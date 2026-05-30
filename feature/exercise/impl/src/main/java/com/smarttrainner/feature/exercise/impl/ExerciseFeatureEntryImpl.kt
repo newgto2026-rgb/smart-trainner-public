@@ -11,7 +11,6 @@ import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
-import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import javax.inject.Inject
@@ -25,7 +24,7 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
         title: String,
         subtitle: String,
         selectedExerciseId: ExerciseId?,
-        actions: ExerciseCatalogActions
+        onExerciseSelected: (ExerciseId) -> Unit
     ) {
         val viewModel: ExerciseCatalogViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -38,7 +37,7 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
         ) {
             exerciseCatalogContent(
                 state = routeState,
-                actions = actions
+                onExerciseSelected = onExerciseSelected
             )
         }
     }

@@ -2,11 +2,9 @@ package com.smarttrainner.app.training
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.R
-import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureCallbacks
@@ -82,11 +80,6 @@ fun TrainingExercisesRoute(
         viewModel = viewModel
     )
     val routeChrome = trainingRouteChrome(routineRouteState)
-    val exerciseCatalogActions = remember(viewModel) {
-        ExerciseCatalogActions(
-            onExerciseSelected = viewModel::selectExercise
-        )
-    }
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
@@ -98,7 +91,7 @@ fun TrainingExercisesRoute(
             title = routeChrome.title,
             subtitle = routeChrome.subtitle,
             selectedExerciseId = trainingState.selectedExerciseId,
-            actions = exerciseCatalogActions
+            onExerciseSelected = viewModel::selectExercise
         )
     }
 }

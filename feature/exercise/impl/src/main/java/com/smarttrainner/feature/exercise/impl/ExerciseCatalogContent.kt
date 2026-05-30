@@ -29,7 +29,6 @@ import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
-import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 
 private val armDetailGroups = listOf(
     MuscleGroup.BICEPS,
@@ -39,7 +38,7 @@ private val armDetailGroups = listOf(
 
 internal fun LazyListScope.exerciseCatalogContent(
     state: ExerciseCatalogUiState,
-    actions: ExerciseCatalogActions
+    onExerciseSelected: (ExerciseId) -> Unit
 ) {
     val selectedExerciseId = state.selectedExerciseId
     item {
@@ -61,7 +60,7 @@ internal fun LazyListScope.exerciseCatalogContent(
                 group = group,
                 state = state,
                 selectedExerciseId = selectedExerciseId,
-                actions = actions
+                onExerciseSelected = onExerciseSelected
             )
         }
 }
@@ -70,7 +69,7 @@ private fun LazyListScope.exerciseGroupSection(
     group: MuscleGroup,
     state: ExerciseCatalogUiState,
     selectedExerciseId: ExerciseId?,
-    actions: ExerciseCatalogActions
+    onExerciseSelected: (ExerciseId) -> Unit
 ) {
     val groupExercises = state.exercises.filter {
         if (group == MuscleGroup.ARMS) {
@@ -104,7 +103,7 @@ private fun LazyListScope.exerciseGroupSection(
                     exercises = armExercises,
                     latestWorkoutLogs = state.latestWorkoutLogs,
                     selectedExerciseId = selectedExerciseId,
-                    actions = actions
+                    onExerciseSelected = onExerciseSelected
                 )
             }
         }
@@ -113,14 +112,14 @@ private fun LazyListScope.exerciseGroupSection(
             exercises = uncategorizedArms,
             latestWorkoutLogs = state.latestWorkoutLogs,
             selectedExerciseId = selectedExerciseId,
-            actions = actions
+            onExerciseSelected = onExerciseSelected
         )
     } else {
         exerciseRows(
             exercises = groupExercises,
             latestWorkoutLogs = state.latestWorkoutLogs,
             selectedExerciseId = selectedExerciseId,
-            actions = actions
+            onExerciseSelected = onExerciseSelected
         )
     }
 }
@@ -129,14 +128,14 @@ private fun LazyListScope.exerciseRows(
     exercises: List<Exercise>,
     latestWorkoutLogs: List<WorkoutLog>,
     selectedExerciseId: ExerciseId?,
-    actions: ExerciseCatalogActions
+    onExerciseSelected: (ExerciseId) -> Unit
 ) {
     items(exercises, key = { it.id.value }) { exercise ->
         ExerciseRow(
             exercise = exercise,
             latestLog = latestWorkoutLogs.latestForExercise(exercise.id),
             selected = exercise.id == selectedExerciseId,
-            onClick = { actions.onExerciseSelected(exercise.id) },
+            onClick = { onExerciseSelected(exercise.id) },
             modifier = Modifier.testTag("training_exercise_row_${exercise.id.value}")
         )
     }

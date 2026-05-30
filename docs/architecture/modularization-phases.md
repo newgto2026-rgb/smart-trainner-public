@@ -946,6 +946,30 @@ Next PR scope:
 - Continue trimming public feature API wrappers, especially single-callback action holder types.
 - Re-audit workout recording repository commands separately for possible `:feature:workout:domain` and `:feature:workout:data` ownership.
 
+## Phase 45: Exercise Catalog Callback Contract
+
+Status: stacked after Phase 44 on `codex/modularization-exercise-catalog-callback-contract`.
+
+Keep public feature APIs as small as their current contract requires. The exercise catalog route has one app-owned handoff callback, so it does not need a public action-holder model.
+
+First PR scope:
+
+- Remove the public `ExerciseCatalogActions` wrapper from `:feature:exercise:api`.
+- Pass `onExerciseSelected` directly through `ExerciseCatalogFeatureEntry.Route`.
+- Keep the selection callback app-owned because it drives the app training coordinator's selected exercise dialog state.
+- Update exercise implementation internals to pass the callback through content rows without introducing a replacement wrapper.
+
+Split decision:
+
+- Do not add a feature domain/data/network module for this phase. The change only trims an API callback wrapper.
+- Keep `ExerciseId` in the public exercise API because app routing still coordinates selected exercise handoffs.
+- Do not introduce a generic route action abstraction until a route has multiple callbacks that justify a named contract.
+
+Next PR scope:
+
+- Re-audit workout recording command ownership for a possible workout-owned domain/data split.
+- Continue checking whether app-owned training coordination can expose fewer core model handoffs.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -975,6 +999,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Workout API no longer depends on `:core:ui` after removing the media renderer from its public route contract.
 - Exercise and routine APIs no longer expose `SmartTrainnerScreenChrome`; app passes only route title/subtitle strings, and feature implementations build common UI chrome internally.
 - Exercise, routine, and workout API modules no longer depend on `:core:ui`; common UI is an implementation dependency where needed.
+- Exercise catalog API no longer exposes a single-callback action wrapper; app passes `onExerciseSelected` directly as the route handoff.
 - Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 

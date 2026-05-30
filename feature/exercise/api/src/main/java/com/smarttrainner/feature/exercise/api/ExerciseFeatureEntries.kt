@@ -9,7 +9,7 @@ interface ExerciseCatalogFeatureEntry {
         title: String,
         subtitle: String,
         selectedExerciseId: ExerciseId?,
-        actions: ExerciseCatalogActions
+        onExerciseSelected: (ExerciseId) -> Unit
     )
 }
 
