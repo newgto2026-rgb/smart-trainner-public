@@ -2,10 +2,8 @@ package com.smarttrainner.feature.workout.impl
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
-import com.smarttrainner.core.domain.GetLatestWorkoutLogUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
-import com.smarttrainner.core.domain.SaveWorkoutLogUseCase
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.DifficultyLevel
@@ -24,6 +22,9 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.feature.workout.domain.GetLatestWorkoutLogUseCase
+import com.smarttrainner.feature.workout.domain.SaveWorkoutLogUseCase
+import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -156,7 +157,7 @@ class MainDispatcherRule(
     }
 }
 
-private class FakeTrainingRepository : WorkoutLogRepository {
+private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRepository {
     val plannedExercise = PlannedExercise(
         id = PlannedExerciseId("planned_chest_press"),
         exercise = Exercise(

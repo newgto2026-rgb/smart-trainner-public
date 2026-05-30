@@ -33,7 +33,6 @@ import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
-import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.feature.routine.domain.AdvanceRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CompleteRoutineDayUseCase
@@ -856,11 +855,6 @@ private class FakeTrainingRepository :
 
     override suspend fun getExercise(id: ExerciseId): Exercise? = exercises.firstOrNull { it.id == id }
 
-    override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
-        logs.value
-            .filter { it.exerciseId == exerciseId }
-            .maxByOrNull { it.performedAt }
-
     override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = Result.success(Unit)
 
     override suspend fun startRoutine(templateId: String): Result<Unit> {
@@ -931,23 +925,6 @@ private class FakeTrainingRepository :
         return Result.success(Unit)
     }
 
-    override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> {
-        logs.value = logs.value + WorkoutLog(
-            id = WorkoutLogId(logs.value.size.toLong() + 1),
-            sessionId = UserSessionId("local-default"),
-            plannedExerciseId = input.plannedExerciseId,
-            exerciseId = input.exerciseId,
-            performedAt = input.performedAt,
-            sets = input.sets,
-            reps = input.reps,
-            weightKg = input.weightKg,
-            durationMinutes = input.durationMinutes,
-            memo = input.memo,
-            completed = input.completed,
-            setEntries = input.setEntries
-        )
-        return Result.success(Unit)
-    }
 }
 
 private fun exercise(id: String, muscleGroup: MuscleGroup) = Exercise(

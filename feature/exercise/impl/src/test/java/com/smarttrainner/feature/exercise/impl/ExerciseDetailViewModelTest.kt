@@ -20,7 +20,6 @@ import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
-import com.smarttrainner.core.model.WorkoutLogInput
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -139,10 +138,6 @@ private class FakeExerciseRepository :
         exercises.firstOrNull { it.id == id }
 
     override fun observeExercises(): Flow<List<Exercise>> = unused()
-
-    override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? = unused()
-
-    override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = unused()
 
     private fun unused(): Nothing = throw UnsupportedOperationException("Not used by exercise detail tests")
 }

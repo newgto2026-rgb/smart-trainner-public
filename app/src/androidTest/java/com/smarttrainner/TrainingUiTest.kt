@@ -21,6 +21,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.smarttrainner.app.MainActivity
 import com.smarttrainner.app.di.CoreRepositoryBindingsModule
 import com.smarttrainner.app.di.RoutineDataRepositoryBindingsModule
+import com.smarttrainner.app.di.WorkoutDataRepositoryBindingsModule
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklyPlanRepository
@@ -30,6 +31,7 @@ import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
+import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -43,7 +45,8 @@ import org.junit.runner.RunWith
 @HiltAndroidTest
 @UninstallModules(
     CoreRepositoryBindingsModule::class,
-    RoutineDataRepositoryBindingsModule::class
+    RoutineDataRepositoryBindingsModule::class,
+    WorkoutDataRepositoryBindingsModule::class
 )
 @RunWith(AndroidJUnit4::class)
 class TrainingUiTest {
@@ -82,6 +85,10 @@ class TrainingUiTest {
     @BindValue
     @JvmField
     val workoutLogRepository: WorkoutLogRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val workoutRecordingRepository: WorkoutRecordingRepository = trainingRepository
 
     @BindValue
     @JvmField

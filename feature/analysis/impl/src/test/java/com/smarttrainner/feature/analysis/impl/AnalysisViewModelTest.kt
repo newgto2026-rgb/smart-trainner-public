@@ -22,7 +22,6 @@ import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
-import com.smarttrainner.core.model.WorkoutLogInput
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -216,10 +215,6 @@ private class FakeAnalysisRepository :
     }
 
     override suspend fun getExercise(id: ExerciseId): Exercise? = unused()
-
-    override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? = unused()
-
-    override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = unused()
 
     private fun unused(): Nothing = error("Not used")
 }

@@ -31,6 +31,7 @@ android {
 
 dependencies {
     implementation(project(":feature:workout:api"))
+    implementation(project(":feature:workout:domain"))
     implementation(project(":core:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))

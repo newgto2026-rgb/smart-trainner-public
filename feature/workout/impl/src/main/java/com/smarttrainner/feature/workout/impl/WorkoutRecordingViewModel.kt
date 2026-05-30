@@ -2,13 +2,13 @@ package com.smarttrainner.feature.workout.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smarttrainner.core.domain.GetLatestWorkoutLogUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
-import com.smarttrainner.core.domain.SaveWorkoutLogUseCase
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogInput
+import com.smarttrainner.feature.workout.domain.GetLatestWorkoutLogUseCase
+import com.smarttrainner.feature.workout.domain.SaveWorkoutLogUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek

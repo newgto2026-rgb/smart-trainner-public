@@ -970,6 +970,32 @@ Next PR scope:
 - Re-audit workout recording command ownership for a possible workout-owned domain/data split.
 - Continue checking whether app-owned training coordination can expose fewer core model handoffs.
 
+## Phase 46: Workout Recording Command Data Ownership
+
+Status: stacked after Phase 45 on `codex/modularization-workout-command-data-split`.
+
+Split workout log ownership by use. Workout log reads remain in `:core:domain` because analysis, exercise, routine, workout, and weekly summary flows consume them. Workout recording commands now belong to the workout feature because production save/prefill command use is owned by the workout recording dialog.
+
+First PR scope:
+
+- Keep `WorkoutLogRepository` in `:core:domain` as a shared read contract with `observeWorkoutLogs` and `observeLatestWorkoutLogs`.
+- Move recording command use cases to `:feature:workout:domain`: `GetLatestWorkoutLogUseCase` and `SaveWorkoutLogUseCase`.
+- Add `WorkoutRecordingRepository` in `:feature:workout:domain` for command-only persistence.
+- Add `:feature:workout:data` with `DefaultWorkoutRecordingRepository`, backed by `core:database` and `core:datastore` infrastructure.
+- Keep final production DI assembly in `:app` through `WorkoutDataRepositoryBindingsModule`.
+
+Split decision:
+
+- Do not move workout log read contracts into workout feature modules; those reads are shared inputs to analysis, exercise detail/catalog, routine state, weekly summary, and workout recording.
+- Do not make `:feature:workout:impl` depend on `:feature:workout:data`; the UI implementation consumes domain use cases only.
+- Do not introduce `:feature:workout:network`; workout recording uses local storage infrastructure only.
+- Allow `:feature:workout:data` to depend on `:core:database` and `:core:datastore`, but not `:core:data`.
+
+Next PR scope:
+
+- Re-check whether any remaining app handoffs still expose more core model detail than routing requires.
+- Continue keeping feature-data bindings in explicit app-owned DI modules as additional feature data modules are introduced.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -991,7 +1017,9 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Routine-only command contracts and command use cases now live in `:feature:routine:domain`.
 - Routine-only read contracts for template catalog and active progress now live in `:feature:routine:domain`.
 - Routine repository implementations now live in `:feature:routine:data`; app-owned DI binds them to the shared core weekly-plan contract and routine-owned read/command contracts.
-- App-owned DI now separates shared core repository bindings from routine feature-data repository bindings.
+- Workout log shared reads remain in `:core:domain`; workout recording commands now live in `:feature:workout:domain`.
+- Workout recording persistence now lives in `:feature:workout:data`; app-owned DI binds it to the workout-owned command contract.
+- App-owned DI now separates shared core repository bindings from routine/workout feature-data repository bindings.
 - App training flow state now lives in an app-local reducer so `TrainingViewModel` is a thin coordinator shell, while cross-feature routing remains app-owned.
 - Routine common badge and empty-state UI now use `:core:ui`; only routine-specific content-description wrapping remains in `:feature:routine:impl`.
 - Routine API no longer exports unused Compose foundation or desugaring dependencies; its public dependencies are limited to the contracts still referenced by app routing and handoffs.
@@ -1007,8 +1035,8 @@ Current guardrails still enforce the important lower-level boundary:
 
 - `core:*` must not depend on `feature:*`.
 - Feature modules must not depend on shared `:core:data` implementations.
-- Feature data modules may use core storage/network infrastructure only through explicit allowlists; `:feature:routine:data` currently may use `:core:database` and `:core:datastore`, not `:core:data` or `:core:network`.
-- New feature-local domain/data/network modules require an explicit ownership decision before being introduced; `:feature:routine:domain` and `:feature:routine:data` are the current approved feature-local modules.
+- Feature data modules may use core storage/network infrastructure only through explicit allowlists; `:feature:routine:data` and `:feature:workout:data` currently may use `:core:database` and `:core:datastore`, not `:core:data` or `:core:network`.
+- New feature-local domain/data/network modules require an explicit ownership decision before being introduced; `:feature:routine:domain`, `:feature:routine:data`, `:feature:workout:domain`, and `:feature:workout:data` are the current approved feature-local modules.
 - Feature API modules must not depend on feature implementation or entry modules.
 - Feature implementation modules must not depend on other feature implementation or entry modules directly.
 - Feature implementation modules must not depend on feature data modules; feature UI code consumes domain contracts/use cases.

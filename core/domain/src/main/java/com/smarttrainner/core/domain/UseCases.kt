@@ -1,7 +1,6 @@
 package com.smarttrainner.core.domain
 
 import com.smarttrainner.core.model.ExerciseId
-import com.smarttrainner.core.model.WorkoutLogInput
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -39,18 +38,6 @@ class GetExerciseUseCase @Inject constructor(
     private val repository: ExerciseRepository
 ) {
     suspend operator fun invoke(id: ExerciseId) = repository.getExercise(id)
-}
-
-class GetLatestWorkoutLogUseCase @Inject constructor(
-    private val repository: WorkoutLogRepository
-) {
-    suspend operator fun invoke(exerciseId: ExerciseId) = repository.getLatestWorkoutLog(exerciseId)
-}
-
-class SaveWorkoutLogUseCase @Inject constructor(
-    private val repository: WorkoutLogRepository
-) {
-    suspend operator fun invoke(input: WorkoutLogInput) = repository.saveWorkoutLog(input)
 }
 
 class ObserveActiveSessionUseCase @Inject constructor(

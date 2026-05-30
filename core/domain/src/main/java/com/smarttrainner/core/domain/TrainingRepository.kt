@@ -6,7 +6,6 @@ import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
-import com.smarttrainner.core.model.WorkoutLogInput
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
@@ -22,8 +21,6 @@ interface WeeklyPlanRepository {
 interface WorkoutLogRepository {
     fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>>
     fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>>
-    suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog?
-    suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit>
 }
 
 interface WeeklySummaryRepository {

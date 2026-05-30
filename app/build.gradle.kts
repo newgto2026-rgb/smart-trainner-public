@@ -61,6 +61,8 @@ dependencies {
     implementation(project(":feature:routine:domain"))
     implementation(project(":feature:routine:impl"))
     implementation(project(":feature:workout:api"))
+    implementation(project(":feature:workout:data"))
+    implementation(project(":feature:workout:domain"))
     implementation(project(":feature:workout:impl"))
 
     implementation(libs.androidx.core.ktx)

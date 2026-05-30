@@ -31,6 +31,7 @@ import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
+import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -73,6 +74,7 @@ internal class InMemoryTrainingRepository :
     RoutineProgressRepository,
     RoutinePlanCommandRepository,
     RoutineProgressCommandRepository,
+    WorkoutRecordingRepository,
     WorkoutLogRepository,
     WeeklySummaryRepository {
     private val exercises = MutableStateFlow(SeedTrainingContent.exercises)

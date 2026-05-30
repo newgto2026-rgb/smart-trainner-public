@@ -69,11 +69,15 @@ val checkModuleBoundaries by tasks.registering {
         val allowedCrossFeatureApiDependencies = emptySet<Pair<String, String>>()
         val allowedFeaturePrivateModules = setOf(
             ":feature:routine:domain",
-            ":feature:routine:data"
+            ":feature:routine:data",
+            ":feature:workout:domain",
+            ":feature:workout:data"
         )
         val allowedFeatureDataCoreInfrastructureDependencies = setOf(
             ":feature:routine:data" to ":core:database",
-            ":feature:routine:data" to ":core:datastore"
+            ":feature:routine:data" to ":core:datastore",
+            ":feature:workout:data" to ":core:database",
+            ":feature:workout:data" to ":core:datastore"
         )
         val allowedAppFeatureImplDependencies = setOf(
             ":app" to ":feature:analysis:impl",
@@ -82,7 +86,8 @@ val checkModuleBoundaries by tasks.registering {
             ":app" to ":feature:workout:impl"
         )
         val allowedAppFeatureDataDependencies = setOf(
-            ":app" to ":feature:routine:data"
+            ":app" to ":feature:routine:data",
+            ":app" to ":feature:workout:data"
         )
         val allProjectPaths = allprojects.map { it.path }.toSet()
         val invalidAllowlistPaths = (
@@ -190,7 +195,10 @@ val checkModuleBoundaries by tasks.registering {
             "PlatformNetworkModule.kt"
         )
         val appDiFeatureImplementationFiles = setOf("FeatureEntryBindingsModule.kt")
-        val appDiFeatureDataFiles = setOf("RoutineDataRepositoryBindingsModule.kt")
+        val appDiFeatureDataFiles = setOf(
+            "RoutineDataRepositoryBindingsModule.kt",
+            "WorkoutDataRepositoryBindingsModule.kt"
+        )
 
         appMainKotlinSources.files.forEach { sourceFile ->
             val normalizedPath = sourceFile.path.replace('\\', '/')
