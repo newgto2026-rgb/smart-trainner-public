@@ -876,6 +876,28 @@ Next PR scope:
 - Re-audit workout log commands only if a command surface becomes feature-private rather than shared analysis/routine/exercise input.
 - Keep app as the final routing and DI composition root while feature modules remain isolated from each other.
 
+## Phase 42: Routine API Dependency Trim
+
+Status: stacked after Phase 41 on `codex/modularization-routine-api-dependency-trim`.
+
+Keep feature API modules as contract-only surfaces. The routine API still needs Compose runtime for its route entry, `:core:model` for app handoff models, and `:core:ui` for shared route chrome/media contracts, but it should not leak unused implementation-facing dependencies.
+
+First PR scope:
+
+- Remove the unused Compose foundation API dependency from `:feature:routine:api`.
+- Remove core library desugaring from `:feature:routine:api` because the public routine contract no longer exposes `java.time` or other desugared JDK APIs.
+- Keep `:core:model` and `:core:ui` in the public API only while app/routine/workout handoffs still pass `ExerciseId`, `PlannedExercise`, `SmartTrainnerScreenChrome`, and `ExerciseMediaRenderer`.
+
+Split decision:
+
+- Do not add a new feature domain/data/network module for this cleanup. The pressure point is public API dependency hygiene, not repository ownership.
+- Keep the next repository ownership audit focused on workout log reads/writes, which remain shared until proven feature-private.
+
+Next PR scope:
+
+- Continue trimming public feature API action wrappers where a direct callback would preserve the route contract with less exposed surface.
+- Re-audit whether `ExerciseMediaRenderer` belongs permanently in `:core:ui` or should move to a narrower common training presentation contract.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -900,6 +922,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - App-owned DI now separates shared core repository bindings from routine feature-data repository bindings.
 - App training flow state now lives in an app-local reducer so `TrainingViewModel` is a thin coordinator shell, while cross-feature routing remains app-owned.
 - Routine common badge and empty-state UI now use `:core:ui`; only routine-specific content-description wrapping remains in `:feature:routine:impl`.
+- Routine API no longer exports unused Compose foundation or desugaring dependencies; its public dependencies are limited to the contracts still referenced by app routing and handoffs.
 - Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
