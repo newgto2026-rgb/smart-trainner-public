@@ -3,7 +3,6 @@
 ## Source Of Truth
 - GitHub app repo: `newgto2026-rgb/smart-trainner-public`.
 - The `origin` remote for this checkout should point to `https://github.com/newgto2026-rgb/smart-trainner-public.git`.
-- A local `MyFirstApp` checkout, when available, is read-only reference material. Use `SMART_TRAINNER_REFERENCE_APP` or your local checkout path to locate it; do not modify it.
 
 ## New Task Workflow
 - Start every new task from the latest public `main` by running `scripts/new-smart-task <task-name>`.
@@ -16,12 +15,11 @@ git worktree add -b codex/<task-name> "$HOME/.codex/worktrees/<task-name>/smart-
 ```
 
 ## Required Pre-Change Checks
-1. Confirm you are not editing the MyFirstApp checkout.
-2. Confirm the current branch is not `main` or `master`.
-3. Confirm new work is based on fresh `origin/main`.
-4. Identify affected Gradle modules.
-5. Open affected module-local `AGENTS.md` files when they exist.
-6. Check module boundaries and dependency direction before editing.
+1. Confirm the current branch is not `main` or `master`.
+2. Confirm new work is based on fresh `origin/main`.
+3. Identify affected Gradle modules.
+4. Open affected module-local `AGENTS.md` files when they exist.
+5. Check module boundaries and dependency direction before editing.
 
 ## Required Pre-PR Checks
 1. Run affected module unit tests.
