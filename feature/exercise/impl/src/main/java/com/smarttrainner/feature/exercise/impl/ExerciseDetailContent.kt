@@ -38,8 +38,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.Exercise
-import com.smarttrainner.feature.exercise.api.ExerciseDetailActions
-import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
 
 @Composable
 internal fun ExerciseDetailDialog(

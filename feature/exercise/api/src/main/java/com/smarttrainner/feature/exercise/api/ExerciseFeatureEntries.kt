@@ -21,10 +21,4 @@ interface ExerciseDetailFeatureEntry {
         onDismiss: () -> Unit,
         onRecordRequested: (ExerciseId) -> Unit
     )
-
-    @Composable
-    fun Dialog(
-        state: ExerciseDetailUiState,
-        actions: ExerciseDetailActions
-    )
 }

@@ -12,9 +12,7 @@ import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
-import com.smarttrainner.feature.exercise.api.ExerciseDetailActions
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
-import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import javax.inject.Inject
 
@@ -57,23 +55,12 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
             }
         }
         val state by viewModel.uiState.collectAsStateWithLifecycle()
-        Dialog(
+        ExerciseDetailDialog(
             state = state,
             actions = ExerciseDetailActions(
                 onDismiss = onDismiss,
                 onRecordRequested = onRecordRequested
             )
-        )
-    }
-
-    @Composable
-    override fun Dialog(
-        state: ExerciseDetailUiState,
-        actions: ExerciseDetailActions
-    ) {
-        ExerciseDetailDialog(
-            state = state,
-            actions = actions
         )
     }
 

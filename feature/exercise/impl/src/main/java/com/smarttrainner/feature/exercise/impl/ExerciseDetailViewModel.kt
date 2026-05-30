@@ -6,7 +6,6 @@ import com.smarttrainner.core.domain.GetExerciseUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.WorkoutLog
-import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,7 +38,7 @@ class ExerciseDetailViewModel @Inject constructor(
         initialValue = null
     )
 
-    val uiState = combine(
+    internal val uiState = combine(
         selectedExerciseId,
         selectedExercise,
         showRecordAction,

@@ -680,6 +680,28 @@ Next PR scope:
 - Apply the same route-only tightening to exercise detail if its public `Dialog(state, actions)` surface remains unused by app routing.
 - Re-audit the shared exercise media renderer contract once exercise detail no longer exposes UI state models from its API.
 
+## Phase 34: Exercise Detail Route-Only API Contract
+
+Status: stacked after Phase 33 on `codex/modularization-exercise-detail-route-contract`.
+
+Tighten the exercise detail feature API so app routing can open the detail dialog without seeing exercise detail UI state or rendering actions. The app already uses `ExerciseDetailFeatureEntry.DialogRoute(...)`; the lower-level dialog rendering surface is an implementation detail.
+
+First PR scope:
+
+- Remove the public `ExerciseDetailFeatureEntry.Dialog(state, actions)` content-rendering escape hatch.
+- Move exercise detail UI state and actions into `:feature:exercise:impl`.
+- Drop unused Compose foundation/UI API dependencies from `:feature:exercise:api`; the public API needs Compose runtime, `core:model` route ids, and `core:ui` screen chrome only.
+
+Split decision:
+
+- Do not introduce `:feature:exercise:domain` or `:feature:exercise:data`; exercise catalog/detail still consume shared exercise and workout-log core-domain use cases.
+- Keep `ExerciseMediaRenderer` in `:core:ui` for now because routine/workout screens need a feature-neutral rendering port without depending on `:feature:exercise:*`.
+
+Next PR scope:
+
+- Re-audit `RoutineRouteState`, which still exposes a broad routine facade to app training coordination.
+- Decide whether `ExerciseMediaRenderer` should stay in `:core:ui` or move to a more explicit common training UI taxonomy.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -695,6 +717,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - App-owned DI composition now owns production platform providers for Room, Retrofit, and app-wide time.
 - Analysis API now exposes only a route entry; its content-rendering surface and UI state models are implementation details.
 - Workout recording API now exposes only its dialog route entry; its form state, validation errors, and rendering actions are implementation details.
+- Exercise detail API now exposes only its dialog route entry; its detail UI state and rendering actions are implementation details.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:
