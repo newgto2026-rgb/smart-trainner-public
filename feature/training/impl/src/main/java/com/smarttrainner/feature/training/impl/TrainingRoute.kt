@@ -1,5 +1,7 @@
 package com.smarttrainner.feature.training.impl
 
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,8 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
 import com.smarttrainner.core.model.ExerciseId
@@ -43,7 +47,7 @@ internal fun TrainingRoute(
     exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
-    viewModel: TrainingViewModel = hiltViewModel(),
+    viewModel: TrainingViewModel = sharedTrainingViewModel(),
     content: TrainingRouteContent
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -98,6 +102,23 @@ internal fun TrainingRoute(
         onRecordDialogDismiss = viewModel::dismissRecordDialog,
         content = content
     )
+}
+
+@Composable
+private fun sharedTrainingViewModel(): TrainingViewModel {
+    val context = LocalContext.current
+    val sharedOwner = remember(context) { context.findViewModelStoreOwner() }
+    return if (sharedOwner != null) {
+        hiltViewModel(sharedOwner)
+    } else {
+        hiltViewModel()
+    }
+}
+
+private tailrec fun Context.findViewModelStoreOwner(): ViewModelStoreOwner? = when (this) {
+    is ViewModelStoreOwner -> this
+    is ContextWrapper -> baseContext.findViewModelStoreOwner()
+    else -> null
 }
 
 @Composable

@@ -84,11 +84,12 @@ private fun SmartTrainnerBottomBar(
     onDestinationSelected: (SmartTrainnerDestination) -> Unit
 ) {
     NavigationBar(
-        containerColor = SmartTrainnerColors.SurfaceRaised
+        containerColor = SmartTrainnerColors.SurfaceRaised,
+        modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
     ) {
         destinations.forEach { destination ->
             NavigationBarItem(
-                selected = currentRoute.startsWith(destination.route),
+                selected = currentRoute == destination.route,
                 onClick = { onDestinationSelected(destination) },
                 modifier = Modifier.testTag(destination.testTag),
                 colors = NavigationBarItemDefaults.colors(
