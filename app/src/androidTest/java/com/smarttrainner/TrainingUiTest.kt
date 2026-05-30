@@ -20,8 +20,12 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.smarttrainner.app.MainActivity
 import com.smarttrainner.core.data.DataModule
+import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.RoutinePlanRepository
+import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
-import com.smarttrainner.core.domain.TrainingRepository
+import com.smarttrainner.core.domain.WeeklySummaryRepository
+import com.smarttrainner.core.domain.WorkoutLogRepository
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -42,9 +46,27 @@ class TrainingUiTest {
     @get:Rule(order = 1)
     val composeRule = createEmptyComposeRule()
 
+    private val trainingRepository = InMemoryTrainingRepository()
+
     @BindValue
     @JvmField
-    val trainingRepository: TrainingRepository = InMemoryTrainingRepository()
+    val exerciseRepository: ExerciseRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val routinePlanRepository: RoutinePlanRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val routineProgressRepository: RoutineProgressRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val workoutLogRepository: WorkoutLogRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val weeklySummaryRepository: WeeklySummaryRepository = trainingRepository
 
     @BindValue
     @JvmField
@@ -348,7 +370,7 @@ class TrainingUiTest {
     }
 
     private fun resetTestState() {
-        (trainingRepository as InMemoryTrainingRepository).reset()
+        trainingRepository.reset()
         (sessionRepository as InMemorySessionRepository).reset()
     }
 

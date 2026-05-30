@@ -6,7 +6,7 @@ import com.smarttrainner.core.domain.GetLatestWorkoutLogUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.SaveWorkoutLogUseCase
-import com.smarttrainner.core.domain.TrainingRepository
+import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
@@ -156,7 +156,7 @@ class MainDispatcherRule(
     }
 }
 
-private class FakeTrainingRepository : TrainingRepository {
+private class FakeTrainingRepository : WorkoutLogRepository {
     val plannedExercise = PlannedExercise(
         id = PlannedExerciseId("planned_chest_press"),
         exercise = Exercise(
@@ -210,48 +210,17 @@ private class FakeTrainingRepository : TrainingRepository {
         setEntries = setEntries
     )
 
-    override fun observeExercises(): Flow<List<Exercise>> = unsupported()
-
-    override fun observePlanTemplates(): Flow<List<PlanTemplate>> = unsupported()
-
-    override fun observeCustomRoutines(): Flow<List<PlanTemplate>> = unsupported()
-
-    override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> = unsupported()
-
-    override fun observeRoutineProgress(): Flow<RoutineProgress> = unsupported()
-
     override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = logs
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
-
-    override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> = unsupported()
-
-    override suspend fun getExercise(id: ExerciseId): Exercise? = unsupported()
 
     override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
         logs.value
             .filter { it.exerciseId == exerciseId }
             .maxByOrNull { it.performedAt }
 
-    override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = unsupported()
-
-    override suspend fun startRoutine(templateId: String): Result<Unit> = unsupported()
-
-    override suspend fun saveCustomRoutine(input: CustomRoutineInput): Result<PlanTemplate> = unsupported()
-
-    override suspend fun deleteCustomRoutine(templateId: String): Result<Unit> = unsupported()
-
-    override suspend fun markRoutineDayCompleted(
-        completedDayIndex: Int,
-        nextDayIndex: Int,
-        completedAt: Instant,
-        newCycleStartedAt: Instant?
-    ): Result<Unit> = unsupported()
-
     override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> {
         savedInputs += input
         return Result.success(Unit)
     }
-
-    private fun unsupported(): Nothing = throw UnsupportedOperationException("Not used by workout recording tests")
 }

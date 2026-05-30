@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.CompleteRoutineDayUseCase
 import com.smarttrainner.core.domain.AdvanceRoutineDayUseCase
+import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.ObserveCurrentWeeklyPlanUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
@@ -12,10 +13,12 @@ import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.RecommendRoutineUseCase
 import com.smarttrainner.core.domain.ResolveRoutineCycleCompletionUseCase
+import com.smarttrainner.core.domain.RoutinePlanRepository
+import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SaveCustomRoutineUseCase
 import com.smarttrainner.core.domain.StartRoutineUseCase
-import com.smarttrainner.core.domain.TrainingRepository
 import com.smarttrainner.core.domain.ValidateCustomRoutineUseCase
+import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
@@ -709,7 +712,11 @@ class MainDispatcherRule(
     }
 }
 
-private class FakeTrainingRepository : TrainingRepository {
+private class FakeTrainingRepository :
+    ExerciseRepository,
+    RoutinePlanRepository,
+    RoutineProgressRepository,
+    WorkoutLogRepository {
     private val weekStart = LocalDate.of(2026, 5, 18)
     private val exercises = listOf(
         exercise("back_pull", MuscleGroup.BACK),
@@ -844,20 +851,6 @@ private class FakeTrainingRepository : TrainingRepository {
     }
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
-
-    override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> = MutableStateFlow(
-        WeeklySummary(
-            weekStartDate = weekStartDate,
-            plannedExerciseCount = 4,
-            completedExerciseCount = 0,
-            totalSets = 0,
-            totalVolumeKg = 0.0,
-            totalMinutes = 0,
-            streakDays = 0,
-            muscleBalance = emptyMap(),
-            insight = ""
-        )
-    )
 
     override suspend fun getExercise(id: ExerciseId): Exercise? = exercises.firstOrNull { it.id == id }
 

@@ -516,6 +516,31 @@ Next PR scope:
 - Revisit `:feature:*:entry` Hilt bindings and move composition-root bindings into app once the route APIs no longer force coordinator-mediated screen state.
 - Continue tightening feature APIs by removing state/action rendering escape hatches that only exist for previews or tests.
 
+## Phase 27: Shared Repository Contract Split
+
+Status: stacked after Phase 26 on `codex/modularization-split-training-repositories`.
+
+Split the broad `TrainingRepository` contract into narrower shared `:core:domain` contracts aligned by data concern. This keeps shared persistence contracts in core while preventing every use case, feature test, and Hilt binding from depending on one catch-all training repository.
+
+First PR scope:
+
+- Replace `TrainingRepository` with `ExerciseRepository`, `RoutinePlanRepository`, `RoutineProgressRepository`, `WorkoutLogRepository`, and `WeeklySummaryRepository`.
+- Update use cases so each constructor depends only on the narrow repository capability it needs.
+- Keep `DefaultTrainingRepository` as the single `:core:data` implementation for now, but bind it to each narrow core-domain contract.
+- Update app android tests and feature unit-test fakes to implement only the contracts used by the subject under test.
+
+Split decision:
+
+- Do not add `:feature:*:domain`, `:feature:*:data`, or `:feature:*:network` here. The contracts are still shared by multiple features: exercise lookup spans routine/exercise/analysis, workout logs span workout/exercise/routine/analysis, and routine plan/progress state is read by the routine feature but still participates in app-wide training flow.
+- Do not split `DefaultTrainingRepository` into multiple data implementations in this phase. The current implementation shares active-session resolution, template lookup, custom routine storage, plan building, and weekly summary composition; separating implementation classes should be a follow-up once the contracts prove stable.
+- Keep network out of scope. There are no feature-specific remote contracts in this split; DTO/network contracts continue to belong in `:core:network` when they appear.
+
+Next PR scope:
+
+- Move `:feature:*:entry` Hilt feature-entry bindings into the app composition root, with an explicit app-to-feature-impl guardrail exception for DI wiring only.
+- Consider splitting `DefaultTrainingRepository` into internal core-data collaborators after the contract split has settled.
+- Continue checking whether any future repository is truly feature-private before adding `:feature:*:domain` or `:feature:*:data`.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -525,6 +550,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - App `TrainingViewModel` now coordinates selected exercise id and a generic single/continuous recording flow; workout recording, exercise detail, exercise catalog, analysis, routine, custom routine builder state, and routine continuation policy are feature-owned.
 - App no longer imports routine UI/action/form models or raw routine coordinator state; it consumes only the routine feature entry and opaque route API.
 - App no longer owns the routine/exercise `LazyListScope` screen assembly; shared screen chrome lives in `:core:ui`, and feature APIs expose composable route surfaces.
+- Core domain persistence contracts are no longer one broad `TrainingRepository`; use cases depend on concern-specific shared contracts.
 - `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
 
 Current guardrails still enforce the important lower-level boundary:

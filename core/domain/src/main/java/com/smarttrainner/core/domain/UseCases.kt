@@ -7,73 +7,73 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 class ObserveExercisesUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: ExerciseRepository
 ) {
     operator fun invoke() = repository.observeExercises()
 }
 
 class ObservePlanTemplatesUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: RoutinePlanRepository
 ) {
     operator fun invoke() = repository.observePlanTemplates()
 }
 
 class ObserveCustomRoutinesUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: RoutinePlanRepository
 ) {
     operator fun invoke() = repository.observeCustomRoutines()
 }
 
 class ObserveCurrentWeeklyPlanUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: RoutinePlanRepository
 ) {
     operator fun invoke(weekStartDate: LocalDate) = repository.observeCurrentWeeklyPlan(weekStartDate)
 }
 
 class ObserveWorkoutLogsUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: WorkoutLogRepository
 ) {
     operator fun invoke(weekStartDate: LocalDate) = repository.observeWorkoutLogs(weekStartDate)
 }
 
 class ObserveLatestWorkoutLogsUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: WorkoutLogRepository
 ) {
     operator fun invoke() = repository.observeLatestWorkoutLogs()
 }
 
 class ObserveWeeklySummaryUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: WeeklySummaryRepository
 ) {
     operator fun invoke(weekStartDate: LocalDate) = repository.observeWeeklySummary(weekStartDate)
 }
 
 class GetExerciseUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: ExerciseRepository
 ) {
     suspend operator fun invoke(id: ExerciseId) = repository.getExercise(id)
 }
 
 class GetLatestWorkoutLogUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: WorkoutLogRepository
 ) {
     suspend operator fun invoke(exerciseId: ExerciseId) = repository.getLatestWorkoutLog(exerciseId)
 }
 
 class SaveWorkoutLogUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: WorkoutLogRepository
 ) {
     suspend operator fun invoke(input: WorkoutLogInput) = repository.saveWorkoutLog(input)
 }
 
 class SelectPlanTemplateUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: RoutinePlanRepository
 ) {
     suspend operator fun invoke(templateId: String) = repository.selectPlanTemplate(templateId)
 }
 
 class SaveCustomRoutineUseCase @Inject constructor(
-    private val repository: TrainingRepository,
+    private val repository: RoutinePlanRepository,
     private val validateCustomRoutine: ValidateCustomRoutineUseCase
 ) {
     suspend operator fun invoke(
@@ -85,7 +85,7 @@ class SaveCustomRoutineUseCase @Inject constructor(
 }
 
 class DeleteCustomRoutineUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: RoutinePlanRepository
 ) {
     suspend operator fun invoke(templateId: String) = repository.deleteCustomRoutine(templateId)
 }

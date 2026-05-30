@@ -187,13 +187,13 @@ class ValidateCustomRoutineUseCase @Inject constructor() {
 }
 
 class ObserveRoutineProgressUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: RoutineProgressRepository
 ) {
     operator fun invoke() = repository.observeRoutineProgress()
 }
 
 class StartRoutineUseCase @Inject constructor(
-    private val repository: TrainingRepository
+    private val repository: RoutineProgressRepository
 ) {
     suspend operator fun invoke(templateId: String) = repository.startRoutine(templateId)
 }
@@ -207,7 +207,7 @@ class AdvanceRoutineDayUseCase @Inject constructor() {
 }
 
 class CompleteRoutineDayUseCase @Inject constructor(
-    private val repository: TrainingRepository,
+    private val repository: RoutineProgressRepository,
     private val advanceRoutineDay: AdvanceRoutineDayUseCase
 ) {
     suspend operator fun invoke(

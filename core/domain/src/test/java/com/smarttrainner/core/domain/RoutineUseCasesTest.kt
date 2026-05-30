@@ -194,7 +194,7 @@ class RoutineUseCasesTest {
 
     @Test
     fun completeRoutineDay_marksNewCycleStartWhenRoutineWraps() = runTest {
-        val repository = CapturingTrainingRepository()
+        val repository = CapturingRoutineProgressRepository()
         val completedAt = Instant.parse("2026-05-24T12:00:00Z")
         val completeRoutineDay = CompleteRoutineDayUseCase(repository, advanceRoutineDay)
 
@@ -210,7 +210,7 @@ class RoutineUseCasesTest {
 
     @Test
     fun completeRoutineDay_keepsCycleStartWhenRoutineContinues() = runTest {
-        val repository = CapturingTrainingRepository()
+        val repository = CapturingRoutineProgressRepository()
         val completedAt = Instant.parse("2026-05-24T12:00:00Z")
         val completeRoutineDay = CompleteRoutineDayUseCase(repository, advanceRoutineDay)
 
@@ -435,24 +435,12 @@ class RoutineUseCasesTest {
     )
 }
 
-private class CapturingTrainingRepository : TrainingRepository {
+private class CapturingRoutineProgressRepository : RoutineProgressRepository {
     var nextDayIndex: Int? = null
     var newCycleStartedAt: Instant? = null
 
-    override fun observeExercises(): Flow<List<Exercise>> = error("Not used")
-    override fun observePlanTemplates(): Flow<List<PlanTemplate>> = error("Not used")
-    override fun observeCustomRoutines(): Flow<List<PlanTemplate>> = error("Not used")
-    override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> = error("Not used")
     override fun observeRoutineProgress(): Flow<RoutineProgress> = error("Not used")
-    override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = error("Not used")
-    override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = error("Not used")
-    override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> = error("Not used")
-    override suspend fun getExercise(id: ExerciseId): Exercise? = error("Not used")
-    override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? = error("Not used")
-    override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = error("Not used")
     override suspend fun startRoutine(templateId: String): Result<Unit> = error("Not used")
-    override suspend fun saveCustomRoutine(input: CustomRoutineInput): Result<PlanTemplate> = error("Not used")
-    override suspend fun deleteCustomRoutine(templateId: String): Result<Unit> = error("Not used")
 
     override suspend fun markRoutineDayCompleted(
         completedDayIndex: Int,
@@ -464,6 +452,4 @@ private class CapturingTrainingRepository : TrainingRepository {
         this.newCycleStartedAt = newCycleStartedAt
         return Result.success(Unit)
     }
-
-    override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = error("Not used")
 }

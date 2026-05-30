@@ -2,9 +2,10 @@ package com.smarttrainner.feature.exercise.impl
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.GetExerciseUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
-import com.smarttrainner.core.domain.TrainingRepository
+import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
@@ -117,7 +118,9 @@ class MainDispatcherRule(
     }
 }
 
-private class FakeExerciseRepository : TrainingRepository {
+private class FakeExerciseRepository :
+    ExerciseRepository,
+    WorkoutLogRepository {
     val latestLogs = MutableStateFlow<List<WorkoutLog>>(emptyList())
     private val exercises = listOf(
         exercise("chest_press", MuscleGroup.CHEST),
@@ -130,39 +133,14 @@ private class FakeExerciseRepository : TrainingRepository {
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
 
+    override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = unused()
+
     override suspend fun getExercise(id: ExerciseId): Exercise? =
         exercises.firstOrNull { it.id == id }
 
     override fun observeExercises(): Flow<List<Exercise>> = unused()
 
-    override fun observePlanTemplates(): Flow<List<PlanTemplate>> = unused()
-
-    override fun observeCustomRoutines(): Flow<List<PlanTemplate>> = unused()
-
-    override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> = unused()
-
-    override fun observeRoutineProgress(): Flow<RoutineProgress> = unused()
-
-    override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = unused()
-
-    override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> = unused()
-
     override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? = unused()
-
-    override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = unused()
-
-    override suspend fun startRoutine(templateId: String): Result<Unit> = unused()
-
-    override suspend fun saveCustomRoutine(input: CustomRoutineInput): Result<PlanTemplate> = unused()
-
-    override suspend fun deleteCustomRoutine(templateId: String): Result<Unit> = unused()
-
-    override suspend fun markRoutineDayCompleted(
-        completedDayIndex: Int,
-        nextDayIndex: Int,
-        completedAt: Instant,
-        newCycleStartedAt: Instant?
-    ): Result<Unit> = unused()
 
     override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = unused()
 

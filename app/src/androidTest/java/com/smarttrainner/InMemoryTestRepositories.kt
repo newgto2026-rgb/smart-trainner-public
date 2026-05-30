@@ -1,9 +1,13 @@
 package com.smarttrainner
 
 import com.smarttrainner.core.data.SeedTrainingContent
+import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.RoutinePlanRepository
+import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
-import com.smarttrainner.core.domain.TrainingRepository
+import com.smarttrainner.core.domain.WeeklySummaryRepository
 import com.smarttrainner.core.domain.WeeklySummaryCalculator
+import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.AuthProvider
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.Exercise
@@ -59,7 +63,12 @@ internal class InMemorySessionRepository : SessionRepository {
     }
 }
 
-internal class InMemoryTrainingRepository : TrainingRepository {
+internal class InMemoryTrainingRepository :
+    ExerciseRepository,
+    RoutinePlanRepository,
+    RoutineProgressRepository,
+    WorkoutLogRepository,
+    WeeklySummaryRepository {
     private val exercises = MutableStateFlow(SeedTrainingContent.exercises)
     private val exerciseById = SeedTrainingContent.exercises.associateBy { it.id }
     private val systemTemplates = SeedTrainingContent.templates

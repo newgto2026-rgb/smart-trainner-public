@@ -4,7 +4,11 @@ import com.smarttrainner.core.database.CustomRoutineDao
 import com.smarttrainner.core.database.WorkoutLogDao
 import com.smarttrainner.core.datastore.DEFAULT_USER_SESSION_ID
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
-import com.smarttrainner.core.domain.TrainingRepository
+import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.RoutinePlanRepository
+import com.smarttrainner.core.domain.RoutineProgressRepository
+import com.smarttrainner.core.domain.WeeklySummaryRepository
+import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.domain.WeeklySummaryCalculator
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.Exercise
@@ -44,7 +48,11 @@ class DefaultTrainingRepository @Inject constructor(
     private val preferences: TrainingPreferencesDataSource,
     private val summaryCalculator: WeeklySummaryCalculator,
     private val clock: Clock
-) : TrainingRepository {
+) : ExerciseRepository,
+    RoutinePlanRepository,
+    RoutineProgressRepository,
+    WorkoutLogRepository,
+    WeeklySummaryRepository {
     private val exerciseById = SeedTrainingContent.exercises.associateBy { it.id }
     private val templates = SeedTrainingContent.templates
 

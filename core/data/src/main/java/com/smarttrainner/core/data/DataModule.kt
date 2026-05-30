@@ -1,8 +1,12 @@
 package com.smarttrainner.core.data
 
-import com.smarttrainner.core.domain.TrainingRepository
+import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.RoutinePlanRepository
+import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
+import com.smarttrainner.core.domain.WeeklySummaryRepository
 import com.smarttrainner.core.domain.WeeklySummaryCalculator
+import com.smarttrainner.core.domain.WorkoutLogRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -13,9 +17,29 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 abstract class DataModule {
     @Binds
-    abstract fun bindTrainingRepository(
+    abstract fun bindExerciseRepository(
         repository: DefaultTrainingRepository
-    ): TrainingRepository
+    ): ExerciseRepository
+
+    @Binds
+    abstract fun bindRoutinePlanRepository(
+        repository: DefaultTrainingRepository
+    ): RoutinePlanRepository
+
+    @Binds
+    abstract fun bindRoutineProgressRepository(
+        repository: DefaultTrainingRepository
+    ): RoutineProgressRepository
+
+    @Binds
+    abstract fun bindWorkoutLogRepository(
+        repository: DefaultTrainingRepository
+    ): WorkoutLogRepository
+
+    @Binds
+    abstract fun bindWeeklySummaryRepository(
+        repository: DefaultTrainingRepository
+    ): WeeklySummaryRepository
 
     @Binds
     abstract fun bindSessionRepository(

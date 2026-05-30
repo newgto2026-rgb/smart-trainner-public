@@ -14,28 +14,40 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
-interface TrainingRepository {
+interface ExerciseRepository {
     fun observeExercises(): Flow<List<Exercise>>
+    suspend fun getExercise(id: ExerciseId): Exercise?
+}
+
+interface RoutinePlanRepository {
     fun observePlanTemplates(): Flow<List<PlanTemplate>>
     fun observeCustomRoutines(): Flow<List<PlanTemplate>>
     fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan>
-    fun observeRoutineProgress(): Flow<RoutineProgress>
-    fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>>
-    fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>>
-    fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary>
-    suspend fun getExercise(id: ExerciseId): Exercise?
-    suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog?
     suspend fun selectPlanTemplate(templateId: String): Result<Unit>
-    suspend fun startRoutine(templateId: String): Result<Unit>
     suspend fun saveCustomRoutine(input: CustomRoutineInput): Result<PlanTemplate>
     suspend fun deleteCustomRoutine(templateId: String): Result<Unit>
+}
+
+interface RoutineProgressRepository {
+    fun observeRoutineProgress(): Flow<RoutineProgress>
+    suspend fun startRoutine(templateId: String): Result<Unit>
     suspend fun markRoutineDayCompleted(
         completedDayIndex: Int,
         nextDayIndex: Int,
         completedAt: Instant,
         newCycleStartedAt: Instant?
     ): Result<Unit>
+}
+
+interface WorkoutLogRepository {
+    fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>>
+    fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>>
+    suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog?
     suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit>
+}
+
+interface WeeklySummaryRepository {
+    fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary>
 }
 
 interface SessionRepository {
