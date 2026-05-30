@@ -44,6 +44,8 @@ First PR scope:
 
 ## Phase 3: Exercise Catalog Feature Boundary
 
+Status: stacked after Phase 2 on `codex/modularization-exercise-feature`.
+
 Candidate modules:
 
 - `:feature:exercise:api`
@@ -51,6 +53,12 @@ Candidate modules:
 - `:feature:exercise:impl`
 
 Move exercise list, exercise detail, exercise images, and exercise instruction rendering behind an exercise catalog feature contract. Keep exercise image assets local to the exercise implementation unless another feature requires direct access.
+
+First PR scope:
+
+- Introduce `:feature:exercise:api`.
+- Move exercise catalog destination input to `ExerciseCatalogUiState` and `ExerciseCatalogActions`.
+- Keep exercise detail and image rendering in `:feature:training:impl` until the screen implementation can move without depending on training state.
 
 ## Phase 4: Analysis Feature Boundary
 

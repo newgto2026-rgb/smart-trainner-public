@@ -20,6 +20,7 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.training.api.TrainingDestination
 
@@ -129,6 +130,7 @@ private fun TrainingScreen(
     val selectedExercise = state.selectedExercise
     val recordingPlannedExercise = state.recordingPlannedExercise
     val routineState = state.routine
+    val exerciseCatalogState = state.exerciseCatalog
     val routineActions = remember(
         onTemplateSelected,
         onRoutineDaysPerWeekChanged,
@@ -194,6 +196,9 @@ private fun TrainingScreen(
             onRecordSelected = onRecordSelected
         )
     }
+    val exerciseCatalogActions = ExerciseCatalogActions(
+        onExerciseSelected = onExerciseSelected
+    )
     if (recordingPlannedExercise != null && selectedExercise == null) {
         RecordDialog(
             state = state,
@@ -291,7 +296,10 @@ private fun TrainingScreen(
                     state = routineState,
                     actions = routineActions
                 )
-                TrainingDestination.Exercises -> exerciseContent(state, onExerciseSelected)
+                TrainingDestination.Exercises -> exerciseContent(
+                    state = exerciseCatalogState,
+                    actions = exerciseCatalogActions
+                )
                 TrainingDestination.Analysis -> analysisContent(state)
             }
         }

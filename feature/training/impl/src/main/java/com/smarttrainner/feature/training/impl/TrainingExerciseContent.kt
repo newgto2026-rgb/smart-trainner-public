@@ -46,16 +46,17 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.Exercise
-import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
+import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
-    state: TrainingUiState,
-    onExerciseSelected: (com.smarttrainner.core.model.ExerciseId) -> Unit
+    state: ExerciseCatalogUiState,
+    actions: ExerciseCatalogActions
 ) {
-    val selected = state.selectedExercise
+    val selectedExerciseId = state.selectedExerciseId
     item {
         Text(
             text = stringResource(R.string.training_all_exercises, state.exercises.size),
@@ -63,7 +64,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
             fontWeight = FontWeight.Bold
         )
     }
-    if (selected == null) {
+    if (selectedExerciseId == null) {
         item {
             EmptyState(text = stringResource(R.string.training_select_exercise_hint))
         }
@@ -102,8 +103,8 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
                             ExerciseRow(
                                 exercise = exercise,
                                 latestLog = state.latestWorkoutLogs.latestForExercise(exercise.id),
-                                selected = exercise.id == state.selectedExerciseId,
-                                onClick = { onExerciseSelected(exercise.id) },
+                                selected = exercise.id == selectedExerciseId,
+                                onClick = { actions.onExerciseSelected(exercise.id) },
                                 modifier = Modifier.testTag("training_exercise_row_${exercise.id.value}")
                             )
                         }
@@ -114,8 +115,8 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
                     ExerciseRow(
                         exercise = exercise,
                         latestLog = state.latestWorkoutLogs.latestForExercise(exercise.id),
-                        selected = exercise.id == state.selectedExerciseId,
-                        onClick = { onExerciseSelected(exercise.id) },
+                        selected = exercise.id == selectedExerciseId,
+                        onClick = { actions.onExerciseSelected(exercise.id) },
                         modifier = Modifier.testTag("training_exercise_row_${exercise.id.value}")
                     )
                 }
@@ -124,8 +125,8 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
                     ExerciseRow(
                         exercise = exercise,
                         latestLog = state.latestWorkoutLogs.latestForExercise(exercise.id),
-                        selected = exercise.id == state.selectedExerciseId,
-                        onClick = { onExerciseSelected(exercise.id) },
+                        selected = exercise.id == selectedExerciseId,
+                        onClick = { actions.onExerciseSelected(exercise.id) },
                         modifier = Modifier.testTag("training_exercise_row_${exercise.id.value}")
                     )
                 }
