@@ -67,7 +67,6 @@ import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
 import com.smarttrainner.feature.routine.api.CustomRoutineDayFormState
 import com.smarttrainner.feature.routine.api.CustomRoutineExerciseFormState
 import com.smarttrainner.feature.routine.api.CustomRoutineFormError
-import com.smarttrainner.feature.routine.api.allowedCustomRoutineMuscleGroups
 
 @Composable
 internal fun CustomRoutineBuilderSheet(

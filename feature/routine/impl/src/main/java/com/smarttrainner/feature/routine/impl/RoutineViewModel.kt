@@ -28,7 +28,6 @@ import com.smarttrainner.feature.routine.api.CustomRoutineExerciseFormState
 import com.smarttrainner.feature.routine.api.CustomRoutineFormError
 import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
 import com.smarttrainner.feature.routine.api.RoutineUiState
-import com.smarttrainner.feature.routine.api.allowedCustomRoutineMuscleGroups
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek

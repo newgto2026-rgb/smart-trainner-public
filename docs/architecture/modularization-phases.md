@@ -418,6 +418,33 @@ Next PR scope:
 - Revisit the shared training shell so feature routes can own full list surfaces instead of providing `LazyListScope` content.
 - Revisit `:feature:*:entry` Hilt bindings once feature-owned routes no longer require coordinator-mediated state.
 
+## Phase 23: Routine API Tightening And Data Split Audit
+
+Status: stacked after Phase 22 on `codex/modularization-routine-api-tightening`.
+
+Tighten the routine feature contract before adding more modules. The routine API should expose only what app needs for routing and cross-feature handoffs. Routine-only policy helpers stay in `:feature:routine:impl`.
+
+First PR scope:
+
+- Move custom routine muscle-group eligibility out of `:feature:routine:api` and into `:feature:routine:impl`.
+- Keep app unaware of routine-only builder policy.
+- Record the current decision on `feature:*:domain`, `feature:*:network`, and `feature:*:data` modules.
+
+Split decision:
+
+- Do not add `:feature:*:network` modules now. Network contracts and DTOs belong in `:core:network`; features should not depend on network implementation details.
+- Shared repository contracts stay in `:core:domain`, with shared implementations in `:core:data`.
+- Feature-private repository contracts may live in `:feature:<name>:domain` and their implementations in `:feature:<name>:data` when only that feature consumes the contract and the data source is not a shared app capability.
+- Do not add `:feature:*:data` modules for the current code yet. The existing repository surface is shared by routine, exercise, workout, analysis, app session state, tests, and the app-owned coordinator.
+- Do not add `:feature:*:domain` modules yet. `:feature:routine:domain` is the first plausible candidate if routine-only policy keeps growing, but today the stronger move is to keep public feature API small and split the broad core repository surface first.
+- If data pressure grows, split `TrainingRepository` in `:core:domain` into purpose-specific shared contracts such as exercise, routine, workout log, and session repositories, then split implementation classes inside `:core:data`. If a contract is proven feature-private after that split, promote it to feature-local domain/data in a separate PR.
+
+Next PR scope:
+
+- Revisit the shared training shell so feature routes can own full list surfaces instead of providing `LazyListScope` content.
+- Revisit `:feature:*:entry` Hilt bindings once feature-owned routes no longer require coordinator-mediated state.
+- Split broad core-domain repository contracts before introducing feature-owned data/domain/network modules.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
