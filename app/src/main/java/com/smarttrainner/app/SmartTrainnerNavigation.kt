@@ -1,9 +1,6 @@
 package com.smarttrainner.app
 
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.DateRange
@@ -79,12 +76,11 @@ private fun SmartTrainnerBottomBar(
     onDestinationSelected: (TrainingDestination) -> Unit
 ) {
     NavigationBar(
-        containerColor = SmartTrainnerColors.SurfaceRaised,
-        modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+        containerColor = SmartTrainnerColors.SurfaceRaised
     ) {
         destinations.forEach { destination ->
             NavigationBarItem(
-                selected = currentRoute == destination.route,
+                selected = currentRoute.startsWith(destination.route),
                 onClick = { onDestinationSelected(destination) },
                 modifier = Modifier.testTag(destination.testTag),
                 colors = NavigationBarItemDefaults.colors(

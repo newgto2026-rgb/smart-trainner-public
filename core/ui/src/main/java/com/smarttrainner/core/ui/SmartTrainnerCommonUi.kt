@@ -140,7 +140,7 @@ fun SmartTrainnerNumberField(
         onValueChange = onValueChange,
         label = { Text(label) },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true,
+        maxLines = 1,
         shape = RoundedCornerShape(8.dp),
         modifier = modifier
     )
