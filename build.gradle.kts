@@ -144,6 +144,8 @@ subprojects {
     }
 
     plugins.withId("com.android.library") {
+        dependencies.add("androidTestImplementation", libs.androidx.test.runner)
+
         extensions.configure<LibraryExtension> {
             lint {
                 abortOnError = true
