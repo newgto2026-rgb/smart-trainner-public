@@ -19,24 +19,29 @@ val checkModuleBoundaries by tasks.registering {
     group = "verification"
     description = "Checks Smart Trainner module dependency direction rules."
 
+    val checkedSuffixes = setOf("api", "implementation", "compileonly", "runtimeonly", "kapt", "ksp")
+    val projectEdges = providers.provider {
+        allprojects.flatMap { sourceProject ->
+            sourceProject.configurations
+                .matching { configuration ->
+                    val lowerName = configuration.name.lowercase()
+                    lowerName in checkedSuffixes || checkedSuffixes.any { suffix -> lowerName.endsWith(suffix) }
+                }
+                .flatMap { configuration ->
+                    configuration.dependencies.withType(ProjectDependency::class.java).map { dependency ->
+                        "${sourceProject.path}|${dependency.path}|${configuration.name}"
+                    }
+                }
+        }
+    }
+    inputs.property("projectEdges", projectEdges)
+
     doLast {
         val implementationCoreModules = setOf(
             ":core:data",
             ":core:database",
             ":core:datastore",
             ":core:network"
-        )
-        val checkedConfigurations = setOf(
-            "api",
-            "implementation",
-            "compileOnly",
-            "runtimeOnly",
-            "debugImplementation",
-            "releaseImplementation",
-            "testImplementation",
-            "androidTestImplementation",
-            "kapt",
-            "kaptAndroidTest"
         )
 
         fun isFeature(path: String) = path.startsWith(":feature:")
@@ -47,35 +52,31 @@ val checkModuleBoundaries by tasks.registering {
 
         val violations = mutableListOf<String>()
 
-        allprojects.forEach { sourceProject ->
-            sourceProject.configurations
-                .matching { it.name in checkedConfigurations }
-                .forEach { configuration ->
-                configuration.dependencies.withType(ProjectDependency::class.java).forEach { dependency ->
-                    val source = sourceProject.path
-                    val target = dependency.path
-                    val edge = "$source -> $target (${configuration.name})"
+        projectEdges.get().forEach { edgeString ->
+            val parts = edgeString.split("|")
+            val source = parts[0]
+            val target = parts[1]
+            val configurationName = parts[2]
+            val edge = "$source -> $target ($configurationName)"
 
-                    when {
-                        source.startsWith(":core:") && isFeature(target) -> {
-                            violations += "$edge: core modules must not depend on feature modules."
-                        }
-                        isFeature(source) && target in implementationCoreModules -> {
-                            violations += "$edge: feature modules must use domain/model/UI contracts, not data/storage/network implementations."
-                        }
-                        isFeatureApi(source) && (isFeatureImpl(target) || isFeatureEntry(target)) -> {
-                            violations += "$edge: feature API modules must not depend on implementation or entry modules."
-                        }
-                        isFeatureImpl(source) && (isFeatureImpl(target) || isFeatureEntry(target)) -> {
-                            violations += "$edge: feature implementations must not depend on feature implementations or entries directly."
-                        }
-                        isFeatureEntry(source) && isFeature(target) && featureName(source) != featureName(target) -> {
-                            violations += "$edge: feature entry modules may only bind their own feature API and implementation."
-                        }
-                        source == ":app" && isFeatureImpl(target) -> {
-                            violations += "$edge: app must depend on feature API/entry contracts, not feature implementations."
-                        }
-                    }
+            when {
+                source.startsWith(":core:") && isFeature(target) -> {
+                    violations += "$edge: core modules must not depend on feature modules."
+                }
+                isFeature(source) && target in implementationCoreModules -> {
+                    violations += "$edge: feature modules must use domain/model/UI contracts, not data/storage/network implementations."
+                }
+                isFeatureApi(source) && (isFeatureImpl(target) || isFeatureEntry(target)) -> {
+                    violations += "$edge: feature API modules must not depend on implementation or entry modules."
+                }
+                isFeatureImpl(source) && (isFeatureImpl(target) || isFeatureEntry(target)) -> {
+                    violations += "$edge: feature implementations must not depend on feature implementations or entries directly."
+                }
+                isFeatureEntry(source) && isFeature(target) && featureName(source) != featureName(target) -> {
+                    violations += "$edge: feature entry modules may only bind their own feature API and implementation."
+                }
+                source == ":app" && isFeatureImpl(target) -> {
+                    violations += "$edge: app must depend on feature API/entry contracts, not feature implementations."
                 }
             }
         }
