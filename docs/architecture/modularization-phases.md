@@ -565,6 +565,30 @@ Next PR scope:
 - Consider splitting `DefaultTrainingRepository` into core-data collaborators if the narrower core-domain contracts keep holding.
 - Continue auditing app package imports so feature implementation symbols remain isolated to app-owned DI modules.
 
+## Phase 29: Core Data Repository Implementation Split
+
+Status: stacked after Phase 28 on `codex/modularization-core-data-repository-collaborators`.
+
+Split the remaining catch-all `DefaultTrainingRepository` implementation into repository implementations that match the already-split `:core:domain` contracts. Keep all shared persistence contracts in `:core:domain` and all shared implementations in `:core:data`.
+
+First PR scope:
+
+- Replace `DefaultTrainingRepository` with `DefaultExerciseRepository`, `DefaultRoutinePlanRepository`, `DefaultRoutineProgressRepository`, `DefaultWorkoutLogRepository`, and `DefaultWeeklySummaryRepository`.
+- Keep one `DataModule`, but bind each core-domain repository contract directly to its matching core-data implementation.
+- Add small shared core-data collaborators for active-session resolution and seed/template weekly-plan construction.
+- Preserve planned exercise id behavior for system and custom routines with focused unit coverage.
+
+Split decision:
+
+- Do not introduce `:feature:*:domain` or `:feature:*:data` here. These repositories still serve multiple features and app-wide training flows.
+- Do not split Room/DataStore contracts. Room remains in `:core:database`; DataStore remains in `:core:datastore`.
+- Do not split `TrainingMappers.kt` yet. Mapper file shape is secondary to removing the broad repository implementation.
+
+Next PR scope:
+
+- Re-audit remaining app coordinator responsibilities now that feature routing, feature ViewModels, DI assembly, and shared data implementations are no longer catch-all structures.
+- Consider splitting `TrainingMappers.kt` by storage concern only if mapper growth starts obscuring ownership.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -575,6 +599,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - App no longer imports routine UI/action/form models or raw routine coordinator state; it consumes only the routine feature entry and opaque route API.
 - App no longer owns the routine/exercise `LazyListScope` screen assembly; shared screen chrome lives in `:core:ui`, and feature APIs expose composable route surfaces.
 - Core domain persistence contracts are no longer one broad `TrainingRepository`; use cases depend on concern-specific shared contracts.
+- Core data repository implementations now mirror those concern-specific contracts instead of one catch-all implementation.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:

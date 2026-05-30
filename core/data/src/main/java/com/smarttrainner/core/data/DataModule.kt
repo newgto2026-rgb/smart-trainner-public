@@ -18,27 +18,27 @@ import dagger.hilt.components.SingletonComponent
 abstract class DataModule {
     @Binds
     abstract fun bindExerciseRepository(
-        repository: DefaultTrainingRepository
+        repository: DefaultExerciseRepository
     ): ExerciseRepository
 
     @Binds
     abstract fun bindRoutinePlanRepository(
-        repository: DefaultTrainingRepository
+        repository: DefaultRoutinePlanRepository
     ): RoutinePlanRepository
 
     @Binds
     abstract fun bindRoutineProgressRepository(
-        repository: DefaultTrainingRepository
+        repository: DefaultRoutineProgressRepository
     ): RoutineProgressRepository
 
     @Binds
     abstract fun bindWorkoutLogRepository(
-        repository: DefaultTrainingRepository
+        repository: DefaultWorkoutLogRepository
     ): WorkoutLogRepository
 
     @Binds
     abstract fun bindWeeklySummaryRepository(
-        repository: DefaultTrainingRepository
+        repository: DefaultWeeklySummaryRepository
     ): WeeklySummaryRepository
 
     @Binds

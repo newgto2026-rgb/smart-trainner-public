@@ -1,0 +1,90 @@
+package com.smarttrainner.core.data
+
+import com.smarttrainner.core.database.CustomRoutineDao
+import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
+import com.smarttrainner.core.domain.RoutinePlanRepository
+import com.smarttrainner.core.model.CustomRoutineInput
+import com.smarttrainner.core.model.PlanTemplate
+import com.smarttrainner.core.model.WeeklyPlan
+import java.time.Clock
+import java.time.LocalDate
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+
+@Singleton
+@OptIn(ExperimentalCoroutinesApi::class)
+class DefaultRoutinePlanRepository @Inject constructor(
+    private val customRoutineDao: CustomRoutineDao,
+    private val preferences: TrainingPreferencesDataSource,
+    private val activeSessionResolver: ActiveSessionResolver,
+    private val seedStore: TrainingSeedStore,
+    private val clock: Clock
+) : RoutinePlanRepository {
+    override fun observePlanTemplates(): Flow<List<PlanTemplate>> =
+        observeCustomRoutines().map { customTemplates -> seedStore.templates + customTemplates }
+
+    override fun observeCustomRoutines(): Flow<List<PlanTemplate>> =
+        activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
+            customRoutineDao.observeForSession(sessionId)
+                .map { routines -> routines.map { it.toPlanTemplate() } }
+        }
+
+    override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> =
+        activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
+            combine(
+                preferences.selectedTemplateId(sessionId),
+                customRoutineDao.observeForSession(sessionId)
+            ) { templateId, customRoutines ->
+                seedStore.buildWeeklyPlan(
+                    template = seedStore.templateById(templateId, customRoutines.map { it.toPlanTemplate() }),
+                    weekStartDate = weekStartDate
+                )
+            }
+        }
+
+    override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = runCatching {
+        val sessionId = activeSessionResolver.sessionId()
+        require(templateExists(sessionId, templateId)) { "Unknown plan template: $templateId" }
+        preferences.setSelectedTemplateId(sessionId, templateId)
+    }
+
+    override suspend fun saveCustomRoutine(input: CustomRoutineInput): Result<PlanTemplate> = runCatching {
+        val sessionId = activeSessionResolver.sessionId()
+        val existing = input.id?.let { customRoutineDao.getById(sessionId, it) }
+        val routineId = input.id?.takeIf { it.isNotBlank() } ?: "custom-${UUID.randomUUID()}"
+        val now = clock.instant().toString()
+        customRoutineDao.upsertFull(
+            routine = input.toEntity(
+                routineId = routineId,
+                sessionId = sessionId,
+                createdAt = existing?.routine?.createdAt ?: now,
+                updatedAt = now
+            ),
+            days = input.toDayWrites(routineId)
+        )
+        requireNotNull(customRoutineDao.getById(sessionId, routineId)).toPlanTemplate()
+    }
+
+    override suspend fun deleteCustomRoutine(templateId: String): Result<Unit> = runCatching {
+        val sessionId = activeSessionResolver.sessionId()
+        val deleted = customRoutineDao.deleteRoutine(sessionId, templateId)
+        require(deleted > 0) { "Unknown custom routine: $templateId" }
+        val selectedTemplateId = preferences.selectedTemplateId(sessionId).first()
+        val activeTemplateId = preferences.activeRoutineProgress(sessionId).first().templateId
+        if (selectedTemplateId == templateId || activeTemplateId == templateId) {
+            val fallbackTemplateId = seedStore.templates.first().id
+            preferences.setSelectedTemplateId(sessionId, fallbackTemplateId)
+            preferences.setActiveRoutineTemplate(sessionId, fallbackTemplateId)
+        }
+    }
+
+    private suspend fun templateExists(sessionId: String, templateId: String): Boolean =
+        seedStore.hasTemplate(templateId) || customRoutineDao.getById(sessionId, templateId) != null
+}
