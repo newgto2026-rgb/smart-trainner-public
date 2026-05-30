@@ -1,6 +1,6 @@
 package com.smarttrainner.app.training
 
-internal enum class RecordingMode {
+internal enum class RecordingFlow {
     SINGLE,
-    ROUTINE
+    CONTINUOUS
 }

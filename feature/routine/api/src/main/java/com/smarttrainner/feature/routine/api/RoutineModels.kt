@@ -4,15 +4,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
-import com.smarttrainner.core.model.PlannedExerciseId
-import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
-
-data class RoutineCoordinatorState(
-    val plan: WeeklyPlan? = null,
-    val completedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
-    val customRoutineBuilderVisible: Boolean = false
-)
 
 data class RoutineFeatureCallbacks(
     val onWorkoutStarted: (PlannedExercise) -> Unit = {},
@@ -22,9 +14,11 @@ data class RoutineFeatureCallbacks(
 )
 
 interface RoutineRouteState {
-    val coordinatorState: RoutineCoordinatorState
-
     val currentRoutineName: String
+
+    fun nextPlannedExerciseAfterSaved(plannedExercise: PlannedExercise): PlannedExercise?
+
+    fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise?
 
     fun LazyListScope.HomeSummary()
 

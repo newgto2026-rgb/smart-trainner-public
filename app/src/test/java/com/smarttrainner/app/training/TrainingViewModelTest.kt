@@ -9,10 +9,6 @@ import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
-import com.smarttrainner.core.model.RoutineFocus
-import com.smarttrainner.core.model.WeeklyPlan
-import com.smarttrainner.core.model.WorkoutDayPlan
-import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -50,20 +46,15 @@ class TrainingViewModelTest {
     }
 
     @Test
-    fun startWorkout_saveRecordAdvancesToNextExerciseInSameDay() = runTest {
+    fun startContinuousRecording_saveRecordAdvancesToProvidedNextExercise() = runTest {
         val first = plannedExercise("back_pull")
         val second = plannedExercise("back_row")
-        val plan = weeklyPlan(first, second)
         val viewModel = TrainingViewModel()
 
         viewModel.uiState.test {
             skipItems(1)
-            viewModel.startWorkout(first)
-            viewModel.handleRecordSaved(
-                planned = first,
-                plan = plan,
-                completedIds = emptySet()
-            )
+            viewModel.startContinuousRecording(first)
+            viewModel.handleRecordSaved(nextPlannedExercise = second)
             advanceUntilIdle()
 
             assertThat(viewModel.uiState.value.recordingPlannedExercise?.id).isEqualTo(second.id)
@@ -79,11 +70,7 @@ class TrainingViewModelTest {
         viewModel.uiState.test {
             skipItems(1)
             viewModel.selectPlannedExercise(planned)
-            viewModel.handleRecordSaved(
-                planned = planned,
-                plan = weeklyPlan(planned),
-                completedIds = emptySet()
-            )
+            viewModel.handleRecordSaved(nextPlannedExercise = plannedExercise("ignored_next"))
             advanceUntilIdle()
 
             assertThat(viewModel.uiState.value.recordingPlannedExercise).isNull()
@@ -97,7 +84,7 @@ class TrainingViewModelTest {
 
         viewModel.uiState.test {
             skipItems(1)
-            viewModel.startWorkout(plannedExercise("back_pull"))
+            viewModel.startContinuousRecording(plannedExercise("back_pull"))
             viewModel.clearRecordingFlow()
             advanceUntilIdle()
 
@@ -118,30 +105,6 @@ class MainDispatcherRule(
     override fun finished(description: Description) {
         Dispatchers.resetMain()
     }
-}
-
-private fun weeklyPlan(vararg exercises: PlannedExercise) = WeeklyPlan(
-    id = com.smarttrainner.core.model.PlanId("plan"),
-    templateId = "template",
-    name = "Template",
-    weekStartDate = LocalDate.of(2026, 5, 18),
-    days = listOf(
-        WorkoutDayPlan(
-            date = LocalDate.of(2026, 5, 18),
-            title = "Day 1",
-            focus = "Back",
-            exercises = exercises.toList(),
-            dayNumber = 1,
-            primaryFocus = MuscleGroup.BACK.toRoutineFocus(),
-            secondaryFocuses = emptyList(),
-            minRecoveryHours = 24
-        )
-    )
-)
-
-private fun MuscleGroup.toRoutineFocus() = when (this) {
-    MuscleGroup.BACK -> RoutineFocus.BACK
-    else -> RoutineFocus.FULL_BODY
 }
 
 private fun plannedExercise(id: String) = PlannedExercise(

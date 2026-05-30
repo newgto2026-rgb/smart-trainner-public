@@ -465,14 +465,39 @@ Next PR scope:
 - Revisit the shared training shell so feature routes can own full list surfaces instead of providing `LazyListScope` content.
 - Split broad core-domain repository contracts before introducing feature-owned data/domain/network modules.
 
+## Phase 25: Routine Continuation Policy Ownership
+
+Status: stacked after Phase 24 on `codex/modularization-routine-continuation-policy`.
+
+Move the routine-specific record continuation and planned-exercise lookup policy behind the routine feature boundary. App remains the route and dialog coordinator, but it no longer inspects `WeeklyPlan`, completed routine ids, or routine builder visibility to decide what happens after a record save or whether exercise detail can launch recording.
+
+First PR scope:
+
+- Remove `RoutineCoordinatorState` from the public routine API.
+- Add opaque `RoutineRouteState` methods for routine-owned continuation and recordability decisions.
+- Move same-day routine continuation into `:feature:routine:impl`.
+- Keep app `TrainingViewModel` as a generic single/continuous recording-flow coordinator.
+- Remove stale app-side training localization helpers and `training_*` resources now owned by feature modules.
+
+Split decision:
+
+- Do not add `:feature:routine:domain` or `:feature:routine:data` for this phase. The moved logic is presentation/flow policy over already-loaded routine UI state, not a new repository contract or feature-private data source.
+- Keep shared persistence contracts in `:core:domain` and implementations in `:core:data`.
+
+Next PR scope:
+
+- Revisit the shared training shell so feature routes can own full list surfaces instead of providing `LazyListScope` content.
+- Split broad core-domain repository contracts before introducing feature-owned data/domain/network modules.
+- Continue shrinking app training code to route selection, tab composition, and explicit cross-feature handoffs only.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
 
 - `:feature:analysis`, `:feature:exercise`, `:feature:routine`, and `:feature:workout` no longer depend on another feature's API, implementation, or entry module.
 - `:app` knows the feature APIs and entries because it owns routing and cross-feature composition.
-- App `TrainingViewModel` now coordinates selected exercise id and workout recording continuation across routine/exercise/workout; workout recording, exercise detail, exercise catalog, analysis, routine, and custom routine builder state are feature-owned.
-- App no longer imports routine UI/action/form models; it consumes only the routine feature entry and the opaque route/coordinator API.
+- App `TrainingViewModel` now coordinates selected exercise id and a generic single/continuous recording flow; workout recording, exercise detail, exercise catalog, analysis, routine, custom routine builder state, and routine continuation policy are feature-owned.
+- App no longer imports routine UI/action/form models or raw routine coordinator state; it consumes only the routine feature entry and opaque route API.
 - `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
 
 Current guardrails still enforce the important lower-level boundary:

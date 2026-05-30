@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
-import com.smarttrainner.core.model.PlannedExerciseId
-import com.smarttrainner.core.model.WeeklyPlan
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +15,7 @@ import kotlinx.coroutines.flow.stateIn
 class TrainingViewModel @Inject constructor() : ViewModel() {
     private val selectedExerciseId = MutableStateFlow<ExerciseId?>(null)
     private val recordingPlannedExercise = MutableStateFlow<PlannedExercise?>(null)
-    private val recordingMode = MutableStateFlow(RecordingMode.SINGLE)
+    private val recordingFlow = MutableStateFlow(RecordingFlow.SINGLE)
 
     val uiState = combine(
         selectedExerciseId,
@@ -46,57 +44,34 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
     }
 
     fun selectPlannedExercise(exercise: PlannedExercise) {
-        recordingMode.value = RecordingMode.SINGLE
+        recordingFlow.value = RecordingFlow.SINGLE
         recordingPlannedExercise.value = exercise
         selectedExerciseId.value = null
     }
 
-    fun startWorkout(exercise: PlannedExercise) {
-        recordingMode.value = RecordingMode.ROUTINE
+    fun startContinuousRecording(exercise: PlannedExercise) {
+        recordingFlow.value = RecordingFlow.CONTINUOUS
         recordingPlannedExercise.value = exercise
         selectedExerciseId.value = null
     }
 
     fun dismissRecordDialog() {
         recordingPlannedExercise.value = null
-        recordingMode.value = RecordingMode.SINGLE
+        recordingFlow.value = RecordingFlow.SINGLE
     }
 
-    fun handleRecordSaved(
-        planned: PlannedExercise,
-        plan: WeeklyPlan?,
-        completedIds: Set<PlannedExerciseId>
-    ) {
-        val continueRoutine = recordingMode.value == RecordingMode.ROUTINE
-        val nextPlanned = if (continueRoutine) {
-            plan?.nextIncompleteInSameDay(
-                currentId = planned.id,
-                completedIds = completedIds + planned.id
-            )
-        } else {
-            null
-        }
+    fun handleRecordSaved(nextPlannedExercise: PlannedExercise?) {
+        val nextPlanned = if (recordingFlow.value == RecordingFlow.CONTINUOUS) nextPlannedExercise else null
         if (nextPlanned != null) {
             recordingPlannedExercise.value = nextPlanned
         } else {
             recordingPlannedExercise.value = null
-            recordingMode.value = RecordingMode.SINGLE
+            recordingFlow.value = RecordingFlow.SINGLE
         }
     }
 
     fun clearRecordingFlow() {
         recordingPlannedExercise.value = null
-        recordingMode.value = RecordingMode.SINGLE
+        recordingFlow.value = RecordingFlow.SINGLE
     }
-}
-
-private fun WeeklyPlan.nextIncompleteInSameDay(
-    currentId: PlannedExerciseId,
-    completedIds: Set<PlannedExerciseId>
-): PlannedExercise? {
-    val day = days.firstOrNull { workoutDay -> workoutDay.exercises.any { it.id == currentId } } ?: return null
-    val currentIndex = day.exercises.indexOfFirst { it.id == currentId }
-    return day.exercises
-        .drop(currentIndex + 1)
-        .firstOrNull { it.id !in completedIds }
 }

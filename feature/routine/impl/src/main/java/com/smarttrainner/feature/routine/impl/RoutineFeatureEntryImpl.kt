@@ -7,8 +7,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
-import com.smarttrainner.feature.routine.api.RoutineCoordinatorState
 import com.smarttrainner.feature.routine.api.RoutineFeatureCallbacks
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineRouteState
@@ -74,11 +75,11 @@ private class DefaultRoutineRouteState(
     private val actions: RoutineActions,
     override val currentRoutineName: String
 ) : RoutineRouteState {
-    override val coordinatorState: RoutineCoordinatorState = RoutineCoordinatorState(
-        plan = state.plan,
-        completedPlannedExerciseIds = state.completedPlannedExerciseIds,
-        customRoutineBuilderVisible = state.customRoutineBuilder.visible
-    )
+    override fun nextPlannedExerciseAfterSaved(plannedExercise: PlannedExercise): PlannedExercise? =
+        state.nextPlannedExerciseAfterSaved(plannedExercise)
+
+    override fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =
+        state.recordablePlannedExerciseFor(exerciseId)
 
     override fun LazyListScope.HomeSummary() {
         homeSummaryContent(

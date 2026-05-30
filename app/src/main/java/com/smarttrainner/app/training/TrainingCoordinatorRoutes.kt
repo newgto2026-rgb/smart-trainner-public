@@ -103,7 +103,7 @@ private fun rememberRoutineRouteState(
     viewModel: TrainingViewModel
 ): RoutineRouteState = routineFeatureEntry.rememberRouteState(
     callbacks = RoutineFeatureCallbacks(
-        onWorkoutStarted = viewModel::startWorkout,
+        onWorkoutStarted = viewModel::startContinuousRecording,
         onRoutineDayCompleted = viewModel::clearRecordingFlow,
         onExerciseMethodSelected = viewModel::showExerciseMethod,
         onRecordSelected = viewModel::selectPlannedExercise

@@ -56,9 +56,7 @@ internal fun TrainingRoute(
         onRecordSelected = viewModel::selectPlannedExercise,
         onRecordSaved = { planned ->
             viewModel.handleRecordSaved(
-                planned = planned,
-                plan = routineRouteState.coordinatorState.plan,
-                completedIds = routineRouteState.coordinatorState.completedPlannedExerciseIds
+                nextPlannedExercise = routineRouteState.nextPlannedExerciseAfterSaved(planned)
             )
         },
         onExerciseDetailDismiss = viewModel::dismissExerciseDetail,
@@ -101,7 +99,6 @@ private fun TrainingScreen(
 ) {
     val selectedExerciseId = state.selectedExerciseId
     val recordingPlannedExercise = state.recordingPlannedExercise
-    val routineCoordinatorState = routineRouteState.coordinatorState
     val exerciseCatalogActions = remember(onExerciseSelected) {
         ExerciseCatalogActions(
             onExerciseSelected = onExerciseSelected
@@ -118,13 +115,8 @@ private fun TrainingScreen(
     }
     routineRouteState.Dialogs()
     if (selectedExerciseId != null) {
-        val selectedPlannedExercise = if (
-            state.recordingPlannedExercise == null &&
-            !routineCoordinatorState.customRoutineBuilderVisible
-        ) {
-            routineCoordinatorState.plan?.days
-                ?.flatMap { it.exercises }
-                ?.firstOrNull { it.exercise.id == selectedExerciseId }
+        val selectedPlannedExercise = if (state.recordingPlannedExercise == null) {
+            routineRouteState.recordablePlannedExerciseFor(selectedExerciseId)
         } else {
             null
         }
