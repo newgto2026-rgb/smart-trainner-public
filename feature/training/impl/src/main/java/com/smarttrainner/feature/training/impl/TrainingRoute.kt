@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -128,38 +129,71 @@ private fun TrainingScreen(
     val selectedExercise = state.selectedExercise
     val recordingPlannedExercise = state.recordingPlannedExercise
     val routineState = state.routine
-    val routineActions = RoutineActions(
-        onTemplateSelected = onTemplateSelected,
-        onDaysPerWeekChanged = onRoutineDaysPerWeekChanged,
-        onSessionMinutesChanged = onRoutineSessionMinutesChanged,
-        onExperienceChanged = onRoutineExperienceChanged,
-        onFeelingChanged = onRoutineFeelingChanged,
-        onShowLibrary = onShowRoutineLibrary,
-        onLibraryDismiss = onRoutineLibraryDismiss,
-        onShowSettings = onShowRoutineSettings,
-        onSettingsDismiss = onRoutineSettingsDismiss,
-        onShowRecommendations = onShowRoutineRecommendations,
-        onRecommendationsDismiss = onRoutineRecommendationsDismiss,
-        onPreviewSelected = onRoutinePreviewSelected,
-        onStartPreviewRoutine = onStartPreviewRoutine,
-        onCreateCustomRoutine = onCreateCustomRoutine,
-        onCopyTemplateToCustom = onCopyTemplateToCustom,
-        onEditCustomRoutine = onEditCustomRoutine,
-        onCustomRoutineNameChanged = onCustomRoutineNameChanged,
-        onCustomRoutineDaySelected = onCustomRoutineDaySelected,
-        onCustomRoutineDayFocusChanged = onCustomRoutineDayFocusChanged,
-        onCustomRoutineDayAdded = onCustomRoutineDayAdded,
-        onCustomRoutineDayRemoved = onCustomRoutineDayRemoved,
-        onCustomRoutineExerciseGroupToggled = onCustomRoutineExerciseGroupToggled,
-        onCustomRoutineExerciseAdded = onCustomRoutineExerciseAdded,
-        onCustomRoutineExerciseRemoved = onCustomRoutineExerciseRemoved,
-        onCustomRoutineExerciseMovedUp = onCustomRoutineExerciseMovedUp,
-        onCustomRoutineExerciseMovedDown = onCustomRoutineExerciseMovedDown,
-        onCustomRoutineSaved = onCustomRoutineSaved,
-        onCustomRoutineBuilderDismiss = onCustomRoutineBuilderDismiss,
-        onExerciseMethodSelected = onExerciseMethodSelected,
-        onRecordSelected = onRecordSelected
-    )
+    val routineActions = remember(
+        onTemplateSelected,
+        onRoutineDaysPerWeekChanged,
+        onRoutineSessionMinutesChanged,
+        onRoutineExperienceChanged,
+        onRoutineFeelingChanged,
+        onShowRoutineLibrary,
+        onRoutineLibraryDismiss,
+        onShowRoutineSettings,
+        onRoutineSettingsDismiss,
+        onShowRoutineRecommendations,
+        onRoutineRecommendationsDismiss,
+        onRoutinePreviewSelected,
+        onStartPreviewRoutine,
+        onCreateCustomRoutine,
+        onCopyTemplateToCustom,
+        onEditCustomRoutine,
+        onCustomRoutineNameChanged,
+        onCustomRoutineDaySelected,
+        onCustomRoutineDayFocusChanged,
+        onCustomRoutineDayAdded,
+        onCustomRoutineDayRemoved,
+        onCustomRoutineExerciseGroupToggled,
+        onCustomRoutineExerciseAdded,
+        onCustomRoutineExerciseRemoved,
+        onCustomRoutineExerciseMovedUp,
+        onCustomRoutineExerciseMovedDown,
+        onCustomRoutineSaved,
+        onCustomRoutineBuilderDismiss,
+        onExerciseMethodSelected,
+        onRecordSelected
+    ) {
+        RoutineActions(
+            onTemplateSelected = onTemplateSelected,
+            onDaysPerWeekChanged = onRoutineDaysPerWeekChanged,
+            onSessionMinutesChanged = onRoutineSessionMinutesChanged,
+            onExperienceChanged = onRoutineExperienceChanged,
+            onFeelingChanged = onRoutineFeelingChanged,
+            onShowLibrary = onShowRoutineLibrary,
+            onLibraryDismiss = onRoutineLibraryDismiss,
+            onShowSettings = onShowRoutineSettings,
+            onSettingsDismiss = onRoutineSettingsDismiss,
+            onShowRecommendations = onShowRoutineRecommendations,
+            onRecommendationsDismiss = onRoutineRecommendationsDismiss,
+            onPreviewSelected = onRoutinePreviewSelected,
+            onStartPreviewRoutine = onStartPreviewRoutine,
+            onCreateCustomRoutine = onCreateCustomRoutine,
+            onCopyTemplateToCustom = onCopyTemplateToCustom,
+            onEditCustomRoutine = onEditCustomRoutine,
+            onCustomRoutineNameChanged = onCustomRoutineNameChanged,
+            onCustomRoutineDaySelected = onCustomRoutineDaySelected,
+            onCustomRoutineDayFocusChanged = onCustomRoutineDayFocusChanged,
+            onCustomRoutineDayAdded = onCustomRoutineDayAdded,
+            onCustomRoutineDayRemoved = onCustomRoutineDayRemoved,
+            onCustomRoutineExerciseGroupToggled = onCustomRoutineExerciseGroupToggled,
+            onCustomRoutineExerciseAdded = onCustomRoutineExerciseAdded,
+            onCustomRoutineExerciseRemoved = onCustomRoutineExerciseRemoved,
+            onCustomRoutineExerciseMovedUp = onCustomRoutineExerciseMovedUp,
+            onCustomRoutineExerciseMovedDown = onCustomRoutineExerciseMovedDown,
+            onCustomRoutineSaved = onCustomRoutineSaved,
+            onCustomRoutineBuilderDismiss = onCustomRoutineBuilderDismiss,
+            onExerciseMethodSelected = onExerciseMethodSelected,
+            onRecordSelected = onRecordSelected
+        )
+    }
     if (recordingPlannedExercise != null && selectedExercise == null) {
         RecordDialog(
             state = state,

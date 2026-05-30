@@ -77,7 +77,7 @@ data class NextRoutineDayUiModel(
 data class RoutineUiState(
     val templates: List<PlanTemplate> = emptyList(),
     val selectedTemplateId: String = "",
-    val today: LocalDate = LocalDate.EPOCH,
+    val today: LocalDate = LocalDate.ofEpochDay(0),
     val plan: WeeklyPlan? = null,
     val activeRoutineProgress: RoutineProgress? = null,
     val nextRoutineDay: WorkoutDayPlan? = null,
@@ -135,33 +135,56 @@ data class RoutineActions(
     val onRecordSelected: (PlannedExercise) -> Unit = {}
 )
 
+private val AllCustomRoutineMuscleGroups = MuscleGroup.entries.toSet()
+private val UpperBodyCustomRoutineMuscleGroups = setOf(
+    MuscleGroup.BACK,
+    MuscleGroup.CHEST,
+    MuscleGroup.SHOULDERS,
+    MuscleGroup.ARMS,
+    MuscleGroup.BICEPS,
+    MuscleGroup.TRICEPS,
+    MuscleGroup.FOREARMS
+)
+private val PushCustomRoutineMuscleGroups = setOf(
+    MuscleGroup.CHEST,
+    MuscleGroup.SHOULDERS,
+    MuscleGroup.TRICEPS
+)
+private val PullCustomRoutineMuscleGroups = setOf(
+    MuscleGroup.BACK,
+    MuscleGroup.BICEPS,
+    MuscleGroup.FOREARMS
+)
+private val ChestCustomRoutineMuscleGroups = setOf(MuscleGroup.CHEST)
+private val BackCustomRoutineMuscleGroups = setOf(MuscleGroup.BACK)
+private val LowerBodyCustomRoutineMuscleGroups = setOf(MuscleGroup.LOWER_BODY)
+private val ShouldersCustomRoutineMuscleGroups = setOf(MuscleGroup.SHOULDERS)
+private val ArmsCustomRoutineMuscleGroups = setOf(
+    MuscleGroup.ARMS,
+    MuscleGroup.BICEPS,
+    MuscleGroup.TRICEPS,
+    MuscleGroup.FOREARMS
+)
+private val BicepsCustomRoutineMuscleGroups = setOf(MuscleGroup.BICEPS)
+private val TricepsCustomRoutineMuscleGroups = setOf(MuscleGroup.TRICEPS)
+private val ForearmsCustomRoutineMuscleGroups = setOf(MuscleGroup.FOREARMS)
+private val CardioCustomRoutineMuscleGroups = setOf(MuscleGroup.CARDIO)
+private val CoreCustomRoutineMuscleGroups = setOf(MuscleGroup.CORE)
+
 fun allowedCustomRoutineMuscleGroups(focus: RoutineFocus?): Set<MuscleGroup> = when (focus) {
     null,
-    RoutineFocus.FULL_BODY -> MuscleGroup.entries.toSet()
-    RoutineFocus.UPPER_BODY -> setOf(
-        MuscleGroup.BACK,
-        MuscleGroup.CHEST,
-        MuscleGroup.SHOULDERS,
-        MuscleGroup.ARMS,
-        MuscleGroup.BICEPS,
-        MuscleGroup.TRICEPS,
-        MuscleGroup.FOREARMS
-    )
-    RoutineFocus.PUSH -> setOf(MuscleGroup.CHEST, MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS)
-    RoutineFocus.PULL -> setOf(MuscleGroup.BACK, MuscleGroup.BICEPS, MuscleGroup.FOREARMS)
-    RoutineFocus.CHEST -> setOf(MuscleGroup.CHEST)
-    RoutineFocus.BACK -> setOf(MuscleGroup.BACK)
-    RoutineFocus.LOWER_BODY -> setOf(MuscleGroup.LOWER_BODY)
-    RoutineFocus.SHOULDERS -> setOf(MuscleGroup.SHOULDERS)
-    RoutineFocus.ARMS -> setOf(
-        MuscleGroup.ARMS,
-        MuscleGroup.BICEPS,
-        MuscleGroup.TRICEPS,
-        MuscleGroup.FOREARMS
-    )
-    RoutineFocus.BICEPS -> setOf(MuscleGroup.BICEPS)
-    RoutineFocus.TRICEPS -> setOf(MuscleGroup.TRICEPS)
-    RoutineFocus.FOREARMS -> setOf(MuscleGroup.FOREARMS)
-    RoutineFocus.CARDIO_CONDITIONING -> setOf(MuscleGroup.CARDIO)
-    RoutineFocus.CORE -> setOf(MuscleGroup.CORE)
+    RoutineFocus.FULL_BODY -> AllCustomRoutineMuscleGroups
+    RoutineFocus.UPPER_BODY -> UpperBodyCustomRoutineMuscleGroups
+    RoutineFocus.PUSH -> PushCustomRoutineMuscleGroups
+    RoutineFocus.PULL -> PullCustomRoutineMuscleGroups
+    RoutineFocus.CHEST -> ChestCustomRoutineMuscleGroups
+    RoutineFocus.BACK -> BackCustomRoutineMuscleGroups
+    RoutineFocus.LOWER_BODY -> LowerBodyCustomRoutineMuscleGroups
+    RoutineFocus.SHOULDERS -> ShouldersCustomRoutineMuscleGroups
+    RoutineFocus.ARMS -> ArmsCustomRoutineMuscleGroups
+    RoutineFocus.BICEPS -> BicepsCustomRoutineMuscleGroups
+    RoutineFocus.TRICEPS -> TricepsCustomRoutineMuscleGroups
+    RoutineFocus.FOREARMS -> ForearmsCustomRoutineMuscleGroups
+    RoutineFocus.CARDIO_CONDITIONING -> CardioCustomRoutineMuscleGroups
+    RoutineFocus.CORE -> CoreCustomRoutineMuscleGroups
 }
