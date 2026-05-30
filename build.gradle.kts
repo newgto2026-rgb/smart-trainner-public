@@ -184,23 +184,47 @@ val checkModuleBoundaries by tasks.registering {
             }
         }
 
+        val appDiCoreImplementationFiles = setOf(
+            "CoreRepositoryBindingsModule.kt",
+            "PlatformDatabaseModule.kt",
+            "PlatformNetworkModule.kt"
+        )
+        val appDiFeatureImplementationFiles = setOf("FeatureEntryBindingsModule.kt")
+        val appDiFeatureDataFiles = setOf("RoutineDataRepositoryBindingsModule.kt")
+
         appMainKotlinSources.files.forEach { sourceFile ->
             val normalizedPath = sourceFile.path.replace('\\', '/')
-            if ("/app/src/main/java/com/smarttrainner/app/di/" in normalizedPath) return@forEach
+            val isAppDiSource = "/app/src/main/java/com/smarttrainner/app/di/" in normalizedPath
+            val sourceFileName = sourceFile.name
 
             sourceFile.useLines { lines ->
                 lines.forEachIndexed { index, line ->
                     if (featureImplReferencePattern.containsMatchIn(line)) {
-                        violations +=
-                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature implementation references in :app are allowed only in app-owned DI composition modules."
+                        if (!isAppDiSource) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature implementation references in :app are allowed only in app-owned DI composition modules."
+                        } else if (sourceFileName !in appDiFeatureImplementationFiles) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature implementation references in :app DI are allowed only in feature entry binding modules."
+                        }
                     }
                     if (featureDataReferencePattern.containsMatchIn(line)) {
-                        violations +=
-                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature data references in :app are allowed only in app-owned DI composition modules."
+                        if (!isAppDiSource) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature data references in :app are allowed only in app-owned DI composition modules."
+                        } else if (sourceFileName !in appDiFeatureDataFiles) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature data references in :app DI are allowed only in approved feature data repository binding modules."
+                        }
                     }
                     if (coreImplementationReferencePattern.containsMatchIn(line)) {
-                        violations +=
-                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: core data/storage/network references in :app are allowed only in app-owned DI composition modules."
+                        if (!isAppDiSource) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: core data/storage/network references in :app are allowed only in app-owned DI composition modules."
+                        } else if (sourceFileName !in appDiCoreImplementationFiles) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: core data/storage/network references in :app DI are allowed only in core repository or platform provider modules."
+                        }
                     }
                 }
             }

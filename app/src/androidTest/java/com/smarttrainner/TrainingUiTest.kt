@@ -20,6 +20,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.smarttrainner.app.MainActivity
 import com.smarttrainner.app.di.CoreRepositoryBindingsModule
+import com.smarttrainner.app.di.RoutineDataRepositoryBindingsModule
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklyPlanRepository
@@ -40,7 +41,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @HiltAndroidTest
-@UninstallModules(CoreRepositoryBindingsModule::class)
+@UninstallModules(
+    CoreRepositoryBindingsModule::class,
+    RoutineDataRepositoryBindingsModule::class
+)
 @RunWith(AndroidJUnit4::class)
 class TrainingUiTest {
     @get:Rule(order = 0)

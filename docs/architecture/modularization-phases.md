@@ -807,6 +807,30 @@ Next PR scope:
 - Apply the same ownership test to workout log commands only if a command becomes feature-private. Current workout logs remain shared analysis/routine/exercise input.
 - Continue reducing app imports so feature data classes appear only in app-owned DI composition modules.
 
+## Phase 39: App DI Routine Data Assembly Split
+
+Status: stacked after Phase 38 on `codex/modularization-app-di-routine-data-split`.
+
+Keep `:app` as the final DI composition root, but separate core shared repository assembly from routine feature data assembly. A module named for core repositories should not also bind routine feature-private data implementations.
+
+First PR scope:
+
+- Keep `CoreRepositoryBindingsModule` focused on shared core-data repository implementations.
+- Add an app-owned `RoutineDataRepositoryBindingsModule` that binds `DefaultRoutinePlanRepository` and `DefaultRoutineProgressRepository` to the shared `WeeklyPlanRepository` contract and routine-owned read/command contracts.
+- Update Hilt UI tests to uninstall both core and routine repository binding modules before installing in-memory replacements.
+- Tighten `checkModuleBoundaries` so app feature-data imports are allowed only in approved feature-data repository binding modules, not every app DI file.
+
+Split decision:
+
+- Do not move DI out of `:app`. The app remains the control tower for selecting concrete implementations.
+- Do not create a generic feature-data composition abstraction yet. Only `:feature:routine:data` exists, so an explicit routine binding module is clearer than a speculative framework.
+- Keep `WeeklyPlanRepository` bound from routine data in app DI because the current weekly plan implementation is backed by routine plan storage while the contract remains shared.
+
+Next PR scope:
+
+- Audit whether workout log write commands are still shared app capabilities or should split into workout-owned command contracts.
+- Continue tightening app DI file-level guardrails as more feature-local data modules are introduced.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -828,6 +852,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Routine-only command contracts and command use cases now live in `:feature:routine:domain`.
 - Routine-only read contracts for template catalog and active progress now live in `:feature:routine:domain`.
 - Routine repository implementations now live in `:feature:routine:data`; app-owned DI binds them to the shared core weekly-plan contract and routine-owned read/command contracts.
+- App-owned DI now separates shared core repository bindings from routine feature-data repository bindings.
 - Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
@@ -843,6 +868,7 @@ Current guardrails still enforce the important lower-level boundary:
 - Only `:app` may depend on the listed feature implementation modules for composition-root DI.
 - Only `:app` may depend on listed feature data modules for composition-root DI.
 - App production code may reference core data/storage/network and feature implementation/data packages only from app-owned DI composition modules.
+- App DI may reference feature data implementations only from approved feature-data repository binding modules.
 - Production Hilt modules may be declared only in app-owned DI composition modules.
 
 ## Split Decision
