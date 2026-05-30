@@ -55,6 +55,7 @@ dependencies {
     implementation(project(":feature:exercise:entry"))
     implementation(project(":feature:training:api"))
     implementation(project(":feature:training:entry"))
+    implementation(project(":feature:workout:entry"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

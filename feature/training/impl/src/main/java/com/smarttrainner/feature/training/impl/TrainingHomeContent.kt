@@ -63,13 +63,17 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.homeContent(
     state.formError?.takeIf { it == RecordFormError.COMPLETE_DAY_FAILED }?.let {
         item {
             Text(
-                text = it.message(),
+                text = completeRoutineDayErrorMessage(),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
         }
     }
 }
+
+@Composable
+private fun completeRoutineDayErrorMessage(): String =
+    stringResource(R.string.training_error_complete_day)
 
 @Composable
 internal fun NextRoutineDayCard(

@@ -184,6 +184,25 @@ Next PR scope:
 - Move routine implementation behind `RoutineFeatureEntry`, or move workout recording implementation behind `WorkoutRecordingFeatureEntry` if it is the safer dependency cut.
 - Continue shrinking `:feature:training:impl` toward a temporary coordinator with no feature-owned screen rendering.
 
+## Phase 11: Workout Recording Implementation Module
+
+Status: stacked after Phase 10 on `codex/modularization-workout-recording-impl`.
+
+Move workout recording dialog rendering out of `:feature:training:impl` now that recording state and actions already live in `:feature:workout:api`. Training still owns save orchestration and selected exercise coordination, but it should call the workout feature entry point for the recording UI.
+
+First PR scope:
+
+- Add `:feature:workout:impl` and `:feature:workout:entry`.
+- Add `WorkoutRecordingFeatureEntry` to `:feature:workout:api`.
+- Move record dialog UI, field labels, record validation messages, and recording display formatting into `:feature:workout:impl`.
+- Keep `TrainingViewModel` producing `WorkoutRecordingUiState` and `WorkoutRecordingActions` until routine/workout state ownership can move safely.
+- Have `:feature:training:impl` depend only on `:feature:workout:api`, not workout implementation.
+
+Next PR scope:
+
+- Move routine destination rendering behind a routine feature entry, or split workout save orchestration if routine dependencies still make that safer.
+- Audit remaining `training` resources to ensure only coordinator/home/routine-specific copy remains there.
+
 ## Split Decision
 
 `routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress, exercise selection, and recording forms. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.

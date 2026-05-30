@@ -30,6 +30,7 @@ import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.training.api.TrainingDestination
 import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
+import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 
 @Composable
 fun TrainingRoute(
@@ -38,6 +39,7 @@ fun TrainingRoute(
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     viewModel: TrainingViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -47,6 +49,7 @@ fun TrainingRoute(
         exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         state = state,
         onTemplateSelected = viewModel::selectTemplate,
         onRoutineDaysPerWeekChanged = viewModel::updateRoutineDaysPerWeek,
@@ -101,6 +104,7 @@ private fun TrainingScreen(
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     state: TrainingUiState,
     onTemplateSelected: (String) -> Unit,
     onRoutineDaysPerWeekChanged: (Int) -> Unit,
@@ -255,7 +259,7 @@ private fun TrainingScreen(
         )
     }
     if (recordingPlannedExercise != null && selectedExercise == null) {
-        RecordDialog(
+        workoutRecordingFeatureEntry.Dialog(
             state = workoutRecordingState,
             actions = workoutRecordingActions,
             exerciseMediaFeatureEntry = exerciseMediaFeatureEntry

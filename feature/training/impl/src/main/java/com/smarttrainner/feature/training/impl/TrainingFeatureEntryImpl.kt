@@ -7,13 +7,15 @@ import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
 import com.smarttrainner.feature.training.api.TrainingDestination
 import com.smarttrainner.feature.training.api.TrainingFeatureEntry
+import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 import javax.inject.Inject
 
 class TrainingFeatureEntryImpl @Inject constructor(
     private val analysisFeatureEntry: AnalysisFeatureEntry,
     private val exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     private val exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    private val exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
+    private val exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    private val workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) : TrainingFeatureEntry {
     @Composable
     override fun Content(destination: TrainingDestination) {
@@ -22,7 +24,8 @@ class TrainingFeatureEntryImpl @Inject constructor(
             analysisFeatureEntry = analysisFeatureEntry,
             exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
             exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
+            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
         )
     }
 }
