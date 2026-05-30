@@ -850,6 +850,32 @@ Split decision:
 - Do not move this state to `core:*` yet. It is not reused by lower layers and references a concrete app navigation workflow.
 - Continue using `:app` as the only module that wires routine, exercise, and workout feature APIs together.
 
+## Phase 41: Routine Common UI Deduplication
+
+Status: stacked after Phase 40 on `codex/modularization-routine-common-ui-dedupe`.
+
+Keep common Compose primitives in `:core:ui` instead of duplicating them inside a feature implementation. Routine still owns routine-specific strings and status semantics, but common badge and empty-state visuals should remain shared.
+
+First PR scope:
+
+- Replace routine-local `TrainingBadge`, `TrainingBadgeRow`, and `TrainingBadgeSpec` with `SmartTrainnerBadge`, `SmartTrainnerBadgeRow`, and `SmartTrainnerBadgeSpec` from `:core:ui`.
+- Replace the routine-local `EmptyState` wrapper with direct `SmartTrainnerEmptyState` usage.
+- Keep only the routine-specific `StatusIcon` wrapper because it supplies localized routine completion content descriptions.
+- Keep `SmartTrainnerBadgeRow` implemented with stable common layout primitives so shared UI usage does not depend on experimental flow-layout runtime signatures.
+- Document that no new feature-local repository, domain, data, or network module is needed for this UI ownership cleanup.
+
+Split decision:
+
+- Do not add `:feature:routine:domain` or `:feature:routine:data` for this phase. The change removes duplicated UI composition, not a feature-private repository contract or data implementation.
+- Do not add `:feature:routine:network`. Routine still has no feature-specific remote contract; shared network contracts belong in `:core:network` when needed.
+- Keep common, domain-free UI primitives in `:core:ui`. Feature-specific copy, state, events, and policy remain in the feature implementation/domain modules that own them.
+
+Next PR scope:
+
+- Continue auditing feature implementations for duplicated common UI wrappers before adding new modules.
+- Re-audit workout log commands only if a command surface becomes feature-private rather than shared analysis/routine/exercise input.
+- Keep app as the final routing and DI composition root while feature modules remain isolated from each other.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -873,6 +899,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Routine repository implementations now live in `:feature:routine:data`; app-owned DI binds them to the shared core weekly-plan contract and routine-owned read/command contracts.
 - App-owned DI now separates shared core repository bindings from routine feature-data repository bindings.
 - App training flow state now lives in an app-local reducer so `TrainingViewModel` is a thin coordinator shell, while cross-feature routing remains app-owned.
+- Routine common badge and empty-state UI now use `:core:ui`; only routine-specific content-description wrapping remains in `:feature:routine:impl`.
 - Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 

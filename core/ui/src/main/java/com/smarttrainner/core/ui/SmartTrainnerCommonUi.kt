@@ -5,9 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
@@ -256,28 +255,33 @@ fun SmartTrainnerBadge(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SmartTrainnerBadgeRow(
     badges: List<SmartTrainnerBadgeSpec>,
     maxItemsPerRow: Int,
     modifier: Modifier = Modifier
 ) {
-    FlowRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        maxItemsInEachRow = maxItemsPerRow.coerceAtLeast(1)
-    ) {
-        badges.forEach { badge ->
-            SmartTrainnerBadge(
-                text = badge.text,
-                icon = badge.icon,
-                containerColor = badge.containerColor,
-                contentColor = badge.contentColor,
-                borderColor = badge.borderColor,
-                modifier = badge.testTag?.let { Modifier.testTag(it) } ?: Modifier
-            )
+    BoxWithConstraints(modifier = modifier) {
+        val rowLimit = if (maxWidth < 360.dp) {
+            maxItemsPerRow.coerceAtMost(2)
+        } else {
+            maxItemsPerRow
+        }.coerceAtLeast(1)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            badges.chunked(rowLimit).forEach { rowBadges ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rowBadges.forEach { badge ->
+                        SmartTrainnerBadge(
+                            text = badge.text,
+                            icon = badge.icon,
+                            containerColor = badge.containerColor,
+                            contentColor = badge.contentColor,
+                            borderColor = badge.borderColor,
+                            modifier = badge.testTag?.let { Modifier.testTag(it) } ?: Modifier
+                        )
+                    }
+                }
+            }
         }
     }
 }

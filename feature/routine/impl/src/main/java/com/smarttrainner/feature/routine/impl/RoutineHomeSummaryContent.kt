@@ -34,6 +34,9 @@ import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineSource
+import com.smarttrainner.core.ui.SmartTrainnerBadge
+import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
+import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
 import com.smarttrainner.core.ui.SmartTrainnerSectionTitle
@@ -187,7 +190,7 @@ internal fun NextRoutineDayCard(
                         items = focusItems,
                         maxItemsPerRow = 4
                     ) { focus ->
-                        TrainingBadge(
+                        SmartTrainnerBadge(
                             text = focus.localizedShortLabel(),
                             containerColor = SmartTrainnerColors.CoralSoft,
                             contentColor = SmartTrainnerColors.Ink,
@@ -248,23 +251,23 @@ internal fun NextRoutineDayCard(
 
 @Composable
 internal fun RoutineDayBadgeRow(routineDay: NextRoutineDayUiModel) {
-    TrainingBadgeRow(
+    SmartTrainnerBadgeRow(
         badges = listOf(
-            TrainingBadgeSpec(
+            SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.routine_routine_badge_duration, routineDay.sessionMinutes),
                 icon = Icons.Default.Timer,
                 containerColor = SmartTrainnerColors.CoralSoft,
                 contentColor = SmartTrainnerColors.Ink,
                 testTag = "training_next_routine_badge_duration"
             ),
-            TrainingBadgeSpec(
+            SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.routine_routine_badge_exercises, routineDay.totalExerciseCount),
                 icon = Icons.Default.FitnessCenter,
                 containerColor = SmartTrainnerColors.GreenSoft,
                 contentColor = SmartTrainnerColors.Ink,
                 testTag = "training_next_routine_badge_exercises"
             ),
-            TrainingBadgeSpec(
+            SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.routine_routine_badge_recovery, routineDay.minRecoveryHours),
                 icon = Icons.Default.DateRange,
                 containerColor = SmartTrainnerColors.AmberSoft,

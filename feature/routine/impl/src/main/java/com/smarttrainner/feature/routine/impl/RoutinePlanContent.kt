@@ -40,6 +40,7 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
+import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
     state: RoutineUiState,
@@ -63,7 +64,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
-                EmptyState(text = stringResource(R.string.routine_empty_plan))
+                SmartTrainnerEmptyState(text = stringResource(R.string.routine_empty_plan))
             }
             Button(
                 onClick = actions.onShowLibrary,

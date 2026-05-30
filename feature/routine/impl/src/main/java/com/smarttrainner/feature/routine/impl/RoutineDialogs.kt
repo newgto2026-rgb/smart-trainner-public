@@ -52,6 +52,10 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.ui.SmartTrainnerBadge
+import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
+import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
+import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
 
 @Composable
@@ -191,7 +195,7 @@ internal fun RoutineLibraryDialog(
                         fontWeight = FontWeight.Bold
                     )
                     if (state.customTemplates.isEmpty()) {
-                        EmptyState(text = stringResource(R.string.routine_custom_routine_empty))
+                        SmartTrainnerEmptyState(text = stringResource(R.string.routine_custom_routine_empty))
                     } else {
                         state.customTemplates.forEach { template ->
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -586,7 +590,7 @@ internal fun PlanTemplateCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 if (selected) {
-                    TrainingBadge(
+                    SmartTrainnerBadge(
                         text = stringResource(R.string.routine_selected),
                         icon = Icons.Default.CheckCircle,
                         containerColor = SmartTrainnerColors.GreenSoft,
@@ -594,7 +598,7 @@ internal fun PlanTemplateCard(
                     )
                 }
                 if (highlightLabel != null) {
-                    TrainingBadge(
+                    SmartTrainnerBadge(
                         text = highlightLabel,
                         icon = Icons.Default.CheckCircle,
                         containerColor = SmartTrainnerColors.AmberSoft,
@@ -629,7 +633,7 @@ internal fun PlanTemplateCard(
 internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
     val badges = if (template.source == RoutineSource.CUSTOM) {
         listOf(
-            TrainingBadgeSpec(
+            SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.routine_custom_template_meta, template.days.size),
                 icon = Icons.Default.DateRange,
                 containerColor = SmartTrainnerColors.GreenSoft,
@@ -638,18 +642,18 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
         )
     } else {
         listOf(
-            TrainingBadgeSpec(
+            SmartTrainnerBadgeSpec(
                 text = template.level.localizedLabel(),
                 containerColor = SmartTrainnerColors.SteelSoft,
                 contentColor = SmartTrainnerColors.Ink
             ),
-            TrainingBadgeSpec(
+            SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.routine_days_per_week_option, template.daysPerWeek),
                 icon = Icons.Default.DateRange,
                 containerColor = SmartTrainnerColors.GreenSoft,
                 contentColor = SmartTrainnerColors.Ink
             ),
-            TrainingBadgeSpec(
+            SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.routine_minutes_option, template.sessionMinutes),
                 icon = Icons.Default.Timer,
                 containerColor = SmartTrainnerColors.CoralSoft,
@@ -657,7 +661,7 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
             )
         )
     }
-    TrainingBadgeRow(
+    SmartTrainnerBadgeRow(
         badges = badges,
         maxItemsPerRow = 3
     )
@@ -665,7 +669,7 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
 
 @Composable
 internal fun RoutineSourceChip(source: RoutineSource, testTag: String = source.routineSourceTag()) {
-    TrainingBadge(
+    SmartTrainnerBadge(
         modifier = Modifier.testTag(testTag),
         text = stringResource(
             if (source == RoutineSource.CUSTOM) {
