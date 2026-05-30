@@ -1,4 +1,4 @@
-package com.smarttrainner.core.domain
+package com.smarttrainner.feature.routine.domain
 
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.model.ExerciseId
@@ -8,15 +8,13 @@ import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.PlanLevel
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.RoutineFocus
-import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TrainingExperience
 import java.time.Instant
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
-class RoutineUseCasesTest {
+class RoutineCommandUseCasesTest {
     private val advanceRoutineDay = AdvanceRoutineDayUseCase()
     private val validateCustomRoutine = ValidateCustomRoutineUseCase()
 
@@ -254,11 +252,10 @@ class RoutineUseCasesTest {
     )
 }
 
-private class CapturingRoutineProgressRepository : RoutineProgressRepository {
+private class CapturingRoutineProgressRepository : RoutineProgressCommandRepository {
     var nextDayIndex: Int? = null
     var newCycleStartedAt: Instant? = null
 
-    override fun observeRoutineProgress(): Flow<RoutineProgress> = error("Not used")
     override suspend fun startRoutine(templateId: String): Result<Unit> = error("Not used")
 
     override suspend fun markRoutineDayCompleted(

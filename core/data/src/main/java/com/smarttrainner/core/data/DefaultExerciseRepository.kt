@@ -1,6 +1,7 @@
 package com.smarttrainner.core.data
 
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.TrainingSeedStore
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import javax.inject.Inject

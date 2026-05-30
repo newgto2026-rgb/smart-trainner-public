@@ -1,9 +1,12 @@
-package com.smarttrainner.core.data
+package com.smarttrainner.feature.routine.data
 
 import com.smarttrainner.core.database.CustomRoutineDao
+import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.domain.RoutineProgressRepository
+import com.smarttrainner.core.domain.TrainingSeedStore
 import com.smarttrainner.core.model.RoutineProgress
+import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,7 +22,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
     private val preferences: TrainingPreferencesDataSource,
     private val activeSessionResolver: ActiveSessionResolver,
     private val seedStore: TrainingSeedStore
-) : RoutineProgressRepository {
+) : RoutineProgressRepository, RoutineProgressCommandRepository {
     override fun observeRoutineProgress(): Flow<RoutineProgress> =
         activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
             combine(

@@ -26,6 +26,8 @@ import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklySummaryRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
+import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -58,7 +60,15 @@ class TrainingUiTest {
 
     @BindValue
     @JvmField
+    val routinePlanCommandRepository: RoutinePlanCommandRepository = trainingRepository
+
+    @BindValue
+    @JvmField
     val routineProgressRepository: RoutineProgressRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val routineProgressCommandRepository: RoutineProgressCommandRepository = trainingRepository
 
     @BindValue
     @JvmField

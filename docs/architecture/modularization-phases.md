@@ -753,6 +753,35 @@ Next PR scope:
 - After that split, evaluate `:feature:routine:data` with app-owned DI assembly as the only place that sees the implementation.
 - Revisit whether `CompleteRoutineDayUseCase`, `StartRoutineUseCase`, custom routine save/delete, and routine progress repository commands should move together.
 
+## Phase 37: Routine Command Domain And Data Ownership
+
+Status: stacked after Phase 36 on `codex/modularization-routine-command-data`.
+
+Split routine repository ownership by purpose. Shared routine reads remain in `:core:domain` because weekly plans, summaries, and multiple feature flows consume them. Routine-only commands now belong to the routine feature contract, and the Room/DataStore-backed implementation lives in routine feature data.
+
+First PR scope:
+
+- Add `:feature:routine:data` as an explicitly approved feature-local data module.
+- Move routine command contracts to `:feature:routine:domain`: `RoutinePlanCommandRepository` and `RoutineProgressCommandRepository`.
+- Move routine command use cases to `:feature:routine:domain`: custom routine validation/save/delete/select plus routine start/advance/complete.
+- Move `DefaultRoutinePlanRepository` and `DefaultRoutineProgressRepository` to `:feature:routine:data`; each implementation binds to both shared core read contracts and routine command contracts.
+- Move routine custom-routine database mappers into `:feature:routine:data`.
+- Move `SeedTrainingContent` and `TrainingSeedStore` to `:core:domain` because seed exercises/templates are shared domain catalog content used by shared reads and routine data.
+- Move `ActiveSessionResolver` to `:core:datastore` so core workout data and routine feature data can share session resolution without a `feature -> core:data` dependency.
+- Keep final production DI assembly in `:app`, where routine data implementations are bound to both core read interfaces and feature command interfaces.
+
+Split decision:
+
+- Do not allow `:feature:routine:data -> :core:data`. Feature data may use only explicitly approved core infrastructure contracts (`:core:database`, `:core:datastore`) plus shared model/domain modules.
+- Do not make `:feature:routine:impl` depend on `:feature:routine:data`; the UI implementation depends on domain use cases/contracts only.
+- Keep read-only `RoutinePlanRepository` and `RoutineProgressRepository` in `:core:domain` for now because they still feed shared weekly plan/progress surfaces.
+
+Next PR scope:
+
+- Re-audit whether routine progress reads are truly shared or can also become routine feature-owned.
+- Apply the same feature-domain/data ownership test to workout commands if workout log persistence ever becomes feature-private rather than shared analysis/routine input.
+- Continue tightening app so it sees feature data only inside app-owned DI modules.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -771,17 +800,22 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Exercise detail API now exposes only its dialog route entry; its detail UI state and rendering actions are implementation details.
 - Routine route and dialog rendering now goes through `RoutineFeatureEntry`; `RoutineRouteState` is no longer a public rendering facade.
 - Routine-only recommendation, readiness, and cycle-completion policies now live in `:feature:routine:domain`.
+- Routine-only command contracts and command use cases now live in `:feature:routine:domain`.
+- Routine repository implementations now live in `:feature:routine:data`; app-owned DI binds them to shared core read contracts and routine command contracts.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:
 
 - `core:*` must not depend on `feature:*`.
-- Feature modules must not depend on data, storage, or network implementation modules.
-- New feature-local domain/data/network modules require an explicit ownership decision before being introduced; `:feature:routine:domain` is the current approved feature-local module.
+- Feature modules must not depend on shared `:core:data` implementations.
+- Feature data modules may use core storage/network infrastructure only through explicit allowlists; `:feature:routine:data` currently may use `:core:database` and `:core:datastore`, not `:core:data` or `:core:network`.
+- New feature-local domain/data/network modules require an explicit ownership decision before being introduced; `:feature:routine:domain` and `:feature:routine:data` are the current approved feature-local modules.
 - Feature API modules must not depend on feature implementation or entry modules.
 - Feature implementation modules must not depend on other feature implementation or entry modules directly.
+- Feature implementation modules must not depend on feature data modules; feature UI code consumes domain contracts/use cases.
 - Only `:app` may depend on the listed feature implementation modules for composition-root DI.
-- App production code may reference core data/storage/network implementation packages only from app-owned DI composition modules.
+- Only `:app` may depend on listed feature data modules for composition-root DI.
+- App production code may reference core data/storage/network and feature implementation/data packages only from app-owned DI composition modules.
 - Production Hilt modules may be declared only in app-owned DI composition modules.
 
 ## Split Decision

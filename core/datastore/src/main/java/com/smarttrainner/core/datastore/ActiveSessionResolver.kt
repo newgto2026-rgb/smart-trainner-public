@@ -1,7 +1,5 @@
-package com.smarttrainner.core.data
+package com.smarttrainner.core.datastore
 
-import com.smarttrainner.core.datastore.DEFAULT_USER_SESSION_ID
-import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow

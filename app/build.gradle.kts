@@ -57,6 +57,8 @@ dependencies {
     implementation(project(":feature:exercise:api"))
     implementation(project(":feature:exercise:impl"))
     implementation(project(":feature:routine:api"))
+    implementation(project(":feature:routine:data"))
+    implementation(project(":feature:routine:domain"))
     implementation(project(":feature:routine:impl"))
     implementation(project(":feature:workout:api"))
     implementation(project(":feature:workout:impl"))

@@ -1,4 +1,4 @@
-package com.smarttrainner.core.data
+package com.smarttrainner.feature.routine.data
 
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.database.CustomRoutineDayEntity
@@ -10,7 +10,7 @@ import com.smarttrainner.core.model.CustomRoutineDayInput
 import com.smarttrainner.core.model.RoutineFocus
 import org.junit.Test
 
-class TrainingMappersTest {
+class CustomRoutineMappersTest {
     @Test
     fun customRoutineWithoutFocusDoesNotDefaultToFullBody() {
         val template = customRoutine(primaryFocus = "", focus = "").toPlanTemplate()

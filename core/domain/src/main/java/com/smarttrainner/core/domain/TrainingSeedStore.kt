@@ -1,4 +1,4 @@
-package com.smarttrainner.core.data
+package com.smarttrainner.core.domain
 
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId

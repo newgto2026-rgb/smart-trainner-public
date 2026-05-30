@@ -1,7 +1,6 @@
 package com.smarttrainner.core.domain
 
 import com.smarttrainner.core.model.ExerciseId
-import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.WorkoutLogInput
 import java.time.LocalDate
 import javax.inject.Inject
@@ -64,30 +63,6 @@ class SaveWorkoutLogUseCase @Inject constructor(
     private val repository: WorkoutLogRepository
 ) {
     suspend operator fun invoke(input: WorkoutLogInput) = repository.saveWorkoutLog(input)
-}
-
-class SelectPlanTemplateUseCase @Inject constructor(
-    private val repository: RoutinePlanRepository
-) {
-    suspend operator fun invoke(templateId: String) = repository.selectPlanTemplate(templateId)
-}
-
-class SaveCustomRoutineUseCase @Inject constructor(
-    private val repository: RoutinePlanRepository,
-    private val validateCustomRoutine: ValidateCustomRoutineUseCase
-) {
-    suspend operator fun invoke(
-        input: CustomRoutineInput,
-        availableExerciseIds: Set<ExerciseId>
-    ) = validateCustomRoutine(input, availableExerciseIds)?.let { error ->
-        Result.failure(IllegalArgumentException(error.name))
-    } ?: repository.saveCustomRoutine(input)
-}
-
-class DeleteCustomRoutineUseCase @Inject constructor(
-    private val repository: RoutinePlanRepository
-) {
-    suspend operator fun invoke(templateId: String) = repository.deleteCustomRoutine(templateId)
 }
 
 class ObserveActiveSessionUseCase @Inject constructor(

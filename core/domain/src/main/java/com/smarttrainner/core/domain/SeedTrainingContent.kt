@@ -1,4 +1,4 @@
-package com.smarttrainner.core.data
+package com.smarttrainner.core.domain
 
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType

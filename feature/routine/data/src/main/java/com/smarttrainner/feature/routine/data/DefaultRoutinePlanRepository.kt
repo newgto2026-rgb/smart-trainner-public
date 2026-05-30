@@ -1,11 +1,14 @@
-package com.smarttrainner.core.data
+package com.smarttrainner.feature.routine.data
 
 import com.smarttrainner.core.database.CustomRoutineDao
+import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.domain.RoutinePlanRepository
+import com.smarttrainner.core.domain.TrainingSeedStore
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
@@ -26,7 +29,7 @@ class DefaultRoutinePlanRepository @Inject constructor(
     private val activeSessionResolver: ActiveSessionResolver,
     private val seedStore: TrainingSeedStore,
     private val clock: Clock
-) : RoutinePlanRepository {
+) : RoutinePlanRepository, RoutinePlanCommandRepository {
     override fun observePlanTemplates(): Flow<List<PlanTemplate>> =
         observeCustomRoutines().map { customTemplates -> seedStore.templates + customTemplates }
 

@@ -1,4 +1,4 @@
-package com.smarttrainner.core.data
+package com.smarttrainner.core.domain
 
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.model.EquipmentType

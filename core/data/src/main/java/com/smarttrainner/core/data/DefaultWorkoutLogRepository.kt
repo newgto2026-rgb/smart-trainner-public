@@ -1,6 +1,7 @@
 package com.smarttrainner.core.data
 
 import com.smarttrainner.core.database.WorkoutLogDao
+import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.WorkoutLog

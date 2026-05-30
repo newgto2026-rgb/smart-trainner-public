@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.smarttrainner.core.datastore"
+    namespace = "com.smarttrainner.feature.routine.data"
     compileSdk = 36
 
     defaultConfig {
@@ -13,9 +13,9 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -23,15 +23,17 @@ android {
 }
 
 dependencies {
+    implementation(project(":feature:routine:domain"))
     implementation(project(":core:model"))
-    implementation(libs.androidx.datastore.preferences)
+    implementation(project(":core:domain"))
+    implementation(project(":core:database"))
+    implementation(project(":core:datastore"))
+
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.hilt.android)
     implementation(libs.javax.inject)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     testImplementation(libs.junit)
-    testImplementation(libs.robolectric)
     testImplementation(libs.truth)
     testImplementation(libs.kotlinx.coroutines.test)
 

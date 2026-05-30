@@ -52,8 +52,8 @@ val checkModuleBoundaries by tasks.registering {
         .withPathSensitivity(PathSensitivity.RELATIVE)
 
     doLast {
-        val implementationCoreModules = setOf(
-            ":core:data",
+        val deniedFeatureCoreImplementationModules = setOf(":core:data")
+        val guardedCoreInfrastructureModules = setOf(
             ":core:database",
             ":core:datastore",
             ":core:network"
@@ -61,13 +61,19 @@ val checkModuleBoundaries by tasks.registering {
 
         fun isFeature(path: String) = path.startsWith(":feature:")
         fun isFeatureApi(path: String) = isFeature(path) && path.endsWith(":api")
+        fun isFeatureData(path: String) = isFeature(path) && path.endsWith(":data")
         fun isFeatureEntry(path: String) = isFeature(path) && path.endsWith(":entry")
         fun isFeatureImpl(path: String) = isFeature(path) && path.endsWith(":impl")
         fun featureName(path: String) = path.split(":").getOrNull(2)
 
         val allowedCrossFeatureApiDependencies = emptySet<Pair<String, String>>()
         val allowedFeaturePrivateModules = setOf(
-            ":feature:routine:domain"
+            ":feature:routine:domain",
+            ":feature:routine:data"
+        )
+        val allowedFeatureDataCoreInfrastructureDependencies = setOf(
+            ":feature:routine:data" to ":core:database",
+            ":feature:routine:data" to ":core:datastore"
         )
         val allowedAppFeatureImplDependencies = setOf(
             ":app" to ":feature:analysis:impl",
@@ -75,9 +81,18 @@ val checkModuleBoundaries by tasks.registering {
             ":app" to ":feature:routine:impl",
             ":app" to ":feature:workout:impl"
         )
+        val allowedAppFeatureDataDependencies = setOf(
+            ":app" to ":feature:routine:data"
+        )
         val allProjectPaths = allprojects.map { it.path }.toSet()
-        val invalidAllowlistPaths = (allowedCrossFeatureApiDependencies + allowedAppFeatureImplDependencies)
-            .flatMap { (source, target) -> listOf(source, target) }
+        val invalidAllowlistPaths = (
+            (allowedCrossFeatureApiDependencies +
+                allowedFeatureDataCoreInfrastructureDependencies +
+                allowedAppFeatureImplDependencies +
+                allowedAppFeatureDataDependencies)
+                .flatMap { (source, target) -> listOf(source, target) } +
+                allowedFeaturePrivateModules
+            )
             .filterNot { it in allProjectPaths }
             .distinct()
             .sorted()
@@ -107,6 +122,7 @@ val checkModuleBoundaries by tasks.registering {
 
         val violations = mutableListOf<String>()
         val featureImplReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.impl(\.|$)""")
+        val featureDataReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.data(\.|$)""")
         val coreImplementationReferencePattern =
             Regex("""com\.smarttrainner\.core\.(data|database|datastore|network)(\.|$)""")
 
@@ -121,8 +137,13 @@ val checkModuleBoundaries by tasks.registering {
                 source.startsWith(":core:") && isFeature(target) -> {
                     violations += "$edge: core modules must not depend on feature modules."
                 }
-                isFeature(source) && target in implementationCoreModules -> {
-                    violations += "$edge: feature modules must use domain/model/UI contracts, not data/storage/network implementations."
+                isFeature(source) && target in deniedFeatureCoreImplementationModules -> {
+                    violations += "$edge: feature modules must not depend on shared data implementations."
+                }
+                isFeature(source) &&
+                    target in guardedCoreInfrastructureModules &&
+                    (source to target) !in allowedFeatureDataCoreInfrastructureDependencies -> {
+                    violations += "$edge: core infrastructure is allowed only for explicitly approved feature data modules."
                 }
                 isFeatureApi(source) && (isFeatureImpl(target) || isFeatureEntry(target)) -> {
                     violations += "$edge: feature API modules must not depend on implementation or entry modules."
@@ -130,14 +151,22 @@ val checkModuleBoundaries by tasks.registering {
                 isFeatureImpl(source) && (isFeatureImpl(target) || isFeatureEntry(target)) -> {
                     violations += "$edge: feature implementations must not depend on feature implementations or entries directly."
                 }
+                isFeatureImpl(source) && isFeatureData(target) -> {
+                    violations += "$edge: feature UI implementations must depend on domain contracts, not feature data implementations."
+                }
+                isFeatureData(source) &&
+                    isFeature(target) &&
+                    target != ":feature:${featureName(source)}:domain" -> {
+                    violations += "$edge: feature data modules may depend only on their own feature domain contract."
+                }
                 isFeatureEntry(source) && isFeature(target) && featureName(source) != featureName(target) -> {
                     violations += "$edge: feature entry modules may only bind their own feature API and implementation."
                 }
                 isFeature(source) &&
-                    isFeatureApi(target) &&
+                    isFeature(target) &&
                     featureName(source) != featureName(target) &&
                     (source to target) !in allowedCrossFeatureApiDependencies -> {
-                    violations += "$edge: cross-feature API dependencies must be explicitly isolated or added to the transitional allowlist with an owner-removal plan."
+                    violations += "$edge: feature modules must not depend on modules from another feature; app owns cross-feature routing and composition."
                 }
                 source == ":app" && isFeatureEntry(target) -> {
                     violations += "$edge: app-owned DI composition should bind feature APIs directly to feature implementations; feature entry modules must not be reintroduced."
@@ -146,6 +175,11 @@ val checkModuleBoundaries by tasks.registering {
                     isFeatureImpl(target) &&
                     (source to target) !in allowedAppFeatureImplDependencies -> {
                     violations += "$edge: app may depend on feature implementations only from the app-owned DI composition allowlist."
+                }
+                source == ":app" &&
+                    isFeatureData(target) &&
+                    (source to target) !in allowedAppFeatureDataDependencies -> {
+                    violations += "$edge: app may depend on feature data only from the app-owned DI composition allowlist."
                 }
             }
         }
@@ -159,6 +193,10 @@ val checkModuleBoundaries by tasks.registering {
                     if (featureImplReferencePattern.containsMatchIn(line)) {
                         violations +=
                             "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature implementation references in :app are allowed only in app-owned DI composition modules."
+                    }
+                    if (featureDataReferencePattern.containsMatchIn(line)) {
+                        violations +=
+                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature data references in :app are allowed only in app-owned DI composition modules."
                     }
                     if (coreImplementationReferencePattern.containsMatchIn(line)) {
                         violations +=
