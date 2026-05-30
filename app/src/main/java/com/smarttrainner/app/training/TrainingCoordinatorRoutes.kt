@@ -35,9 +35,13 @@ fun TrainingHomeRoute(
         exerciseMediaRenderer = exerciseMediaRenderer,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         routineRouteState = routineRouteState,
-        viewModel = viewModel
+        viewModel = viewModel,
+        routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {
-        routineRouteState.HomeSummaryRoute(chrome = chrome)
+        routineFeatureEntry.HomeSummaryRoute(
+            routeState = routineRouteState,
+            chrome = chrome
+        )
     }
 }
 
@@ -59,9 +63,11 @@ fun TrainingRoutineRoute(
         exerciseMediaRenderer = exerciseMediaRenderer,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         routineRouteState = routineRouteState,
-        viewModel = viewModel
+        viewModel = viewModel,
+        routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {
-        routineRouteState.Route(
+        routineFeatureEntry.Route(
+            routeState = routineRouteState,
             chrome = chrome,
             exerciseMediaRenderer = exerciseMediaRenderer
         )
@@ -93,7 +99,8 @@ fun TrainingExercisesRoute(
         exerciseMediaRenderer = exerciseMediaRenderer,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         routineRouteState = routineRouteState,
-        viewModel = viewModel
+        viewModel = viewModel,
+        routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {
         exerciseCatalogFeatureEntry.Route(
             chrome = chrome,

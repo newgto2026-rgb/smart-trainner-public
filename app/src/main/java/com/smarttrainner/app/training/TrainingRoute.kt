@@ -23,6 +23,7 @@ internal fun TrainingRoute(
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     routineRouteState: RoutineRouteState,
     viewModel: TrainingViewModel = sharedTrainingViewModel(),
+    routineDialogs: @Composable () -> Unit,
     content: @Composable () -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -41,6 +42,7 @@ internal fun TrainingRoute(
         },
         onExerciseDetailDismiss = viewModel::dismissExerciseDetail,
         onRecordDialogDismiss = viewModel::dismissRecordDialog,
+        routineDialogs = routineDialogs,
         content = content
     )
 }
@@ -74,6 +76,7 @@ private fun TrainingScreen(
     onRecordSaved: (PlannedExercise) -> Unit,
     onExerciseDetailDismiss: () -> Unit,
     onRecordDialogDismiss: () -> Unit,
+    routineDialogs: @Composable () -> Unit,
     content: @Composable () -> Unit
 ) {
     val selectedExerciseId = state.selectedExerciseId
@@ -87,7 +90,7 @@ private fun TrainingScreen(
             exerciseMediaRenderer = exerciseMediaRenderer
         )
     }
-    routineRouteState.Dialogs()
+    routineDialogs()
     if (selectedExerciseId != null) {
         val selectedPlannedExercise = if (recordingPlannedExercise == null) {
             remember(routineRouteState, selectedExerciseId) {

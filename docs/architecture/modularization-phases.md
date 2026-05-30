@@ -702,6 +702,32 @@ Next PR scope:
 - Re-audit `RoutineRouteState`, which still exposes a broad routine facade to app training coordination.
 - Decide whether `ExerciseMediaRenderer` should stay in `:core:ui` or move to a more explicit common training UI taxonomy.
 
+## Phase 35: Routine Entry-Owned Route Surfaces
+
+Status: stacked after Phase 34 on `codex/modularization-routine-entry-routes`.
+
+Tighten the routine feature API so app routing calls routine screen/dialog surfaces through `RoutineFeatureEntry`, not through a broad state object. `RoutineRouteState` remains only as the opaque handle for cross-feature coordination decisions the app still needs while composing the training flow.
+
+First PR scope:
+
+- Move `HomeSummaryRoute`, `Route`, and `Dialogs` off `RoutineRouteState` and onto `RoutineFeatureEntry`.
+- Keep routine UI state and actions inside `:feature:routine:impl`; app never receives raw routine UI/action/form models.
+- Keep `RoutineRouteState` limited to current routine chrome text plus routine-owned continuation and recordability policy needed by workout/exercise handoffs.
+- Update app training routes so routine destinations and dialogs are rendered by the routine feature entry.
+
+Split decision:
+
+- Do not add `:feature:routine:domain` or `:feature:routine:data` in this route-surface PR. This phase narrows the public route contract; it does not move repository ownership.
+- A feature-private routine domain module is now the first concrete candidate. Routine-only policy/use cases such as recommendation, routine day advancement, and cycle-completion resolution can move to `:feature:routine:domain` once that module is explicitly approved.
+- Keep shared read repository contracts in `:core:domain` when multiple flows or summaries depend on them. `RoutinePlanRepository.observeCurrentWeeklyPlan` remains shared because weekly summary/analysis data is derived from it.
+- Do not add `:feature:routine:data` before splitting shared read contracts from routine-only command contracts. Feature data must not depend on `:core:data` implementations; final DI assembly should still happen in `:app`.
+
+Next PR scope:
+
+- Introduce `:feature:routine:domain` for routine-only pure policy/use cases, with an explicit guardrail allowlist.
+- Then split routine repository contracts into shared core reads and routine-private commands before considering `:feature:routine:data`.
+- Keep checking that feature modules do not know about one another and that `:app` remains the routing and DI composition root.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -718,6 +744,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Analysis API now exposes only a route entry; its content-rendering surface and UI state models are implementation details.
 - Workout recording API now exposes only its dialog route entry; its form state, validation errors, and rendering actions are implementation details.
 - Exercise detail API now exposes only its dialog route entry; its detail UI state and rendering actions are implementation details.
+- Routine route and dialog rendering now goes through `RoutineFeatureEntry`; `RoutineRouteState` is no longer a public rendering facade.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:

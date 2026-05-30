@@ -69,45 +69,42 @@ class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
             )
         }
     }
-}
-
-private class DefaultRoutineRouteState(
-    private val state: RoutineUiState,
-    private val actions: RoutineActions,
-    override val currentRoutineName: String
-) : RoutineRouteState {
-    override fun nextPlannedExerciseAfterSaved(plannedExercise: PlannedExercise): PlannedExercise? =
-        state.nextPlannedExerciseAfterSaved(plannedExercise)
-
-    override fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =
-        state.recordablePlannedExerciseFor(exerciseId)
 
     @Composable
-    override fun HomeSummaryRoute(chrome: SmartTrainnerScreenChrome) {
+    override fun HomeSummaryRoute(
+        routeState: RoutineRouteState,
+        chrome: SmartTrainnerScreenChrome
+    ) {
+        val routineState = routeState.asDefaultRoutineRouteState()
         SmartTrainnerScreenScaffold(chrome = chrome) {
             homeSummaryContent(
-                state = state,
-                actions = actions
+                state = routineState.state,
+                actions = routineState.actions
             )
         }
     }
 
     @Composable
     override fun Route(
+        routeState: RoutineRouteState,
         chrome: SmartTrainnerScreenChrome,
         exerciseMediaRenderer: ExerciseMediaRenderer
     ) {
+        val routineState = routeState.asDefaultRoutineRouteState()
         SmartTrainnerScreenScaffold(chrome = chrome) {
             planContent(
-                state = state,
-                actions = actions,
+                state = routineState.state,
+                actions = routineState.actions,
                 exerciseMediaRenderer = exerciseMediaRenderer
             )
         }
     }
 
     @Composable
-    override fun Dialogs() {
+    override fun Dialogs(routeState: RoutineRouteState) {
+        val routineState = routeState.asDefaultRoutineRouteState()
+        val state = routineState.state
+        val actions = routineState.actions
         if (state.showRoutineLibraryDialog) {
             RoutineLibraryDialog(
                 state = state,
@@ -159,3 +156,19 @@ private class DefaultRoutineRouteState(
         }
     }
 }
+
+internal class DefaultRoutineRouteState(
+    val state: RoutineUiState,
+    val actions: RoutineActions,
+    override val currentRoutineName: String
+) : RoutineRouteState {
+    override fun nextPlannedExerciseAfterSaved(plannedExercise: PlannedExercise): PlannedExercise? =
+        state.nextPlannedExerciseAfterSaved(plannedExercise)
+
+    override fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =
+        state.recordablePlannedExerciseFor(exerciseId)
+}
+
+internal fun RoutineRouteState.asDefaultRoutineRouteState(): DefaultRoutineRouteState =
+    this as? DefaultRoutineRouteState
+        ?: error("RoutineRouteState must be created by RoutineFeatureEntry.rememberRouteState.")
