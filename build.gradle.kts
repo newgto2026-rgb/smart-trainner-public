@@ -50,6 +50,17 @@ val checkModuleBoundaries by tasks.registering {
         fun isFeatureImpl(path: String) = isFeature(path) && path.endsWith(":impl")
         fun featureName(path: String) = path.split(":").getOrNull(2)
 
+        val allowedCrossFeatureApiDependencies = setOf(
+            ":feature:routine:api" to ":feature:exercise:api",
+            ":feature:routine:impl" to ":feature:exercise:api",
+            ":feature:workout:api" to ":feature:exercise:api",
+            ":feature:workout:impl" to ":feature:exercise:api",
+            ":feature:training:impl" to ":feature:analysis:api",
+            ":feature:training:impl" to ":feature:exercise:api",
+            ":feature:training:impl" to ":feature:routine:api",
+            ":feature:training:impl" to ":feature:workout:api"
+        )
+
         val violations = mutableListOf<String>()
 
         projectEdges.get().forEach { edgeString ->
@@ -74,6 +85,12 @@ val checkModuleBoundaries by tasks.registering {
                 }
                 isFeatureEntry(source) && isFeature(target) && featureName(source) != featureName(target) -> {
                     violations += "$edge: feature entry modules may only bind their own feature API and implementation."
+                }
+                isFeature(source) &&
+                    isFeatureApi(target) &&
+                    featureName(source) != featureName(target) &&
+                    (source to target) !in allowedCrossFeatureApiDependencies -> {
+                    violations += "$edge: cross-feature API dependencies must be explicitly isolated or added to the transitional allowlist with an owner-removal plan."
                 }
                 source == ":app" && isFeatureImpl(target) -> {
                     violations += "$edge: app must depend on feature API/entry contracts, not feature implementations."

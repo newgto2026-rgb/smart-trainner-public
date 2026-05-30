@@ -262,6 +262,36 @@ Next PR scope:
 - Remove cross-feature API references where the coupling is only for presentation composition, especially `routine/api -> exercise/api` and `workout/api -> exercise/api`.
 - Split `TrainingViewModel` so each feature owns its state and only app-level flows coordinate between features.
 
+## Phase 15: Feature Isolation Guardrail
+
+Status: stacked after Phase 14 on `codex/modularization-feature-isolation-guard`.
+
+Make cross-feature awareness explicit in the build instead of letting it spread silently. The codebase is not yet at strict feature ignorance, so this phase adds a small transitional allowlist and fails any new cross-feature API dependency outside that list.
+
+First PR scope:
+
+- Extend `checkModuleBoundaries` to detect cross-feature API dependencies.
+- Allow only the current transitional cross-feature API edges.
+- Keep direct feature implementation and entry dependencies blocked.
+- Document that each allowlisted edge needs an owner-removal plan before strict feature isolation is complete.
+
+Current transitional allowlist:
+
+- `:feature:routine:api -> :feature:exercise:api`
+- `:feature:routine:impl -> :feature:exercise:api`
+- `:feature:workout:api -> :feature:exercise:api`
+- `:feature:workout:impl -> :feature:exercise:api`
+- `:feature:training:impl -> :feature:analysis:api`
+- `:feature:training:impl -> :feature:exercise:api`
+- `:feature:training:impl -> :feature:routine:api`
+- `:feature:training:impl -> :feature:workout:api`
+
+Next PR scope:
+
+- Move app-level feature entry injection out of the broad `TrainingFeatureEntry` facade where the current shared `TrainingViewModel` permits it.
+- Decide whether exercise media should remain an exercise feature service consumed through app composition, or move to a neutral core presentation contract that does not make routine/workout APIs depend on exercise API.
+- Add a failing guard once the transitional allowlist is empty.
+
 ## Strict Feature Isolation Audit
 
 Current state is not strict feature ignorance:
