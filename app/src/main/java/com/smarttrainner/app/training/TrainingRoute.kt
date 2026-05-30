@@ -150,7 +150,7 @@ private fun TrainingScreen(
             contentPadding = PaddingValues(start = 18.dp, top = 14.dp, end = 18.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            item { Header(currentRoutineName = routineRouteState.currentRoutineName()) }
+            item { Header(currentRoutineName = routineRouteState.currentRoutineName) }
             content(state, exerciseCatalogActions)
         }
     }

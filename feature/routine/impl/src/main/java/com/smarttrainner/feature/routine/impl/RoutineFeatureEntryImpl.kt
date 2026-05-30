@@ -22,6 +22,7 @@ class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
         LaunchedEffect(viewModel) {
             viewModel.refreshWeekStartOnWeekBoundary()
         }
+        val currentRoutineName = state.plan?.localizedName().orEmpty()
         val actions = remember(callbacks, viewModel) {
             RoutineActions(
                 onTemplateSelected = viewModel::selectTemplate,
@@ -58,24 +59,26 @@ class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
                 onRecordSelected = callbacks.onRecordSelected
             )
         }
-        return remember(state, actions) {
-            DefaultRoutineRouteState(state = state, actions = actions)
+        return remember(state, actions, currentRoutineName) {
+            DefaultRoutineRouteState(
+                state = state,
+                actions = actions,
+                currentRoutineName = currentRoutineName
+            )
         }
     }
 }
 
 private class DefaultRoutineRouteState(
     private val state: RoutineUiState,
-    private val actions: RoutineActions
+    private val actions: RoutineActions,
+    override val currentRoutineName: String
 ) : RoutineRouteState {
     override val coordinatorState: RoutineCoordinatorState = RoutineCoordinatorState(
         plan = state.plan,
         completedPlannedExerciseIds = state.completedPlannedExerciseIds,
         customRoutineBuilderVisible = state.customRoutineBuilder.visible
     )
-
-    @Composable
-    override fun currentRoutineName(): String = state.plan?.localizedName().orEmpty()
 
     override fun LazyListScope.HomeSummary() {
         homeSummaryContent(

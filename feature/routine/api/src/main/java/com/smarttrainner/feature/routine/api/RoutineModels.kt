@@ -24,8 +24,7 @@ data class RoutineFeatureCallbacks(
 interface RoutineRouteState {
     val coordinatorState: RoutineCoordinatorState
 
-    @Composable
-    fun currentRoutineName(): String
+    val currentRoutineName: String
 
     fun LazyListScope.HomeSummary()
 
