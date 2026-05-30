@@ -204,6 +204,7 @@ private fun TrainingScreen(
             onExerciseSelected = onExerciseSelected
         )
     }
+
     val workoutRecordingActions = remember(
         workoutRecordingState.recordingPlannedExercise,
         onSetRepsChanged,
