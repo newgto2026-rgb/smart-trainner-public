@@ -23,8 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
-import com.smarttrainner.core.model.DifficultyLevel
-import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
@@ -455,35 +453,6 @@ internal fun MuscleGroup.localizedLabel(): String = stringResource(
         MuscleGroup.CORE -> R.string.training_muscle_core
         MuscleGroup.CARDIO -> R.string.training_muscle_cardio
         MuscleGroup.FULL_BODY -> R.string.training_muscle_full_body
-    }
-)
-
-internal val armDetailGroups = listOf(
-    MuscleGroup.BICEPS,
-    MuscleGroup.TRICEPS,
-    MuscleGroup.FOREARMS
-)
-
-@Composable
-internal fun EquipmentType.localizedLabel(): String = stringResource(
-    when (this) {
-        EquipmentType.BODYWEIGHT -> R.string.training_equipment_bodyweight
-        EquipmentType.DUMBBELL -> R.string.training_equipment_dumbbell
-        EquipmentType.KETTLEBELL -> R.string.training_equipment_kettlebell
-        EquipmentType.BARBELL -> R.string.training_equipment_barbell
-        EquipmentType.MACHINE -> R.string.training_equipment_machine
-        EquipmentType.CABLE -> R.string.training_equipment_cable
-        EquipmentType.BENCH -> R.string.training_equipment_bench
-        EquipmentType.CARDIO_MACHINE -> R.string.training_equipment_cardio_machine
-    }
-)
-
-@Composable
-internal fun DifficultyLevel.localizedLabel(): String = stringResource(
-    when (this) {
-        DifficultyLevel.BEGINNER -> R.string.training_difficulty_beginner
-        DifficultyLevel.INTERMEDIATE -> R.string.training_difficulty_intermediate
-        DifficultyLevel.ADVANCED -> R.string.training_difficulty_advanced
     }
 )
 

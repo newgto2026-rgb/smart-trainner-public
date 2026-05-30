@@ -1,12 +1,12 @@
 package com.smarttrainner.feature.exercise.api
 
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.smarttrainner.core.model.Exercise
 
 interface ExerciseCatalogFeatureEntry {
-    @Composable
-    fun Content(
+    fun LazyListScope.Content(
         state: ExerciseCatalogUiState,
         actions: ExerciseCatalogActions
     )

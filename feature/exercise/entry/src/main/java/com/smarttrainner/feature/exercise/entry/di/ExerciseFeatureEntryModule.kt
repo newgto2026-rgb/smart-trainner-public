@@ -1,5 +1,6 @@
 package com.smarttrainner.feature.exercise.entry.di
 
+import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
 import com.smarttrainner.feature.exercise.impl.ExerciseFeatureEntryImpl
@@ -11,6 +12,9 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ExerciseFeatureEntryModule {
+    @Binds
+    abstract fun bindExerciseCatalogFeatureEntry(impl: ExerciseFeatureEntryImpl): ExerciseCatalogFeatureEntry
+
     @Binds
     abstract fun bindExerciseDetailFeatureEntry(impl: ExerciseFeatureEntryImpl): ExerciseDetailFeatureEntry
 

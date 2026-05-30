@@ -29,6 +29,7 @@ android {
 dependencies {
     api(project(":core:model"))
     api(platform(libs.androidx.compose.bom))
+    api("androidx.compose.foundation:foundation")
     api(libs.androidx.compose.runtime)
     api(libs.androidx.compose.ui)
 }

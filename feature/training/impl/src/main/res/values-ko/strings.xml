@@ -26,7 +26,6 @@
     <string name="training_error_save">기록 저장에 실패했습니다.</string>
     <string name="training_error_complete_day">오늘 루틴 완료 처리에 실패했습니다.</string>
     <string name="training_saved">기록이 저장되었습니다.</string>
-    <string name="training_all_exercises">기본 운동 %1$d개</string>
     <string name="training_today_progress">오늘 %2$d개 중 %1$d개 완료</string>
     <string name="training_selected">선택됨</string>
     <string name="training_close_detail">운동 상세 닫기</string>
@@ -34,7 +33,6 @@
     <string name="training_record_action">기록</string>
     <string name="training_record_dialog_title">%1$s 기록</string>
     <string name="training_show_exercise_method">운동 방법 보기</string>
-    <string name="training_select_exercise_hint">운동을 선택하면 큰 상세 창에서 방법과 단계 이미지를 볼 수 있습니다.</string>
     <string name="training_target_reps">%1$d세트 · %2$d-%3$d회</string>
     <string name="training_target_duration">%1$d세트 · %2$d분</string>
     <string name="training_recommended_record">권장: %1$s</string>
@@ -198,17 +196,6 @@
     <string name="training_muscle_core">코어</string>
     <string name="training_muscle_cardio">유산소</string>
     <string name="training_muscle_full_body">전신</string>
-    <string name="training_equipment_bodyweight">맨몸</string>
-    <string name="training_equipment_dumbbell">덤벨</string>
-    <string name="training_equipment_kettlebell">케틀벨</string>
-    <string name="training_equipment_barbell">바벨</string>
-    <string name="training_equipment_machine">머신</string>
-    <string name="training_equipment_cable">케이블</string>
-    <string name="training_equipment_bench">벤치</string>
-    <string name="training_equipment_cardio_machine">유산소 머신</string>
-    <string name="training_difficulty_beginner">초보</string>
-    <string name="training_difficulty_intermediate">초중급</string>
-    <string name="training_difficulty_advanced">숙련</string>
     <string name="training_level_intro">입문</string>
     <string name="training_level_beginner">초보 단계</string>
     <string name="training_level_intermediate">초중급 단계</string>

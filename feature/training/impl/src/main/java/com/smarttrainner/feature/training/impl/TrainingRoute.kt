@@ -22,6 +22,7 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
+import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailActions
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
@@ -34,6 +35,7 @@ import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 fun TrainingRoute(
     destination: TrainingDestination,
     analysisFeatureEntry: AnalysisFeatureEntry,
+    exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
     viewModel: TrainingViewModel = hiltViewModel()
@@ -42,6 +44,7 @@ fun TrainingRoute(
     TrainingScreen(
         destination = destination,
         analysisFeatureEntry = analysisFeatureEntry,
+        exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
         state = state,
@@ -95,6 +98,7 @@ fun TrainingRoute(
 private fun TrainingScreen(
     destination: TrainingDestination,
     analysisFeatureEntry: AnalysisFeatureEntry,
+    exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
     state: TrainingUiState,
@@ -347,11 +351,12 @@ private fun TrainingScreen(
                     actions = routineActions,
                     exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
                 )
-                TrainingDestination.Exercises -> exerciseContent(
-                    state = exerciseCatalogState,
-                    actions = exerciseCatalogActions,
-                    exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
-                )
+                TrainingDestination.Exercises -> with(exerciseCatalogFeatureEntry) {
+                    Content(
+                        state = exerciseCatalogState,
+                        actions = exerciseCatalogActions
+                    )
+                }
                 TrainingDestination.Analysis -> item {
                     analysisFeatureEntry.Content(analysisState)
                 }

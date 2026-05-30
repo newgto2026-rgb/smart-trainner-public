@@ -7,6 +7,17 @@
     <string name="exercise_close_image_viewer">확대 이미지 닫기</string>
     <string name="exercise_image_pending">이미지 검수 중</string>
     <string name="exercise_image_viewer_title">운동 이미지</string>
+    <string name="exercise_all_exercises">기본 운동 %1$d개</string>
+    <string name="exercise_select_exercise_hint">운동을 선택하면 큰 상세 창에서 방법과 단계 이미지를 볼 수 있습니다.</string>
+    <string name="exercise_set_number">%1$d세트</string>
+    <string name="exercise_target_reps">%1$d세트 · %2$d-%3$d회</string>
+    <string name="exercise_target_duration">%1$d세트 · %2$d분</string>
+    <string name="exercise_recommended_record">권장: %1$s</string>
+    <string name="exercise_latest_record">최근 기록: %1$s</string>
+    <string name="exercise_actual_reps">반복 %1$s회</string>
+    <string name="exercise_actual_weight">kg %1$s</string>
+    <string name="exercise_actual_duration">%1$s분</string>
+    <string name="exercise_actual_rest">휴식 %1$s초</string>
     <string name="exercise_summary_template">%1$s는 %3$s 장비로 %2$s를 안전하게 연습하는 운동입니다.</string>
     <string name="exercise_instruction_setup_template">%1$s를 시작하기 전에 자세를 세우고 호흡을 정리합니다.</string>
     <string name="exercise_instruction_move_template">목표 근육에 힘을 유지하며 천천히 수행 범위를 움직입니다.</string>

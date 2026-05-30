@@ -26,7 +26,6 @@
     <string name="training_error_save">Could not save this workout.</string>
     <string name="training_error_complete_day">Could not complete this routine day.</string>
     <string name="training_saved">Workout saved.</string>
-    <string name="training_all_exercises">Exercise count: %1$d</string>
     <string name="training_today_progress">Done today: %1$d/%2$d</string>
     <string name="training_selected">Selected</string>
     <string name="training_close_detail">Close exercise detail</string>
@@ -34,7 +33,6 @@
     <string name="training_record_action">Log</string>
     <string name="training_record_dialog_title">Log %1$s</string>
     <string name="training_show_exercise_method">View Exercise Method</string>
-    <string name="training_select_exercise_hint">Choose an exercise to see its method and step images in a large detail dialog.</string>
     <string name="training_target_reps">Sets: %1$d · Reps: %2$d-%3$d</string>
     <string name="training_target_duration">Sets: %1$d · Min: %2$d</string>
     <string name="training_recommended_record">Recommended: %1$s</string>
@@ -198,17 +196,6 @@
     <string name="training_muscle_core">Core</string>
     <string name="training_muscle_cardio">Cardio</string>
     <string name="training_muscle_full_body">Full Body</string>
-    <string name="training_equipment_bodyweight">Bodyweight</string>
-    <string name="training_equipment_dumbbell">Dumbbell</string>
-    <string name="training_equipment_kettlebell">Kettlebell</string>
-    <string name="training_equipment_barbell">Barbell</string>
-    <string name="training_equipment_machine">Machine</string>
-    <string name="training_equipment_cable">Cable</string>
-    <string name="training_equipment_bench">Bench</string>
-    <string name="training_equipment_cardio_machine">Cardio Machine</string>
-    <string name="training_difficulty_beginner">Beginner</string>
-    <string name="training_difficulty_intermediate">Intermediate</string>
-    <string name="training_difficulty_advanced">Advanced</string>
     <string name="training_level_intro">Intro</string>
     <string name="training_level_beginner">Beginner level</string>
     <string name="training_level_intermediate">Intermediate level</string>

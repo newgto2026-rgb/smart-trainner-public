@@ -166,6 +166,24 @@ Next PR scope:
 - Move the exercise catalog destination content behind `ExerciseCatalogFeatureEntry`.
 - Decide whether catalog state stays in the temporary training coordinator for one more PR or moves with a feature-owned ViewModel.
 
+## Phase 10: Exercise Catalog Implementation Move
+
+Status: stacked after Phase 9 on `codex/modularization-exercise-catalog-impl`.
+
+Move the exercise catalog destination UI out of `:feature:training:impl` so the exercise feature owns both list and detail rendering. Training remains the temporary state coordinator for one more step, but the destination body should be composed through the exercise API contract only.
+
+First PR scope:
+
+- Bind `ExerciseCatalogFeatureEntry` from the exercise entry module.
+- Move exercise list sections, row rendering, empty state copy, equipment labels, and latest-record display formatting into `:feature:exercise:impl`.
+- Remove exercise catalog-only UI resources and helpers from `:feature:training:impl`.
+- Keep `TrainingViewModel` producing `ExerciseCatalogUiState` and `ExerciseCatalogActions` until the next state-ownership phase.
+
+Next PR scope:
+
+- Move routine implementation behind `RoutineFeatureEntry`, or move workout recording implementation behind `WorkoutRecordingFeatureEntry` if it is the safer dependency cut.
+- Continue shrinking `:feature:training:impl` toward a temporary coordinator with no feature-owned screen rendering.
+
 ## Split Decision
 
 `routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress, exercise selection, and recording forms. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.
