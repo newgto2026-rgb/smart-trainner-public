@@ -196,9 +196,11 @@ private fun TrainingScreen(
             onRecordSelected = onRecordSelected
         )
     }
-    val exerciseCatalogActions = ExerciseCatalogActions(
-        onExerciseSelected = onExerciseSelected
-    )
+    val exerciseCatalogActions = remember(onExerciseSelected) {
+        ExerciseCatalogActions(
+            onExerciseSelected = onExerciseSelected
+        )
+    }
     if (recordingPlannedExercise != null && selectedExercise == null) {
         RecordDialog(
             state = state,
