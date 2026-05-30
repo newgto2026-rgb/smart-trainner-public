@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="training_destination_home">홈</string>
-    <string name="training_destination_routine">루틴</string>
-    <string name="training_destination_exercises">운동</string>
-    <string name="training_destination_analysis">분석</string>
-</resources>

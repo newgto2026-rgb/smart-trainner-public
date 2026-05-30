@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="training_destination_home">Home</string>
-    <string name="training_destination_routine">Routine</string>
-    <string name="training_destination_exercises">Exercises</string>
-    <string name="training_destination_analysis">Analysis</string>
-</resources>

@@ -241,6 +241,44 @@ Next PR scope:
 - Split the temporary `TrainingViewModel` into feature-owned state holders, starting with routine state and workout recording state.
 - Revisit `TrainingRepository` as multiple domain contracts once feature ViewModels no longer require a single all-purpose repository surface.
 
+## Phase 14: App-Owned Destination Selection
+
+Status: stacked after Phase 13 on `codex/modularization-app-owned-destinations`.
+
+Move route metadata and top-level destination selection out of `:feature:training:api`. The app module should own tab routes, labels, icons, test tags, the root `NavHost`, and the destination `when`. Training remains a temporary coordinator surface only because feature-owned ViewModels and app-level feature composition are not split yet.
+
+First PR scope:
+
+- Remove `TrainingDestination` from `:feature:training:api`.
+- Move tab labels from `:feature:training:api` resources into app resources.
+- Expose separate `TrainingFeatureEntry.Home`, `Routine`, `Exercises`, and `Analysis` surfaces so app decides which destination to render.
+- Remove destination branching from `TrainingRoute`; it now accepts destination content from its caller.
+- Document that DI is still not fully app-owned: current Hilt bindings live in `:feature:*:entry` modules and are aggregated because `:app` depends on those entries.
+
+Next PR scope:
+
+- Replace the broad training facade with app-level injection of each feature entry where possible.
+- Move Hilt feature-entry binding modules into an app-owned composition root, or introduce an explicit app composition module, so the app is the place where feature implementations are assembled.
+- Remove cross-feature API references where the coupling is only for presentation composition, especially `routine/api -> exercise/api` and `workout/api -> exercise/api`.
+- Split `TrainingViewModel` so each feature owns its state and only app-level flows coordinate between features.
+
+## Strict Feature Isolation Audit
+
+Current state is not strict feature ignorance:
+
+- `:feature:routine:api` knows `:feature:exercise:api` through `ExerciseMediaFeatureEntry`.
+- `:feature:workout:api` knows `:feature:exercise:api` through `ExerciseMediaFeatureEntry`.
+- `:feature:training:impl` knows all feature APIs while it remains the temporary coordinator.
+- `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
+
+Current guardrails still enforce the important lower-level boundary:
+
+- `core:*` must not depend on `feature:*`.
+- Feature modules must not depend on data, storage, or network implementation modules.
+- Feature API modules must not depend on feature implementation or entry modules.
+- Feature implementation modules must not depend on other feature implementation or entry modules directly.
+- App must not depend on feature implementation modules directly.
+
 ## Split Decision
 
 `routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress, exercise selection, and recording forms. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.

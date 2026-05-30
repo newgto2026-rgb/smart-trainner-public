@@ -4,4 +4,8 @@
     <string name="login_start_title">바로 시작하기</string>
     <string name="login_start_detail">로그인 없이 시작하고 이 기기에 기록합니다.</string>
     <string name="login_continue_default">시작하기</string>
+    <string name="app_destination_home">홈</string>
+    <string name="app_destination_routine">루틴</string>
+    <string name="app_destination_exercises">운동</string>
+    <string name="app_destination_analysis">분석</string>
 </resources>

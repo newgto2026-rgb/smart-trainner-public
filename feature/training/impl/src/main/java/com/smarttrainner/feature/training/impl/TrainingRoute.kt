@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -20,35 +21,33 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.TrainingExperience
-import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
-import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailActions
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
 import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
-import com.smarttrainner.feature.training.api.TrainingDestination
 import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 
+internal typealias TrainingRouteContent = LazyListScope.(
+    TrainingUiState,
+    RoutineActions,
+    ExerciseCatalogActions
+) -> Unit
+
 @Composable
-fun TrainingRoute(
-    destination: TrainingDestination,
-    analysisFeatureEntry: AnalysisFeatureEntry,
-    exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
+internal fun TrainingRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
-    viewModel: TrainingViewModel = hiltViewModel()
+    viewModel: TrainingViewModel = hiltViewModel(),
+    content: TrainingRouteContent
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     TrainingScreen(
-        destination = destination,
-        analysisFeatureEntry = analysisFeatureEntry,
-        exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
         routineFeatureEntry = routineFeatureEntry,
@@ -96,15 +95,13 @@ fun TrainingRoute(
         onMemoChanged = viewModel::updateMemo,
         onSaveRecord = viewModel::saveRecord,
         onExerciseDetailDismiss = viewModel::dismissExerciseDetail,
-        onRecordDialogDismiss = viewModel::dismissRecordDialog
+        onRecordDialogDismiss = viewModel::dismissRecordDialog,
+        content = content
     )
 }
 
 @Composable
 private fun TrainingScreen(
-    destination: TrainingDestination,
-    analysisFeatureEntry: AnalysisFeatureEntry,
-    exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
@@ -152,7 +149,8 @@ private fun TrainingScreen(
     onMemoChanged: (String) -> Unit,
     onSaveRecord: () -> Unit,
     onExerciseDetailDismiss: () -> Unit,
-    onRecordDialogDismiss: () -> Unit
+    onRecordDialogDismiss: () -> Unit,
+    content: TrainingRouteContent
 ) {
     val selectedExercise = state.selectedExercise
     val recordingPlannedExercise = state.recordingPlannedExercise
@@ -311,30 +309,7 @@ private fun TrainingScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item { Header(state) }
-            when (destination) {
-                TrainingDestination.Home -> with(routineFeatureEntry) {
-                    HomeSummary(
-                        state = routineState,
-                        actions = routineActions
-                    )
-                }
-                TrainingDestination.Routine -> with(routineFeatureEntry) {
-                    Content(
-                        state = routineState,
-                        actions = routineActions,
-                        exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
-                    )
-                }
-                TrainingDestination.Exercises -> with(exerciseCatalogFeatureEntry) {
-                    Content(
-                        state = exerciseCatalogState,
-                        actions = exerciseCatalogActions
-                    )
-                }
-                TrainingDestination.Analysis -> item {
-                    analysisFeatureEntry.Content(analysisState)
-                }
-            }
+            content(state, routineActions, exerciseCatalogActions)
         }
     }
 }

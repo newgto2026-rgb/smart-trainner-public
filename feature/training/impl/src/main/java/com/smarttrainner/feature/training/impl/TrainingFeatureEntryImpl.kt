@@ -6,7 +6,6 @@ import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
-import com.smarttrainner.feature.training.api.TrainingDestination
 import com.smarttrainner.feature.training.api.TrainingFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 import javax.inject.Inject
@@ -20,15 +19,68 @@ class TrainingFeatureEntryImpl @Inject constructor(
     private val workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) : TrainingFeatureEntry {
     @Composable
-    override fun Content(destination: TrainingDestination) {
+    override fun Home() {
         TrainingRoute(
-            destination = destination,
-            analysisFeatureEntry = analysisFeatureEntry,
-            exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
             exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
             exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
             routineFeatureEntry = routineFeatureEntry,
             workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-        )
+        ) { state, routineActions, _ ->
+            with(routineFeatureEntry) {
+                HomeSummary(
+                    state = state.routine,
+                    actions = routineActions
+                )
+            }
+        }
+    }
+
+    @Composable
+    override fun Routine() {
+        TrainingRoute(
+            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+            routineFeatureEntry = routineFeatureEntry,
+            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+        ) { state, routineActions, _ ->
+            with(routineFeatureEntry) {
+                Content(
+                    state = state.routine,
+                    actions = routineActions,
+                    exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
+                )
+            }
+        }
+    }
+
+    @Composable
+    override fun Exercises() {
+        TrainingRoute(
+            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+            routineFeatureEntry = routineFeatureEntry,
+            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+        ) { state, _, exerciseCatalogActions ->
+            with(exerciseCatalogFeatureEntry) {
+                Content(
+                    state = state.exerciseCatalog,
+                    actions = exerciseCatalogActions
+                )
+            }
+        }
+    }
+
+    @Composable
+    override fun Analysis() {
+        TrainingRoute(
+            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+            routineFeatureEntry = routineFeatureEntry,
+            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+        ) { state, _, _ ->
+            item {
+                analysisFeatureEntry.Content(state.analysis)
+            }
+        }
     }
 }
