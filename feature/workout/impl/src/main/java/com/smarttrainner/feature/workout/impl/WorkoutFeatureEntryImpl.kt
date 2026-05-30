@@ -1,6 +1,7 @@
 package com.smarttrainner.feature.workout.impl
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -25,6 +26,11 @@ class WorkoutFeatureEntryImpl @Inject constructor() : WorkoutRecordingFeatureEnt
         val viewModel: WorkoutRecordingViewModel = hiltViewModel()
         LaunchedEffect(plannedExercise) {
             viewModel.updatePlannedExercise(plannedExercise)
+        }
+        DisposableEffect(viewModel) {
+            onDispose {
+                viewModel.clearRecording()
+            }
         }
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         Dialog(

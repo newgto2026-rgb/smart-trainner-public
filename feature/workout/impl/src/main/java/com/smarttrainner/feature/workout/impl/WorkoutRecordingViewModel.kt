@@ -99,7 +99,7 @@ class WorkoutRecordingViewModel @Inject constructor(
         val current = recordingPlannedExercise.value
         if (plannedExercise == null) {
             if (current != null) {
-                resetRecording()
+                clearRecording()
             }
             return
         }
@@ -232,7 +232,7 @@ class WorkoutRecordingViewModel @Inject constructor(
         }
     }
 
-    private fun resetRecording() {
+    fun clearRecording() {
         recordPrefillToken += 1
         recordingPlannedExercise.value = null
         recordForm.value = RecordFormState()

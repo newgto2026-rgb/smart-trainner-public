@@ -113,6 +113,27 @@ class WorkoutRecordingViewModelTest {
         }
     }
 
+    @Test
+    fun clearRecording_resetsDialogState() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            viewModel.updatePlannedExercise(repository.plannedExercise)
+            advanceUntilIdle()
+            viewModel.updateSetReps(index = 0, value = "12")
+            viewModel.clearRecording()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertThat(state.recordingPlannedExercise).isNull()
+            assertThat(state.recordForm.setEntries).isEmpty()
+            assertThat(state.formError).isNull()
+            assertThat(state.recordSaved).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun viewModel() = WorkoutRecordingViewModel(
         observeWorkoutLogs = ObserveWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
