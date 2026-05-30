@@ -44,9 +44,6 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerNumberField
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
-import com.smarttrainner.feature.workout.api.RecordFormError
-import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
-import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
 import java.util.Locale
 
 @Composable

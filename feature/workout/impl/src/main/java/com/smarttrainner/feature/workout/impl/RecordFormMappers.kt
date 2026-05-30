@@ -4,8 +4,6 @@ import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
-import com.smarttrainner.feature.workout.api.RecordFormError
-import com.smarttrainner.feature.workout.api.RecordSetFormState
 
 internal const val MAX_RECORD_SETS = 12
 

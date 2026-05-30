@@ -14,11 +14,4 @@ interface WorkoutRecordingFeatureEntry {
         onDismiss: () -> Unit,
         exerciseMediaRenderer: ExerciseMediaRenderer
     )
-
-    @Composable
-    fun Dialog(
-        state: WorkoutRecordingUiState,
-        actions: WorkoutRecordingActions,
-        exerciseMediaRenderer: ExerciseMediaRenderer
-    )
 }

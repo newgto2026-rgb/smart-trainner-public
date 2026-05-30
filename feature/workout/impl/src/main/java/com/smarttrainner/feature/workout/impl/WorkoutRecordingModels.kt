@@ -1,9 +1,9 @@
-package com.smarttrainner.feature.workout.api
+package com.smarttrainner.feature.workout.impl
 
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 
-enum class RecordFormError {
+internal enum class RecordFormError {
     SELECT_EXERCISE,
     SETS,
     REPS,
@@ -14,19 +14,19 @@ enum class RecordFormError {
     COMPLETE_DAY_FAILED
 }
 
-data class RecordFormState(
+internal data class RecordFormState(
     val setEntries: List<RecordSetFormState> = emptyList(),
     val memo: String = ""
 )
 
-data class RecordSetFormState(
+internal data class RecordSetFormState(
     val reps: String = "",
     val weightKg: String = "",
     val durationMinutes: String = "",
     val restSeconds: String = ""
 )
 
-data class WorkoutRecordingUiState(
+internal data class WorkoutRecordingUiState(
     val recordingPlannedExercise: PlannedExercise? = null,
     val weeklyLogs: List<WorkoutLog> = emptyList(),
     val latestWorkoutLogs: List<WorkoutLog> = emptyList(),
@@ -35,7 +35,7 @@ data class WorkoutRecordingUiState(
     val recordSaved: Boolean = false
 )
 
-data class WorkoutRecordingActions(
+internal data class WorkoutRecordingActions(
     val onSetRepsChanged: (Int, String) -> Unit = { _, _ -> },
     val onSetWeightChanged: (Int, String) -> Unit = { _, _ -> },
     val onSetDurationChanged: (Int, String) -> Unit = { _, _ -> },

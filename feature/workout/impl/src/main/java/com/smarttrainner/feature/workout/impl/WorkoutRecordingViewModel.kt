@@ -9,10 +9,6 @@ import com.smarttrainner.core.domain.SaveWorkoutLogUseCase
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogInput
-import com.smarttrainner.feature.workout.api.RecordFormError
-import com.smarttrainner.feature.workout.api.RecordFormState
-import com.smarttrainner.feature.workout.api.RecordSetFormState
-import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
@@ -76,7 +72,7 @@ class WorkoutRecordingViewModel @Inject constructor(
         )
     }
 
-    val uiState = combine(
+    internal val uiState = combine(
         recordingPlannedExercise,
         logState,
         formState

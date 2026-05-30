@@ -9,9 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
-import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
-import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
 import javax.inject.Inject
 
 class WorkoutFeatureEntryImpl @Inject constructor() : WorkoutRecordingFeatureEntry {
@@ -33,7 +31,7 @@ class WorkoutFeatureEntryImpl @Inject constructor() : WorkoutRecordingFeatureEnt
             }
         }
         val state by viewModel.uiState.collectAsStateWithLifecycle()
-        Dialog(
+        WorkoutRecordDialog(
             state = state,
             actions = WorkoutRecordingActions(
                 onSetRepsChanged = viewModel::updateSetReps,
@@ -52,19 +50,6 @@ class WorkoutFeatureEntryImpl @Inject constructor() : WorkoutRecordingFeatureEnt
                 },
                 onDismiss = onDismiss
             ),
-            exerciseMediaRenderer = exerciseMediaRenderer
-        )
-    }
-
-    @Composable
-    override fun Dialog(
-        state: WorkoutRecordingUiState,
-        actions: WorkoutRecordingActions,
-        exerciseMediaRenderer: ExerciseMediaRenderer
-    ) {
-        WorkoutRecordDialog(
-            state = state,
-            actions = actions,
             exerciseMediaRenderer = exerciseMediaRenderer
         )
     }
