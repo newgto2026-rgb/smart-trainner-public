@@ -2,6 +2,7 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.tasks.PathSensitivity
 
 plugins {
     base
@@ -20,6 +21,9 @@ val checkModuleBoundaries by tasks.registering {
     description = "Checks Smart Trainner module dependency direction rules."
 
     val checkedSuffixes = setOf("api", "implementation", "compileonly", "runtimeonly", "kapt", "ksp")
+    val appMainKotlinSources = layout.projectDirectory.dir("app/src/main").asFileTree.matching {
+        include("**/*.kt")
+    }
     val projectEdges = providers.provider {
         allprojects.flatMap { sourceProject ->
             sourceProject.configurations
@@ -35,6 +39,8 @@ val checkModuleBoundaries by tasks.registering {
         }
     }
     inputs.property("projectEdges", projectEdges)
+    inputs.files(appMainKotlinSources)
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 
     doLast {
         val implementationCoreModules = setOf(
@@ -51,8 +57,14 @@ val checkModuleBoundaries by tasks.registering {
         fun featureName(path: String) = path.split(":").getOrNull(2)
 
         val allowedCrossFeatureApiDependencies = emptySet<Pair<String, String>>()
+        val allowedAppFeatureImplDependencies = setOf(
+            ":app" to ":feature:analysis:impl",
+            ":app" to ":feature:exercise:impl",
+            ":app" to ":feature:routine:impl",
+            ":app" to ":feature:workout:impl"
+        )
         val allProjectPaths = allprojects.map { it.path }.toSet()
-        val invalidAllowlistPaths = allowedCrossFeatureApiDependencies
+        val invalidAllowlistPaths = (allowedCrossFeatureApiDependencies + allowedAppFeatureImplDependencies)
             .flatMap { (source, target) -> listOf(source, target) }
             .filterNot { it in allProjectPaths }
             .distinct()
@@ -60,12 +72,13 @@ val checkModuleBoundaries by tasks.registering {
 
         if (invalidAllowlistPaths.isNotEmpty()) {
             throw GradleException(
-                "allowedCrossFeatureApiDependencies contains stale or invalid project paths: " +
+                "Module boundary allowlists contain stale or invalid project paths: " +
                     invalidAllowlistPaths.joinToString()
             )
         }
 
         val violations = mutableListOf<String>()
+        val featureImplReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.impl(\.|$)""")
 
         projectEdges.get().forEach { edgeString ->
             val parts = edgeString.split("|")
@@ -96,8 +109,27 @@ val checkModuleBoundaries by tasks.registering {
                     (source to target) !in allowedCrossFeatureApiDependencies -> {
                     violations += "$edge: cross-feature API dependencies must be explicitly isolated or added to the transitional allowlist with an owner-removal plan."
                 }
-                source == ":app" && isFeatureImpl(target) -> {
-                    violations += "$edge: app must depend on feature API/entry contracts, not feature implementations."
+                source == ":app" && isFeatureEntry(target) -> {
+                    violations += "$edge: app-owned DI composition should bind feature APIs directly to feature implementations; feature entry modules must not be reintroduced."
+                }
+                source == ":app" &&
+                    isFeatureImpl(target) &&
+                    (source to target) !in allowedAppFeatureImplDependencies -> {
+                    violations += "$edge: app may depend on feature implementations only from the app-owned DI composition allowlist."
+                }
+            }
+        }
+
+        appMainKotlinSources.files.forEach { sourceFile ->
+            val normalizedPath = sourceFile.path.replace('\\', '/')
+            if ("/app/src/main/java/com/smarttrainner/app/di/" in normalizedPath) return@forEach
+
+            sourceFile.useLines { lines ->
+                lines.forEachIndexed { index, line ->
+                    if (featureImplReferencePattern.containsMatchIn(line)) {
+                        violations +=
+                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature implementation references in :app are allowed only in app-owned DI composition modules."
+                    }
                 }
             }
         }

@@ -10,7 +10,7 @@ The final architecture should make the app module a thin composition layer:
 - `:core:*` modules provide reusable models, domain contracts, data implementations, design tokens, and shared UI primitives.
 - `:feature:*:api` modules expose stable route keys and public contracts only.
 - `:feature:*:impl` modules own screen implementation, ViewModels, and feature-specific UI.
-- `:feature:*:entry` modules bind implementation contracts for the app without leaking implementation classes.
+- `:app` owns the DI composition root that binds feature API contracts to feature implementations.
 
 ## Phase 1: App Shell And Shared UI Foundation
 
@@ -541,17 +541,41 @@ Next PR scope:
 - Consider splitting `DefaultTrainingRepository` into internal core-data collaborators after the contract split has settled.
 - Continue checking whether any future repository is truly feature-private before adding `:feature:*:domain` or `:feature:*:data`.
 
+## Phase 28: App-Owned Feature DI Composition
+
+Status: stacked after Phase 27 on `codex/modularization-app-owned-feature-di`.
+
+Move final feature-entry binding assembly into `:app` so routing and DI composition are both app-owned. Feature APIs remain the contracts consumed by app navigation; feature implementations remain responsible for screen/ViewModel internals.
+
+First PR scope:
+
+- Add an app-owned Hilt module that binds `AnalysisFeatureEntry`, `ExerciseCatalogFeatureEntry`, `ExerciseDetailFeatureEntry`, `RoutineFeatureEntry`, `WorkoutRecordingFeatureEntry`, and `ExerciseMediaRenderer` to their feature implementations.
+- Remove the now-redundant `:feature:analysis:entry`, `:feature:exercise:entry`, `:feature:routine:entry`, and `:feature:workout:entry` modules.
+- Change app dependencies from feature entry modules to the corresponding feature implementation modules.
+- Update module-boundary checks with an explicit `:app` to `:feature:*:impl` allowlist for composition-root DI only.
+
+Split decision:
+
+- Allow direct `:app` to feature implementation dependencies only because `:app` is the composition root. Feature implementation classes should stay referenced from app DI wiring, not from app route bodies or feature modules.
+- Keep feature APIs as the routing contracts. App navigation still routes through API interfaces, while Hilt decides which implementation satisfies each contract.
+- Do not add `:feature:*:domain`, `:feature:*:data`, or `:feature:*:network` in this phase. This is a DI assembly cleanup, not a repository ownership split.
+
+Next PR scope:
+
+- Consider splitting `DefaultTrainingRepository` into core-data collaborators if the narrower core-domain contracts keep holding.
+- Continue auditing app package imports so feature implementation symbols remain isolated to app-owned DI modules.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
 
 - `:feature:analysis`, `:feature:exercise`, `:feature:routine`, and `:feature:workout` no longer depend on another feature's API, implementation, or entry module.
-- `:app` knows the feature APIs and entries because it owns routing and cross-feature composition.
+- `:app` knows feature APIs for routing and listed feature implementations only for app-owned DI composition.
 - App `TrainingViewModel` now coordinates selected exercise id and a generic single/continuous recording flow; workout recording, exercise detail, exercise catalog, analysis, routine, custom routine builder state, and routine continuation policy are feature-owned.
 - App no longer imports routine UI/action/form models or raw routine coordinator state; it consumes only the routine feature entry and opaque route API.
 - App no longer owns the routine/exercise `LazyListScope` screen assembly; shared screen chrome lives in `:core:ui`, and feature APIs expose composable route surfaces.
 - Core domain persistence contracts are no longer one broad `TrainingRepository`; use cases depend on concern-specific shared contracts.
-- `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
+- `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:
 
@@ -559,7 +583,7 @@ Current guardrails still enforce the important lower-level boundary:
 - Feature modules must not depend on data, storage, or network implementation modules.
 - Feature API modules must not depend on feature implementation or entry modules.
 - Feature implementation modules must not depend on other feature implementation or entry modules directly.
-- App must not depend on feature implementation modules directly.
+- Only `:app` may depend on the listed feature implementation modules for composition-root DI.
 
 ## Split Decision
 
