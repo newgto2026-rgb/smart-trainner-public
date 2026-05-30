@@ -4,17 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.domain.GetExerciseUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
-import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ExerciseDetailViewModel @Inject constructor(
@@ -22,14 +22,21 @@ class ExerciseDetailViewModel @Inject constructor(
     private val getExercise: GetExerciseUseCase
 ) : ViewModel() {
     private val selectedExerciseId = MutableStateFlow<ExerciseId?>(null)
-    private val selectedExercise = MutableStateFlow<Exercise?>(null)
     private val showRecordAction = MutableStateFlow(false)
-    private var exerciseLookupToken = 0L
 
     private val latestWorkoutLogs = observeLatestWorkoutLogs().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList()
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val selectedExercise = selectedExerciseId.mapLatest { id ->
+        id?.let { getExercise(it) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = null
     )
 
     val uiState = combine(
@@ -54,29 +61,14 @@ class ExerciseDetailViewModel @Inject constructor(
         exerciseId: ExerciseId?,
         shouldShowRecordAction: Boolean
     ) {
-        showRecordAction.value = shouldShowRecordAction
         if (exerciseId == null) {
-            clearSelection()
+            selectedExerciseId.value = null
+            showRecordAction.value = false
             return
         }
+        showRecordAction.value = shouldShowRecordAction
         if (selectedExerciseId.value == exerciseId) return
         selectedExerciseId.value = exerciseId
-        selectedExercise.value = null
-        val token = exerciseLookupToken + 1
-        exerciseLookupToken = token
-        viewModelScope.launch {
-            val exercise = getExercise(exerciseId)
-            if (exerciseLookupToken == token && selectedExerciseId.value == exerciseId) {
-                selectedExercise.value = exercise
-            }
-        }
-    }
-
-    private fun clearSelection() {
-        exerciseLookupToken += 1
-        selectedExerciseId.value = null
-        selectedExercise.value = null
-        showRecordAction.value = false
     }
 }
 

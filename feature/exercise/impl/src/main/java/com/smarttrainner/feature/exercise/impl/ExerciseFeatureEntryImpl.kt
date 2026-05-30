@@ -2,7 +2,7 @@ package com.smarttrainner.feature.exercise.impl
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -40,11 +40,14 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
         onRecordRequested: (ExerciseId) -> Unit
     ) {
         val viewModel: ExerciseDetailViewModel = hiltViewModel()
-        LaunchedEffect(exerciseId, showRecordAction) {
+        DisposableEffect(exerciseId, showRecordAction) {
             viewModel.updateSelection(
                 exerciseId = exerciseId,
                 shouldShowRecordAction = showRecordAction
             )
+            onDispose {
+                viewModel.updateSelection(exerciseId = null, shouldShowRecordAction = false)
+            }
         }
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         Dialog(
