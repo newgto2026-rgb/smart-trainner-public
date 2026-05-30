@@ -831,6 +831,25 @@ Next PR scope:
 - Audit whether workout log write commands are still shared app capabilities or should split into workout-owned command contracts.
 - Continue tightening app DI file-level guardrails as more feature-local data modules are introduced.
 
+## Phase 40: App Training Flow State Coordinator
+
+Status: stacked after Phase 39 on `codex/modularization-training-flow-state-coordinator`.
+
+Keep navigation and cross-feature orchestration in `:app`, but make the app-owned training flow state explicit and testable. The current training flow coordinates routine callbacks, exercise detail, and workout recording dialogs with shared core models; it is not owned by one feature and should not become a feature-local domain/data module.
+
+First PR scope:
+
+- Add an app-local `TrainingFlowState` reducer for selected exercise, recording dialog target, and single-vs-continuous recording mode.
+- Keep `TrainingViewModel` as the lifecycle-aware shell that exposes `TrainingUiState` and delegates state transitions.
+- Scope `TrainingViewModel` to the activity-level app coordinator instead of per destination, so home, routine, and exercise tabs share the same cross-feature flow.
+- Add pure state tests for single recording, continuous recording advancement, and continuous flow completion.
+
+Split decision:
+
+- Do not add a new `feature:*:domain`, `feature:*:data`, or `feature:*:network` module for this flow. The state is app routing/coordinator state, not a feature-owned contract or implementation.
+- Do not move this state to `core:*` yet. It is not reused by lower layers and references a concrete app navigation workflow.
+- Continue using `:app` as the only module that wires routine, exercise, and workout feature APIs together.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -853,6 +872,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Routine-only read contracts for template catalog and active progress now live in `:feature:routine:domain`.
 - Routine repository implementations now live in `:feature:routine:data`; app-owned DI binds them to the shared core weekly-plan contract and routine-owned read/command contracts.
 - App-owned DI now separates shared core repository bindings from routine feature-data repository bindings.
+- App training flow state now lives in an app-local reducer so `TrainingViewModel` is a thin coordinator shell, while cross-feature routing remains app-owned.
 - Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 

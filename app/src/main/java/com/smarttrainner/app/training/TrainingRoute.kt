@@ -48,7 +48,7 @@ internal fun TrainingRoute(
 }
 
 @Composable
-private fun sharedTrainingViewModel(): TrainingViewModel {
+internal fun sharedTrainingViewModel(): TrainingViewModel {
     val context = LocalContext.current
     val sharedOwner = remember(context) { context.findViewModelStoreOwner() }
     return if (sharedOwner != null) {

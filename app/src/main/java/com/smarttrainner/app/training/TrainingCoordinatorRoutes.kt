@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.R
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
@@ -24,7 +23,7 @@ fun TrainingHomeRoute(
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
-    val viewModel: TrainingViewModel = hiltViewModel()
+    val viewModel = sharedTrainingViewModel()
     val routineRouteState = rememberRoutineRouteState(
         routineFeatureEntry = routineFeatureEntry,
         viewModel = viewModel
@@ -52,7 +51,7 @@ fun TrainingRoutineRoute(
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
-    val viewModel: TrainingViewModel = hiltViewModel()
+    val viewModel = sharedTrainingViewModel()
     val routineRouteState = rememberRoutineRouteState(
         routineFeatureEntry = routineFeatureEntry,
         viewModel = viewModel
@@ -82,7 +81,7 @@ fun TrainingExercisesRoute(
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
-    val viewModel: TrainingViewModel = hiltViewModel()
+    val viewModel = sharedTrainingViewModel()
     val trainingState by viewModel.uiState.collectAsStateWithLifecycle()
     val routineRouteState = rememberRoutineRouteState(
         routineFeatureEntry = routineFeatureEntry,

@@ -8,70 +8,49 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 class TrainingViewModel @Inject constructor() : ViewModel() {
-    private val selectedExerciseId = MutableStateFlow<ExerciseId?>(null)
-    private val recordingPlannedExercise = MutableStateFlow<PlannedExercise?>(null)
-    private val recordingFlow = MutableStateFlow(RecordingFlow.SINGLE)
+    private val flowState = MutableStateFlow(TrainingFlowState())
 
-    val uiState = combine(
-        selectedExerciseId,
-        recordingPlannedExercise
-    ) { exerciseId, plannedExercise ->
-        TrainingUiState(
-            recordingPlannedExercise = plannedExercise,
-            selectedExerciseId = exerciseId
-        )
-    }.stateIn(
+    val uiState = flowState.map { it.uiState }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TrainingUiState()
     )
 
     fun selectExercise(exerciseId: ExerciseId) {
-        selectedExerciseId.value = exerciseId
+        flowState.update { it.showExerciseDetail(exerciseId) }
     }
 
     fun showExerciseMethod(exerciseId: ExerciseId) {
-        selectedExerciseId.value = exerciseId
+        flowState.update { it.showExerciseDetail(exerciseId) }
     }
 
     fun dismissExerciseDetail() {
-        selectedExerciseId.value = null
+        flowState.update { it.dismissExerciseDetail() }
     }
 
     fun selectPlannedExercise(exercise: PlannedExercise) {
-        recordingFlow.value = RecordingFlow.SINGLE
-        recordingPlannedExercise.value = exercise
-        selectedExerciseId.value = null
+        flowState.update { it.selectPlannedExercise(exercise) }
     }
 
     fun startContinuousRecording(exercise: PlannedExercise) {
-        recordingFlow.value = RecordingFlow.CONTINUOUS
-        recordingPlannedExercise.value = exercise
-        selectedExerciseId.value = null
+        flowState.update { it.startContinuousRecording(exercise) }
     }
 
     fun dismissRecordDialog() {
-        recordingPlannedExercise.value = null
-        recordingFlow.value = RecordingFlow.SINGLE
+        flowState.update { it.dismissRecordDialog() }
     }
 
     fun handleRecordSaved(nextPlannedExercise: PlannedExercise?) {
-        val nextPlanned = if (recordingFlow.value == RecordingFlow.CONTINUOUS) nextPlannedExercise else null
-        if (nextPlanned != null) {
-            recordingPlannedExercise.value = nextPlanned
-        } else {
-            recordingPlannedExercise.value = null
-            recordingFlow.value = RecordingFlow.SINGLE
-        }
+        flowState.update { it.recordSaved(nextPlannedExercise) }
     }
 
     fun clearRecordingFlow() {
-        recordingPlannedExercise.value = null
-        recordingFlow.value = RecordingFlow.SINGLE
+        flowState.update { it.clearRecordingFlow() }
     }
 }
