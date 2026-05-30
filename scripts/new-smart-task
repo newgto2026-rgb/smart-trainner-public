@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  printf 'Usage: %s <task-name>\n' "$(basename "$0")" >&2
+  printf 'Creates codex/<task-name> from the latest origin/main in a new worktree.\n' >&2
+}
+
+task_name="${1:-}"
+if [[ "$task_name" == "-h" || "$task_name" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ -z "$task_name" ]]; then
+  usage
+  exit 1
+fi
+
+if [[ ! "$task_name" =~ ^[A-Za-z0-9._-]+$ ]]; then
+  printf 'Task name may contain only letters, numbers, dots, underscores, and hyphens: %s\n' "$task_name" >&2
+  exit 1
+fi
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "$script_dir/.." && pwd)"
+expected_repo="newgto2026-rgb/smart-trainner-public"
+remote_url="$(git -C "$repo_root" remote get-url origin)"
+
+case "$remote_url" in
+  git@github.com:newgto2026-rgb/smart-trainner-public.git|\
+  ssh://git@github.com/newgto2026-rgb/smart-trainner-public.git|\
+  https://github.com/newgto2026-rgb/smart-trainner-public.git|\
+  https://github.com/newgto2026-rgb/smart-trainner-public)
+    ;;
+  *)
+    printf 'origin must point to %s before creating a task worktree.\n' "$expected_repo" >&2
+    printf 'Current origin: %s\n' "$remote_url" >&2
+    exit 1
+    ;;
+esac
+
+branch="codex/$task_name"
+worktree_root="${SMART_TRAINNER_WORKTREE_ROOT:-$HOME/.codex/worktrees}"
+worktree_path="$worktree_root/$task_name/smart-trainner"
+
+if git -C "$repo_root" show-ref --verify --quiet "refs/heads/$branch"; then
+  printf 'Branch already exists: %s\n' "$branch" >&2
+  exit 1
+fi
+
+if [[ -e "$worktree_path" ]]; then
+  printf 'Worktree path already exists: %s\n' "$worktree_path" >&2
+  exit 1
+fi
+
+git -C "$repo_root" fetch origin main
+mkdir -p "$(dirname "$worktree_path")"
+git -C "$repo_root" worktree add -b "$branch" "$worktree_path" origin/main
+
+printf 'Created %s at %s\n' "$branch" "$worktree_path"
