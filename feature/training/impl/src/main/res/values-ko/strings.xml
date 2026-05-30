@@ -1,13 +1,7 @@
 <resources>
     <string name="training_app_title">Smart Trainer</string>
-    <string name="training_today_title">오늘의 트레이닝</string>
-    <string name="training_start_record">운동 시작</string>
-    <string name="training_completed">완료</string>
-    <string name="training_incomplete">예정</string>
     <string name="training_set_number">%1$d세트</string>
     <string name="training_rest">휴식 %1$d초</string>
-    <string name="training_empty_plan">이번 주 운동이 없습니다. 입문 루틴을 선택해 시작해보세요.</string>
-    <string name="training_error_complete_day">오늘 루틴 완료 처리에 실패했습니다.</string>
     <string name="training_target_reps">%1$d세트 · %2$d-%3$d회</string>
     <string name="training_target_duration">%1$d세트 · %2$d분</string>
     <string name="training_recommended_record">권장: %1$s</string>
@@ -18,18 +12,6 @@
     <string name="training_actual_rest">휴식 %1$s초</string>
     <string name="training_template_meta">%1$s · 주 %2$d회 · %3$d분</string>
     <string name="training_custom_template_meta">%1$d일 구성</string>
-    <string name="training_today_focus_title">오늘은 %1$s</string>
-    <string name="training_routine_day_subtitle">%1$d일차 · %2$s · 약 %3$d분</string>
-    <string name="training_routine_completed_progress">루틴 진행: %2$d개 중 %1$d개 기록</string>
-    <string name="training_routine_badge_duration">약 %1$d분</string>
-    <string name="training_routine_badge_exercises">운동 %1$d개</string>
-    <string name="training_routine_badge_recovery">회복 %1$d시간</string>
-    <string name="training_routine_main_focus">주요 부위</string>
-    <string name="training_routine_examples">오늘 운동 계획</string>
-    <string name="training_next_routine_day">다음 운동: %1$s</string>
-    <string name="training_complete_routine_day">오늘 운동 완료</string>
-    <string name="training_custom_routine_badge">사용자 루틴</string>
-    <string name="training_default_routine_badge">앱 기본 루틴</string>
     <string name="training_day_label">%1$d일차</string>
     <string name="training_routine_schedule_day_title">%1$d일차 · %2$s</string>
     <string name="training_routine_preview_day_title">%1$d일차 · %2$s · %3$s</string>

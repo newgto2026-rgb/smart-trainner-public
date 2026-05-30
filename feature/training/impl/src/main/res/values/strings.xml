@@ -1,13 +1,7 @@
 <resources>
     <string name="training_app_title">Smart Trainer</string>
-    <string name="training_today_title">Today Training</string>
-    <string name="training_start_record">Start Workout</string>
-    <string name="training_completed">Done</string>
-    <string name="training_incomplete">Planned</string>
     <string name="training_set_number">Set %1$d</string>
     <string name="training_rest">Rest: %1$d s</string>
-    <string name="training_empty_plan">No workouts are planned this week. Choose a starter routine to begin.</string>
-    <string name="training_error_complete_day">Could not complete this routine day.</string>
     <string name="training_target_reps">Sets: %1$d · Reps: %2$d-%3$d</string>
     <string name="training_target_duration">Sets: %1$d · Min: %2$d</string>
     <string name="training_recommended_record">Recommended: %1$s</string>
@@ -18,18 +12,6 @@
     <string name="training_actual_rest">Rest %1$s s</string>
     <string name="training_template_meta">%1$s · %2$d/wk · %3$d min</string>
     <string name="training_custom_template_meta">%1$d-day cycle</string>
-    <string name="training_today_focus_title">Today: %1$s</string>
-    <string name="training_routine_day_subtitle">Day %1$d · %2$s · about %3$d min</string>
-    <string name="training_routine_completed_progress">Routine progress: %1$d/%2$d</string>
-    <string name="training_routine_badge_duration">About %1$d min</string>
-    <string name="training_routine_badge_exercises">Moves: %1$d</string>
-    <string name="training_routine_badge_recovery">Recovery: %1$d h</string>
-    <string name="training_routine_main_focus">Main focus</string>
-    <string name="training_routine_examples">Today workout plan</string>
-    <string name="training_next_routine_day">Next workout: %1$s</string>
-    <string name="training_complete_routine_day">Complete Today</string>
-    <string name="training_custom_routine_badge">My routine</string>
-    <string name="training_default_routine_badge">Default routine</string>
     <string name="training_day_label">Day %1$d</string>
     <string name="training_routine_schedule_day_title">Day %1$d · %2$s</string>
     <string name="training_routine_preview_day_title">Day %1$d · %2$s · %3$s</string>

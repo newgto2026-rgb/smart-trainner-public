@@ -234,7 +234,8 @@ class TrainingViewModel @Inject constructor(
                 exercises = data.exercises,
                 logs = data.logs,
                 latestWorkoutLogs = data.latestLogs,
-                completedPlannedExerciseIds = completedIds
+                completedPlannedExerciseIds = completedIds,
+                completeDayError = control.formError == RecordFormError.COMPLETE_DAY_FAILED
             ),
             exerciseCatalog = ExerciseCatalogUiState(
                 exercises = data.exercises,

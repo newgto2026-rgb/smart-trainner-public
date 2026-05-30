@@ -222,6 +222,25 @@ Next PR scope:
 - Decide whether the home screen should become its own `feature:home`/dashboard contract or whether routine owns the next-routine summary widget.
 - Continue reducing `TrainingViewModel` into orchestration-only pieces by moving routine state ownership behind a routine ViewModel/use-case boundary.
 
+## Phase 13: Routine Home Summary Ownership
+
+Status: stacked after Phase 12 on `codex/modularization-routine-home-summary`.
+
+Move the routine-owned home summary UI out of `:feature:training:impl`. The home tab still uses the temporary training coordinator, but the next-routine card, progress badges, copy, and completion error display now live behind the routine feature contract.
+
+First PR scope:
+
+- Add a home summary renderer to `RoutineFeatureEntry`.
+- Move the next routine day card and its home-only strings into `:feature:routine:impl`.
+- Pass workout start and routine-day completion as routine actions instead of rendering the card in training.
+- Remove the now-unused `:core:ui` dependency and home summary strings from `:feature:training:impl`.
+
+Next PR scope:
+
+- Move top-level destination ownership out of `:feature:training:api` so `:app` owns route metadata and destination selection directly.
+- Split the temporary `TrainingViewModel` into feature-owned state holders, starting with routine state and workout recording state.
+- Revisit `TrainingRepository` as multiple domain contracts once feature ViewModels no longer require a single all-purpose repository surface.
+
 ## Split Decision
 
 `routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress, exercise selection, and recording forms. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.

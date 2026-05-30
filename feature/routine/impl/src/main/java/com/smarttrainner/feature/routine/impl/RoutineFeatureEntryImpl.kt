@@ -9,6 +9,16 @@ import com.smarttrainner.feature.routine.api.RoutineUiState
 import javax.inject.Inject
 
 class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
+    override fun LazyListScope.HomeSummary(
+        state: RoutineUiState,
+        actions: RoutineActions
+    ) {
+        homeSummaryContent(
+            state = state,
+            actions = actions
+        )
+    }
+
     override fun LazyListScope.Content(
         state: RoutineUiState,
         actions: RoutineActions,

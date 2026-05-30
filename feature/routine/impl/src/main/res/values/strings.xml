@@ -73,6 +73,7 @@
     <string name="routine_default_routines">Default routines</string>
     <string name="routine_edit_custom_routine">Edit</string>
     <string name="routine_empty_plan">No workouts are planned this week. Choose a starter routine to begin.</string>
+    <string name="routine_error_complete_day">Could not complete this routine day.</string>
     <string name="routine_experience_beginner">Almost new</string>
     <string name="routine_experience_intermediate">Consistent</string>
     <string name="routine_feeling_app_recommended">Let app choose</string>
@@ -103,6 +104,7 @@
     <string name="routine_muscle_triceps">Triceps</string>
     <string name="routine_muscle_upper_body">Upper Body</string>
     <string name="routine_my_routines">My routines</string>
+    <string name="routine_next_routine_day">Next workout: %1$s</string>
     <string name="routine_recommendation_best_fit">Best fit</string>
     <string name="routine_recommended_record">Recommended: %1$s</string>
     <string name="routine_recommended_routine">Recommended routine</string>
@@ -111,7 +113,13 @@
     <string name="routine_remove_set">Remove Set</string>
     <string name="routine_rest">Rest: %1$d s</string>
     <string name="routine_routine_days_question">Weekly availability</string>
+    <string name="routine_routine_badge_duration">About %1$d min</string>
+    <string name="routine_routine_badge_exercises">Moves: %1$d</string>
+    <string name="routine_routine_badge_recovery">Recovery: %1$d h</string>
+    <string name="routine_routine_completed_progress">Routine progress: %1$d/%2$d</string>
+    <string name="routine_routine_day_subtitle">Day %1$d · %2$s · about %3$d min</string>
     <string name="routine_routine_experience_question">Experience</string>
+    <string name="routine_routine_examples">Today workout plan</string>
     <string name="routine_routine_feeling_question">Workout feel</string>
     <string name="routine_routine_flow">Cycle: %1$s</string>
     <string name="routine_routine_flow_label">Cycle</string>
@@ -134,6 +142,8 @@
     <string name="routine_selected">Selected</string>
     <string name="routine_set_number">Set %1$d</string>
     <string name="routine_show_recommendations">Show recommendations</string>
+    <string name="routine_complete_routine_day">Complete Today</string>
+    <string name="routine_start_record">Start Workout</string>
     <string name="routine_start_routine">Start this routine</string>
     <string name="routine_target_duration">Sets: %1$d · Min: %2$d</string>
     <string name="routine_target_reps">Sets: %1$d · Reps: %2$d-%3$d</string>
@@ -152,6 +162,8 @@
     <string name="routine_template_intermediate_body_part_5day_description">A focused split with chest/push, back/pull, and a separate arms day that calls out biceps and triceps.</string>
     <string name="routine_template_intermediate_body_part_5day_name">Focused 5-Day Body-Part Split</string>
     <string name="routine_template_meta">%1$s · %2$d/wk · %3$d min</string>
+    <string name="routine_today_title">Today Training</string>
+    <string name="routine_today_focus_title">Today: %1$s</string>
     <string name="routine_today_focus_arms">arms focus</string>
     <string name="routine_today_focus_back">back focus</string>
     <string name="routine_today_focus_biceps">biceps focus</string>

@@ -93,7 +93,8 @@ data class RoutineUiState(
     val exercises: List<Exercise> = emptyList(),
     val logs: List<WorkoutLog> = emptyList(),
     val latestWorkoutLogs: List<WorkoutLog> = emptyList(),
-    val completedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet()
+    val completedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
+    val completeDayError: Boolean = false
 ) {
     val customTemplates: List<PlanTemplate>
         get() = templates.filter { it.source == RoutineSource.CUSTOM }
@@ -131,6 +132,8 @@ data class RoutineActions(
     val onCustomRoutineExerciseMovedDown: (Int) -> Unit = {},
     val onCustomRoutineSaved: (Boolean) -> Unit = {},
     val onCustomRoutineBuilderDismiss: () -> Unit = {},
+    val onWorkoutStarted: (PlannedExercise) -> Unit = {},
+    val onCompleteRoutineDay: () -> Unit = {},
     val onExerciseMethodSelected: (ExerciseId) -> Unit = {},
     val onRecordSelected: (PlannedExercise) -> Unit = {}
 )

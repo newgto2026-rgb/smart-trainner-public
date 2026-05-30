@@ -1,4 +1,4 @@
-package com.smarttrainner.feature.training.impl
+package com.smarttrainner.feature.routine.impl
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -32,37 +32,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.ui.SmartTrainnerSectionTitle
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
 import com.smarttrainner.core.ui.SmartTrainnerWrappedRows
 import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
-import com.smarttrainner.feature.workout.api.RecordFormError
+import com.smarttrainner.feature.routine.api.RoutineActions
+import com.smarttrainner.feature.routine.api.RoutineUiState
 
-internal fun androidx.compose.foundation.lazy.LazyListScope.homeContent(
-    state: TrainingUiState,
-    onWorkoutStarted: (PlannedExercise) -> Unit,
-    onCompleteRoutineDay: () -> Unit
+internal fun LazyListScope.homeSummaryContent(
+    state: RoutineUiState,
+    actions: RoutineActions
 ) {
     item {
-        SectionTitle(
-            stringResourceId = R.string.training_today_title,
-            testTag = "training_section_title_today"
+        SmartTrainnerSectionTitle(
+            text = stringResource(R.string.routine_today_title),
+            modifier = Modifier.testTag("training_section_title_today")
         )
     }
     val nextRoutineDay = state.nextRoutineDayUi
     if (nextRoutineDay == null) {
-        item { EmptyState(text = stringResource(R.string.training_empty_plan)) }
+        item { EmptyState(text = stringResource(R.string.routine_empty_plan)) }
     } else {
         item {
             NextRoutineDayCard(
                 routineDay = nextRoutineDay,
-                onRecordSelected = onWorkoutStarted,
-                onCompleteRoutineDay = onCompleteRoutineDay
+                onRecordSelected = actions.onWorkoutStarted,
+                onCompleteRoutineDay = actions.onCompleteRoutineDay
             )
         }
     }
-    state.formError?.takeIf { it == RecordFormError.COMPLETE_DAY_FAILED }?.let {
+    if (state.completeDayError) {
         item {
             Text(
                 text = completeRoutineDayErrorMessage(),
@@ -75,7 +76,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.homeContent(
 
 @Composable
 private fun completeRoutineDayErrorMessage(): String =
-    stringResource(R.string.training_error_complete_day)
+    stringResource(R.string.routine_error_complete_day)
 
 @Composable
 internal fun NextRoutineDayCard(
@@ -124,7 +125,7 @@ internal fun NextRoutineDayCard(
                     (routineDay.primaryFocus != null || hasCustomDayTitle)
                 Text(
                     text = routineDay.primaryFocus?.let { focus ->
-                        stringResource(R.string.training_today_focus_title, focus.localizedTodayFocusLabel())
+                        stringResource(R.string.routine_today_focus_title, focus.localizedTodayFocusLabel())
                     } ?: fallbackDayTitle,
                     modifier = Modifier.testTag("training_next_routine_day_${routineDay.dayNumber}"),
                     style = MaterialTheme.typography.headlineSmall,
@@ -133,7 +134,7 @@ internal fun NextRoutineDayCard(
                 )
                 if (shouldShowCustomDayLabel) {
                     Text(
-                        text = stringResource(R.string.training_day_label, routineDay.dayNumber),
+                        text = stringResource(R.string.routine_day_label, routineDay.dayNumber),
                         color = SmartTrainnerColors.Coral,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
@@ -141,7 +142,7 @@ internal fun NextRoutineDayCard(
                 } else {
                     Text(
                         text = stringResource(
-                            R.string.training_routine_day_subtitle,
+                            R.string.routine_routine_day_subtitle,
                             routineDay.dayNumber,
                             routineDay.focus.localizedPlanFocus(),
                             routineDay.sessionMinutes
@@ -166,7 +167,7 @@ internal fun NextRoutineDayCard(
             RoutineDayBadgeRow(routineDay)
             Text(
                 text = stringResource(
-                    R.string.training_routine_completed_progress,
+                    R.string.routine_routine_completed_progress,
                     routineDay.completedExerciseCount,
                     routineDay.totalExerciseCount
                 ),
@@ -180,7 +181,7 @@ internal fun NextRoutineDayCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.training_routine_main_focus),
+                        text = stringResource(R.string.routine_routine_main_focus),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -200,7 +201,7 @@ internal fun NextRoutineDayCard(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val previewNames = routineDay.previewExercises.map { it.exercise.localizedName() }
                 Text(
-                    text = stringResource(R.string.training_routine_examples),
+                    text = stringResource(R.string.routine_routine_examples),
                     modifier = Modifier.testTag("training_next_routine_plan_title"),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
@@ -222,7 +223,7 @@ internal fun NextRoutineDayCard(
                 ) {
                     Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.training_start_record))
+                    Text(stringResource(R.string.routine_start_record))
                 }
             }
             OutlinedButton(
@@ -234,11 +235,11 @@ internal fun NextRoutineDayCard(
             ) {
                 Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.training_complete_routine_day))
+                Text(stringResource(R.string.routine_complete_routine_day))
             }
             routineDay.nextPrimaryFocus?.let { nextFocus ->
                 Text(
-                    text = stringResource(R.string.training_next_routine_day, nextFocus.localizedTodayFocusLabel()),
+                    text = stringResource(R.string.routine_next_routine_day, nextFocus.localizedTodayFocusLabel()),
                     color = SmartTrainnerColors.Muted,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -252,21 +253,21 @@ internal fun RoutineDayBadgeRow(routineDay: NextRoutineDayUiModel) {
     TrainingBadgeRow(
         badges = listOf(
             TrainingBadgeSpec(
-                text = stringResource(R.string.training_routine_badge_duration, routineDay.sessionMinutes),
+                text = stringResource(R.string.routine_routine_badge_duration, routineDay.sessionMinutes),
                 icon = Icons.Default.Timer,
                 containerColor = SmartTrainnerColors.CoralSoft,
                 contentColor = SmartTrainnerColors.Ink,
                 testTag = "training_next_routine_badge_duration"
             ),
             TrainingBadgeSpec(
-                text = stringResource(R.string.training_routine_badge_exercises, routineDay.totalExerciseCount),
+                text = stringResource(R.string.routine_routine_badge_exercises, routineDay.totalExerciseCount),
                 icon = Icons.Default.FitnessCenter,
                 containerColor = SmartTrainnerColors.GreenSoft,
                 contentColor = SmartTrainnerColors.Ink,
                 testTag = "training_next_routine_badge_exercises"
             ),
             TrainingBadgeSpec(
-                text = stringResource(R.string.training_routine_badge_recovery, routineDay.minRecoveryHours),
+                text = stringResource(R.string.routine_routine_badge_recovery, routineDay.minRecoveryHours),
                 icon = Icons.Default.DateRange,
                 containerColor = SmartTrainnerColors.AmberSoft,
                 contentColor = SmartTrainnerColors.Ink,

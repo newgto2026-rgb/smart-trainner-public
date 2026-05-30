@@ -189,6 +189,8 @@ private fun TrainingScreen(
         onCustomRoutineExerciseMovedDown,
         onCustomRoutineSaved,
         onCustomRoutineBuilderDismiss,
+        onWorkoutStarted,
+        onCompleteRoutineDay,
         onExerciseMethodSelected,
         onRecordSelected
     ) {
@@ -221,6 +223,8 @@ private fun TrainingScreen(
             onCustomRoutineExerciseMovedDown = onCustomRoutineExerciseMovedDown,
             onCustomRoutineSaved = onCustomRoutineSaved,
             onCustomRoutineBuilderDismiss = onCustomRoutineBuilderDismiss,
+            onWorkoutStarted = onWorkoutStarted,
+            onCompleteRoutineDay = onCompleteRoutineDay,
             onExerciseMethodSelected = onExerciseMethodSelected,
             onRecordSelected = onRecordSelected
         )
@@ -308,7 +312,12 @@ private fun TrainingScreen(
         ) {
             item { Header(state) }
             when (destination) {
-                TrainingDestination.Home -> homeContent(state, onWorkoutStarted, onCompleteRoutineDay)
+                TrainingDestination.Home -> with(routineFeatureEntry) {
+                    HomeSummary(
+                        state = routineState,
+                        actions = routineActions
+                    )
+                }
                 TrainingDestination.Routine -> with(routineFeatureEntry) {
                     Content(
                         state = routineState,
