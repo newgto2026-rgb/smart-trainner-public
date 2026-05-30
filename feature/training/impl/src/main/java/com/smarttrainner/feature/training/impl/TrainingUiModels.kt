@@ -17,13 +17,6 @@ import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import java.time.LocalDate
 
-enum class TrainingTab {
-    HOME,
-    PLAN,
-    EXERCISES,
-    ANALYSIS
-}
-
 enum class RecordFormError {
     SELECT_EXERCISE,
     SETS,
@@ -111,7 +104,6 @@ data class RecentWorkoutLogUiModel(
 )
 
 data class TrainingUiState(
-    val selectedTab: TrainingTab = TrainingTab.HOME,
     val templates: List<PlanTemplate> = emptyList(),
     val selectedTemplateId: String = "",
     val today: LocalDate = LocalDate.EPOCH,

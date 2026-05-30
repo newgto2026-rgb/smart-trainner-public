@@ -6,16 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,15 +22,17 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.feature.training.api.TrainingDestination
 
 @Composable
 fun TrainingRoute(
+    destination: TrainingDestination,
     viewModel: TrainingViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     TrainingScreen(
+        destination = destination,
         state = state,
-        onTabSelected = viewModel::selectTab,
         onTemplateSelected = viewModel::selectTemplate,
         onRoutineDaysPerWeekChanged = viewModel::updateRoutineDaysPerWeek,
         onRoutineSessionMinutesChanged = viewModel::updateRoutineSessionMinutes,
@@ -83,8 +81,8 @@ fun TrainingRoute(
 
 @Composable
 private fun TrainingScreen(
+    destination: TrainingDestination,
     state: TrainingUiState,
-    onTabSelected: (TrainingTab) -> Unit,
     onTemplateSelected: (String) -> Unit,
     onRoutineDaysPerWeekChanged: (Int) -> Unit,
     onRoutineSessionMinutesChanged: (Int) -> Unit,
@@ -107,14 +105,14 @@ private fun TrainingScreen(
     onCustomRoutineDayAdded: () -> Unit,
     onCustomRoutineDayRemoved: (Int) -> Unit,
     onCustomRoutineExerciseGroupToggled: (MuscleGroup) -> Unit,
-    onCustomRoutineExerciseAdded: (com.smarttrainner.core.model.ExerciseId) -> Unit,
+    onCustomRoutineExerciseAdded: (ExerciseId) -> Unit,
     onCustomRoutineExerciseRemoved: (Int) -> Unit,
     onCustomRoutineExerciseMovedUp: (Int) -> Unit,
     onCustomRoutineExerciseMovedDown: (Int) -> Unit,
     onCustomRoutineSaved: (Boolean) -> Unit,
     onCustomRoutineBuilderDismiss: () -> Unit,
-    onExerciseSelected: (com.smarttrainner.core.model.ExerciseId) -> Unit,
-    onExerciseMethodSelected: (com.smarttrainner.core.model.ExerciseId) -> Unit,
+    onExerciseSelected: (ExerciseId) -> Unit,
+    onExerciseMethodSelected: (ExerciseId) -> Unit,
     onWorkoutStarted: (PlannedExercise) -> Unit,
     onRecordSelected: (PlannedExercise) -> Unit,
     onCompleteRoutineDay: () -> Unit,
@@ -216,36 +214,25 @@ private fun TrainingScreen(
             .fillMaxSize()
             .background(SmartTrainnerGradients.screen())
     ) {
-        Scaffold(
-            containerColor = Color.Transparent,
-            bottomBar = {
-                TrainingBottomBar(
-                    selectedTab = state.selectedTab,
-                    onTabSelected = onTabSelected
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+            contentPadding = PaddingValues(start = 18.dp, top = 14.dp, end = 18.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            item { Header(state) }
+            when (destination) {
+                TrainingDestination.Home -> homeContent(state, onWorkoutStarted, onCompleteRoutineDay)
+                TrainingDestination.Routine -> planContent(
+                    state = state,
+                    onShowRoutineLibrary = onShowRoutineLibrary,
+                    onCreateCustomRoutine = onCreateCustomRoutine,
+                    onEditCustomRoutine = onEditCustomRoutine,
+                    onRecordSelected = onRecordSelected
                 )
-            }
-        ) { padding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing),
-                contentPadding = PaddingValues(start = 18.dp, top = 14.dp, end = 18.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                item { Header(state) }
-                when (state.selectedTab) {
-                    TrainingTab.HOME -> homeContent(state, onWorkoutStarted, onCompleteRoutineDay)
-                    TrainingTab.PLAN -> planContent(
-                        state = state,
-                        onShowRoutineLibrary = onShowRoutineLibrary,
-                        onCreateCustomRoutine = onCreateCustomRoutine,
-                        onEditCustomRoutine = onEditCustomRoutine,
-                        onRecordSelected = onRecordSelected
-                    )
-                    TrainingTab.EXERCISES -> exerciseContent(state, onExerciseSelected)
-                    TrainingTab.ANALYSIS -> analysisContent(state)
-                }
+                TrainingDestination.Exercises -> exerciseContent(state, onExerciseSelected)
+                TrainingDestination.Analysis -> analysisContent(state)
             }
         }
     }

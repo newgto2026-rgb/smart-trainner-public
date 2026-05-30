@@ -59,7 +59,6 @@ class TrainingViewModel @Inject constructor(
     private val clock: Clock
 ) : ViewModel() {
     private val weekStart = LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-    private val selectedTab = MutableStateFlow(TrainingTab.HOME)
     private val selectedExerciseId = MutableStateFlow<ExerciseId?>(null)
     private val selectedPlannedExerciseId = MutableStateFlow<PlannedExerciseId?>(null)
     private val recordForm = MutableStateFlow(RecordFormState())
@@ -105,13 +104,11 @@ class TrainingViewModel @Inject constructor(
     }
 
     private val controlState = combine(
-        selectedTab,
         selectedExerciseId,
         selectedPlannedExerciseId,
         formControlState
-    ) { tab, exerciseId, plannedExerciseId, formControl ->
+    ) { exerciseId, plannedExerciseId, formControl ->
         TrainingControlState(
-            selectedTab = tab,
             selectedExerciseId = exerciseId,
             selectedPlannedExerciseId = plannedExerciseId,
             recordForm = formControl.recordForm,
@@ -203,7 +200,6 @@ class TrainingViewModel @Inject constructor(
                 )
             }
         TrainingUiState(
-            selectedTab = control.selectedTab,
             templates = data.templates,
             selectedTemplateId = data.plan.templateId,
             today = LocalDate.now(clock),
@@ -237,13 +233,6 @@ class TrainingViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TrainingUiState()
     )
-
-    fun selectTab(tab: TrainingTab) {
-        selectedTab.value = tab
-        selectedExerciseId.value = null
-        formError.value = null
-        recordSaved.value = false
-    }
 
     fun selectTemplate(templateId: String) {
         viewModelScope.launch {
@@ -572,7 +561,6 @@ class TrainingViewModel @Inject constructor(
 
     fun selectExercise(exerciseId: ExerciseId) {
         selectedExerciseId.value = exerciseId
-        selectedTab.value = TrainingTab.EXERCISES
     }
 
     fun showExerciseMethod(exerciseId: ExerciseId) {
@@ -781,7 +769,6 @@ class TrainingViewModel @Inject constructor(
     )
 
     private data class TrainingControlState(
-        val selectedTab: TrainingTab,
         val selectedExerciseId: ExerciseId?,
         val selectedPlannedExerciseId: PlannedExerciseId?,
         val recordForm: RecordFormState,

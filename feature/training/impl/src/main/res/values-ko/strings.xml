@@ -1,8 +1,4 @@
 <resources>
-    <string name="training_tab_home">홈</string>
-    <string name="training_tab_plan">플랜</string>
-    <string name="training_tab_exercises">운동</string>
-    <string name="training_tab_analysis">분석</string>
     <string name="training_app_title">Smart Trainer</string>
     <string name="training_today_title">오늘의 트레이닝</string>
     <string name="training_week_summary">이번 주 요약</string>

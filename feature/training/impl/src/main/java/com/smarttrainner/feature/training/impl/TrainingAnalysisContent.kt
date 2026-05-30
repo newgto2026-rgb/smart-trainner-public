@@ -32,6 +32,7 @@ import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.core.ui.SmartTrainnerMetricTile
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.analysisContent(
     state: TrainingUiState
@@ -217,19 +218,19 @@ internal fun SummaryBand(summary: WeeklySummary?) {
                 fontWeight = FontWeight.Bold
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricTile(
+                SmartTrainnerMetricTile(
                     label = stringResource(R.string.training_completion_rate),
                     value = "${summary?.completionRate ?: 0}%",
                     accent = SmartTrainnerColors.Coral,
                     modifier = Modifier.weight(1f)
                 )
-                MetricTile(
+                SmartTrainnerMetricTile(
                     label = stringResource(R.string.training_total_sets),
                     value = "${summary?.totalSets ?: 0}",
                     accent = SmartTrainnerColors.Green,
                     modifier = Modifier.weight(1f)
                 )
-                MetricTile(
+                SmartTrainnerMetricTile(
                     label = stringResource(R.string.training_streak),
                     value = stringResource(R.string.training_days_value, summary?.streakDays ?: 0),
                     accent = SmartTrainnerColors.Amber,
@@ -241,26 +242,6 @@ internal fun SummaryBand(summary: WeeklySummary?) {
                 color = SmartTrainnerColors.Ink,
                 style = MaterialTheme.typography.bodyMedium
             )
-        }
-    }
-}
-
-@Composable
-internal fun MetricTile(
-    label: String,
-    value: String,
-    accent: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        color = SmartTrainnerColors.SurfaceRaised.copy(alpha = 0.84f),
-        border = BorderStroke(1.dp, SmartTrainnerColors.Line)
-    ) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Text(text = value, color = accent, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(text = label, color = SmartTrainnerColors.Muted, style = MaterialTheme.typography.labelMedium)
         }
     }
 }

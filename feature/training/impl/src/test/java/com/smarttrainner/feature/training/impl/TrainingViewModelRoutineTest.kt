@@ -238,20 +238,20 @@ class TrainingViewModelRoutineTest {
     }
 
     @Test
-    fun showExerciseMethod_keepsPlanTabSelected() = runTest {
+    fun showExerciseMethod_keepsRecordingFlowSelected() = runTest {
         val viewModel = viewModel()
 
         viewModel.uiState.test {
             skipItems(1)
 
-            viewModel.selectTab(TrainingTab.PLAN)
-            viewModel.selectPlannedExercise(repository.plannedExercise(1))
-            viewModel.showExerciseMethod(repository.plannedExercise(1).exercise.id)
+            val planned = repository.plannedExercise(1)
+            viewModel.selectPlannedExercise(planned)
+            viewModel.showExerciseMethod(planned.exercise.id)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
-            assertThat(state.selectedTab).isEqualTo(TrainingTab.PLAN)
             assertThat(state.selectedExercise?.id?.value).isEqualTo("chest_press")
+            assertThat(state.recordingPlannedExercise?.id).isEqualTo(planned.id)
             cancelAndIgnoreRemainingEvents()
         }
     }

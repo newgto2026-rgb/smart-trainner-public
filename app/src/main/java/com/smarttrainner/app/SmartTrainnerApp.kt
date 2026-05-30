@@ -73,7 +73,7 @@ fun SmartTrainnerApp(
         state.activeSession == null -> LoginScreen(
             onContinueDefaultSession = viewModel::continueWithDefaultSession
         )
-        else -> trainingFeatureEntry.Content()
+        else -> SmartTrainnerMainScreen(trainingFeatureEntry = trainingFeatureEntry)
     }
 }
 

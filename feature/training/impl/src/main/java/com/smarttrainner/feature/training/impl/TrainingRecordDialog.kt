@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -40,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.ui.SmartTrainnerNumberField
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
@@ -202,7 +202,7 @@ internal fun RecordForm(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (showReps) {
-                        NumberField(
+                        SmartTrainnerNumberField(
                             label = stringResource(R.string.training_reps),
                             value = setEntry.reps,
                             onValueChange = { onSetRepsChanged(index, it) },
@@ -212,7 +212,7 @@ internal fun RecordForm(
                         )
                     }
                     if (showWeight) {
-                        NumberField(
+                        SmartTrainnerNumberField(
                             label = stringResource(R.string.training_weight_short),
                             value = setEntry.weightKg,
                             onValueChange = { onSetWeightChanged(index, it) },
@@ -223,7 +223,7 @@ internal fun RecordForm(
                         )
                     }
                     if (showDuration) {
-                        NumberField(
+                        SmartTrainnerNumberField(
                             label = stringResource(R.string.training_duration),
                             value = setEntry.durationMinutes,
                             onValueChange = { onSetDurationChanged(index, it) },
@@ -232,7 +232,7 @@ internal fun RecordForm(
                                 .testTag("training_set_duration_input_$index")
                         )
                     }
-                    NumberField(
+                    SmartTrainnerNumberField(
                         label = stringResource(R.string.training_rest_seconds),
                         value = setEntry.restSeconds,
                         onValueChange = { onSetRestChanged(index, it) },
@@ -281,25 +281,6 @@ internal fun RecordForm(
             shape = RoundedCornerShape(8.dp)
         )
     }
-}
-
-@Composable
-internal fun NumberField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    keyboardType: KeyboardType = KeyboardType.Number
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true,
-        shape = RoundedCornerShape(8.dp),
-        modifier = modifier
-    )
 }
 
 @Composable
