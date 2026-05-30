@@ -33,9 +33,11 @@ import com.smarttrainner.core.designsystem.SmartTrainnerGradients
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.ui.SmartTrainnerMetricTile
+import com.smarttrainner.feature.analysis.api.AnalysisUiState
+import com.smarttrainner.feature.analysis.api.RecentWorkoutLogUiModel
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.analysisContent(
-    state: TrainingUiState
+    state: AnalysisUiState
 ) {
     item {
         SummaryBand(state.summary)

@@ -131,6 +131,7 @@ private fun TrainingScreen(
     val recordingPlannedExercise = state.recordingPlannedExercise
     val routineState = state.routine
     val exerciseCatalogState = state.exerciseCatalog
+    val analysisState = state.analysis
     val routineActions = remember(
         onTemplateSelected,
         onRoutineDaysPerWeekChanged,
@@ -302,7 +303,7 @@ private fun TrainingScreen(
                     state = exerciseCatalogState,
                     actions = exerciseCatalogActions
                 )
-                TrainingDestination.Analysis -> analysisContent(state)
+                TrainingDestination.Analysis -> analysisContent(analysisState)
             }
         }
     }

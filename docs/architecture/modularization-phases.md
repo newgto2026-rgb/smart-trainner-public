@@ -62,6 +62,8 @@ First PR scope:
 
 ## Phase 4: Analysis Feature Boundary
 
+Status: stacked after Phase 3 on `codex/modularization-analysis-feature`.
+
 Candidate modules:
 
 - `:feature:analysis:api`
@@ -69,6 +71,13 @@ Candidate modules:
 - `:feature:analysis:impl`
 
 Move weekly summary, completion metrics, muscle balance, and insight UI behind an analysis feature contract. The feature should depend on domain use cases, not training UI state.
+
+First PR scope:
+
+- Introduce `:feature:analysis:api`.
+- Move analysis destination input to `AnalysisUiState`.
+- Move recent workout log presentation models behind the analysis contract.
+- Keep analysis UI implementation in `:feature:training:impl` until the screen implementation can move without depending on training composition state.
 
 ## Phase 5: Workout Recording Flow Boundary
 

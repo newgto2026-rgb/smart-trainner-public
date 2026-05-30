@@ -10,6 +10,8 @@ import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.feature.analysis.api.AnalysisUiState
+import com.smarttrainner.feature.analysis.api.RecentWorkoutLogUiModel
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
 import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
@@ -40,16 +42,10 @@ data class RecordSetFormState(
     val restSeconds: String = ""
 )
 
-data class RecentWorkoutLogUiModel(
-    val log: WorkoutLog,
-    val exercise: Exercise?
-)
-
 data class TrainingUiState(
     val routine: RoutineUiState = RoutineUiState(),
     val exerciseCatalog: ExerciseCatalogUiState = ExerciseCatalogUiState(),
-    val recentLogs: List<RecentWorkoutLogUiModel> = emptyList(),
-    val summary: WeeklySummary? = null,
+    val analysis: AnalysisUiState = AnalysisUiState(),
     val selectedExercise: Exercise? = null,
     val selectedPlannedExercise: PlannedExercise? = null,
     val recordingPlannedExercise: PlannedExercise? = null,
@@ -113,6 +109,12 @@ data class TrainingUiState(
 
     val latestWorkoutLogs: List<WorkoutLog>
         get() = exerciseCatalog.latestWorkoutLogs
+
+    val recentLogs: List<RecentWorkoutLogUiModel>
+        get() = analysis.recentLogs
+
+    val summary: WeeklySummary?
+        get() = analysis.summary
 
     val completedPlannedExerciseIds: Set<PlannedExerciseId>
         get() = routine.completedPlannedExerciseIds
