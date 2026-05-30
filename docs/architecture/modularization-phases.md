@@ -128,6 +128,25 @@ First PR scope:
 - Register the analysis entry binding in Hilt and have `:app` include the entry module.
 - Keep `:feature:training:impl` depending only on `:feature:analysis:api`, not the analysis implementation.
 
+## Phase 8: Exercise Detail Contract
+
+Status: stacked after Phase 7 on `codex/modularization-exercise-detail-contract`.
+
+Define the exercise catalog and detail entry contracts before moving the large exercise implementation and media assets. This keeps the API reviewable and avoids a temporary bridge where training pretends to implement the exercise feature.
+
+First PR scope:
+
+- Add Compose entry contracts to `:feature:exercise:api` for catalog content and exercise detail dialog rendering.
+- Add `ExerciseDetailUiState` and `ExerciseDetailActions` without exposing `PlannedExercise` or training-specific state.
+- Keep exercise images, step text, formatter policy, and detail UI implementation in `:feature:training:impl` until the next implementation-move PR.
+- Document that exercise-specific media and detail rendering belong to `:feature:exercise:impl`, while only domain-free primitives belong in `:core:ui`.
+
+Next PR scope:
+
+- Introduce `:feature:exercise:impl` and `:feature:exercise:entry`.
+- Move exercise detail UI, image resources, step text, and media mapping into the exercise implementation.
+- Replace the first training detail call site with `ExerciseDetailFeatureEntry`.
+
 ## Split Decision
 
 `routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress, exercise selection, and recording forms. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.
