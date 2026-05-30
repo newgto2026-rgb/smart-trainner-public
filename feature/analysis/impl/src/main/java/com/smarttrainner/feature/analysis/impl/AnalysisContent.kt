@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,11 +61,12 @@ internal fun AnalysisContent(state: AnalysisUiState) {
         if (summary == null || summary.muscleBalance.isEmpty()) {
             SmartTrainnerEmptyState(text = stringResource(R.string.analysis_empty_logs))
         } else {
+            val maxMuscleBalance = summary.muscleBalance.values.maxOrNull() ?: 1
             summary.muscleBalance.entries.forEach { entry ->
                 MuscleBalanceRow(
                     label = entry.key.localizedLabel(),
                     count = entry.value,
-                    max = summary.muscleBalance.values.maxOrNull() ?: 1
+                    max = maxMuscleBalance
                 )
             }
             InsightCard(text = summary.insightText())
@@ -240,8 +242,9 @@ private fun SummaryBand(summary: WeeklySummary?) {
                     modifier = Modifier.weight(1f)
                 )
             }
+            val insightText = summary?.insightText() ?: stringResource(R.string.analysis_insight_no_logs)
             Text(
-                text = summary?.insightText() ?: stringResource(R.string.analysis_empty_logs),
+                text = insightText,
                 color = SmartTrainnerColors.Ink,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -284,13 +287,15 @@ private fun InsightCard(text: String) {
 @Composable
 private fun WeeklySummary.insightText(): String {
     if (isKoreanLocale()) return insight
-    val weakestMuscle = MuscleGroup.entries
-        .filterNot {
-            it == MuscleGroup.CARDIO ||
-                it == MuscleGroup.ARMS ||
-                it == MuscleGroup.FULL_BODY
-        }
-        .minByOrNull { muscleBalance[it] ?: 0 }
+    val weakestMuscle = remember(muscleBalance) {
+        MuscleGroup.entries
+            .filterNot {
+                it == MuscleGroup.CARDIO ||
+                    it == MuscleGroup.ARMS ||
+                    it == MuscleGroup.FULL_BODY
+            }
+            .minByOrNull { muscleBalance[it] ?: 0 }
+    }
     return when {
         plannedExerciseCount == 0 -> stringResource(R.string.analysis_insight_empty_plan)
         completedExerciseCount == 0 -> stringResource(R.string.analysis_insight_no_logs)
