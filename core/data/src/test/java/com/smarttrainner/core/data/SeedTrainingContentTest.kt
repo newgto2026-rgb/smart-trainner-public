@@ -32,6 +32,13 @@ class SeedTrainingContentTest {
     }
 
     @Test
+    fun exerciseCatalogUsesDedicatedImageKeys() {
+        SeedTrainingContent.exercises.forEach { exercise ->
+            assertThat(exercise.imageKey).isEqualTo(exercise.id.value)
+        }
+    }
+
+    @Test
     fun kettlebellCatalogCoversSafeBeginnerAndIntermediatePatterns() {
         val kettlebellExercises = SeedTrainingContent.exercises.filter {
             it.equipment == EquipmentType.KETTLEBELL
