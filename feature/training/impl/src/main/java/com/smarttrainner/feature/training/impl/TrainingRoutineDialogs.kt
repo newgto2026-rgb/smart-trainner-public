@@ -56,6 +56,8 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
+import com.smarttrainner.feature.routine.api.RoutineUiState
 
 @Composable
 internal fun RoutineRecommendationControls(
@@ -152,7 +154,7 @@ internal fun RoutineFilterChip(
 
 @Composable
 internal fun RoutineLibraryDialog(
-    state: TrainingUiState,
+    state: RoutineUiState,
     onTemplateSelected: (String) -> Unit,
     onShowRoutineSettings: () -> Unit,
     onCreateCustomRoutine: () -> Unit,
@@ -353,7 +355,7 @@ internal fun RoutineSettingsDialog(
 
 @Composable
 internal fun RoutineRecommendationsDialog(
-    state: TrainingUiState,
+    state: RoutineUiState,
     onTemplatePreviewSelected: (String) -> Unit,
     onStartRoutine: () -> Unit,
     onDismissRequest: () -> Unit
@@ -526,7 +528,7 @@ internal fun RoutinePreviewSchedule(
 }
 
 @Composable
-internal fun TodayProgressLine(state: TrainingUiState) {
+internal fun TodayProgressLine(state: RoutineUiState) {
     val todaysExercises = state.plan?.days
         ?.firstOrNull { it.date == state.today }
         ?.exercises

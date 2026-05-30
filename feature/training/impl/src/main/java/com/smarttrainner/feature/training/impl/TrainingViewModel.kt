@@ -26,6 +26,13 @@ import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogInput
+import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
+import com.smarttrainner.feature.routine.api.CustomRoutineDayFormState
+import com.smarttrainner.feature.routine.api.CustomRoutineExerciseFormState
+import com.smarttrainner.feature.routine.api.CustomRoutineFormError
+import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
+import com.smarttrainner.feature.routine.api.RoutineUiState
+import com.smarttrainner.feature.routine.api.allowedCustomRoutineMuscleGroups
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
@@ -200,26 +207,28 @@ class TrainingViewModel @Inject constructor(
                 )
             }
         TrainingUiState(
-            templates = data.templates,
-            selectedTemplateId = data.plan.templateId,
-            today = LocalDate.now(clock),
-            plan = data.plan,
-            activeRoutineProgress = data.routineProgress,
-            nextRoutineDay = nextRoutineDay,
-            nextRoutineDayUi = nextDayUi,
-            routineRecommendationInput = control.recommendationForm,
-            recommendedTemplateId = recommendation.primaryTemplateId,
-            alternativeTemplateIds = recommendation.alternativeTemplateIds,
-            routinePreviewTemplateId = previewTemplateId,
-            showRoutineLibraryDialog = control.routineDialogState.showLibrary,
-            showRoutineSettingsDialog = control.routineDialogState.showSettings,
-            showRoutineRecommendationsDialog = control.routineDialogState.showRecommendations,
-            customRoutineBuilder = control.customRoutineBuilder,
-            exercises = data.exercises,
-            logs = data.logs,
-            latestWorkoutLogs = data.latestLogs,
+            routine = RoutineUiState(
+                templates = data.templates,
+                selectedTemplateId = data.plan.templateId,
+                today = LocalDate.now(clock),
+                plan = data.plan,
+                activeRoutineProgress = data.routineProgress,
+                nextRoutineDay = nextRoutineDay,
+                nextRoutineDayUi = nextDayUi,
+                routineRecommendationInput = control.recommendationForm,
+                recommendedTemplateId = recommendation.primaryTemplateId,
+                alternativeTemplateIds = recommendation.alternativeTemplateIds,
+                routinePreviewTemplateId = previewTemplateId,
+                showRoutineLibraryDialog = control.routineDialogState.showLibrary,
+                showRoutineSettingsDialog = control.routineDialogState.showSettings,
+                showRoutineRecommendationsDialog = control.routineDialogState.showRecommendations,
+                customRoutineBuilder = control.customRoutineBuilder,
+                exercises = data.exercises,
+                logs = data.logs,
+                latestWorkoutLogs = data.latestLogs,
+                completedPlannedExerciseIds = completedIds
+            ),
             recentLogs = recentLogs,
-            completedPlannedExerciseIds = completedIds,
             summary = data.summary,
             selectedExercise = selectedExercise,
             selectedPlannedExercise = selectedPlanned,

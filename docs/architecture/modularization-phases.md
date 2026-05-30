@@ -25,6 +25,8 @@ This phase intentionally keeps the training implementation in one Gradle feature
 
 ## Phase 2: Routine Feature Boundary
 
+Status: stacked after Phase 1 on `codex/modularization-routine-feature`.
+
 Candidate modules:
 
 - `:feature:routine:api`
@@ -32,6 +34,13 @@ Candidate modules:
 - `:feature:routine:impl`
 
 Move routine selection, routine settings, recommendations, custom routine builder, and current routine schedule screens behind a routine feature contract. Keep shared routine domain models in `:core:model` and routine use cases in `:core:domain` until a stronger domain split is justified.
+
+First PR scope:
+
+- Introduce `:feature:routine:api`.
+- Move routine-only UI contract state, actions, and form errors out of `:feature:training:impl`.
+- Pass the routine destination through `RoutineUiState` and `RoutineActions` instead of the full training state.
+- Keep `TrainingViewModel` as the temporary coordinator until routine screen implementation can be moved safely.
 
 ## Phase 3: Exercise Catalog Feature Boundary
 

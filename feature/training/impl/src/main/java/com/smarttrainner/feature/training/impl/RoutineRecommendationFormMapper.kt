@@ -1,6 +1,7 @@
 package com.smarttrainner.feature.training.impl
 
 import com.smarttrainner.core.model.RoutineRecommendationInput
+import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
 
 internal fun RoutineRecommendationFormState.toInput(): RoutineRecommendationInput =
     RoutineRecommendationInput(

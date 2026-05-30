@@ -45,6 +45,7 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.feature.routine.api.allowedCustomRoutineMuscleGroups
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate

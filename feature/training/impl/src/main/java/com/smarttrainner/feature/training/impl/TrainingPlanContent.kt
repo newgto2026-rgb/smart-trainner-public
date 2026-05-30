@@ -39,13 +39,12 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.feature.routine.api.RoutineActions
+import com.smarttrainner.feature.routine.api.RoutineUiState
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
-    state: TrainingUiState,
-    onShowRoutineLibrary: () -> Unit,
-    onCreateCustomRoutine: () -> Unit,
-    onEditCustomRoutine: (String) -> Unit,
-    onRecordSelected: (PlannedExercise) -> Unit
+    state: RoutineUiState,
+    actions: RoutineActions
 ) {
     item {
         Text(
@@ -60,14 +59,14 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
             if (selectedTemplate != null) {
                 CurrentRoutineSummaryCard(
                     template = selectedTemplate,
-                    onEditCustomRoutine = onEditCustomRoutine,
+                    onEditCustomRoutine = actions.onEditCustomRoutine,
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
                 EmptyState(text = stringResource(R.string.training_empty_plan))
             }
             Button(
-                onClick = onShowRoutineLibrary,
+                onClick = actions.onShowLibrary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("training_find_routine_button"),
@@ -78,7 +77,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
                 Text(stringResource(R.string.training_change_routine))
             }
             OutlinedButton(
-                onClick = onCreateCustomRoutine,
+                onClick = actions.onCreateCustomRoutine,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("training_create_custom_routine_button"),
@@ -108,7 +107,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
                 weeklyLogs = state.logs,
                 latestLogs = state.latestWorkoutLogs,
                 completedIds = state.completedPlannedExerciseIds,
-                onRecordSelected = onRecordSelected
+                onRecordSelected = actions.onRecordSelected
             )
         }
     }

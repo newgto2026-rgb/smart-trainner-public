@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineSource
+import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.homeContent(
     state: TrainingUiState,

@@ -2,19 +2,18 @@ package com.smarttrainner.feature.training.impl
 
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
-import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
-import com.smarttrainner.core.model.RoutineFeeling
-import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineProgress
-import com.smarttrainner.core.model.RoutineSource
-import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
+import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
+import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
+import com.smarttrainner.feature.routine.api.RoutineUiState
 import java.time.LocalDate
 
 enum class RecordFormError {
@@ -26,14 +25,6 @@ enum class RecordFormError {
     REST,
     SAVE_FAILED,
     COMPLETE_DAY_FAILED
-}
-
-enum class CustomRoutineFormError {
-    NAME,
-    DAYS,
-    EMPTY_DAY,
-    EXERCISE,
-    SAVE_FAILED
 }
 
 data class RecordFormState(
@@ -48,82 +39,14 @@ data class RecordSetFormState(
     val restSeconds: String = ""
 )
 
-data class RoutineRecommendationFormState(
-    val daysPerWeek: Int = 4,
-    val sessionMinutes: Int = 60,
-    val experience: TrainingExperience = TrainingExperience.INTERMEDIATE,
-    val feeling: RoutineFeeling = RoutineFeeling.FOCUSED_BODY_PART
-)
-
-data class CustomRoutineBuilderState(
-    val visible: Boolean = false,
-    val editingRoutineId: String? = null,
-    val name: String = "",
-    val selectedDayIndex: Int = 0,
-    val days: List<CustomRoutineDayFormState> = emptyList(),
-    val expandedExerciseGroups: Set<MuscleGroup> = emptySet(),
-    val error: CustomRoutineFormError? = null,
-    val savedTemplateId: String? = null
-)
-
-data class CustomRoutineDayFormState(
-    val title: String,
-    val focus: RoutineFocus?,
-    val exercises: List<CustomRoutineExerciseFormState>
-)
-
-data class CustomRoutineExerciseFormState(
-    val exercise: Exercise,
-    val sets: Int,
-    val repRangeStart: Int?,
-    val repRangeEnd: Int?,
-    val durationMinutes: Int?,
-    val restSeconds: Int,
-    val note: String = ""
-)
-
-data class NextRoutineDayUiModel(
-    val day: WorkoutDayPlan,
-    val routineTemplate: PlanTemplate?,
-    val primaryFocus: RoutineFocus?,
-    val secondaryFocuses: List<RoutineFocus>,
-    val dayNumber: Int,
-    val focus: String,
-    val sessionMinutes: Int,
-    val previewExercises: List<PlannedExercise>,
-    val startExercise: PlannedExercise?,
-    val nextPrimaryFocus: RoutineFocus?,
-    val completedExerciseCount: Int,
-    val totalExerciseCount: Int,
-    val minRecoveryHours: Int
-)
-
 data class RecentWorkoutLogUiModel(
     val log: WorkoutLog,
     val exercise: Exercise?
 )
 
 data class TrainingUiState(
-    val templates: List<PlanTemplate> = emptyList(),
-    val selectedTemplateId: String = "",
-    val today: LocalDate = LocalDate.EPOCH,
-    val plan: WeeklyPlan? = null,
-    val activeRoutineProgress: RoutineProgress? = null,
-    val nextRoutineDay: WorkoutDayPlan? = null,
-    val nextRoutineDayUi: NextRoutineDayUiModel? = null,
-    val routineRecommendationInput: RoutineRecommendationFormState = RoutineRecommendationFormState(),
-    val recommendedTemplateId: String? = null,
-    val alternativeTemplateIds: List<String> = emptyList(),
-    val routinePreviewTemplateId: String? = null,
-    val showRoutineLibraryDialog: Boolean = false,
-    val showRoutineSettingsDialog: Boolean = false,
-    val showRoutineRecommendationsDialog: Boolean = false,
-    val customRoutineBuilder: CustomRoutineBuilderState = CustomRoutineBuilderState(),
-    val exercises: List<Exercise> = emptyList(),
-    val logs: List<WorkoutLog> = emptyList(),
-    val latestWorkoutLogs: List<WorkoutLog> = emptyList(),
+    val routine: RoutineUiState = RoutineUiState(),
     val recentLogs: List<RecentWorkoutLogUiModel> = emptyList(),
-    val completedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
     val summary: WeeklySummary? = null,
     val selectedExercise: Exercise? = null,
     val selectedPlannedExercise: PlannedExercise? = null,
@@ -135,40 +58,66 @@ data class TrainingUiState(
     val selectedExerciseId: ExerciseId?
         get() = selectedExercise?.id
 
+    val templates: List<PlanTemplate>
+        get() = routine.templates
+
+    val selectedTemplateId: String
+        get() = routine.selectedTemplateId
+
+    val today: LocalDate
+        get() = routine.today
+
+    val plan: WeeklyPlan?
+        get() = routine.plan
+
+    val activeRoutineProgress: RoutineProgress?
+        get() = routine.activeRoutineProgress
+
+    val nextRoutineDay: WorkoutDayPlan?
+        get() = routine.nextRoutineDay
+
+    val nextRoutineDayUi: NextRoutineDayUiModel?
+        get() = routine.nextRoutineDayUi
+
+    val routineRecommendationInput: RoutineRecommendationFormState
+        get() = routine.routineRecommendationInput
+
+    val recommendedTemplateId: String?
+        get() = routine.recommendedTemplateId
+
+    val alternativeTemplateIds: List<String>
+        get() = routine.alternativeTemplateIds
+
+    val routinePreviewTemplateId: String?
+        get() = routine.routinePreviewTemplateId
+
+    val showRoutineLibraryDialog: Boolean
+        get() = routine.showRoutineLibraryDialog
+
+    val showRoutineSettingsDialog: Boolean
+        get() = routine.showRoutineSettingsDialog
+
+    val showRoutineRecommendationsDialog: Boolean
+        get() = routine.showRoutineRecommendationsDialog
+
+    val customRoutineBuilder: CustomRoutineBuilderState
+        get() = routine.customRoutineBuilder
+
+    val exercises: List<Exercise>
+        get() = routine.exercises
+
+    val logs: List<WorkoutLog>
+        get() = routine.logs
+
+    val latestWorkoutLogs: List<WorkoutLog>
+        get() = routine.latestWorkoutLogs
+
+    val completedPlannedExerciseIds: Set<PlannedExerciseId>
+        get() = routine.completedPlannedExerciseIds
+
     val customTemplates: List<PlanTemplate>
-        get() = templates.filter { it.source == RoutineSource.CUSTOM }
+        get() = routine.customTemplates
 
     val systemTemplates: List<PlanTemplate>
-        get() = templates.filter { it.source == RoutineSource.SYSTEM }
-}
-
-internal fun allowedCustomRoutineMuscleGroups(focus: RoutineFocus?): Set<MuscleGroup> = when (focus) {
-    null,
-    RoutineFocus.FULL_BODY -> MuscleGroup.entries.toSet()
-    RoutineFocus.UPPER_BODY -> setOf(
-        MuscleGroup.BACK,
-        MuscleGroup.CHEST,
-        MuscleGroup.SHOULDERS,
-        MuscleGroup.ARMS,
-        MuscleGroup.BICEPS,
-        MuscleGroup.TRICEPS,
-        MuscleGroup.FOREARMS
-    )
-    RoutineFocus.PUSH -> setOf(MuscleGroup.CHEST, MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS)
-    RoutineFocus.PULL -> setOf(MuscleGroup.BACK, MuscleGroup.BICEPS, MuscleGroup.FOREARMS)
-    RoutineFocus.CHEST -> setOf(MuscleGroup.CHEST)
-    RoutineFocus.BACK -> setOf(MuscleGroup.BACK)
-    RoutineFocus.LOWER_BODY -> setOf(MuscleGroup.LOWER_BODY)
-    RoutineFocus.SHOULDERS -> setOf(MuscleGroup.SHOULDERS)
-    RoutineFocus.ARMS -> setOf(
-        MuscleGroup.ARMS,
-        MuscleGroup.BICEPS,
-        MuscleGroup.TRICEPS,
-        MuscleGroup.FOREARMS
-    )
-    RoutineFocus.BICEPS -> setOf(MuscleGroup.BICEPS)
-    RoutineFocus.TRICEPS -> setOf(MuscleGroup.TRICEPS)
-    RoutineFocus.FOREARMS -> setOf(MuscleGroup.FOREARMS)
-    RoutineFocus.CARDIO_CONDITIONING -> setOf(MuscleGroup.CARDIO)
-    RoutineFocus.CORE -> setOf(MuscleGroup.CORE)
+        get() = routine.systemTemplates
 }

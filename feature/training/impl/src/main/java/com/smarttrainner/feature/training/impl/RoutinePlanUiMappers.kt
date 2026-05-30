@@ -4,6 +4,7 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
 
 internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel(
     template: PlanTemplate?,
