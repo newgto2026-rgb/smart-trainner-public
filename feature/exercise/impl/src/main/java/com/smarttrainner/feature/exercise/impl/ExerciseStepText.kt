@@ -1,4 +1,4 @@
-package com.smarttrainner.feature.training.impl
+package com.smarttrainner.feature.exercise.impl
 
 internal fun instructionWithoutRepeatedStepTitle(label: String, instruction: String): String {
     val trimmedLabel = label.trim()

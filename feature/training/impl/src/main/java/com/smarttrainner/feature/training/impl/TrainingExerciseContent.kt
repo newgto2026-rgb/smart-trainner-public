@@ -51,10 +51,12 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
+import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
     state: ExerciseCatalogUiState,
-    actions: ExerciseCatalogActions
+    actions: ExerciseCatalogActions,
+    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
 ) {
     val selectedExerciseId = state.selectedExerciseId
     item {
@@ -104,6 +106,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
                                 exercise = exercise,
                                 latestLog = state.latestWorkoutLogs.latestForExercise(exercise.id),
                                 selected = exercise.id == selectedExerciseId,
+                                exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
                                 onClick = { actions.onExerciseSelected(exercise.id) },
                                 modifier = Modifier.testTag("training_exercise_row_${exercise.id.value}")
                             )
@@ -116,6 +119,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
                         exercise = exercise,
                         latestLog = state.latestWorkoutLogs.latestForExercise(exercise.id),
                         selected = exercise.id == selectedExerciseId,
+                        exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
                         onClick = { actions.onExerciseSelected(exercise.id) },
                         modifier = Modifier.testTag("training_exercise_row_${exercise.id.value}")
                     )
@@ -126,6 +130,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
                         exercise = exercise,
                         latestLog = state.latestWorkoutLogs.latestForExercise(exercise.id),
                         selected = exercise.id == selectedExerciseId,
+                        exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
                         onClick = { actions.onExerciseSelected(exercise.id) },
                         modifier = Modifier.testTag("training_exercise_row_${exercise.id.value}")
                     )
@@ -136,321 +141,11 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.exerciseContent(
 }
 
 @Composable
-internal fun FeaturedExerciseCard(
-    exercise: PlannedExercise,
-    displayLog: com.smarttrainner.core.model.WorkoutLog?,
-    completed: Boolean,
-    onRecordSelected: (PlannedExercise) -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, SmartTrainnerColors.Line),
-        colors = CardDefaults.cardColors(containerColor = TrainerExerciseImageBackground)
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TrainerExerciseImage(
-                    exercise = exercise.exercise,
-                    modifier = Modifier
-                        .width(126.dp)
-                        .height(140.dp),
-                    cleanThumbnailCrop = true
-                )
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(exercise.exercise.localizedName(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text(exercise.localizedTrainingDisplayText(displayLog), color = SmartTrainnerColors.Muted, style = MaterialTheme.typography.bodyMedium)
-                        }
-                        StatusChip(completed = completed)
-                    }
-                    Text(exercise.exercise.localizedSummary(), style = MaterialTheme.typography.bodyMedium)
-                    Button(
-                        onClick = { onRecordSelected(exercise) },
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("training_home_start_workout")
-                    ) {
-                        Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.size(8.dp))
-                        Text(stringResource(R.string.training_start_record))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun ExerciseDetailDialog(
-    exercise: Exercise,
-    plannedExercise: PlannedExercise?,
-    onRecordSelected: (PlannedExercise) -> Unit,
-    onDismissRequest: () -> Unit
-) {
-    Dialog(
-        onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.88f)
-                .padding(horizontal = 18.dp)
-                .testTag("training_exercise_detail_dialog"),
-            shape = RoundedCornerShape(8.dp),
-            color = SmartTrainnerColors.SurfaceRaised
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 14.dp, top = 8.dp, end = 4.dp, bottom = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = exercise.localizedName(),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        ExerciseMetaChips(exercise)
-                    }
-                    IconButton(
-                        onClick = onDismissRequest,
-                        modifier = Modifier.testTag("training_close_exercise_detail")
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.training_close_detail))
-                    }
-                }
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 14.dp, end = 14.dp, bottom = 14.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    ExerciseDetailContent(
-                        exercise = exercise,
-                        plannedExercise = plannedExercise,
-                        onRecordSelected = onRecordSelected,
-                        showHeader = false,
-                        showRecordAction = false
-                    )
-                }
-                if (plannedExercise != null) {
-                    Button(
-                        onClick = { onRecordSelected(plannedExercise) },
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 14.dp, end = 14.dp, bottom = 14.dp)
-                            .testTag("training_detail_start_record")
-                    ) {
-                        Text(stringResource(R.string.training_start_record))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun ExerciseDetailCard(
-    exercise: Exercise,
-    plannedExercise: PlannedExercise?,
-    onRecordSelected: (PlannedExercise) -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, SmartTrainnerColors.Line),
-        colors = CardDefaults.cardColors(containerColor = SmartTrainnerColors.SurfaceRaised)
-    ) {
-        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            ExerciseDetailContent(
-                exercise = exercise,
-                plannedExercise = plannedExercise,
-                onRecordSelected = onRecordSelected
-            )
-        }
-    }
-}
-
-@Composable
-internal fun ExerciseDetailContent(
-    exercise: Exercise,
-    plannedExercise: PlannedExercise?,
-    onRecordSelected: (PlannedExercise) -> Unit,
-    showHeader: Boolean = true,
-    showRecordAction: Boolean = true
-) {
-    var imageViewerTarget by remember(exercise.id) {
-        mutableStateOf<ExerciseImageViewerTarget?>(null)
-    }
-    imageViewerTarget?.let { target ->
-        ExerciseImageViewerDialog(
-            exercise = exercise,
-            stepIndex = target.stepIndex,
-            onDismissRequest = { imageViewerTarget = null }
-        )
-    }
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        TrainerExerciseImage(
-            exercise = exercise,
-            modifier = Modifier
-                .width(216.dp)
-                .height(240.dp)
-                .clickable { imageViewerTarget = ExerciseImageViewerTarget(stepIndex = null) }
-                .testTag("training_detail_main_image"),
-            cleanThumbnailCrop = true,
-            contentDescription = exercise.localizedName()
-        )
-    }
-    if (showHeader) {
-        Text(exercise.localizedName(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        ExerciseMetaChips(exercise)
-    }
-    Text(exercise.localizedSummary(), style = MaterialTheme.typography.bodyMedium)
-    StepImageSection(
-        title = stringResource(R.string.training_instruction),
-        exercise = exercise,
-        onImageSelected = { stepIndex ->
-            imageViewerTarget = ExerciseImageViewerTarget(stepIndex = stepIndex)
-        }
-    )
-    BulletSection(title = stringResource(R.string.training_safety), bullets = exercise.localizedSafetyCues())
-    if (plannedExercise != null && showRecordAction) {
-        Button(
-            onClick = { onRecordSelected(plannedExercise) },
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("training_detail_start_record")
-        ) {
-            Text(stringResource(R.string.training_start_record))
-        }
-    }
-}
-
-internal data class ExerciseImageViewerTarget(
-    val stepIndex: Int?
-)
-
-@Composable
-internal fun ExerciseImageViewerDialog(
-    exercise: Exercise,
-    stepIndex: Int?,
-    onDismissRequest: () -> Unit
-) {
-    Dialog(
-        onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.86f)
-                .padding(horizontal = 12.dp)
-                .testTag("training_exercise_image_viewer"),
-            shape = RoundedCornerShape(8.dp),
-            color = SmartTrainnerColors.SurfaceRaised
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 14.dp, top = 8.dp, end = 4.dp, bottom = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = exercise.localizedName(),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = if (stepIndex == null) {
-                                stringResource(R.string.training_image_viewer_title)
-                            } else {
-                                "${stringResource(R.string.training_image_viewer_title)} ${stepIndex + 1}"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = SmartTrainnerColors.Muted
-                        )
-                    }
-                    IconButton(
-                        onClick = onDismissRequest,
-                        modifier = Modifier.testTag("training_close_exercise_image_viewer")
-                    ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = stringResource(R.string.training_close_image_viewer)
-                        )
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(start = 14.dp, end = 14.dp, bottom = 14.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    TrainerExerciseImage(
-                        exercise = exercise,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("training_exercise_image_viewer_image"),
-                        stepIndex = stepIndex,
-                        contentDescription = if (stepIndex == null) {
-                            exercise.localizedName()
-                        } else {
-                            "${exercise.localizedName()} ${stepIndex + 1}"
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun ExerciseMetaChips(exercise: Exercise) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = {}, label = { Text(exercise.muscleGroup.localizedLabel()) })
-            AssistChip(onClick = {}, label = { Text(exercise.equipment.localizedLabel()) })
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = {}, label = { Text(exercise.difficulty.localizedLabel()) })
-        }
-    }
-}
-
-@Composable
 internal fun ExerciseRow(
     exercise: Exercise,
     latestLog: com.smarttrainner.core.model.WorkoutLog?,
     selected: Boolean,
+    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -470,7 +165,8 @@ internal fun ExerciseRow(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TrainerExerciseImage(
+            TrainingExerciseMedia(
+                exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
                 exercise = exercise,
                 modifier = Modifier.size(width = 72.dp, height = 80.dp),
                 cleanThumbnailCrop = true
@@ -489,72 +185,6 @@ internal fun ExerciseRow(
                     style = MaterialTheme.typography.labelSmall,
                     color = SmartTrainnerColors.Muted
                 )
-            }
-        }
-    }
-}
-
-@Composable
-internal fun BulletSection(
-    title: String,
-    bullets: List<String>
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        bullets.forEach { bullet ->
-            Text("• $bullet", style = MaterialTheme.typography.bodyMedium, color = SmartTrainnerColors.Muted)
-        }
-    }
-}
-
-internal data class LocalizedExerciseStep(
-    val label: String,
-    val instruction: String
-)
-
-@Composable
-internal fun StepImageSection(
-    title: String,
-    exercise: Exercise,
-    onImageSelected: (Int) -> Unit = {}
-) {
-    val stepItems = exercise.localizedStepItems()
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        stepItems.forEachIndexed { index, step ->
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = SmartTrainnerColors.Surface,
-                border = BorderStroke(1.dp, SmartTrainnerColors.Line)
-            ) {
-                Row(
-                    modifier = Modifier.padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TrainerExerciseImage(
-                        exercise = exercise,
-                        modifier = Modifier
-                            .size(width = 76.dp, height = 84.dp)
-                            .clickable { onImageSelected(index) }
-                            .testTag("training_step_image_$index"),
-                        stepIndex = index,
-                        contentDescription = "${exercise.localizedName()} ${index + 1}. ${step.label}"
-                    )
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "${index + 1}. ${step.label}",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = SmartTrainnerColors.Coral,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = step.instruction,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = SmartTrainnerColors.Ink
-                        )
-                    }
-                }
             }
         }
     }

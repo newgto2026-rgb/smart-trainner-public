@@ -1,4 +1,4 @@
-package com.smarttrainner.feature.training.impl
+package com.smarttrainner.feature.exercise.impl
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test

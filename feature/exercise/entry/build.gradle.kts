@@ -1,20 +1,17 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
-    namespace = "com.smarttrainner.feature.exercise.api"
+    namespace = "com.smarttrainner.feature.exercise.entry"
     compileSdk = 36
 
     defaultConfig {
         minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildFeatures {
-        compose = true
     }
 
     compileOptions {
@@ -27,8 +24,15 @@ android {
 }
 
 dependencies {
-    api(project(":core:model"))
-    api(platform(libs.androidx.compose.bom))
-    api(libs.androidx.compose.runtime)
-    api(libs.androidx.compose.ui)
+    implementation(project(":feature:exercise:api"))
+    implementation(project(":feature:exercise:impl"))
+
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+
+    androidTestImplementation(libs.androidx.test.runner)
+}
+
+kapt {
+    correctErrorTypes = true
 }

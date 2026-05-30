@@ -42,6 +42,7 @@ import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.ui.SmartTrainnerNumberField
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.PlannedExercise
+import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
 import com.smarttrainner.feature.workout.api.RecordFormError
 import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
@@ -49,7 +50,8 @@ import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
 @Composable
 internal fun RecordDialog(
     state: WorkoutRecordingUiState,
-    actions: WorkoutRecordingActions
+    actions: WorkoutRecordingActions,
+    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
 ) {
     val planned = state.recordingPlannedExercise ?: return
     Dialog(
@@ -81,7 +83,8 @@ internal fun RecordDialog(
                     RecordForm(
                         state = state,
                         planned = planned,
-                        actions = actions
+                        actions = actions,
+                        exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
                     )
                 }
                 IconButton(
@@ -101,7 +104,8 @@ internal fun RecordDialog(
 internal fun RecordForm(
     state: WorkoutRecordingUiState,
     planned: PlannedExercise,
-    actions: WorkoutRecordingActions
+    actions: WorkoutRecordingActions,
+    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
 ) {
     val showReps = planned.repRange != null
     val showDuration = planned.durationMinutes != null || !showReps
@@ -114,7 +118,8 @@ internal fun RecordForm(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TrainerExerciseImage(
+            TrainingExerciseMedia(
+                exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
                 exercise = planned.exercise,
                 modifier = Modifier.size(width = 78.dp, height = 86.dp),
                 cleanThumbnailCrop = true

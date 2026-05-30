@@ -147,6 +147,25 @@ Next PR scope:
 - Move exercise detail UI, image resources, step text, and media mapping into the exercise implementation.
 - Replace the first training detail call site with `ExerciseDetailFeatureEntry`.
 
+## Phase 9: Exercise Detail Implementation Module
+
+Status: stacked after Phase 8 on `codex/modularization-exercise-detail-impl`.
+
+Move exercise detail and media rendering out of `:feature:training:impl` now that the contract exists. Training remains a temporary coordinator for exercise catalog state, routine state, and record launch state, but it should consume exercise-owned UI through the exercise API entry points.
+
+First PR scope:
+
+- Introduce `:feature:exercise:impl` and `:feature:exercise:entry`.
+- Bind `ExerciseDetailFeatureEntry` and `ExerciseMediaFeatureEntry` from the exercise entry module.
+- Move exercise detail UI, step image rendering, generated media mappings, and `drawable-nodpi` exercise images into `:feature:exercise:impl`.
+- Remove exercise detail-only resources and image implementation references from `:feature:training:impl`.
+- Have training call only `:feature:exercise:api` for exercise detail and media rendering.
+
+Next PR scope:
+
+- Move the exercise catalog destination content behind `ExerciseCatalogFeatureEntry`.
+- Decide whether catalog state stays in the temporary training coordinator for one more PR or moves with a feature-owned ViewModel.
+
 ## Split Decision
 
 `routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress, exercise selection, and recording forms. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.

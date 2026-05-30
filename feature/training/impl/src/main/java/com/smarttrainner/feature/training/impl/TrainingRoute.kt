@@ -22,6 +22,10 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
+import com.smarttrainner.feature.exercise.api.ExerciseDetailActions
+import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
+import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
+import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.training.api.TrainingDestination
 import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
@@ -30,12 +34,16 @@ import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 fun TrainingRoute(
     destination: TrainingDestination,
     analysisFeatureEntry: AnalysisFeatureEntry,
+    exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
+    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
     viewModel: TrainingViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     TrainingScreen(
         destination = destination,
         analysisFeatureEntry = analysisFeatureEntry,
+        exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+        exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
         state = state,
         onTemplateSelected = viewModel::selectTemplate,
         onRoutineDaysPerWeekChanged = viewModel::updateRoutineDaysPerWeek,
@@ -87,6 +95,8 @@ fun TrainingRoute(
 private fun TrainingScreen(
     destination: TrainingDestination,
     analysisFeatureEntry: AnalysisFeatureEntry,
+    exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
+    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
     state: TrainingUiState,
     onTemplateSelected: (String) -> Unit,
     onRoutineDaysPerWeekChanged: (Int) -> Unit,
@@ -243,7 +253,8 @@ private fun TrainingScreen(
     if (recordingPlannedExercise != null && selectedExercise == null) {
         RecordDialog(
             state = workoutRecordingState,
-            actions = workoutRecordingActions
+            actions = workoutRecordingActions,
+            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
         )
     }
     if (routineState.showRoutineLibraryDialog) {
@@ -296,17 +307,25 @@ private fun TrainingScreen(
         )
     }
     if (selectedExercise != null) {
-        ExerciseDetailDialog(
-            exercise = selectedExercise,
-            plannedExercise = if (state.recordingPlannedExercise == null && !routineState.customRoutineBuilder.visible) {
-                routineState.plan?.days
-                    ?.flatMap { it.exercises }
-                    ?.firstOrNull { it.exercise.id == selectedExercise.id }
-            } else {
-                null
-            },
-            onRecordSelected = onRecordSelected,
-            onDismissRequest = onExerciseDetailDismiss,
+        val selectedPlannedExercise = if (state.recordingPlannedExercise == null && !routineState.customRoutineBuilder.visible) {
+            routineState.plan?.days
+                ?.flatMap { it.exercises }
+                ?.firstOrNull { it.exercise.id == selectedExercise.id }
+        } else {
+            null
+        }
+        exerciseDetailFeatureEntry.Dialog(
+            state = ExerciseDetailUiState(
+                exercise = selectedExercise,
+                latestWorkoutLog = state.latestWorkoutLogs.latestForExercise(selectedExercise.id),
+                showRecordAction = selectedPlannedExercise != null
+            ),
+            actions = ExerciseDetailActions(
+                onDismiss = onExerciseDetailDismiss,
+                onRecordRequested = {
+                    selectedPlannedExercise?.let(onRecordSelected)
+                }
+            )
         )
     }
 
@@ -325,11 +344,13 @@ private fun TrainingScreen(
                 TrainingDestination.Home -> homeContent(state, onWorkoutStarted, onCompleteRoutineDay)
                 TrainingDestination.Routine -> planContent(
                     state = routineState,
-                    actions = routineActions
+                    actions = routineActions,
+                    exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
                 )
                 TrainingDestination.Exercises -> exerciseContent(
                     state = exerciseCatalogState,
-                    actions = exerciseCatalogActions
+                    actions = exerciseCatalogActions,
+                    exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
                 )
                 TrainingDestination.Analysis -> item {
                     analysisFeatureEntry.Content(analysisState)

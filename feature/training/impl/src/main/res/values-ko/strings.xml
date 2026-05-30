@@ -15,8 +15,6 @@
     <string name="training_memo">메모</string>
     <string name="training_save_record">완료 기록</string>
     <string name="training_instruction">운동 방법</string>
-    <string name="training_step_number">%1$d단계</string>
-    <string name="training_safety">주의 포인트</string>
     <string name="training_rest">휴식 %1$d초</string>
     <string name="training_empty_plan">이번 주 운동이 없습니다. 입문 루틴을 선택해 시작해보세요.</string>
     <string name="training_error_select">기록할 운동을 먼저 선택하세요.</string>
@@ -32,13 +30,10 @@
     <string name="training_today_progress">오늘 %2$d개 중 %1$d개 완료</string>
     <string name="training_selected">선택됨</string>
     <string name="training_close_detail">운동 상세 닫기</string>
-    <string name="training_close_image_viewer">확대 이미지 닫기</string>
     <string name="training_close_record">기록 창 닫기</string>
     <string name="training_record_action">기록</string>
     <string name="training_record_dialog_title">%1$s 기록</string>
     <string name="training_show_exercise_method">운동 방법 보기</string>
-    <string name="training_image_pending">이미지 검수 중</string>
-    <string name="training_image_viewer_title">운동 이미지</string>
     <string name="training_select_exercise_hint">운동을 선택하면 큰 상세 창에서 방법과 단계 이미지를 볼 수 있습니다.</string>
     <string name="training_target_reps">%1$d세트 · %2$d-%3$d회</string>
     <string name="training_target_duration">%1$d세트 · %2$d분</string>
@@ -189,12 +184,6 @@
     <string name="training_day_focus_side_rear_delts_first">측면·후면 우선</string>
     <string name="training_day_focus_arm_accessories_conditioning">팔 보조와 컨디셔닝</string>
     <string name="training_day_focus_biceps_triceps_conditioning">이두·삼두 보조와 컨디셔닝</string>
-    <string name="training_exercise_summary_template">%1$s는 %3$s 장비로 %2$s를 안전하게 연습하는 운동입니다.</string>
-    <string name="training_instruction_setup_template">%1$s를 시작하기 전에 자세를 세우고 호흡을 정리합니다.</string>
-    <string name="training_instruction_move_template">목표 근육에 힘을 유지하며 천천히 수행 범위를 움직입니다.</string>
-    <string name="training_instruction_return_template">정렬을 잃지 않고 시작 자세로 차분히 돌아옵니다.</string>
-    <string name="training_safety_pain">날카로운 통증이 있으면 즉시 멈추세요.</string>
-    <string name="training_safety_control">깔끔하게 통제할 수 있는 범위와 무게를 선택하세요.</string>
     <string name="training_muscle_lower_body">하체</string>
     <string name="training_muscle_upper_body">상체</string>
     <string name="training_muscle_push">밀기</string>

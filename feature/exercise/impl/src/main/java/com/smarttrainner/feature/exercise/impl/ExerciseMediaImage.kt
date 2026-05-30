@@ -1,4 +1,4 @@
-package com.smarttrainner.feature.training.impl
+package com.smarttrainner.feature.exercise.impl
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -58,7 +58,7 @@ fun TrainerExerciseImage(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = stringResource(R.string.training_image_pending),
+                text = stringResource(R.string.exercise_image_pending),
                 modifier = Modifier
                     .padding(10.dp),
                 color = Color(0xFF44777F),

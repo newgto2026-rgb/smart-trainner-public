@@ -1,4 +1,4 @@
-package com.smarttrainner.feature.training.impl
+package com.smarttrainner.feature.exercise.impl
 
 import androidx.annotation.DrawableRes
 
