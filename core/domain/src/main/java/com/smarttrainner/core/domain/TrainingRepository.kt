@@ -2,8 +2,6 @@ package com.smarttrainner.core.domain
 
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
-import com.smarttrainner.core.model.PlanTemplate
-import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
@@ -17,14 +15,8 @@ interface ExerciseRepository {
     suspend fun getExercise(id: ExerciseId): Exercise?
 }
 
-interface RoutinePlanRepository {
-    fun observePlanTemplates(): Flow<List<PlanTemplate>>
-    fun observeCustomRoutines(): Flow<List<PlanTemplate>>
+interface WeeklyPlanRepository {
     fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan>
-}
-
-interface RoutineProgressRepository {
-    fun observeRoutineProgress(): Flow<RoutineProgress>
 }
 
 interface WorkoutLogRepository {

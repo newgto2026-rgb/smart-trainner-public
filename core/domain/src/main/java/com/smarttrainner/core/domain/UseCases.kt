@@ -11,20 +11,8 @@ class ObserveExercisesUseCase @Inject constructor(
     operator fun invoke() = repository.observeExercises()
 }
 
-class ObservePlanTemplatesUseCase @Inject constructor(
-    private val repository: RoutinePlanRepository
-) {
-    operator fun invoke() = repository.observePlanTemplates()
-}
-
-class ObserveCustomRoutinesUseCase @Inject constructor(
-    private val repository: RoutinePlanRepository
-) {
-    operator fun invoke() = repository.observeCustomRoutines()
-}
-
 class ObserveCurrentWeeklyPlanUseCase @Inject constructor(
-    private val repository: RoutinePlanRepository
+    private val repository: WeeklyPlanRepository
 ) {
     operator fun invoke(weekStartDate: LocalDate) = repository.observeCurrentWeeklyPlan(weekStartDate)
 }

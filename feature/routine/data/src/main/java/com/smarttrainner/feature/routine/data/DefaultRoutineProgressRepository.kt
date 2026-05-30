@@ -3,10 +3,10 @@ package com.smarttrainner.feature.routine.data
 import com.smarttrainner.core.database.CustomRoutineDao
 import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
-import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.TrainingSeedStore
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
+import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton

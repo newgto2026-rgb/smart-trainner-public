@@ -5,16 +5,17 @@ import com.smarttrainner.core.data.DefaultSessionRepository
 import com.smarttrainner.core.data.DefaultWeeklySummaryRepository
 import com.smarttrainner.core.data.DefaultWorkoutLogRepository
 import com.smarttrainner.core.domain.ExerciseRepository
-import com.smarttrainner.core.domain.RoutinePlanRepository
-import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklySummaryCalculator
+import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WeeklySummaryRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.feature.routine.data.DefaultRoutinePlanRepository
 import com.smarttrainner.feature.routine.data.DefaultRoutineProgressRepository
+import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
+import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -30,9 +31,14 @@ abstract class CoreRepositoryBindingsModule {
     ): ExerciseRepository
 
     @Binds
-    abstract fun bindRoutinePlanRepository(
+    abstract fun bindWeeklyPlanRepository(
         repository: DefaultRoutinePlanRepository
-    ): RoutinePlanRepository
+    ): WeeklyPlanRepository
+
+    @Binds
+    abstract fun bindRoutinePlanCatalogRepository(
+        repository: DefaultRoutinePlanRepository
+    ): RoutinePlanCatalogRepository
 
     @Binds
     abstract fun bindRoutinePlanCommandRepository(

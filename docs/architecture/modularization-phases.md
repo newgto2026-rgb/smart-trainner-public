@@ -778,9 +778,34 @@ Split decision:
 
 Next PR scope:
 
-- Re-audit whether routine progress reads are truly shared or can also become routine feature-owned.
+- Re-audit whether routine progress and plan-template catalog reads are truly shared or can also become routine feature-owned.
 - Apply the same feature-domain/data ownership test to workout commands if workout log persistence ever becomes feature-private rather than shared analysis/routine input.
 - Continue tightening app so it sees feature data only inside app-owned DI modules.
+
+## Phase 38: Routine Read Contract Ownership
+
+Status: stacked after Phase 37 on `codex/modularization-routine-read-contracts`.
+
+Finish the routine repository ownership split by moving routine-only read contracts into the routine feature. Shared weekly-plan reads stay in core because weekly summaries and analysis derive app-wide metrics from them.
+
+First PR scope:
+
+- Replace the remaining core `RoutinePlanRepository` read surface with `WeeklyPlanRepository`, which exposes only `observeCurrentWeeklyPlan`.
+- Move routine template catalog reads to `:feature:routine:domain` as `RoutinePlanCatalogRepository` and `ObservePlanTemplatesUseCase`.
+- Move active routine progress reads to `:feature:routine:domain` as `RoutineProgressRepository` and `ObserveRoutineProgressUseCase`.
+- Keep `DefaultRoutinePlanRepository` and `DefaultRoutineProgressRepository` in `:feature:routine:data`; app-owned DI binds the plan repository to both the shared core weekly-plan contract and routine-owned catalog/command contracts.
+- Keep custom-routine listing private inside routine data; no production feature consumes a separate `observeCustomRoutines` contract.
+
+Split decision:
+
+- `observeCurrentWeeklyPlan` remains shared core domain because `DefaultWeeklySummaryRepository` uses it to produce weekly summary data consumed outside the routine feature.
+- `observePlanTemplates` and `observeRoutineProgress` are routine feature concerns today; analysis, exercise, and workout do not depend on those repository contracts.
+- Do not introduce `:feature:routine:network`. Routine data uses core storage infrastructure only; network contracts still belong in `:core:network` if a remote training catalog appears.
+
+Next PR scope:
+
+- Apply the same ownership test to workout log commands only if a command becomes feature-private. Current workout logs remain shared analysis/routine/exercise input.
+- Continue reducing app imports so feature data classes appear only in app-owned DI composition modules.
 
 ## Strict Feature Isolation Audit
 
@@ -801,7 +826,9 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Routine route and dialog rendering now goes through `RoutineFeatureEntry`; `RoutineRouteState` is no longer a public rendering facade.
 - Routine-only recommendation, readiness, and cycle-completion policies now live in `:feature:routine:domain`.
 - Routine-only command contracts and command use cases now live in `:feature:routine:domain`.
-- Routine repository implementations now live in `:feature:routine:data`; app-owned DI binds them to shared core read contracts and routine command contracts.
+- Routine-only read contracts for template catalog and active progress now live in `:feature:routine:domain`.
+- Routine repository implementations now live in `:feature:routine:data`; app-owned DI binds them to the shared core weekly-plan contract and routine-owned read/command contracts.
+- Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:

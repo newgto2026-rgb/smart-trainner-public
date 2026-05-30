@@ -1,10 +1,9 @@
 package com.smarttrainner
 
 import com.smarttrainner.core.domain.ExerciseRepository
-import com.smarttrainner.core.domain.RoutinePlanRepository
-import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SeedTrainingContent
 import com.smarttrainner.core.domain.SessionRepository
+import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WeeklySummaryRepository
 import com.smarttrainner.core.domain.WeeklySummaryCalculator
 import com.smarttrainner.core.domain.WorkoutLogRepository
@@ -28,8 +27,10 @@ import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
+import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
+import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -67,7 +68,8 @@ internal class InMemorySessionRepository : SessionRepository {
 
 internal class InMemoryTrainingRepository :
     ExerciseRepository,
-    RoutinePlanRepository,
+    WeeklyPlanRepository,
+    RoutinePlanCatalogRepository,
     RoutineProgressRepository,
     RoutinePlanCommandRepository,
     RoutineProgressCommandRepository,
@@ -93,8 +95,6 @@ internal class InMemoryTrainingRepository :
 
     override fun observePlanTemplates(): Flow<List<PlanTemplate>> =
         customTemplates.map { custom -> systemTemplates + custom }
-
-    override fun observeCustomRoutines(): Flow<List<PlanTemplate>> = customTemplates
 
     override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> =
         combine(selectedTemplateId, customTemplates) { templateId, custom ->

@@ -3,11 +3,12 @@ package com.smarttrainner.feature.routine.data
 import com.smarttrainner.core.database.CustomRoutineDao
 import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
-import com.smarttrainner.core.domain.RoutinePlanRepository
 import com.smarttrainner.core.domain.TrainingSeedStore
+import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import java.time.Clock
 import java.time.LocalDate
@@ -29,11 +30,11 @@ class DefaultRoutinePlanRepository @Inject constructor(
     private val activeSessionResolver: ActiveSessionResolver,
     private val seedStore: TrainingSeedStore,
     private val clock: Clock
-) : RoutinePlanRepository, RoutinePlanCommandRepository {
+) : WeeklyPlanRepository, RoutinePlanCatalogRepository, RoutinePlanCommandRepository {
     override fun observePlanTemplates(): Flow<List<PlanTemplate>> =
         observeCustomRoutines().map { customTemplates -> seedStore.templates + customTemplates }
 
-    override fun observeCustomRoutines(): Flow<List<PlanTemplate>> =
+    private fun observeCustomRoutines(): Flow<List<PlanTemplate>> =
         activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
             customRoutineDao.observeForSession(sessionId)
                 .map { routines -> routines.map { it.toPlanTemplate() } }

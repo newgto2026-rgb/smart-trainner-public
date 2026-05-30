@@ -6,11 +6,8 @@ import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.ObserveCurrentWeeklyPlanUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
-import com.smarttrainner.core.domain.ObservePlanTemplatesUseCase
-import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
-import com.smarttrainner.core.domain.RoutinePlanRepository
-import com.smarttrainner.core.domain.RoutineProgressRepository
+import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
@@ -40,9 +37,13 @@ import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.feature.routine.domain.AdvanceRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CompleteRoutineDayUseCase
+import com.smarttrainner.feature.routine.domain.ObservePlanTemplatesUseCase
+import com.smarttrainner.feature.routine.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.feature.routine.domain.RecommendRoutineUseCase
+import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
+import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
 import com.smarttrainner.feature.routine.domain.StartRoutineUseCase
@@ -716,7 +717,8 @@ class MainDispatcherRule(
 
 private class FakeTrainingRepository :
     ExerciseRepository,
-    RoutinePlanRepository,
+    WeeklyPlanRepository,
+    RoutinePlanCatalogRepository,
     RoutineProgressRepository,
     RoutinePlanCommandRepository,
     RoutineProgressCommandRepository,
@@ -837,10 +839,6 @@ private class FakeTrainingRepository :
     override fun observeExercises(): Flow<List<Exercise>> = MutableStateFlow(exercises)
 
     override fun observePlanTemplates(): Flow<List<PlanTemplate>> = templates
-
-    override fun observeCustomRoutines(): Flow<List<PlanTemplate>> = MutableStateFlow(
-        templates.value.filter { it.source == RoutineSource.CUSTOM }
-    )
 
     override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> {
         requestedPlanWeekStartDates += weekStartDate
