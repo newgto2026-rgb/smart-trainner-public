@@ -29,7 +29,7 @@ import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseDetailActions
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
-import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
@@ -44,7 +44,7 @@ internal typealias TrainingRouteContent = LazyListScope.(
 @Composable
 internal fun TrainingRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    exerciseMediaRenderer: ExerciseMediaRenderer,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     viewModel: TrainingViewModel = sharedTrainingViewModel(),
@@ -53,7 +53,7 @@ internal fun TrainingRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     TrainingScreen(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-        exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+        exerciseMediaRenderer = exerciseMediaRenderer,
         routineFeatureEntry = routineFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         state = state,
@@ -124,7 +124,7 @@ private tailrec fun Context.findViewModelStoreOwner(): ViewModelStoreOwner? = wh
 @Composable
 private fun TrainingScreen(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    exerciseMediaRenderer: ExerciseMediaRenderer,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     state: TrainingUiState,
@@ -288,7 +288,7 @@ private fun TrainingScreen(
         workoutRecordingFeatureEntry.Dialog(
             state = workoutRecordingState,
             actions = workoutRecordingActions,
-            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
+            exerciseMediaRenderer = exerciseMediaRenderer
         )
     }
     routineFeatureEntry.Dialogs(

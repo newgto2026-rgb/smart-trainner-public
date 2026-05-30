@@ -2,7 +2,7 @@ package com.smarttrainner.feature.routine.impl
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
-import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineUiState
@@ -22,12 +22,12 @@ class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
     override fun LazyListScope.Content(
         state: RoutineUiState,
         actions: RoutineActions,
-        exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
+        exerciseMediaRenderer: ExerciseMediaRenderer
     ) {
         planContent(
             state = state,
             actions = actions,
-            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
+            exerciseMediaRenderer = exerciseMediaRenderer
         )
     }
 

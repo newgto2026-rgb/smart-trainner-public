@@ -2,7 +2,7 @@ package com.smarttrainner.feature.routine.api
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
-import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
 
 interface RoutineFeatureEntry {
     fun LazyListScope.HomeSummary(
@@ -13,7 +13,7 @@ interface RoutineFeatureEntry {
     fun LazyListScope.Content(
         state: RoutineUiState,
         actions: RoutineActions,
-        exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
+        exerciseMediaRenderer: ExerciseMediaRenderer
     )
 
     @Composable

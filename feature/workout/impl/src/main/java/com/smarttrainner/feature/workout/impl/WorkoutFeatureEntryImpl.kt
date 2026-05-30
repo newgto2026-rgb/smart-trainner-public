@@ -1,7 +1,7 @@
 package com.smarttrainner.feature.workout.impl
 
 import androidx.compose.runtime.Composable
-import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
@@ -12,12 +12,12 @@ class WorkoutFeatureEntryImpl @Inject constructor() : WorkoutRecordingFeatureEnt
     override fun Dialog(
         state: WorkoutRecordingUiState,
         actions: WorkoutRecordingActions,
-        exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
+        exerciseMediaRenderer: ExerciseMediaRenderer
     ) {
         WorkoutRecordDialog(
             state = state,
             actions = actions,
-            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
+            exerciseMediaRenderer = exerciseMediaRenderer
         )
     }
 }

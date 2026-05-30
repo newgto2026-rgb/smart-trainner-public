@@ -156,10 +156,10 @@ Move exercise detail and media rendering out of `:feature:training:impl` now tha
 First PR scope:
 
 - Introduce `:feature:exercise:impl` and `:feature:exercise:entry`.
-- Bind `ExerciseDetailFeatureEntry` and `ExerciseMediaFeatureEntry` from the exercise entry module.
+- Bind `ExerciseDetailFeatureEntry` and the neutral `ExerciseMediaRenderer` from the exercise entry module.
 - Move exercise detail UI, step image rendering, generated media mappings, and `drawable-nodpi` exercise images into `:feature:exercise:impl`.
 - Remove exercise detail-only resources and image implementation references from `:feature:training:impl`.
-- Have training call only `:feature:exercise:api` for exercise detail and media rendering.
+- Have training call `:feature:exercise:api` for exercise detail and a neutral core UI renderer for exercise media.
 
 Next PR scope:
 
@@ -275,12 +275,8 @@ First PR scope:
 - Keep direct feature implementation and entry dependencies blocked.
 - Document that each allowlisted edge needs an owner-removal plan before strict feature isolation is complete.
 
-Current transitional allowlist:
+Current transitional allowlist after Phase 17:
 
-- `:feature:routine:api -> :feature:exercise:api`
-- `:feature:routine:impl -> :feature:exercise:api`
-- `:feature:workout:api -> :feature:exercise:api`
-- `:feature:workout:impl -> :feature:exercise:api`
 - `:feature:training:impl -> :feature:exercise:api`
 - `:feature:training:impl -> :feature:routine:api`
 - `:feature:training:impl -> :feature:workout:api`
@@ -309,12 +305,29 @@ Next PR scope:
 - Repeat the feature-owned route/ViewModel pattern for exercise catalog or routine, depending on which can be separated from workout recording with the smallest coordination surface.
 - Continue moving feature entry injection into app as each destination stops requiring the training coordinator.
 
+## Phase 17: Exercise Media Core UI Port
+
+Status: stacked after Phase 16 on `codex/modularization-exercise-media-core-ui`.
+
+Remove cross-feature awareness where routine and workout only needed exercise media rendering. Exercise image rendering is now exposed as a neutral core UI port, while the exercise feature remains the implementation owner.
+
+First PR scope:
+
+- Add `ExerciseMediaRenderer` to `:core:ui`.
+- Have `:feature:exercise:impl` implement the renderer and `:feature:exercise:entry` bind it.
+- Replace routine and workout API usage of the exercise feature media contract with `ExerciseMediaRenderer`.
+- Remove `:feature:routine:* -> :feature:exercise:api` and `:feature:workout:* -> :feature:exercise:api` from Gradle dependencies and the transitional allowlist.
+
+Next PR scope:
+
+- Move the exercise catalog destination to an exercise-owned route/ViewModel only after the app can coordinate recording/detail flows without routing through training.
+- Continue reducing the remaining `:feature:training:impl` allowlist entries by moving destination state ownership out of the temporary training coordinator.
+
 ## Strict Feature Isolation Audit
 
 Current state is not strict feature ignorance:
 
-- `:feature:routine:api` knows `:feature:exercise:api` through `ExerciseMediaFeatureEntry`.
-- `:feature:workout:api` knows `:feature:exercise:api` through `ExerciseMediaFeatureEntry`.
+- `:feature:routine:*` and `:feature:workout:*` no longer know `:feature:exercise:api` for exercise media; they depend on `:core:ui`'s renderer port.
 - `:feature:training:impl` still knows exercise, routine, and workout APIs while it remains the temporary coordinator.
 - `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
 

@@ -24,6 +24,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:ui"))
     implementation(project(":feature:exercise:api"))
     implementation(project(":feature:exercise:impl"))
 

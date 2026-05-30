@@ -39,14 +39,14 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.WorkoutLog
-import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.routine.api.RoutineUiState
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
     state: RoutineUiState,
     actions: RoutineActions,
-    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
+    exerciseMediaRenderer: ExerciseMediaRenderer
 ) {
     item {
         Text(
@@ -109,7 +109,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
                 weeklyLogs = state.logs,
                 latestLogs = state.latestWorkoutLogs,
                 completedIds = state.completedPlannedExerciseIds,
-                exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+                exerciseMediaRenderer = exerciseMediaRenderer,
                 onRecordSelected = actions.onRecordSelected
             )
         }
@@ -177,7 +177,7 @@ internal fun DayPlanSection(
     weeklyLogs: List<com.smarttrainner.core.model.WorkoutLog>,
     latestLogs: List<com.smarttrainner.core.model.WorkoutLog>,
     completedIds: Set<com.smarttrainner.core.model.PlannedExerciseId>,
-    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    exerciseMediaRenderer: ExerciseMediaRenderer,
     onRecordSelected: (PlannedExercise) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -202,7 +202,7 @@ internal fun DayPlanSection(
                 displayLog = weeklyLogs.firstOrNull { it.plannedExerciseId == exercise.id }
                     ?: latestLogs.latestForExercise(exercise.exercise.id),
                 completed = exercise.id in completedIds,
-                exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+                exerciseMediaRenderer = exerciseMediaRenderer,
                 onClick = { onRecordSelected(exercise) }
             )
         }
@@ -214,7 +214,7 @@ internal fun PlanExerciseRow(
     exercise: PlannedExercise,
     displayLog: com.smarttrainner.core.model.WorkoutLog?,
     completed: Boolean,
-    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    exerciseMediaRenderer: ExerciseMediaRenderer,
     onClick: () -> Unit
 ) {
     Card(
@@ -231,7 +231,7 @@ internal fun PlanExerciseRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            exerciseMediaFeatureEntry.Image(
+            exerciseMediaRenderer.Image(
                 exercise = exercise.exercise,
                 modifier = Modifier.size(width = 76.dp, height = 84.dp),
                 stepIndex = null,

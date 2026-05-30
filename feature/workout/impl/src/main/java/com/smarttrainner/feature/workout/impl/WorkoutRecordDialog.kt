@@ -43,7 +43,7 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerNumberField
-import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.workout.api.RecordFormError
 import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
@@ -53,7 +53,7 @@ import java.util.Locale
 internal fun WorkoutRecordDialog(
     state: WorkoutRecordingUiState,
     actions: WorkoutRecordingActions,
-    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
+    exerciseMediaRenderer: ExerciseMediaRenderer
 ) {
     val planned = state.recordingPlannedExercise ?: return
     Dialog(
@@ -89,7 +89,7 @@ internal fun WorkoutRecordDialog(
                         state = state,
                         planned = planned,
                         actions = actions,
-                        exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
+                        exerciseMediaRenderer = exerciseMediaRenderer
                     )
                 }
                 IconButton(
@@ -110,7 +110,7 @@ private fun RecordForm(
     state: WorkoutRecordingUiState,
     planned: PlannedExercise,
     actions: WorkoutRecordingActions,
-    exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry
+    exerciseMediaRenderer: ExerciseMediaRenderer
 ) {
     val showReps = planned.repRange != null
     val showDuration = planned.durationMinutes != null || !showReps
@@ -123,7 +123,7 @@ private fun RecordForm(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            exerciseMediaFeatureEntry.Image(
+            exerciseMediaRenderer.Image(
                 exercise = planned.exercise,
                 modifier = Modifier.size(width = 78.dp, height = 86.dp),
                 stepIndex = null,

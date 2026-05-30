@@ -51,10 +51,6 @@ val checkModuleBoundaries by tasks.registering {
         fun featureName(path: String) = path.split(":").getOrNull(2)
 
         val allowedCrossFeatureApiDependencies = setOf(
-            ":feature:routine:api" to ":feature:exercise:api",
-            ":feature:routine:impl" to ":feature:exercise:api",
-            ":feature:workout:api" to ":feature:exercise:api",
-            ":feature:workout:impl" to ":feature:exercise:api",
             ":feature:training:impl" to ":feature:exercise:api",
             ":feature:training:impl" to ":feature:routine:api",
             ":feature:training:impl" to ":feature:workout:api"

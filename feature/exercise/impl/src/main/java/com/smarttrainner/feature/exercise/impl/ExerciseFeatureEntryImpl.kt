@@ -10,13 +10,13 @@ import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 import com.smarttrainner.feature.exercise.api.ExerciseDetailActions
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
-import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import javax.inject.Inject
 
 class ExerciseFeatureEntryImpl @Inject constructor() :
     ExerciseCatalogFeatureEntry,
     ExerciseDetailFeatureEntry,
-    ExerciseMediaFeatureEntry {
+    ExerciseMediaRenderer {
     override fun LazyListScope.Content(
         state: ExerciseCatalogUiState,
         actions: ExerciseCatalogActions
