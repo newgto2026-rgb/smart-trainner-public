@@ -32,10 +32,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
-import com.smarttrainner.core.ui.SmartTrainnerSectionTitle
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineSource
+import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
+import com.smarttrainner.core.ui.SmartTrainnerSectionTitle
 import com.smarttrainner.core.ui.SmartTrainnerWrappedRows
 import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
 import com.smarttrainner.feature.routine.api.RoutineActions
@@ -53,7 +54,7 @@ internal fun LazyListScope.homeSummaryContent(
     }
     val nextRoutineDay = state.nextRoutineDayUi
     if (nextRoutineDay == null) {
-        item { EmptyState(text = stringResource(R.string.routine_empty_plan)) }
+        item { SmartTrainnerEmptyState(text = stringResource(R.string.routine_empty_plan)) }
     } else {
         item {
             NextRoutineDayCard(
