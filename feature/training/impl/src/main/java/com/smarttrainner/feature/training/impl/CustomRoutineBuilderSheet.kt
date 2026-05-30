@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -49,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -132,6 +134,7 @@ internal fun CustomRoutineBuilderSheet(
                             .fillMaxWidth()
                             .testTag("training_custom_routine_name"),
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         shape = RoundedCornerShape(8.dp)
                     )
                     CustomDayTabs(
@@ -556,23 +559,6 @@ private fun CustomRoutineFormError.localizedMessage(): String = stringResource(
         CustomRoutineFormError.EMPTY_DAY -> R.string.training_custom_error_empty_day
         CustomRoutineFormError.EXERCISE -> R.string.training_custom_error_exercise
         CustomRoutineFormError.SAVE_FAILED -> R.string.training_custom_error_save
-    }
-)
-
-@Composable
-private fun MuscleGroup.localizedLabel(): String = stringResource(
-    when (this) {
-        MuscleGroup.LOWER_BODY -> R.string.training_muscle_lower_body
-        MuscleGroup.BACK -> R.string.training_muscle_back
-        MuscleGroup.CHEST -> R.string.training_muscle_chest
-        MuscleGroup.SHOULDERS -> R.string.training_muscle_shoulders
-        MuscleGroup.ARMS -> R.string.training_muscle_arms
-        MuscleGroup.BICEPS -> R.string.training_muscle_biceps
-        MuscleGroup.TRICEPS -> R.string.training_muscle_triceps
-        MuscleGroup.FOREARMS -> R.string.training_muscle_forearms
-        MuscleGroup.CORE -> R.string.training_muscle_core
-        MuscleGroup.CARDIO -> R.string.training_muscle_cardio
-        MuscleGroup.FULL_BODY -> R.string.training_muscle_full_body
     }
 )
 

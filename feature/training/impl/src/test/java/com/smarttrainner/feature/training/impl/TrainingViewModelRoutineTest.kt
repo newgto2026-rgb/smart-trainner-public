@@ -97,6 +97,7 @@ class TrainingViewModelRoutineTest {
             assertThat(state.nextRoutineDayUi?.dayNumber).isEqualTo(2)
             assertThat(state.nextRoutineDayUi?.primaryFocus).isEqualTo(RoutineFocus.CHEST)
             assertThat(state.selectedPlannedExercise?.exercise?.id?.value).isEqualTo("chest_press")
+            assertThat(state.today).isEqualTo(LocalDate.of(2026, 5, 24))
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -127,6 +128,38 @@ class TrainingViewModelRoutineTest {
         )
 
         assertThat(uiModel.previewExercises.map { it.id }).containsExactlyElementsIn(exercises.map { it.id }).inOrder()
+    }
+
+    @Test
+    fun nextRoutineDayUi_ignoresEmptyTemplateDays() {
+        val day = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 24),
+            title = "1일차",
+            focus = "가슴 집중",
+            exercises = listOf(plannedExercise("exercise_1")),
+            dayNumber = 1,
+            primaryFocus = RoutineFocus.CHEST,
+            secondaryFocuses = emptyList(),
+            minRecoveryHours = 24
+        )
+        val emptyTemplate = PlanTemplate(
+            id = "empty-template",
+            name = "Empty",
+            level = PlanLevel.BEGINNER,
+            daysPerWeek = 0,
+            description = "",
+            days = emptyList(),
+            sessionMinutes = 45,
+            source = RoutineSource.SYSTEM
+        )
+
+        val uiModel = day.toNextRoutineDayUiModel(
+            template = emptyTemplate,
+            dayIndex = 0,
+            completedIds = emptySet()
+        )
+
+        assertThat(uiModel.nextPrimaryFocus).isNull()
     }
 
     @Test
