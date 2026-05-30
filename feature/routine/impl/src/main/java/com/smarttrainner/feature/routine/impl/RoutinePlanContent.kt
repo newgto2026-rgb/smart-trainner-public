@@ -1,4 +1,4 @@
-package com.smarttrainner.feature.training.impl
+package com.smarttrainner.feature.routine.impl
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -50,7 +50,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
 ) {
     item {
         Text(
-            text = stringResource(R.string.training_current_routine),
+            text = stringResource(R.string.routine_current_routine),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -65,7 +65,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
-                EmptyState(text = stringResource(R.string.training_empty_plan))
+                EmptyState(text = stringResource(R.string.routine_empty_plan))
             }
             Button(
                 onClick = actions.onShowLibrary,
@@ -76,7 +76,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
             ) {
                 Icon(Icons.Default.FitnessCenter, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.training_change_routine))
+                Text(stringResource(R.string.routine_change_routine))
             }
             OutlinedButton(
                 onClick = actions.onCreateCustomRoutine,
@@ -87,13 +87,13 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.training_create_custom_routine))
+                Text(stringResource(R.string.routine_create_custom_routine))
             }
         }
     }
     item {
         Text(
-            text = stringResource(R.string.training_routine_schedule),
+            text = stringResource(R.string.routine_routine_schedule),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -160,7 +160,7 @@ internal fun CurrentRoutineSummaryCard(
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.training_edit_custom_routine))
+                    Text(stringResource(R.string.routine_edit_custom_routine))
                 }
             }
         }
@@ -231,11 +231,12 @@ internal fun PlanExerciseRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            TrainingExerciseMedia(
-                exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+            exerciseMediaFeatureEntry.Image(
                 exercise = exercise.exercise,
                 modifier = Modifier.size(width = 76.dp, height = 84.dp),
-                cleanThumbnailCrop = true
+                stepIndex = null,
+                cleanThumbnailCrop = true,
+                contentDescription = null
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(exercise.exercise.localizedName(), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -253,7 +254,7 @@ internal fun PlanExerciseRow(
                 ) {
                     Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.size(6.dp))
-                    Text(stringResource(R.string.training_record_action), style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.routine_record_action), style = MaterialTheme.typography.labelMedium)
                 }
             }
         }

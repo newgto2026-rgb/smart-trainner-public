@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":feature:analysis:entry"))
     implementation(project(":feature:exercise:entry"))
+    implementation(project(":feature:routine:entry"))
     implementation(project(":feature:training:api"))
     implementation(project(":feature:training:entry"))
     implementation(project(":feature:workout:entry"))

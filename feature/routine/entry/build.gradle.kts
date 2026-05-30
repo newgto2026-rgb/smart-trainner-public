@@ -1,11 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
-    namespace = "com.smarttrainner.feature.routine.api"
+    namespace = "com.smarttrainner.feature.routine.entry"
     compileSdk = 36
 
     defaultConfig {
@@ -13,12 +14,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildFeatures {
-        compose = true
-    }
-
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -28,10 +24,15 @@ android {
 }
 
 dependencies {
-    api(project(":core:model"))
-    api(project(":feature:exercise:api"))
-    api(platform(libs.androidx.compose.bom))
-    api("androidx.compose.foundation:foundation")
-    api(libs.androidx.compose.runtime)
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
+    implementation(project(":feature:routine:api"))
+    implementation(project(":feature:routine:impl"))
+
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+
+    androidTestImplementation(libs.androidx.test.runner)
+}
+
+kapt {
+    correctErrorTypes = true
 }

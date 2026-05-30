@@ -28,6 +28,7 @@ import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
 import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineActions
+import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.training.api.TrainingDestination
 import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
@@ -39,6 +40,7 @@ fun TrainingRoute(
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     viewModel: TrainingViewModel = hiltViewModel()
 ) {
@@ -49,6 +51,7 @@ fun TrainingRoute(
         exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+        routineFeatureEntry = routineFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         state = state,
         onTemplateSelected = viewModel::selectTemplate,
@@ -104,6 +107,7 @@ private fun TrainingScreen(
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     state: TrainingUiState,
     onTemplateSelected: (String) -> Unit,
@@ -265,55 +269,10 @@ private fun TrainingScreen(
             exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
         )
     }
-    if (routineState.showRoutineLibraryDialog) {
-        RoutineLibraryDialog(
-            state = routineState,
-            onTemplateSelected = onTemplateSelected,
-            onShowRoutineSettings = onShowRoutineSettings,
-            onCreateCustomRoutine = onCreateCustomRoutine,
-            onCopyTemplateToCustom = onCopyTemplateToCustom,
-            onEditCustomRoutine = onEditCustomRoutine,
-            onDismissRequest = onRoutineLibraryDismiss
-        )
-    }
-    if (routineState.showRoutineSettingsDialog) {
-        RoutineSettingsDialog(
-            form = routineState.routineRecommendationInput,
-            onDaysPerWeekChanged = onRoutineDaysPerWeekChanged,
-            onSessionMinutesChanged = onRoutineSessionMinutesChanged,
-            onExperienceChanged = onRoutineExperienceChanged,
-            onFeelingChanged = onRoutineFeelingChanged,
-            onShowRecommendations = onShowRoutineRecommendations,
-            onDismissRequest = onRoutineSettingsDismiss
-        )
-    }
-    if (routineState.showRoutineRecommendationsDialog) {
-        RoutineRecommendationsDialog(
-            state = routineState,
-            onTemplatePreviewSelected = onRoutinePreviewSelected,
-            onStartRoutine = onStartPreviewRoutine,
-            onDismissRequest = onRoutineRecommendationsDismiss
-        )
-    }
-    if (routineState.customRoutineBuilder.visible) {
-        CustomRoutineBuilderSheet(
-            builder = routineState.customRoutineBuilder,
-            exercises = routineState.exercises,
-            onNameChanged = onCustomRoutineNameChanged,
-            onDaySelected = onCustomRoutineDaySelected,
-            onDayFocusChanged = onCustomRoutineDayFocusChanged,
-            onAddDay = onCustomRoutineDayAdded,
-            onRemoveDay = onCustomRoutineDayRemoved,
-            onExerciseGroupToggled = onCustomRoutineExerciseGroupToggled,
-            onExerciseDetailRequested = onExerciseMethodSelected,
-            onAddExercise = onCustomRoutineExerciseAdded,
-            onRemoveExercise = onCustomRoutineExerciseRemoved,
-            onMoveExerciseUp = onCustomRoutineExerciseMovedUp,
-            onMoveExerciseDown = onCustomRoutineExerciseMovedDown,
-            onSave = { onCustomRoutineSaved(false) },
-            onDismissRequest = onCustomRoutineBuilderDismiss
-        )
-    }
+    routineFeatureEntry.Dialogs(
+        state = routineState,
+        actions = routineActions
+    )
     if (selectedExercise != null) {
         val selectedPlannedExercise = if (state.recordingPlannedExercise == null && !routineState.customRoutineBuilder.visible) {
             routineState.plan?.days
@@ -350,11 +309,13 @@ private fun TrainingScreen(
             item { Header(state) }
             when (destination) {
                 TrainingDestination.Home -> homeContent(state, onWorkoutStarted, onCompleteRoutineDay)
-                TrainingDestination.Routine -> planContent(
-                    state = routineState,
-                    actions = routineActions,
-                    exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
-                )
+                TrainingDestination.Routine -> with(routineFeatureEntry) {
+                    Content(
+                        state = routineState,
+                        actions = routineActions,
+                        exerciseMediaFeatureEntry = exerciseMediaFeatureEntry
+                    )
+                }
                 TrainingDestination.Exercises -> with(exerciseCatalogFeatureEntry) {
                     Content(
                         state = exerciseCatalogState,

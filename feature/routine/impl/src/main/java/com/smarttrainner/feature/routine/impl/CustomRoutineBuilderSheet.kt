@@ -1,4 +1,4 @@
-package com.smarttrainner.feature.training.impl
+package com.smarttrainner.feature.routine.impl
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -113,12 +113,12 @@ internal fun CustomRoutineBuilderSheet(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = stringResource(R.string.training_custom_routine_builder_title),
+                            text = stringResource(R.string.routine_custom_routine_builder_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = stringResource(R.string.training_custom_routine_builder_body),
+                            text = stringResource(R.string.routine_custom_routine_builder_body),
                             color = SmartTrainnerColors.Muted,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -127,7 +127,7 @@ internal fun CustomRoutineBuilderSheet(
                         onClick = onDismissRequest,
                         modifier = Modifier.testTag("training_close_custom_routine_builder")
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.training_close_detail))
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.routine_close_detail))
                     }
                 }
                 Column(
@@ -139,7 +139,7 @@ internal fun CustomRoutineBuilderSheet(
                     OutlinedTextField(
                         value = builder.name,
                         onValueChange = onNameChanged,
-                        label = { Text(stringResource(R.string.training_custom_routine_name)) },
+                        label = { Text(stringResource(R.string.routine_custom_routine_name)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("training_custom_routine_name"),
@@ -163,7 +163,7 @@ internal fun CustomRoutineBuilderSheet(
                     }
                     builder.savedTemplateId?.let {
                         Text(
-                            text = stringResource(R.string.training_custom_routine_saved),
+                            text = stringResource(R.string.routine_custom_routine_saved),
                             color = SmartTrainnerColors.Green,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
@@ -211,7 +211,7 @@ internal fun CustomRoutineBuilderSheet(
                     ) {
                         Icon(Icons.Default.RemoveCircleOutline, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
-                        Text(stringResource(R.string.training_remove_custom_day))
+                        Text(stringResource(R.string.routine_remove_custom_day))
                     }
                     Button(
                         onClick = onSave,
@@ -223,7 +223,7 @@ internal fun CustomRoutineBuilderSheet(
                     ) {
                         Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
-                        Text(stringResource(R.string.training_save_custom_routine))
+                        Text(stringResource(R.string.routine_save_custom_routine))
                     }
                 }
             }
@@ -239,7 +239,7 @@ private fun CustomDayTabs(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = stringResource(R.string.training_custom_routine_days),
+            text = stringResource(R.string.routine_custom_routine_days),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
@@ -250,7 +250,7 @@ private fun CustomDayTabs(
                     FilterChip(
                         selected = selected,
                         onClick = { onDaySelected(dayIndex) },
-                        label = { Text(stringResource(R.string.training_day_label, dayIndex + 1)) },
+                        label = { Text(stringResource(R.string.routine_day_label, dayIndex + 1)) },
                         modifier = Modifier.testTag("training_custom_day_tab_$dayIndex"),
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = SmartTrainnerColors.SurfaceRaised,
@@ -272,7 +272,7 @@ private fun CustomDayTabs(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.training_add_custom_day))
+                Text(stringResource(R.string.routine_add_custom_day))
             }
         }
     }
@@ -289,7 +289,7 @@ private fun CustomDayEditor(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = stringResource(R.string.training_custom_day_editing, dayIndex + 1),
+            text = stringResource(R.string.routine_custom_day_editing, dayIndex + 1),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -299,7 +299,7 @@ private fun CustomDayEditor(
         )
         if (day.exercises.isEmpty()) {
             Text(
-                text = stringResource(R.string.training_custom_day_empty),
+                text = stringResource(R.string.routine_custom_day_empty),
                 color = SmartTrainnerColors.Muted,
                 modifier = Modifier.testTag("training_custom_day_empty")
             )
@@ -333,20 +333,20 @@ private fun CustomDayEditor(
                         enabled = index > 0,
                         modifier = Modifier.testTag("training_custom_move_up_$index")
                     ) {
-                        Icon(Icons.Default.ArrowUpward, contentDescription = stringResource(R.string.training_move_up))
+                        Icon(Icons.Default.ArrowUpward, contentDescription = stringResource(R.string.routine_move_up))
                     }
                     IconButton(
                         onClick = { onMoveExerciseDown(index) },
                         enabled = index < day.exercises.lastIndex,
                         modifier = Modifier.testTag("training_custom_move_down_$index")
                     ) {
-                        Icon(Icons.Default.ArrowDownward, contentDescription = stringResource(R.string.training_move_down))
+                        Icon(Icons.Default.ArrowDownward, contentDescription = stringResource(R.string.routine_move_down))
                     }
                     IconButton(
                         onClick = { onRemoveExercise(index) },
                         modifier = Modifier.testTag("training_remove_custom_exercise_$index")
                     ) {
-                        Icon(Icons.Default.RemoveCircleOutline, contentDescription = stringResource(R.string.training_remove_set))
+                        Icon(Icons.Default.RemoveCircleOutline, contentDescription = stringResource(R.string.routine_remove_set))
                     }
                 }
             }
@@ -361,7 +361,7 @@ private fun CustomDayFocusSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedLabel = selectedFocus?.localizedOptionLabel()
-        ?: stringResource(R.string.training_custom_focus_none)
+        ?: stringResource(R.string.routine_custom_focus_none)
     val selectedTag = focusSelectedTestTag(selectedFocus)
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val options = listOf<RoutineFocus?>(null) + customRoutineFocusOptions()
@@ -384,7 +384,7 @@ private fun CustomDayFocusSelector(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = stringResource(R.string.training_routine_main_focus),
+                        text = stringResource(R.string.routine_routine_main_focus),
                         style = MaterialTheme.typography.labelMedium,
                         color = SmartTrainnerColors.Muted
                     )
@@ -414,14 +414,14 @@ private fun CustomDayFocusSelector(
                     text = {
                         Text(
                             text = focus?.localizedOptionLabel()
-                                ?: stringResource(R.string.training_custom_focus_none)
+                                ?: stringResource(R.string.routine_custom_focus_none)
                         )
                     },
                     leadingIcon = if (focus == selectedFocus) {
                         {
                             Icon(
                                 imageVector = Icons.Default.Check,
-                                contentDescription = stringResource(R.string.training_selected),
+                                contentDescription = stringResource(R.string.routine_selected),
                                 tint = SmartTrainnerColors.Green
                             )
                         }
@@ -469,7 +469,7 @@ private fun ExercisePicker(
         .filterNot { it.id in selectedExerciseIds }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = stringResource(R.string.training_add_exercise_to_day),
+            text = stringResource(R.string.routine_add_exercise_to_day),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
@@ -477,9 +477,9 @@ private fun ExercisePicker(
             Text(
                 text = stringResource(
                     if (selectedFocus == null) {
-                        R.string.training_custom_all_exercises_added
+                        R.string.routine_custom_all_exercises_added
                     } else {
-                        R.string.training_custom_focus_exercises_added
+                        R.string.routine_custom_focus_exercises_added
                     }
                 ),
                 color = SmartTrainnerColors.Muted,
@@ -557,7 +557,7 @@ private fun ExercisePicker(
                                     )
                                     Spacer(Modifier.size(4.dp))
                                     Text(
-                                        text = stringResource(R.string.training_instruction),
+                                        text = stringResource(R.string.routine_instruction),
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }
@@ -573,11 +573,11 @@ private fun ExercisePicker(
 @Composable
 private fun CustomRoutineFormError.localizedMessage(): String = stringResource(
     when (this) {
-        CustomRoutineFormError.NAME -> R.string.training_custom_error_name
-        CustomRoutineFormError.DAYS -> R.string.training_custom_error_days
-        CustomRoutineFormError.EMPTY_DAY -> R.string.training_custom_error_empty_day
-        CustomRoutineFormError.EXERCISE -> R.string.training_custom_error_exercise
-        CustomRoutineFormError.SAVE_FAILED -> R.string.training_custom_error_save
+        CustomRoutineFormError.NAME -> R.string.routine_custom_error_name
+        CustomRoutineFormError.DAYS -> R.string.routine_custom_error_days
+        CustomRoutineFormError.EMPTY_DAY -> R.string.routine_custom_error_empty_day
+        CustomRoutineFormError.EXERCISE -> R.string.routine_custom_error_exercise
+        CustomRoutineFormError.SAVE_FAILED -> R.string.routine_custom_error_save
     }
 )
 
@@ -607,19 +607,19 @@ private fun customRoutineFocusOptions(): List<RoutineFocus> = listOf(
 @Composable
 private fun RoutineFocus.localizedOptionLabel(): String = stringResource(
     when (this) {
-        RoutineFocus.FULL_BODY -> R.string.training_muscle_full_body
-        RoutineFocus.UPPER_BODY -> R.string.training_muscle_upper_body
-        RoutineFocus.PUSH -> R.string.training_muscle_push
-        RoutineFocus.PULL -> R.string.training_muscle_pull
-        RoutineFocus.CHEST -> R.string.training_muscle_chest
-        RoutineFocus.BACK -> R.string.training_muscle_back
-        RoutineFocus.LOWER_BODY -> R.string.training_muscle_lower_body
-        RoutineFocus.SHOULDERS -> R.string.training_muscle_shoulders
-        RoutineFocus.ARMS -> R.string.training_muscle_arms
-        RoutineFocus.BICEPS -> R.string.training_muscle_biceps
-        RoutineFocus.TRICEPS -> R.string.training_muscle_triceps
-        RoutineFocus.FOREARMS -> R.string.training_muscle_forearms
-        RoutineFocus.CARDIO_CONDITIONING -> R.string.training_muscle_cardio
-        RoutineFocus.CORE -> R.string.training_muscle_core
+        RoutineFocus.FULL_BODY -> R.string.routine_muscle_full_body
+        RoutineFocus.UPPER_BODY -> R.string.routine_muscle_upper_body
+        RoutineFocus.PUSH -> R.string.routine_muscle_push
+        RoutineFocus.PULL -> R.string.routine_muscle_pull
+        RoutineFocus.CHEST -> R.string.routine_muscle_chest
+        RoutineFocus.BACK -> R.string.routine_muscle_back
+        RoutineFocus.LOWER_BODY -> R.string.routine_muscle_lower_body
+        RoutineFocus.SHOULDERS -> R.string.routine_muscle_shoulders
+        RoutineFocus.ARMS -> R.string.routine_muscle_arms
+        RoutineFocus.BICEPS -> R.string.routine_muscle_biceps
+        RoutineFocus.TRICEPS -> R.string.routine_muscle_triceps
+        RoutineFocus.FOREARMS -> R.string.routine_muscle_forearms
+        RoutineFocus.CARDIO_CONDITIONING -> R.string.routine_muscle_cardio
+        RoutineFocus.CORE -> R.string.routine_muscle_core
     }
 )

@@ -1,4 +1,4 @@
-package com.smarttrainner.feature.training.impl
+package com.smarttrainner.feature.routine.impl
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
@@ -69,29 +69,29 @@ internal fun RoutineRecommendationControls(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         RoutineOptionRow(
-            label = stringResource(R.string.training_routine_days_question),
+            label = stringResource(R.string.routine_routine_days_question),
             options = listOf(2, 3, 4, 5).map {
-                it to stringResource(R.string.training_days_per_week_option, it)
+                it to stringResource(R.string.routine_days_per_week_option, it)
             },
             selected = form.daysPerWeek,
             onSelected = onDaysPerWeekChanged
         )
         RoutineOptionRow(
-            label = stringResource(R.string.training_routine_minutes_question),
+            label = stringResource(R.string.routine_routine_minutes_question),
             options = listOf(30, 45, 60).map {
-                it to stringResource(R.string.training_minutes_option, it)
+                it to stringResource(R.string.routine_minutes_option, it)
             },
             selected = form.sessionMinutes,
             onSelected = onSessionMinutesChanged
         )
         RoutineOptionRow(
-            label = stringResource(R.string.training_routine_experience_question),
+            label = stringResource(R.string.routine_routine_experience_question),
             options = TrainingExperience.entries.map { it to it.localizedLabel() },
             selected = form.experience,
             onSelected = onExperienceChanged
         )
         RoutineOptionRow(
-            label = stringResource(R.string.training_routine_feeling_question),
+            label = stringResource(R.string.routine_routine_feeling_question),
             options = RoutineFeeling.entries.map { it to it.localizedLabel() },
             selected = form.feeling,
             onSelected = onFeelingChanged
@@ -181,7 +181,7 @@ internal fun RoutineLibraryDialog(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 DialogHeader(
-                    title = stringResource(R.string.training_routine_library_title),
+                    title = stringResource(R.string.routine_routine_library_title),
                     onDismissRequest = onDismissRequest
                 )
                 Column(
@@ -191,12 +191,12 @@ internal fun RoutineLibraryDialog(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.training_my_routines),
+                        text = stringResource(R.string.routine_my_routines),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
                     if (state.customTemplates.isEmpty()) {
-                        EmptyState(text = stringResource(R.string.training_custom_routine_empty))
+                        EmptyState(text = stringResource(R.string.routine_custom_routine_empty))
                     } else {
                         state.customTemplates.forEach { template ->
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -216,7 +216,7 @@ internal fun RoutineLibraryDialog(
                                 ) {
                                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(Modifier.size(8.dp))
-                                    Text(stringResource(R.string.training_edit_custom_routine))
+                                    Text(stringResource(R.string.routine_edit_custom_routine))
                                 }
                             }
                         }
@@ -230,10 +230,10 @@ internal fun RoutineLibraryDialog(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(8.dp))
-                        Text(stringResource(R.string.training_create_custom_routine))
+                        Text(stringResource(R.string.routine_create_custom_routine))
                     }
                     Text(
-                        text = stringResource(R.string.training_default_routines),
+                        text = stringResource(R.string.routine_default_routines),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -254,7 +254,7 @@ internal fun RoutineLibraryDialog(
                             ) {
                                 Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.size(8.dp))
-                                Text(stringResource(R.string.training_copy_to_custom_routine))
+                                Text(stringResource(R.string.routine_copy_to_custom_routine))
                             }
                         }
                     }
@@ -268,7 +268,7 @@ internal fun RoutineLibraryDialog(
                 ) {
                     Icon(Icons.Default.FitnessCenter, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.training_find_recommended_routine))
+                    Text(stringResource(R.string.routine_find_recommended_routine))
                 }
             }
         }
@@ -305,7 +305,7 @@ internal fun RoutineSettingsDialog(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 DialogHeader(
-                    title = stringResource(R.string.training_routine_settings_title),
+                    title = stringResource(R.string.routine_routine_settings_title),
                     onDismissRequest = onDismissRequest
                 )
                 Column(
@@ -315,7 +315,7 @@ internal fun RoutineSettingsDialog(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.training_routine_settings_body),
+                        text = stringResource(R.string.routine_routine_settings_body),
                         color = SmartTrainnerColors.Muted,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -336,7 +336,7 @@ internal fun RoutineSettingsDialog(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(stringResource(R.string.training_cancel))
+                        Text(stringResource(R.string.routine_cancel))
                     }
                     Button(
                         onClick = onShowRecommendations,
@@ -345,7 +345,7 @@ internal fun RoutineSettingsDialog(
                             .testTag("training_show_recommendations"),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(stringResource(R.string.training_show_recommendations))
+                        Text(stringResource(R.string.routine_show_recommendations))
                     }
                 }
             }
@@ -387,12 +387,12 @@ internal fun RoutineRecommendationsDialog(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 DialogHeader(
-                    title = stringResource(R.string.training_routine_recommendations_title),
+                    title = stringResource(R.string.routine_routine_recommendations_title),
                     onDismissRequest = onDismissRequest
                 )
                 Text(
                     text = stringResource(
-                        R.string.training_routine_recommendations_body,
+                        R.string.routine_routine_recommendations_body,
                         state.routineRecommendationInput.daysPerWeek,
                         state.routineRecommendationInput.sessionMinutes
                     ),
@@ -408,13 +408,13 @@ internal fun RoutineRecommendationsDialog(
                     options.forEachIndexed { index, template ->
                         if (index == 0) {
                             Text(
-                                text = stringResource(R.string.training_recommended_routine),
+                                text = stringResource(R.string.routine_recommended_routine),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                         } else if (index == 1) {
                             Text(
-                                text = stringResource(R.string.training_alternative_routines),
+                                text = stringResource(R.string.routine_alternative_routines),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
@@ -425,7 +425,7 @@ internal fun RoutineRecommendationsDialog(
                             onClick = { onTemplatePreviewSelected(template.id) },
                             modifier = Modifier.fillMaxWidth(),
                             highlightLabel = if (index == 0) {
-                                stringResource(R.string.training_recommendation_best_fit)
+                                stringResource(R.string.routine_recommendation_best_fit)
                             } else {
                                 null
                             },
@@ -452,7 +452,7 @@ internal fun RoutineRecommendationsDialog(
                 ) {
                     Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.training_start_routine))
+                    Text(stringResource(R.string.routine_start_routine))
                 }
             }
         }
@@ -476,7 +476,7 @@ internal fun DialogHeader(
             fontWeight = FontWeight.Bold
         )
         IconButton(onClick = onDismissRequest) {
-            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.training_close_detail))
+            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.routine_close_detail))
         }
     }
 }
@@ -492,7 +492,7 @@ internal fun RoutinePreviewSchedule(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = stringResource(R.string.training_routine_preview_schedule),
+            text = stringResource(R.string.routine_routine_preview_schedule),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
@@ -537,7 +537,7 @@ internal fun TodayProgressLine(state: RoutineUiState) {
     val total = todaysExercises.size
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
-            text = stringResource(R.string.training_today_progress, completed, total),
+            text = stringResource(R.string.routine_today_progress, completed, total),
             color = SmartTrainnerColors.Muted,
             style = MaterialTheme.typography.bodyMedium
         )
@@ -632,7 +632,7 @@ internal fun PlanTemplateCard(
                 )
                 if (selected) {
                     TrainingBadge(
-                        text = stringResource(R.string.training_selected),
+                        text = stringResource(R.string.routine_selected),
                         icon = Icons.Default.CheckCircle,
                         containerColor = SmartTrainnerColors.GreenSoft,
                         contentColor = SmartTrainnerColors.Ink
@@ -675,7 +675,7 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
     val badges = if (template.source == RoutineSource.CUSTOM) {
         listOf(
             TrainingBadgeSpec(
-                text = stringResource(R.string.training_custom_template_meta, template.days.size),
+                text = stringResource(R.string.routine_custom_template_meta, template.days.size),
                 icon = Icons.Default.DateRange,
                 containerColor = SmartTrainnerColors.GreenSoft,
                 contentColor = SmartTrainnerColors.Ink
@@ -689,13 +689,13 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
                 contentColor = SmartTrainnerColors.Ink
             ),
             TrainingBadgeSpec(
-                text = stringResource(R.string.training_days_per_week_option, template.daysPerWeek),
+                text = stringResource(R.string.routine_days_per_week_option, template.daysPerWeek),
                 icon = Icons.Default.DateRange,
                 containerColor = SmartTrainnerColors.GreenSoft,
                 contentColor = SmartTrainnerColors.Ink
             ),
             TrainingBadgeSpec(
-                text = stringResource(R.string.training_minutes_option, template.sessionMinutes),
+                text = stringResource(R.string.routine_minutes_option, template.sessionMinutes),
                 icon = Icons.Default.Timer,
                 containerColor = SmartTrainnerColors.CoralSoft,
                 contentColor = SmartTrainnerColors.Ink
@@ -714,9 +714,9 @@ internal fun RoutineSourceChip(source: RoutineSource, testTag: String = source.r
         modifier = Modifier.testTag(testTag),
         text = stringResource(
             if (source == RoutineSource.CUSTOM) {
-                R.string.training_custom_routine_badge
+                R.string.routine_custom_routine_badge
             } else {
-                R.string.training_default_routine_badge
+                R.string.routine_default_routine_badge
             }
         ),
         icon = if (source == RoutineSource.CUSTOM) Icons.Default.Edit else Icons.Default.FitnessCenter,

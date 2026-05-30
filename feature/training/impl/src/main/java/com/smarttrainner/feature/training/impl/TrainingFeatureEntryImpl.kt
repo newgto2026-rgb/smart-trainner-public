@@ -5,6 +5,7 @@ import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
+import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.training.api.TrainingDestination
 import com.smarttrainner.feature.training.api.TrainingFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
@@ -15,6 +16,7 @@ class TrainingFeatureEntryImpl @Inject constructor(
     private val exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     private val exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     private val exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
+    private val routineFeatureEntry: RoutineFeatureEntry,
     private val workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) : TrainingFeatureEntry {
     @Composable
@@ -25,6 +27,7 @@ class TrainingFeatureEntryImpl @Inject constructor(
             exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
             exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
             exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
+            routineFeatureEntry = routineFeatureEntry,
             workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
         )
     }

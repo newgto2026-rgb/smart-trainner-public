@@ -203,6 +203,25 @@ Next PR scope:
 - Move routine destination rendering behind a routine feature entry, or split workout save orchestration if routine dependencies still make that safer.
 - Audit remaining `training` resources to ensure only coordinator/home/routine-specific copy remains there.
 
+## Phase 12: Routine Implementation Module
+
+Status: stacked after Phase 11 on `codex/modularization-routine-impl`.
+
+Move routine tab rendering and routine management overlays out of `:feature:training:impl` behind the existing routine state/actions contract. Training still owns the temporary `TrainingViewModel` orchestration, but routine UI composition now belongs to the routine feature module.
+
+First PR scope:
+
+- Add `:feature:routine:impl` and `:feature:routine:entry`.
+- Add `RoutineFeatureEntry` to `:feature:routine:api`.
+- Move routine tab content, routine library/settings/recommendation dialogs, and custom routine builder UI into `:feature:routine:impl`.
+- Have `:feature:training:impl` inject and call the routine feature entry instead of rendering routine screens directly.
+- Keep the home screen's next-routine summary in training for now because it still coordinates workout start and day completion.
+
+Next PR scope:
+
+- Decide whether the home screen should become its own `feature:home`/dashboard contract or whether routine owns the next-routine summary widget.
+- Continue reducing `TrainingViewModel` into orchestration-only pieces by moving routine state ownership behind a routine ViewModel/use-case boundary.
+
 ## Split Decision
 
 `routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress, exercise selection, and recording forms. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.
