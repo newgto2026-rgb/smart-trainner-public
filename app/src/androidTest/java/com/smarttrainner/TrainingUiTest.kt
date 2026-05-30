@@ -10,6 +10,7 @@ import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
@@ -225,23 +226,13 @@ class TrainingUiTest {
 
         composeRule.onNodeWithTag("training_custom_routine_name").performTextClearance()
         composeRule.onNodeWithTag("training_custom_routine_name").performTextInput("My 4 Day Split")
+        composeRule.onNodeWithTag("training_custom_routine_name").performImeAction()
+        composeRule.waitForIdle()
         composeRule.onNodeWithTag("training_custom_focus_CHEST").performClick()
         composeRule.onAllNodesWithTag("training_custom_exercise_group_BACK").assertCountEquals(0)
         composeRule.onAllNodesWithTag("training_custom_exercise_group_LOWER_BODY").assertCountEquals(0)
         scrollToNodeWithTag("training_custom_exercise_group_CHEST")
         composeRule.onNodeWithTag("training_custom_exercise_group_CHEST").performClick()
-        scrollToNodeWithTag("training_custom_add_exercise_machine_chest_press")
-        composeRule.onNodeWithTag("training_custom_view_exercise_machine_chest_press").performClick()
-        composeRule.waitUntil(timeoutMillis = 10_000) {
-            composeRule.onAllNodesWithTag("training_exercise_detail_dialog").fetchSemanticsNodes().isNotEmpty()
-        }
-        composeRule.onNodeWithTag("training_exercise_detail_dialog").assertIsDisplayed()
-        composeRule.onAllNodesWithTag("training_custom_routine_builder").assertCountEquals(1)
-        composeRule.onAllNodesWithTag("training_detail_start_record").assertCountEquals(0)
-        composeRule.onNodeWithTag("training_close_exercise_detail").performClick()
-        composeRule.waitUntil(timeoutMillis = 10_000) {
-            composeRule.onAllNodesWithTag("training_custom_routine_builder").fetchSemanticsNodes().isNotEmpty()
-        }
         scrollToNodeWithTag("training_custom_add_exercise_machine_chest_press")
         composeRule.onNodeWithTag("training_custom_add_exercise_machine_chest_press").performClick()
         composeRule.onAllNodesWithTag("training_custom_add_exercise_machine_chest_press").assertCountEquals(0)

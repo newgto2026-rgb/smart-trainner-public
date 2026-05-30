@@ -16,9 +16,6 @@ import com.smarttrainner.core.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.core.domain.SaveCustomRoutineUseCase
 import com.smarttrainner.core.domain.SaveWorkoutLogUseCase
 import com.smarttrainner.core.domain.StartRoutineUseCase
-import com.smarttrainner.core.model.CustomRoutineDayInput
-import com.smarttrainner.core.model.CustomRoutineExerciseInput
-import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
@@ -26,11 +23,9 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineProgress
-import com.smarttrainner.core.model.RoutineRecommendationInput
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogInput
-import com.smarttrainner.core.model.WorkoutSetLog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
@@ -708,8 +703,8 @@ class TrainingViewModel @Inject constructor(
 
     private fun prefillRecordForm(planned: PlannedExercise) {
         val currentState = uiState.value
-        val previousLog = currentState.latestWorkoutLogs.latestForExercise(planned.exercise.id)
-            ?: currentState.logs.latestForExercise(planned.exercise.id)
+        val previousLog = currentState.latestWorkoutLogs.latestRecordForExercise(planned.exercise.id)
+            ?: currentState.logs.latestRecordForExercise(planned.exercise.id)
         val initialForm = RecordFormState(setEntries = planned.defaultSetForms(previousLog))
         val token = recordPrefillToken + 1
         recordPrefillToken = token
@@ -791,256 +786,4 @@ class TrainingViewModel @Inject constructor(
         val showSettings: Boolean,
         val showRecommendations: Boolean
     )
-}
-
-private enum class RecordingMode {
-    SINGLE,
-    ROUTINE
-}
-
-internal const val MAX_CUSTOM_ROUTINE_DAYS = 7
-
-internal fun RoutineRecommendationFormState.toInput(): RoutineRecommendationInput =
-    RoutineRecommendationInput(
-        daysPerWeek = daysPerWeek,
-        sessionMinutes = sessionMinutes,
-        experience = experience,
-        feeling = feeling
-    )
-
-internal fun defaultBuilderDay(): CustomRoutineDayFormState = CustomRoutineDayFormState(
-    title = "",
-    focus = null,
-    exercises = emptyList()
-)
-
-internal fun com.smarttrainner.core.model.Exercise.toCustomRoutineExerciseForm(): CustomRoutineExerciseFormState =
-    CustomRoutineExerciseFormState(
-        exercise = this,
-        sets = defaultSets,
-        repRangeStart = defaultRepRange?.first,
-        repRangeEnd = defaultRepRange?.last,
-        durationMinutes = defaultDurationMinutes,
-        restSeconds = restSeconds
-    )
-
-internal fun MutableStateFlow<CustomRoutineBuilderState>.updateSelectedDay(
-    updateDay: (CustomRoutineDayFormState) -> CustomRoutineDayFormState
-) {
-    update { builder ->
-        val selectedIndex = builder.selectedDayIndex
-        if (selectedIndex !in builder.days.indices) {
-            builder
-        } else {
-            builder.copy(
-                days = builder.days.mapIndexed { index, day ->
-                    if (index == selectedIndex) updateDay(day) else day
-                },
-                error = null,
-                savedTemplateId = null
-            )
-        }
-    }
-}
-
-internal fun <T> List<T>.move(fromIndex: Int, toIndex: Int): List<T> {
-    if (fromIndex !in indices || toIndex !in indices) return this
-    val mutable = toMutableList()
-    val item = mutable.removeAt(fromIndex)
-    mutable.add(toIndex, item)
-    return mutable
-}
-
-internal fun CustomRoutineBuilderState.toFormError(): CustomRoutineFormError? = when {
-    name.trim().isEmpty() -> CustomRoutineFormError.NAME
-    days.isEmpty() || days.size > MAX_CUSTOM_ROUTINE_DAYS -> CustomRoutineFormError.DAYS
-    days.any { it.exercises.isEmpty() } -> CustomRoutineFormError.EMPTY_DAY
-    else -> null
-}
-
-internal fun CustomRoutineBuilderState.toInput(): CustomRoutineInput? {
-    if (!visible) return null
-    return CustomRoutineInput(
-        id = editingRoutineId,
-        name = name,
-        description = "",
-        days = days.map { day ->
-            CustomRoutineDayInput(
-                title = day.title,
-                focus = day.focus?.name.orEmpty(),
-                primaryFocus = day.focus,
-                exercises = day.exercises.map { exercise ->
-                    CustomRoutineExerciseInput(
-                        exerciseId = exercise.exercise.id,
-                        sets = exercise.sets,
-                        repRangeStart = exercise.repRangeStart,
-                        repRangeEnd = exercise.repRangeEnd,
-                        durationMinutes = exercise.durationMinutes,
-                        restSeconds = exercise.restSeconds,
-                        note = exercise.note
-                    )
-                }
-            )
-        }
-    )
-}
-
-internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel(
-    template: PlanTemplate?,
-    dayIndex: Int,
-    completedIds: Set<PlannedExerciseId>
-): NextRoutineDayUiModel {
-    val nextDay = template?.days?.let { days ->
-        days.getOrNull((dayIndex + 1) % days.size)
-    }
-    return NextRoutineDayUiModel(
-        day = this,
-        routineTemplate = template,
-        primaryFocus = primaryFocus,
-        secondaryFocuses = secondaryFocuses,
-        dayNumber = dayNumber,
-        focus = focus,
-        sessionMinutes = template?.sessionMinutes ?: 45,
-        previewExercises = exercises,
-        startExercise = exercises.firstOrNull { it.id !in completedIds } ?: exercises.firstOrNull(),
-        nextPrimaryFocus = nextDay?.primaryFocus,
-        completedExerciseCount = exercises.count { it.id in completedIds },
-        totalExerciseCount = exercises.size,
-        minRecoveryHours = minRecoveryHours
-    )
-}
-
-fun WeeklyPlan.findPlannedExercise(id: PlannedExerciseId?): PlannedExercise? {
-    if (id == null) return null
-    return days.asSequence()
-        .flatMap { it.exercises.asSequence() }
-        .firstOrNull { it.id == id }
-}
-
-fun WeeklyPlan.firstIncomplete(completedIds: Set<PlannedExerciseId>): PlannedExercise? =
-    days.asSequence()
-        .flatMap { it.exercises.asSequence() }
-        .firstOrNull { it.id !in completedIds }
-        ?: days.firstOrNull()?.exercises?.firstOrNull()
-
-fun WeeklyPlan.nextIncompleteInSameDay(
-    currentId: PlannedExerciseId,
-    completedIds: Set<PlannedExerciseId>
-): PlannedExercise? {
-    val day = days.firstOrNull { workoutDay -> workoutDay.exercises.any { it.id == currentId } } ?: return null
-    val currentIndex = day.exercises.indexOfFirst { it.id == currentId }
-    return day.exercises
-        .drop(currentIndex + 1)
-        .firstOrNull { it.id !in completedIds }
-}
-
-internal const val MAX_RECORD_SETS = 12
-
-internal fun PlannedExercise.defaultSetForms(previousLog: WorkoutLog? = null): List<RecordSetFormState> {
-    val previousSets = previousLog?.reusableSetEntries().orEmpty()
-    val setCount = previousSets
-        .takeIf { it.isNotEmpty() }
-        ?.size
-        ?: sets
-
-    return List(setCount.coerceIn(1, MAX_RECORD_SETS)) { index ->
-        defaultSetForm(previousSets.getOrNull(index))
-    }
-}
-
-internal fun PlannedExercise.defaultSetForm(previousSet: WorkoutSetLog? = null): RecordSetFormState {
-    val plannedRepRange = repRange
-    val plannedDurationMinutes = durationMinutes
-    return RecordSetFormState(
-        reps = if (plannedRepRange != null) {
-            (previousSet?.reps ?: plannedRepRange.first).toString()
-        } else {
-            ""
-        },
-        weightKg = if (plannedRepRange != null) {
-            previousSet?.weightKg?.toRecordInput().orEmpty()
-        } else {
-            ""
-        },
-        durationMinutes = if (plannedDurationMinutes != null || plannedRepRange == null) {
-            (previousSet?.durationMinutes ?: plannedDurationMinutes)?.toString().orEmpty()
-        } else {
-            ""
-        },
-        restSeconds = (previousSet?.restSeconds ?: restSeconds).toString()
-    )
-}
-
-private fun List<WorkoutLog>.latestForExercise(exerciseId: ExerciseId): WorkoutLog? =
-    filter { it.exerciseId == exerciseId }
-        .maxByOrNull { it.performedAt }
-
-private fun WorkoutLog.reusableSetEntries(): List<WorkoutSetLog> =
-    setEntries.takeIf { it.isNotEmpty() }
-        ?: List(sets.coerceIn(1, MAX_RECORD_SETS)) { index ->
-            WorkoutSetLog(
-                order = index + 1,
-                reps = reps,
-                weightKg = weightKg,
-                durationMinutes = durationMinutes,
-                restSeconds = null
-            )
-        }
-
-private fun Double.toRecordInput(): String =
-    if (rem(1.0) == 0.0) toLong().toString() else toString()
-
-internal fun validateSetEntries(
-    planned: PlannedExercise,
-    entries: List<RecordSetFormState>
-): RecordFormError? {
-    if (entries.isEmpty() || entries.size > MAX_RECORD_SETS) return RecordFormError.SETS
-    entries.forEach { entry ->
-        val reps = entry.reps.toIntOrNull()
-        val weight = entry.weightKg.toDoubleOrNull()
-        val duration = entry.durationMinutes.toIntOrNull()
-        val rest = entry.restSeconds.toIntOrNull()
-        when {
-            entry.reps.isNotBlank() && (reps == null || reps !in 1..50) -> return RecordFormError.REPS
-            entry.weightKg.isNotBlank() && (weight == null || weight < 0.0) -> return RecordFormError.WEIGHT
-            entry.durationMinutes.isNotBlank() && (duration == null || duration !in 1..240) -> {
-                return RecordFormError.DURATION
-            }
-            entry.restSeconds.isNotBlank() && (rest == null || rest !in 0..600) -> return RecordFormError.REST
-            planned.repRange != null && reps == null -> return RecordFormError.REPS
-            planned.repRange == null && duration == null -> return RecordFormError.DURATION
-        }
-    }
-    return null
-}
-
-internal fun List<RecordSetFormState>.toWorkoutSetLogs(planned: PlannedExercise): List<WorkoutSetLog> =
-    mapIndexed { index, entry ->
-        WorkoutSetLog(
-            order = index + 1,
-            reps = if (planned.repRange != null) entry.reps.toIntOrNull() else null,
-            weightKg = if (planned.repRange != null) entry.weightKg.toDoubleOrNull() else null,
-            durationMinutes = if (planned.durationMinutes != null || planned.repRange == null) {
-                entry.durationMinutes.toIntOrNull()
-            } else {
-                null
-            },
-            restSeconds = entry.restSeconds.toIntOrNull()
-        )
-    }
-
-fun String.onlyNumber(): String = filter { it.isDigit() }.take(3)
-
-fun String.onlyDecimal(): String {
-    var dotSeen = false
-    return filter { char ->
-        when {
-            char.isDigit() -> true
-            char == '.' && !dotSeen -> {
-                dotSeen = true
-                true
-            }
-            else -> false
-        }
-    }.take(6)
 }
