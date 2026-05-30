@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -229,7 +228,7 @@ private fun ExerciseImageViewerDialog(
                     TrainerExerciseImage(
                         exercise = exercise,
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
                             .testTag("training_exercise_image_viewer_image"),
                         stepIndex = stepIndex,
                         contentDescription = if (stepIndex == null) {
@@ -248,12 +247,28 @@ private fun ExerciseImageViewerDialog(
 private fun ExerciseMetaChips(exercise: Exercise) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = {}, label = { Text(exercise.muscleGroup.localizedLabel()) })
-            AssistChip(onClick = {}, label = { Text(exercise.equipment.localizedLabel()) })
+            ExerciseMetaChip(label = exercise.muscleGroup.localizedLabel())
+            ExerciseMetaChip(label = exercise.equipment.localizedLabel())
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = {}, label = { Text(exercise.difficulty.localizedLabel()) })
+            ExerciseMetaChip(label = exercise.difficulty.localizedLabel())
         }
+    }
+}
+
+@Composable
+private fun ExerciseMetaChip(label: String) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = SmartTrainnerColors.SteelSoft,
+        border = BorderStroke(1.dp, SmartTrainnerColors.Line)
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            color = SmartTrainnerColors.Ink,
+            style = MaterialTheme.typography.labelLarge
+        )
     }
 }
 
