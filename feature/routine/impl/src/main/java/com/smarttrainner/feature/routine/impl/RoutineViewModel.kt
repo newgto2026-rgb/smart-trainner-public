@@ -22,12 +22,6 @@ import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutLog
-import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
-import com.smarttrainner.feature.routine.api.CustomRoutineDayFormState
-import com.smarttrainner.feature.routine.api.CustomRoutineExerciseFormState
-import com.smarttrainner.feature.routine.api.CustomRoutineFormError
-import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
-import com.smarttrainner.feature.routine.api.RoutineUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
@@ -144,7 +138,7 @@ class RoutineViewModel @Inject constructor(
         )
     }
 
-    val uiState = combine(
+    internal val uiState = combine(
         formControlState,
         dataState
     ) { control, data ->

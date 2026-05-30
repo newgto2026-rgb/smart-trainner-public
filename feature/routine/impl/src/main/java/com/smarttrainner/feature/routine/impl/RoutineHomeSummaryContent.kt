@@ -38,9 +38,6 @@ import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
 import com.smarttrainner.core.ui.SmartTrainnerSectionTitle
 import com.smarttrainner.core.ui.SmartTrainnerWrappedRows
-import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
-import com.smarttrainner.feature.routine.api.RoutineActions
-import com.smarttrainner.feature.routine.api.RoutineUiState
 
 internal fun LazyListScope.homeSummaryContent(
     state: RoutineUiState,

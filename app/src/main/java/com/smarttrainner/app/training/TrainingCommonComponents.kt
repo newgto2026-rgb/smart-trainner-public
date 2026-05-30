@@ -20,10 +20,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
-import com.smarttrainner.feature.routine.api.RoutineUiState
 
 @Composable
-internal fun Header(state: RoutineUiState) {
+internal fun Header(currentRoutineName: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -45,7 +44,7 @@ internal fun Header(state: RoutineUiState) {
                     color = SmartTrainnerColors.Ink
                 )
                 Text(
-                    text = state.plan?.localizedName().orEmpty(),
+                    text = currentRoutineName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = SmartTrainnerColors.Muted,
                     maxLines = 1,

@@ -63,10 +63,6 @@ import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.RoutineFocus
-import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
-import com.smarttrainner.feature.routine.api.CustomRoutineDayFormState
-import com.smarttrainner.feature.routine.api.CustomRoutineExerciseFormState
-import com.smarttrainner.feature.routine.api.CustomRoutineFormError
 
 @Composable
 internal fun CustomRoutineBuilderSheet(

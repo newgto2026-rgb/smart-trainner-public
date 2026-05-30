@@ -40,8 +40,6 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
-import com.smarttrainner.feature.routine.api.RoutineActions
-import com.smarttrainner.feature.routine.api.RoutineUiState
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
     state: RoutineUiState,

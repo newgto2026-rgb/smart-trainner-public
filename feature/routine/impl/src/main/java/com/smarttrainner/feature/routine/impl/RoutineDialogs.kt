@@ -53,8 +53,6 @@ import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
-import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
-import com.smarttrainner.feature.routine.api.RoutineUiState
 
 @Composable
 internal fun RoutineRecommendationControls(

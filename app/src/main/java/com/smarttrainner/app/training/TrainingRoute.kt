@@ -27,15 +27,11 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
-import com.smarttrainner.feature.routine.api.RoutineActions
-import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
-import com.smarttrainner.feature.routine.api.RoutineUiState
+import com.smarttrainner.feature.routine.api.RoutineRouteState
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 
 internal typealias TrainingRouteContent = LazyListScope.(
     TrainingUiState,
-    RoutineUiState,
-    RoutineActions,
     ExerciseCatalogActions
 ) -> Unit
 
@@ -43,10 +39,8 @@ internal typealias TrainingRouteContent = LazyListScope.(
 internal fun TrainingRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaRenderer: ExerciseMediaRenderer,
-    routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
-    routineState: RoutineUiState,
-    routineActions: RoutineActions,
+    routineRouteState: RoutineRouteState,
     viewModel: TrainingViewModel = sharedTrainingViewModel(),
     content: TrainingRouteContent
 ) {
@@ -54,19 +48,17 @@ internal fun TrainingRoute(
     TrainingScreen(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaRenderer = exerciseMediaRenderer,
-        routineFeatureEntry = routineFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         state = state,
-        routineState = routineState,
-        routineActions = routineActions,
+        routineRouteState = routineRouteState,
         onExerciseSelected = viewModel::selectExercise,
         onExerciseMethodSelected = viewModel::showExerciseMethod,
         onRecordSelected = viewModel::selectPlannedExercise,
         onRecordSaved = { planned ->
             viewModel.handleRecordSaved(
                 planned = planned,
-                plan = routineState.plan,
-                completedIds = routineState.completedPlannedExerciseIds
+                plan = routineRouteState.coordinatorState.plan,
+                completedIds = routineRouteState.coordinatorState.completedPlannedExerciseIds
             )
         },
         onExerciseDetailDismiss = viewModel::dismissExerciseDetail,
@@ -96,11 +88,9 @@ private tailrec fun Context.findViewModelStoreOwner(): ViewModelStoreOwner? = wh
 private fun TrainingScreen(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     exerciseMediaRenderer: ExerciseMediaRenderer,
-    routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     state: TrainingUiState,
-    routineState: RoutineUiState,
-    routineActions: RoutineActions,
+    routineRouteState: RoutineRouteState,
     onExerciseSelected: (ExerciseId) -> Unit,
     onExerciseMethodSelected: (ExerciseId) -> Unit,
     onRecordSelected: (PlannedExercise) -> Unit,
@@ -111,6 +101,7 @@ private fun TrainingScreen(
 ) {
     val selectedExerciseId = state.selectedExerciseId
     val recordingPlannedExercise = state.recordingPlannedExercise
+    val routineCoordinatorState = routineRouteState.coordinatorState
     val exerciseCatalogActions = remember(onExerciseSelected) {
         ExerciseCatalogActions(
             onExerciseSelected = onExerciseSelected
@@ -125,13 +116,13 @@ private fun TrainingScreen(
             exerciseMediaRenderer = exerciseMediaRenderer
         )
     }
-    routineFeatureEntry.Dialogs(
-        state = routineState,
-        actions = routineActions
-    )
+    routineRouteState.Dialogs()
     if (selectedExerciseId != null) {
-        val selectedPlannedExercise = if (state.recordingPlannedExercise == null && !routineState.customRoutineBuilder.visible) {
-            routineState.plan?.days
+        val selectedPlannedExercise = if (
+            state.recordingPlannedExercise == null &&
+            !routineCoordinatorState.customRoutineBuilderVisible
+        ) {
+            routineCoordinatorState.plan?.days
                 ?.flatMap { it.exercises }
                 ?.firstOrNull { it.exercise.id == selectedExerciseId }
         } else {
@@ -159,8 +150,8 @@ private fun TrainingScreen(
             contentPadding = PaddingValues(start = 18.dp, top = 14.dp, end = 18.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            item { Header(routineState) }
-            content(state, routineState, routineActions, exerciseCatalogActions)
+            item { Header(currentRoutineName = routineRouteState.currentRoutineName()) }
+            content(state, exerciseCatalogActions)
         }
     }
 }

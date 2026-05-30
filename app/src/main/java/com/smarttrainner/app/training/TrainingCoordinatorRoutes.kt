@@ -27,17 +27,12 @@ fun TrainingHomeRoute(
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaRenderer = exerciseMediaRenderer,
-        routineFeatureEntry = routineFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-        routineState = routineRouteState.state,
-        routineActions = routineRouteState.actions,
+        routineRouteState = routineRouteState,
         viewModel = viewModel
-    ) { _, routineState, routineActions, _ ->
-        with(routineFeatureEntry) {
-            HomeSummary(
-                state = routineState,
-                actions = routineActions
-            )
+    ) { _, _ ->
+        with(routineRouteState) {
+            HomeSummary()
         }
     }
 }
@@ -57,16 +52,12 @@ fun TrainingRoutineRoute(
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaRenderer = exerciseMediaRenderer,
-        routineFeatureEntry = routineFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-        routineState = routineRouteState.state,
-        routineActions = routineRouteState.actions,
+        routineRouteState = routineRouteState,
         viewModel = viewModel
-    ) { _, routineState, routineActions, _ ->
-        with(routineFeatureEntry) {
+    ) { _, _ ->
+        with(routineRouteState) {
             Content(
-                state = routineState,
-                actions = routineActions,
                 exerciseMediaRenderer = exerciseMediaRenderer
             )
         }
@@ -93,12 +84,10 @@ fun TrainingExercisesRoute(
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaRenderer = exerciseMediaRenderer,
-        routineFeatureEntry = routineFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-        routineState = routineRouteState.state,
-        routineActions = routineRouteState.actions,
+        routineRouteState = routineRouteState,
         viewModel = viewModel
-    ) { _, _, _, exerciseCatalogActions ->
+    ) { _, exerciseCatalogActions ->
         with(exerciseCatalogFeatureEntry) {
             Content(
                 state = exerciseCatalogState,

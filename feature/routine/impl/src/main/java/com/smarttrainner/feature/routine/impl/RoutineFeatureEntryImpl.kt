@@ -8,11 +8,10 @@ import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
-import com.smarttrainner.feature.routine.api.RoutineActions
+import com.smarttrainner.feature.routine.api.RoutineCoordinatorState
 import com.smarttrainner.feature.routine.api.RoutineFeatureCallbacks
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineRouteState
-import com.smarttrainner.feature.routine.api.RoutineUiState
 import javax.inject.Inject
 
 class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
@@ -60,25 +59,32 @@ class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
             )
         }
         return remember(state, actions) {
-            RoutineRouteState(state = state, actions = actions)
+            DefaultRoutineRouteState(state = state, actions = actions)
         }
     }
+}
 
-    override fun LazyListScope.HomeSummary(
-        state: RoutineUiState,
-        actions: RoutineActions
-    ) {
+private class DefaultRoutineRouteState(
+    private val state: RoutineUiState,
+    private val actions: RoutineActions
+) : RoutineRouteState {
+    override val coordinatorState: RoutineCoordinatorState = RoutineCoordinatorState(
+        plan = state.plan,
+        completedPlannedExerciseIds = state.completedPlannedExerciseIds,
+        customRoutineBuilderVisible = state.customRoutineBuilder.visible
+    )
+
+    @Composable
+    override fun currentRoutineName(): String = state.plan?.localizedName().orEmpty()
+
+    override fun LazyListScope.HomeSummary() {
         homeSummaryContent(
             state = state,
             actions = actions
         )
     }
 
-    override fun LazyListScope.Content(
-        state: RoutineUiState,
-        actions: RoutineActions,
-        exerciseMediaRenderer: ExerciseMediaRenderer
-    ) {
+    override fun LazyListScope.Content(exerciseMediaRenderer: ExerciseMediaRenderer) {
         planContent(
             state = state,
             actions = actions,
@@ -87,10 +93,7 @@ class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
     }
 
     @Composable
-    override fun Dialogs(
-        state: RoutineUiState,
-        actions: RoutineActions
-    ) {
+    override fun Dialogs() {
         if (state.showRoutineLibraryDialog) {
             RoutineLibraryDialog(
                 state = state,
