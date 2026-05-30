@@ -287,8 +287,15 @@ private fun Exercise.localizedWorkoutName(): String =
     if (isKoreanLocale()) name else id.value.toExerciseTitle()
 
 @Composable
-private fun isKoreanLocale(): Boolean =
-    LocalConfiguration.current.locales[0].language.equals("ko", ignoreCase = true)
+private fun isKoreanLocale(): Boolean {
+    val locales = LocalConfiguration.current.locales
+    val language = if (locales.isEmpty) {
+        Locale.getDefault().language
+    } else {
+        locales[0]?.language
+    }
+    return language.equals("ko", ignoreCase = true)
+}
 
 @Composable
 private fun PlannedExercise.localizedWorkoutTargetText(): String {
@@ -350,8 +357,7 @@ private fun Double.toRecordInput(): String =
     if (rem(1.0) == 0.0) toLong().toString() else toString()
 
 private fun List<WorkoutLog>.latestForExercise(exerciseId: ExerciseId): WorkoutLog? =
-    firstOrNull { it.exerciseId == exerciseId }
-        ?: filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
+    filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
 
 private fun String.toExerciseTitle(): String =
     split('_', '-')
