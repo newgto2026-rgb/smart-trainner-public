@@ -16,7 +16,9 @@ import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineRouteState
 import javax.inject.Inject
 
-class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
+class RoutineFeatureEntryImpl @Inject constructor(
+    private val exerciseMediaRenderer: ExerciseMediaRenderer
+) : RoutineFeatureEntry {
     @Composable
     override fun rememberRouteState(callbacks: RoutineFeatureCallbacks): RoutineRouteState {
         val viewModel: RoutineViewModel = hiltViewModel()
@@ -87,8 +89,7 @@ class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
     @Composable
     override fun Route(
         routeState: RoutineRouteState,
-        chrome: SmartTrainnerScreenChrome,
-        exerciseMediaRenderer: ExerciseMediaRenderer
+        chrome: SmartTrainnerScreenChrome
     ) {
         val routineState = routeState.asDefaultRoutineRouteState()
         SmartTrainnerScreenScaffold(chrome = chrome) {

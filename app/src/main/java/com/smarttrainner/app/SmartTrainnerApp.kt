@@ -49,7 +49,6 @@ import com.smarttrainner.core.designsystem.SmartTrainnerBrandSplashImage
 import com.smarttrainner.core.designsystem.SmartTrainnerBrandWordmarkImage
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
@@ -62,7 +61,6 @@ fun SmartTrainnerApp(
     analysisFeatureEntry: AnalysisFeatureEntry,
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    exerciseMediaRenderer: ExerciseMediaRenderer,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     viewModel: SmartTrainnerAppViewModel = hiltViewModel()
@@ -87,7 +85,6 @@ fun SmartTrainnerApp(
             analysisFeatureEntry = analysisFeatureEntry,
             exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
             exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-            exerciseMediaRenderer = exerciseMediaRenderer,
             routineFeatureEntry = routineFeatureEntry,
             workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
         )

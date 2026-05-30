@@ -12,14 +12,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.routine.api.RoutineRouteState
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 
 @Composable
 internal fun TrainingRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    exerciseMediaRenderer: ExerciseMediaRenderer,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     routineRouteState: RoutineRouteState,
     viewModel: TrainingViewModel = sharedTrainingViewModel(),
@@ -29,7 +27,6 @@ internal fun TrainingRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     TrainingScreen(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-        exerciseMediaRenderer = exerciseMediaRenderer,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         state = state,
         routineRouteState = routineRouteState,
@@ -67,7 +64,6 @@ private tailrec fun Context.findViewModelStoreOwner(): ViewModelStoreOwner? = wh
 @Composable
 private fun TrainingScreen(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    exerciseMediaRenderer: ExerciseMediaRenderer,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     state: TrainingUiState,
     routineRouteState: RoutineRouteState,
@@ -86,8 +82,7 @@ private fun TrainingScreen(
             plannedExercise = recordingPlannedExercise,
             onRecordSaved = onRecordSaved,
             onExerciseMethodSelected = onExerciseMethodSelected,
-            onDismiss = onRecordDialogDismiss,
-            exerciseMediaRenderer = exerciseMediaRenderer
+            onDismiss = onRecordDialogDismiss
         )
     }
     routineDialogs()

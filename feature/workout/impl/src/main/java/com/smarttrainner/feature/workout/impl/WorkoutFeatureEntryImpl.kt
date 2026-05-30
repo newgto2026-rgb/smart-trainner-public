@@ -12,14 +12,15 @@ import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 import javax.inject.Inject
 
-class WorkoutFeatureEntryImpl @Inject constructor() : WorkoutRecordingFeatureEntry {
+class WorkoutFeatureEntryImpl @Inject constructor(
+    private val exerciseMediaRenderer: ExerciseMediaRenderer
+) : WorkoutRecordingFeatureEntry {
     @Composable
     override fun DialogRoute(
         plannedExercise: PlannedExercise?,
         onRecordSaved: (PlannedExercise) -> Unit,
         onExerciseMethodSelected: (ExerciseId) -> Unit,
-        onDismiss: () -> Unit,
-        exerciseMediaRenderer: ExerciseMediaRenderer
+        onDismiss: () -> Unit
     ) {
         val viewModel: WorkoutRecordingViewModel = hiltViewModel()
         LaunchedEffect(plannedExercise) {

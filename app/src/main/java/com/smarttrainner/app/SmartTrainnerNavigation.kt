@@ -29,7 +29,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.app.training.TrainingExercisesRoute
 import com.smarttrainner.app.training.TrainingHomeRoute
 import com.smarttrainner.app.training.TrainingRoutineRoute
@@ -44,7 +43,6 @@ fun SmartTrainnerMainScreen(
     analysisFeatureEntry: AnalysisFeatureEntry,
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    exerciseMediaRenderer: ExerciseMediaRenderer,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
@@ -81,20 +79,17 @@ fun SmartTrainnerMainScreen(
                     when (destination) {
                         SmartTrainnerDestination.Home -> TrainingHomeRoute(
                             exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                            exerciseMediaRenderer = exerciseMediaRenderer,
                             routineFeatureEntry = routineFeatureEntry,
                             workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
                         )
                         SmartTrainnerDestination.Routine -> TrainingRoutineRoute(
                             exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                            exerciseMediaRenderer = exerciseMediaRenderer,
                             routineFeatureEntry = routineFeatureEntry,
                             workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
                         )
                         SmartTrainnerDestination.Exercises -> TrainingExercisesRoute(
                             exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
                             exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                            exerciseMediaRenderer = exerciseMediaRenderer,
                             routineFeatureEntry = routineFeatureEntry,
                             workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
                         )

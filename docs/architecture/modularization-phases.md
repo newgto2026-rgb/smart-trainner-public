@@ -898,6 +898,30 @@ Next PR scope:
 - Continue trimming public feature API action wrappers where a direct callback would preserve the route contract with less exposed surface.
 - Re-audit whether `ExerciseMediaRenderer` belongs permanently in `:core:ui` or should move to a narrower common training presentation contract.
 
+## Phase 43: Feature Media Renderer DI Ownership
+
+Status: stacked after Phase 42 on `codex/modularization-feature-media-renderer-di`.
+
+Keep `ExerciseMediaRenderer` as a common UI presentation contract for now, but do not expose it through routine/workout route APIs. The app should choose the production renderer through DI composition; route callers should not manually thread that renderer across app navigation.
+
+First PR scope:
+
+- Inject `ExerciseMediaRenderer` into routine and workout feature entry implementations through app-owned Hilt composition.
+- Remove the renderer parameter from `RoutineFeatureEntry.Route` and `WorkoutRecordingFeatureEntry.DialogRoute`.
+- Stop passing the renderer through `MainActivity`, `SmartTrainnerApp`, app navigation, and app training coordinator routes.
+- Remove `:core:ui` from `:feature:workout:api` because the workout public contract no longer references common UI types.
+
+Split decision:
+
+- Do not add `:feature:exercise:domain`, `:feature:exercise:data`, or `:feature:workout:data` for this phase. The renderer is presentation composition, not a repository contract or data implementation.
+- Keep the renderer contract in `:core:ui` while both routine and workout UI use it and the concrete exercise implementation provides it through app DI.
+- Keep final DI assembly in `:app`; feature implementations request the contract, and app DI selects the exercise implementation as the renderer.
+
+Next PR scope:
+
+- Audit `SmartTrainnerScreenChrome` in routine/exercise APIs as the next remaining common UI type exposed through public feature route contracts.
+- Revisit workout command ownership separately; workout recording writes may justify `:feature:workout:domain` and `:feature:workout:data`, but this UI composition cleanup does not.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -923,6 +947,8 @@ Current state is strict at the feature-module dependency level. State ownership 
 - App training flow state now lives in an app-local reducer so `TrainingViewModel` is a thin coordinator shell, while cross-feature routing remains app-owned.
 - Routine common badge and empty-state UI now use `:core:ui`; only routine-specific content-description wrapping remains in `:feature:routine:impl`.
 - Routine API no longer exports unused Compose foundation or desugaring dependencies; its public dependencies are limited to the contracts still referenced by app routing and handoffs.
+- Routine and workout APIs no longer expose `ExerciseMediaRenderer`; app DI provides the renderer to feature implementations instead of app navigation manually threading a common UI renderer.
+- Workout API no longer depends on `:core:ui`; routine/exercise APIs still reference `SmartTrainnerScreenChrome` until route chrome ownership is tightened.
 - Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 

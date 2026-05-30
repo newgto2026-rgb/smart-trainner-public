@@ -6,7 +6,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.R
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
@@ -19,7 +18,6 @@ import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 @Composable
 fun TrainingHomeRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    exerciseMediaRenderer: ExerciseMediaRenderer,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
@@ -31,7 +29,6 @@ fun TrainingHomeRoute(
     val chrome = trainingScreenChrome(routineRouteState)
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-        exerciseMediaRenderer = exerciseMediaRenderer,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         routineRouteState = routineRouteState,
         viewModel = viewModel,
@@ -47,7 +44,6 @@ fun TrainingHomeRoute(
 @Composable
 fun TrainingRoutineRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    exerciseMediaRenderer: ExerciseMediaRenderer,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
@@ -59,7 +55,6 @@ fun TrainingRoutineRoute(
     val chrome = trainingScreenChrome(routineRouteState)
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-        exerciseMediaRenderer = exerciseMediaRenderer,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         routineRouteState = routineRouteState,
         viewModel = viewModel,
@@ -67,8 +62,7 @@ fun TrainingRoutineRoute(
     ) {
         routineFeatureEntry.Route(
             routeState = routineRouteState,
-            chrome = chrome,
-            exerciseMediaRenderer = exerciseMediaRenderer
+            chrome = chrome
         )
     }
 }
@@ -77,7 +71,6 @@ fun TrainingRoutineRoute(
 fun TrainingExercisesRoute(
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
-    exerciseMediaRenderer: ExerciseMediaRenderer,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
@@ -95,7 +88,6 @@ fun TrainingExercisesRoute(
     }
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-        exerciseMediaRenderer = exerciseMediaRenderer,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         routineRouteState = routineRouteState,
         viewModel = viewModel,

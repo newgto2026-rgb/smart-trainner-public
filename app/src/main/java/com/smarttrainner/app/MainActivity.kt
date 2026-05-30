@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.smarttrainner.core.designsystem.SmartTrainnerTheme
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
@@ -26,9 +25,6 @@ class MainActivity : ComponentActivity() {
     lateinit var exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry
 
     @Inject
-    lateinit var exerciseMediaRenderer: ExerciseMediaRenderer
-
-    @Inject
     lateinit var routineFeatureEntry: RoutineFeatureEntry
 
     @Inject
@@ -43,7 +39,6 @@ class MainActivity : ComponentActivity() {
                     analysisFeatureEntry = analysisFeatureEntry,
                     exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
                     exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                    exerciseMediaRenderer = exerciseMediaRenderer,
                     routineFeatureEntry = routineFeatureEntry,
                     workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
                 )
