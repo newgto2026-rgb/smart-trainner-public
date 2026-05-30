@@ -49,6 +49,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,7 +57,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -98,6 +101,32 @@ class TrainingViewModelRoutineTest {
             assertThat(state.nextRoutineDayUi?.primaryFocus).isEqualTo(RoutineFocus.CHEST)
             assertThat(state.selectedPlannedExercise?.exercise?.id?.value).isEqualTo("chest_press")
             assertThat(state.today).isEqualTo(LocalDate.of(2026, 5, 24))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun uiState_refreshesWeeklySourcesWhenCollectionRestartsAfterWeekChange() = runTest {
+        val clock = MutableClock(fixedInstant, fixedClock.zone)
+        val viewModel = viewModel(clock)
+
+        viewModel.uiState.test {
+            skipItems(1)
+            assertThat(awaitItem().plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        clock.setInstant(Instant.parse("2026-05-25T12:00:00Z"))
+        advanceTimeBy(5_001)
+        runCurrent()
+
+        viewModel.uiState.test {
+            assertThat(awaitItem().plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+            assertThat(awaitItem().plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
+            assertThat(repository.requestedPlanWeekStartDates)
+                .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
+            assertThat(repository.requestedLogWeekStartDates)
+                .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -704,7 +733,7 @@ class TrainingViewModelRoutineTest {
         }
     }
 
-    private fun viewModel() = TrainingViewModel(
+    private fun viewModel(clock: Clock = fixedClock) = TrainingViewModel(
         observeExercises = ObserveExercisesUseCase(repository),
         observePlanTemplates = ObservePlanTemplatesUseCase(repository),
         observeCurrentWeeklyPlan = ObserveCurrentWeeklyPlanUseCase(repository),
@@ -718,8 +747,23 @@ class TrainingViewModelRoutineTest {
         completeRoutineDay = CompleteRoutineDayUseCase(repository, AdvanceRoutineDayUseCase()),
         saveCustomRoutineUseCase = SaveCustomRoutineUseCase(repository, ValidateCustomRoutineUseCase()),
         saveWorkoutLog = SaveWorkoutLogUseCase(repository),
-        clock = fixedClock
+        clock = clock
     )
+}
+
+private class MutableClock(
+    private var currentInstant: Instant,
+    private val currentZone: ZoneId
+) : Clock() {
+    fun setInstant(instant: Instant) {
+        currentInstant = instant
+    }
+
+    override fun getZone(): ZoneId = currentZone
+
+    override fun withZone(zone: ZoneId): Clock = MutableClock(currentInstant, zone)
+
+    override fun instant(): Instant = currentInstant
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -804,11 +848,15 @@ private class FakeTrainingRepository : TrainingRepository {
     )
     private val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
     private val latestLogs = MutableStateFlow<List<WorkoutLog>>(emptyList())
+    val requestedPlanWeekStartDates = mutableListOf<LocalDate>()
+    val requestedLogWeekStartDates = mutableListOf<LocalDate>()
 
     fun reset() {
         progress.value = RoutineProgress(template.id, 0, null, null)
         logs.value = emptyList()
         latestLogs.value = emptyList()
+        requestedPlanWeekStartDates.clear()
+        requestedLogWeekStartDates.clear()
     }
 
     fun setLogs(value: List<WorkoutLog>) {
@@ -853,11 +901,17 @@ private class FakeTrainingRepository : TrainingRepository {
         templates.value.filter { it.source == RoutineSource.CUSTOM }
     )
 
-    override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> = MutableStateFlow(plan)
+    override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> {
+        requestedPlanWeekStartDates += weekStartDate
+        return MutableStateFlow(plan.copy(weekStartDate = weekStartDate))
+    }
 
     override fun observeRoutineProgress(): Flow<RoutineProgress> = progress
 
-    override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = logs
+    override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> {
+        requestedLogWeekStartDates += weekStartDate
+        return logs
+    }
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
 

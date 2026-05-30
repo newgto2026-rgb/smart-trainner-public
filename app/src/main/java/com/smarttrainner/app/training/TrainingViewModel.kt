@@ -20,9 +20,11 @@ import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.RoutineRecommendation
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
@@ -30,6 +32,7 @@ import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
 import com.smarttrainner.feature.routine.api.CustomRoutineDayFormState
 import com.smarttrainner.feature.routine.api.CustomRoutineExerciseFormState
 import com.smarttrainner.feature.routine.api.CustomRoutineFormError
+import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
 import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
 import com.smarttrainner.feature.routine.api.RoutineUiState
 import com.smarttrainner.feature.routine.api.allowedCustomRoutineMuscleGroups
@@ -44,14 +47,19 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class TrainingViewModel @Inject constructor(
     observeExercises: ObserveExercisesUseCase,
     observePlanTemplates: ObservePlanTemplatesUseCase,
@@ -68,7 +76,10 @@ class TrainingViewModel @Inject constructor(
     private val saveWorkoutLog: SaveWorkoutLogUseCase,
     private val clock: Clock
 ) : ViewModel() {
-    private val weekStart = LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    private val weekStartFlow = flow {
+        emit(currentWeekStart())
+    }.distinctUntilChanged()
+
     private val selectedExerciseId = MutableStateFlow<ExerciseId?>(null)
     private val selectedPlannedExerciseId = MutableStateFlow<PlannedExerciseId?>(null)
     private val recordForm = MutableStateFlow(RecordFormState())
@@ -136,21 +147,25 @@ class TrainingViewModel @Inject constructor(
         control.copy(recordSaved = saved)
     }
 
-    private val routinePlanState = combine(
-        observeCurrentWeeklyPlan(weekStart),
-        observeRoutineProgress()
-    ) { plan, progress ->
-        RoutinePlanState(plan = plan, routineProgress = progress)
+    private val routinePlanState = weekStartFlow.flatMapLatest { weekStart ->
+        combine(
+            observeCurrentWeeklyPlan(weekStart),
+            observeRoutineProgress()
+        ) { plan, progress ->
+            RoutinePlanState(plan = plan, routineProgress = progress)
+        }
     }
 
-    private val logState = combine(
-        observeWorkoutLogs(weekStart),
-        observeLatestWorkoutLogs()
-    ) { weeklyLogs, latestLogs ->
-        TrainingLogState(
-            weeklyLogs = weeklyLogs,
-            latestLogs = latestLogs
-        )
+    private val logState = weekStartFlow.flatMapLatest { weekStart ->
+        combine(
+            observeWorkoutLogs(weekStart),
+            observeLatestWorkoutLogs()
+        ) { weeklyLogs, latestLogs ->
+            TrainingLogState(
+                weeklyLogs = weeklyLogs,
+                latestLogs = latestLogs
+            )
+        }
     }
 
     private val dataState = combine(
@@ -169,10 +184,10 @@ class TrainingViewModel @Inject constructor(
         )
     }
 
-    val uiState = combine(
-        saveState,
-        dataState
-    ) { control, data ->
+    private val presentationState = combine(
+        dataState,
+        recommendationForm
+    ) { data, recommendationForm ->
         val completedIds = resolveRoutineCycleCompletion(data.logs, data.routineProgress, clock.zone)
         val activeTemplate = data.templates.firstOrNull { it.id == data.routineProgress.templateId }
             ?: data.templates.firstOrNull { it.id == data.plan.templateId }
@@ -187,16 +202,31 @@ class TrainingViewModel @Inject constructor(
             completedIds = completedIds
         )
         val recommendation = recommendRoutine(
-            input = control.recommendationForm.toInput(),
+            input = recommendationForm.toInput(),
             templates = data.templates
         )
+        TrainingPresentationState(
+            data = data,
+            completedIds = completedIds,
+            nextRoutineDay = nextRoutineDay,
+            nextRoutineDayUi = nextDayUi,
+            recommendation = recommendation
+        )
+    }
+
+    val uiState = combine(
+        saveState,
+        presentationState
+    ) { control, presentation ->
+        val data = presentation.data
+        val recommendation = presentation.recommendation
         val previewTemplateId = control.routineDialogState.previewTemplateId
             ?: recommendation.primaryTemplateId
         val selectedExercise = data.exercises.firstOrNull { it.id == control.selectedExerciseId }
         val recordingPlanned = data.plan.findPlannedExercise(control.selectedPlannedExerciseId)
         val selectedPlanned = recordingPlanned
-            ?: nextDayUi?.startExercise
-            ?: data.plan.firstIncomplete(completedIds)
+            ?: presentation.nextRoutineDayUi?.startExercise
+            ?: data.plan.firstIncomplete(presentation.completedIds)
         TrainingUiState(
             routine = RoutineUiState(
                 templates = data.templates,
@@ -204,8 +234,8 @@ class TrainingViewModel @Inject constructor(
                 today = LocalDate.now(clock),
                 plan = data.plan,
                 activeRoutineProgress = data.routineProgress,
-                nextRoutineDay = nextRoutineDay,
-                nextRoutineDayUi = nextDayUi,
+                nextRoutineDay = presentation.nextRoutineDay,
+                nextRoutineDayUi = presentation.nextRoutineDayUi,
                 routineRecommendationInput = control.recommendationForm,
                 recommendedTemplateId = recommendation.primaryTemplateId,
                 alternativeTemplateIds = recommendation.alternativeTemplateIds,
@@ -217,7 +247,7 @@ class TrainingViewModel @Inject constructor(
                 exercises = data.exercises,
                 logs = data.logs,
                 latestWorkoutLogs = data.latestLogs,
-                completedPlannedExerciseIds = completedIds,
+                completedPlannedExerciseIds = presentation.completedIds,
                 completeDayError = control.formError == RecordFormError.COMPLETE_DAY_FAILED
             ),
             exerciseCatalog = ExerciseCatalogUiState(
@@ -747,6 +777,17 @@ class TrainingViewModel @Inject constructor(
             }
         }
     }
+
+    private fun currentWeekStart(): LocalDate =
+        LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+
+    private data class TrainingPresentationState(
+        val data: TrainingDataState,
+        val completedIds: Set<PlannedExerciseId>,
+        val nextRoutineDay: WorkoutDayPlan?,
+        val nextRoutineDayUi: NextRoutineDayUiModel?,
+        val recommendation: RoutineRecommendation
+    )
 
     private data class TrainingDataState(
         val templates: List<PlanTemplate>,
