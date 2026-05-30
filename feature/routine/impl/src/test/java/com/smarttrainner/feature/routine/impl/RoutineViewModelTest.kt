@@ -1,4 +1,4 @@
-package com.smarttrainner.app.training
+package com.smarttrainner.feature.routine.impl
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
@@ -53,6 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -68,7 +69,7 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class TrainingViewModelRoutineTest {
+class RoutineViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -97,7 +98,7 @@ class TrainingViewModelRoutineTest {
 
             assertThat(state.nextRoutineDayUi?.dayNumber).isEqualTo(2)
             assertThat(state.nextRoutineDayUi?.primaryFocus).isEqualTo(RoutineFocus.CHEST)
-            assertThat(state.selectedPlannedExercise?.exercise?.id?.value).isEqualTo("chest_press")
+            assertThat(state.nextRoutineDayUi?.startExercise?.exercise?.id?.value).isEqualTo("chest_press")
             assertThat(state.today).isEqualTo(LocalDate.of(2026, 5, 24))
             cancelAndIgnoreRemainingEvents()
         }
@@ -120,6 +121,31 @@ class TrainingViewModelRoutineTest {
 
         viewModel.uiState.test {
             assertThat(awaitItem().plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+            assertThat(awaitItem().plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
+            assertThat(repository.requestedPlanWeekStartDates)
+                .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
+            assertThat(repository.requestedLogWeekStartDates)
+                .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun uiState_refreshesWeeklySourcesWhenWeekBoundaryPassesWhileSubscribed() = runTest {
+        val clock = MutableClock(Instant.parse("2026-05-24T23:59:59Z"), fixedClock.zone)
+        val viewModel = viewModel(clock)
+        backgroundScope.launch {
+            viewModel.refreshWeekStartOnWeekBoundary()
+        }
+
+        viewModel.uiState.test {
+            skipItems(1)
+            assertThat(awaitItem().plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+
+            clock.setInstant(Instant.parse("2026-05-25T00:00:00Z"))
+            advanceTimeBy(1_000)
+            runCurrent()
+
             assertThat(awaitItem().plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
             assertThat(repository.requestedPlanWeekStartDates)
                 .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
@@ -216,63 +242,6 @@ class TrainingViewModelRoutineTest {
             assertThat(state.completedPlannedExerciseIds).isEmpty()
             assertThat(state.nextRoutineDayUi?.completedExerciseCount).isEqualTo(0)
             assertThat(state.nextRoutineDayUi?.startExercise?.id).isEqualTo(repository.plannedExercise(0).id)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun showExerciseMethod_keepsRecordingFlowSelected() = runTest {
-        val viewModel = viewModel()
-
-        viewModel.uiState.test {
-            skipItems(1)
-
-            val planned = repository.plannedExercise(1)
-            viewModel.selectPlannedExercise(planned)
-            viewModel.showExerciseMethod(planned.exercise.id)
-            advanceUntilIdle()
-
-            val state = viewModel.uiState.value
-            assertThat(state.selectedExerciseId?.value).isEqualTo("chest_press")
-            assertThat(state.recordingPlannedExercise?.id).isEqualTo(planned.id)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun startWorkout_saveRecordAdvancesToNextExerciseInSameDay() = runTest {
-        val viewModel = viewModel()
-
-        viewModel.uiState.test {
-            skipItems(1)
-            awaitItem()
-
-            viewModel.startWorkout(repository.plannedExercise(dayIndex = 0, exerciseIndex = 0))
-            viewModel.handleRecordSaved(repository.plannedExercise(dayIndex = 0, exerciseIndex = 0))
-            advanceUntilIdle()
-
-            val state = viewModel.uiState.value
-            assertThat(state.recordingPlannedExercise?.id)
-                .isEqualTo(repository.plannedExercise(dayIndex = 0, exerciseIndex = 1).id)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun selectPlannedExercise_saveRecordClosesSingleRecordDialog() = runTest {
-        val viewModel = viewModel()
-
-        viewModel.uiState.test {
-            skipItems(1)
-            awaitItem()
-
-            val planned = repository.plannedExercise(dayIndex = 1)
-            viewModel.selectPlannedExercise(planned)
-            viewModel.handleRecordSaved(planned)
-            advanceUntilIdle()
-
-            val state = viewModel.uiState.value
-            assertThat(state.recordingPlannedExercise).isNull()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -697,7 +666,7 @@ class TrainingViewModelRoutineTest {
         }
     }
 
-    private fun viewModel(clock: Clock = fixedClock) = TrainingViewModel(
+    private fun viewModel(clock: Clock = fixedClock) = RoutineViewModel(
         observeExercises = ObserveExercisesUseCase(repository),
         observePlanTemplates = ObservePlanTemplatesUseCase(repository),
         observeCurrentWeeklyPlan = ObserveCurrentWeeklyPlanUseCase(repository),

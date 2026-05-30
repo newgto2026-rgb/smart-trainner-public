@@ -7,7 +7,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
+import com.smarttrainner.feature.routine.api.RoutineFeatureCallbacks
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
+import com.smarttrainner.feature.routine.api.RoutineRouteState
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 
 @Composable
@@ -17,15 +19,23 @@ fun TrainingHomeRoute(
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
+    val viewModel: TrainingViewModel = hiltViewModel()
+    val routineRouteState = rememberRoutineRouteState(
+        routineFeatureEntry = routineFeatureEntry,
+        viewModel = viewModel
+    )
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaRenderer = exerciseMediaRenderer,
         routineFeatureEntry = routineFeatureEntry,
-        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-    ) { state, routineActions, _ ->
+        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+        routineState = routineRouteState.state,
+        routineActions = routineRouteState.actions,
+        viewModel = viewModel
+    ) { _, routineState, routineActions, _ ->
         with(routineFeatureEntry) {
             HomeSummary(
-                state = state.routine,
+                state = routineState,
                 actions = routineActions
             )
         }
@@ -39,15 +49,23 @@ fun TrainingRoutineRoute(
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
+    val viewModel: TrainingViewModel = hiltViewModel()
+    val routineRouteState = rememberRoutineRouteState(
+        routineFeatureEntry = routineFeatureEntry,
+        viewModel = viewModel
+    )
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaRenderer = exerciseMediaRenderer,
         routineFeatureEntry = routineFeatureEntry,
-        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-    ) { state, routineActions, _ ->
+        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+        routineState = routineRouteState.state,
+        routineActions = routineRouteState.actions,
+        viewModel = viewModel
+    ) { _, routineState, routineActions, _ ->
         with(routineFeatureEntry) {
             Content(
-                state = state.routine,
+                state = routineState,
                 actions = routineActions,
                 exerciseMediaRenderer = exerciseMediaRenderer
             )
@@ -65,6 +83,10 @@ fun TrainingExercisesRoute(
 ) {
     val viewModel: TrainingViewModel = hiltViewModel()
     val trainingState by viewModel.uiState.collectAsStateWithLifecycle()
+    val routineRouteState = rememberRoutineRouteState(
+        routineFeatureEntry = routineFeatureEntry,
+        viewModel = viewModel
+    )
     val exerciseCatalogState = exerciseCatalogFeatureEntry.rememberUiState(
         selectedExerciseId = trainingState.selectedExerciseId
     )
@@ -73,8 +95,10 @@ fun TrainingExercisesRoute(
         exerciseMediaRenderer = exerciseMediaRenderer,
         routineFeatureEntry = routineFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+        routineState = routineRouteState.state,
+        routineActions = routineRouteState.actions,
         viewModel = viewModel
-    ) { _, _, exerciseCatalogActions ->
+    ) { _, _, _, exerciseCatalogActions ->
         with(exerciseCatalogFeatureEntry) {
             Content(
                 state = exerciseCatalogState,
@@ -83,3 +107,16 @@ fun TrainingExercisesRoute(
         }
     }
 }
+
+@Composable
+private fun rememberRoutineRouteState(
+    routineFeatureEntry: RoutineFeatureEntry,
+    viewModel: TrainingViewModel
+): RoutineRouteState = routineFeatureEntry.rememberRouteState(
+    callbacks = RoutineFeatureCallbacks(
+        onWorkoutStarted = viewModel::startWorkout,
+        onRoutineDayCompleted = viewModel::clearRecordingFlow,
+        onExerciseMethodSelected = viewModel::showExerciseMethod,
+        onRecordSelected = viewModel::selectPlannedExercise
+    )
+)

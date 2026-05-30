@@ -1,4 +1,4 @@
-package com.smarttrainner.app.training
+package com.smarttrainner.feature.routine.impl
 
 import com.smarttrainner.core.model.RoutineRecommendationInput
 import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState

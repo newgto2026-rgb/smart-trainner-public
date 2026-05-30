@@ -138,6 +138,18 @@ data class RoutineActions(
     val onRecordSelected: (PlannedExercise) -> Unit = {}
 )
 
+data class RoutineFeatureCallbacks(
+    val onWorkoutStarted: (PlannedExercise) -> Unit = {},
+    val onRoutineDayCompleted: () -> Unit = {},
+    val onExerciseMethodSelected: (ExerciseId) -> Unit = {},
+    val onRecordSelected: (PlannedExercise) -> Unit = {}
+)
+
+data class RoutineRouteState(
+    val state: RoutineUiState = RoutineUiState(),
+    val actions: RoutineActions = RoutineActions()
+)
+
 private val AllCustomRoutineMuscleGroups = MuscleGroup.entries.toSet()
 private val UpperBodyCustomRoutineMuscleGroups = setOf(
     MuscleGroup.BACK,

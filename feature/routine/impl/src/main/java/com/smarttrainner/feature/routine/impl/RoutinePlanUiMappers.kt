@@ -1,4 +1,4 @@
-package com.smarttrainner.app.training
+package com.smarttrainner.feature.routine.impl
 
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExercise

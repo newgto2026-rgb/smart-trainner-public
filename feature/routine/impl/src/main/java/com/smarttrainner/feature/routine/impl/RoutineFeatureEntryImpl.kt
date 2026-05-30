@@ -2,13 +2,68 @@ package com.smarttrainner.feature.routine.impl
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.routine.api.RoutineActions
+import com.smarttrainner.feature.routine.api.RoutineFeatureCallbacks
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
+import com.smarttrainner.feature.routine.api.RoutineRouteState
 import com.smarttrainner.feature.routine.api.RoutineUiState
 import javax.inject.Inject
 
 class RoutineFeatureEntryImpl @Inject constructor() : RoutineFeatureEntry {
+    @Composable
+    override fun rememberRouteState(callbacks: RoutineFeatureCallbacks): RoutineRouteState {
+        val viewModel: RoutineViewModel = hiltViewModel()
+        val state by viewModel.uiState.collectAsStateWithLifecycle()
+        LaunchedEffect(viewModel) {
+            viewModel.refreshWeekStartOnWeekBoundary()
+        }
+        val actions = remember(callbacks, viewModel) {
+            RoutineActions(
+                onTemplateSelected = viewModel::selectTemplate,
+                onDaysPerWeekChanged = viewModel::updateRoutineDaysPerWeek,
+                onSessionMinutesChanged = viewModel::updateRoutineSessionMinutes,
+                onExperienceChanged = viewModel::updateRoutineExperience,
+                onFeelingChanged = viewModel::updateRoutineFeeling,
+                onShowLibrary = viewModel::showRoutineLibrary,
+                onLibraryDismiss = viewModel::dismissRoutineLibrary,
+                onShowSettings = viewModel::showRoutineSettings,
+                onSettingsDismiss = viewModel::dismissRoutineSettings,
+                onShowRecommendations = viewModel::showRoutineRecommendations,
+                onRecommendationsDismiss = viewModel::dismissRoutineRecommendations,
+                onPreviewSelected = viewModel::selectRoutinePreview,
+                onStartPreviewRoutine = viewModel::startPreviewRoutine,
+                onCreateCustomRoutine = viewModel::showCreateCustomRoutine,
+                onCopyTemplateToCustom = viewModel::copyTemplateToCustom,
+                onEditCustomRoutine = viewModel::editCustomRoutine,
+                onCustomRoutineNameChanged = viewModel::updateCustomRoutineName,
+                onCustomRoutineDaySelected = viewModel::selectCustomRoutineDay,
+                onCustomRoutineDayFocusChanged = viewModel::updateCustomRoutineDayFocus,
+                onCustomRoutineDayAdded = viewModel::addCustomRoutineDay,
+                onCustomRoutineDayRemoved = viewModel::removeCustomRoutineDay,
+                onCustomRoutineExerciseGroupToggled = viewModel::toggleCustomRoutineExerciseGroup,
+                onCustomRoutineExerciseAdded = viewModel::addExerciseToCustomRoutine,
+                onCustomRoutineExerciseRemoved = viewModel::removeExerciseFromCustomRoutine,
+                onCustomRoutineExerciseMovedUp = viewModel::moveCustomRoutineExerciseUp,
+                onCustomRoutineExerciseMovedDown = viewModel::moveCustomRoutineExerciseDown,
+                onCustomRoutineSaved = viewModel::saveCustomRoutine,
+                onCustomRoutineBuilderDismiss = viewModel::dismissCustomRoutineBuilder,
+                onWorkoutStarted = callbacks.onWorkoutStarted,
+                onCompleteRoutineDay = { viewModel.completeCurrentRoutineDay(callbacks.onRoutineDayCompleted) },
+                onExerciseMethodSelected = callbacks.onExerciseMethodSelected,
+                onRecordSelected = callbacks.onRecordSelected
+            )
+        }
+        return remember(state, actions) {
+            RoutineRouteState(state = state, actions = actions)
+        }
+    }
+
     override fun LazyListScope.HomeSummary(
         state: RoutineUiState,
         actions: RoutineActions

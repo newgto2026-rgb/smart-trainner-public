@@ -5,6 +5,9 @@ import androidx.compose.runtime.Composable
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
 
 interface RoutineFeatureEntry {
+    @Composable
+    fun rememberRouteState(callbacks: RoutineFeatureCallbacks): RoutineRouteState
+
     fun LazyListScope.HomeSummary(
         state: RoutineUiState,
         actions: RoutineActions
