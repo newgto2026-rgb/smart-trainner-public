@@ -165,6 +165,27 @@ class ExerciseStepImagesTest {
     }
 
     @Test
+    fun directStepInstructionsDoNotUsePlaceholderCopy() {
+        val placeholderPhrases = listOf(
+            "장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
+            "움직임을 작게 시작해 균형과 속도를 먼저 통제합니다.",
+            "통증 없는 범위에서 천천히 움직이고 반동을 쓰지 않습니다.",
+            "목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
+            "목과 허리에 과한 긴장이 들어가지 않게 안정적으로 유지합니다.",
+            "같은 경로로 천천히 돌아와 다음 반복을 준비합니다."
+        )
+        val directExerciseIds = exerciseStepVisualExerciseIds - GENERATED_EXERCISE_TEXT_BACKED_IDS
+
+        directExerciseIds.forEach { exerciseId ->
+            exerciseStepVisuals(exerciseId).forEach { visual ->
+                placeholderPhrases.forEach { placeholder ->
+                    assertThat(visual.koInstruction).doesNotContain(placeholder)
+                }
+            }
+        }
+    }
+
+    @Test
     fun deadBugUsesStartReachReturnOppositeReachFlow() {
         val visuals = exerciseStepVisuals("dead_bug")
 

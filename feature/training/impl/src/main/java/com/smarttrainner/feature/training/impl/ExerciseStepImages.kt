@@ -146,29 +146,29 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_goblet_squat_clean_step_1,
             koLabel = "덤벨 위치",
             enLabel = "Set dumbbell",
-            koInstruction = "덤벨 위치: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set dumbbell and settle your breathing before the rep."
+            koInstruction = "덤벨 위치: 덤벨 한쪽 끝을 양손으로 감싸 가슴 앞에 세우고 팔꿈치를 몸 가까이 둡니다.",
+            enInstruction = "Cup one end of the dumbbell in both hands, hold it upright at the chest, and keep elbows close."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_goblet_squat_clean_step_2,
             koLabel = "발·코어 정렬",
             enLabel = "Align feet and core",
-            koInstruction = "발·코어 정렬: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to align feet and core and settle your breathing before the rep."
+            koInstruction = "발·코어 정렬: 발을 어깨너비로 두고 갈비뼈가 들리지 않게 복부를 조입니다.",
+            enInstruction = "Set feet about shoulder-width and brace the abs so the ribs do not flare."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_goblet_squat_clean_step_3,
             koLabel = "내려가기",
             enLabel = "Lower",
-            koInstruction = "내려가기: 통증 없는 범위에서 천천히 움직이고 반동을 쓰지 않습니다.",
-            enInstruction = "Lower slowly, keep control, and stop before any painful range."
+            koInstruction = "내려가기: 무릎과 발끝 방향을 맞추며 덤벨이 가슴에서 멀어지지 않게 앉습니다.",
+            enInstruction = "Lower while knees track with toes and the dumbbell stays close to the chest."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_goblet_squat_clean_step_4,
             koLabel = "올라오기",
             enLabel = "Stand up",
-            koInstruction = "올라오기: 움직임을 작게 시작해 균형과 속도를 먼저 통제합니다.",
-            enInstruction = "Control the stand up phase with steady breathing and no bouncing."
+            koInstruction = "올라오기: 발바닥 전체로 바닥을 밀어 가슴과 골반이 함께 올라오게 합니다.",
+            enInstruction = "Drive through the whole foot so the chest and hips rise together."
         )
     ),
     "box_squat" to listOf(
@@ -206,22 +206,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_dumbbell_split_squat_clean_step_1,
             koLabel = "보폭 잡기",
             enLabel = "Set stance",
-            koInstruction = "보폭 잡기: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set stance and settle your breathing before the rep."
+            koInstruction = "보폭 잡기: 양손 덤벨을 몸 옆에 두고 앞발과 뒷발을 나누어 안정적인 보폭을 만듭니다.",
+            enInstruction = "Hold dumbbells at the sides and split the feet into a stable stance."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_dumbbell_split_squat_clean_step_2,
             koLabel = "앞발 중심",
             enLabel = "Load front foot",
-            koInstruction = "앞발 중심: 움직임을 작게 시작해 균형과 속도를 먼저 통제합니다.",
-            enInstruction = "Control the load front foot phase with steady breathing and no bouncing."
+            koInstruction = "앞발 중심: 몸통을 세우고 앞발 전체에 체중을 실어 뒤꿈치가 뜨지 않게 준비합니다.",
+            enInstruction = "Keep the torso tall and load the whole front foot without letting the heel lift."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_dumbbell_split_squat_clean_step_3,
             koLabel = "내려가기",
             enLabel = "Lower",
-            koInstruction = "내려가기: 통증 없는 범위에서 천천히 움직이고 반동을 쓰지 않습니다.",
-            enInstruction = "Lower slowly, keep control, and stop before any painful range."
+            koInstruction = "내려가기: 뒤무릎을 바닥 가까이 내리며 앞무릎이 발끝 방향을 따라가게 합니다.",
+            enInstruction = "Lower the back knee toward the floor while the front knee tracks with the toes."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_dumbbell_split_squat_clean_step_4,
@@ -266,22 +266,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_leg_extension_clean_step_1,
             koLabel = "패드 조정",
             enLabel = "Adjust pad",
-            koInstruction = "패드 조정: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to adjust pad and settle your breathing before the rep."
+            koInstruction = "패드 조정: 등받이에 몸을 붙이고 발목 앞 패드가 발목 바로 위에 오도록 맞춥니다.",
+            enInstruction = "Sit against the back pad and set the shin pad just above the ankles."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_leg_extension_clean_step_2,
             koLabel = "무릎 펴기",
             enLabel = "Extend knees",
-            koInstruction = "무릎 펴기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Extend knees with steady tempo and keep the target muscle engaged."
+            koInstruction = "무릎 펴기: 허벅지 앞쪽 힘으로 패드를 들어 올리되 엉덩이가 들리지 않게 고정합니다.",
+            enInstruction = "Lift the pad with the front thighs while keeping the hips anchored."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_leg_extension_clean_step_3,
             koLabel = "통제 복귀",
             enLabel = "Controlled return",
-            koInstruction = "통제 복귀: 같은 경로로 천천히 돌아와 다음 반복을 준비합니다.",
-            enInstruction = "Controlled return slowly, keep control, and stop before any painful range."
+            koInstruction = "통제 복귀: 무게추가 튕기지 않게 같은 경로로 천천히 내려 무릎을 굽힙니다.",
+            enInstruction = "Lower along the same path so the weight stack does not bounce."
         )
     ),
     "leg_curl" to listOf(
@@ -289,8 +289,8 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_leg_curl_clean_step_1,
             koLabel = "패드 조정",
             enLabel = "Adjust pad",
-            koInstruction = "패드 조정: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to adjust pad and settle your breathing before the rep."
+            koInstruction = "패드 조정: 발목 뒤쪽에 패드를 맞추고 엎드려 엉덩이가 패드에서 뜨지 않게 고정합니다.",
+            enInstruction = "Set the pad behind the ankles and keep the hips pinned to the bench."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_leg_curl_clean_step_2,
@@ -312,36 +312,36 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_romanian_deadlift_clean_step_1,
             koLabel = "시작 위치",
             enLabel = "Start position",
-            koInstruction = "시작 위치: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to start position and settle your breathing before the rep."
+            koInstruction = "시작 위치: 덤벨을 허벅지 앞에 두고 발을 골반너비로 세워 복부를 조입니다.",
+            enInstruction = "Hold the dumbbells in front of the thighs, stand hip-width, and brace the abs."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_romanian_deadlift_clean_step_2,
             koLabel = "등 중립",
             enLabel = "Neutral back",
-            koInstruction = "등 중립: 목과 허리에 과한 긴장이 들어가지 않게 안정적으로 유지합니다.",
-            enInstruction = "Control the neutral back phase with steady breathing and no bouncing."
+            koInstruction = "등 중립: 어깨를 낮추고 목부터 골반까지 긴 선을 유지한 채 무릎을 살짝 굽힙니다.",
+            enInstruction = "Keep shoulders down, a long line from neck to pelvis, and a soft bend in the knees."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_romanian_deadlift_clean_step_3,
             koLabel = "힙힌지",
             enLabel = "Hip hinge",
-            koInstruction = "힙힌지: 움직임을 작게 시작해 균형과 속도를 먼저 통제합니다.",
-            enInstruction = "Control the hip hinge phase with steady breathing and no bouncing."
+            koInstruction = "힙힌지: 엉덩이를 뒤로 보내며 덤벨이 허벅지와 정강이 가까이 내려가게 합니다.",
+            enInstruction = "Send the hips back and keep the dumbbells close to the thighs and shins."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_romanian_deadlift_clean_step_4,
             koLabel = "햄스트링 범위",
             enLabel = "Hamstring range",
-            koInstruction = "햄스트링 범위: 목과 허리에 과한 긴장이 들어가지 않게 안정적으로 유지합니다.",
-            enInstruction = "Control the hamstring range phase with steady breathing and no bouncing."
+            koInstruction = "햄스트링 범위: 허리가 말리기 전, 허벅지 뒤쪽이 당기는 지점에서 멈춥니다.",
+            enInstruction = "Stop where the hamstrings stretch before the lower back rounds."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_romanian_deadlift_clean_step_5,
             koLabel = "둔근으로 복귀",
             enLabel = "Return with glutes",
-            koInstruction = "둔근으로 복귀: 같은 경로로 천천히 돌아와 다음 반복을 준비합니다.",
-            enInstruction = "Return with glutes slowly, keep control, and stop before any painful range."
+            koInstruction = "둔근으로 복귀: 발바닥 전체를 누르고 엉덩이를 앞으로 보내 시작 자세로 돌아옵니다.",
+            enInstruction = "Press through the whole foot and drive the hips forward to stand tall."
         )
     ),
     "hip_thrust" to listOf(
@@ -379,22 +379,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_calf_raise_clean_step_1,
             koLabel = "발 위치",
             enLabel = "Set feet",
-            koInstruction = "발 위치: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set feet and settle your breathing before the rep."
+            koInstruction = "발 위치: 발 앞쪽을 발판에 올리고 뒤꿈치가 자유롭게 내려갈 수 있게 섭니다.",
+            enInstruction = "Place the balls of the feet on the platform so the heels can move freely."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_calf_raise_clean_step_2,
             koLabel = "올리기",
             enLabel = "Lift",
-            koInstruction = "올리기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Lift with steady tempo and keep the target muscle engaged."
+            koInstruction = "올리기: 종아리 힘으로 뒤꿈치를 들어 올려 발목을 끝범위까지 펴줍니다.",
+            enInstruction = "Use the calves to lift the heels and fully extend the ankles."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_calf_raise_clean_step_3,
             koLabel = "멈추고 내리기",
             enLabel = "Pause and lower",
-            koInstruction = "멈추고 내리기: 같은 경로로 천천히 돌아와 다음 반복을 준비합니다.",
-            enInstruction = "Pause and lower slowly, keep control, and stop before any painful range."
+            koInstruction = "멈추고 내리기: 상단에서 잠깐 멈춘 뒤 뒤꿈치를 천천히 내려 종아리가 늘어나는 범위를 만듭니다.",
+            enInstruction = "Pause at the top, then lower the heels slowly until the calves stretch."
         )
     ),
     "lat_pulldown" to listOf(
@@ -1236,22 +1236,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_glute_bridge_clean_v2_step_1,
             koLabel = "누운 자세",
             enLabel = "Lie down",
-            koInstruction = "누운 자세: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Control the lie down phase with steady breathing and no bouncing."
+            koInstruction = "누운 자세: 매트에 누워 무릎을 세우고 발을 엉덩이 가까이에 두어 뒤꿈치로 바닥을 누릅니다.",
+            enInstruction = "Lie on the mat with knees bent, feet near the hips, and heels pressing into the floor."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_glute_bridge_clean_v2_step_2,
             koLabel = "골반 올리기",
             enLabel = "Lift hips",
-            koInstruction = "골반 올리기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Lift hips with steady tempo and keep the target muscle engaged."
+            koInstruction = "골반 올리기: 갈비뼈를 낮춘 채 둔근으로 골반을 들어 어깨부터 무릎까지 긴 선을 만듭니다.",
+            enInstruction = "Keep ribs down and lift the hips with the glutes until shoulders, hips, and knees line up."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_glute_bridge_clean_v2_step_3,
             koLabel = "둔근 수축 후 하강",
             enLabel = "Squeeze glutes then lower",
-            koInstruction = "둔근 수축 후 하강: 통증 없는 범위에서 천천히 움직이고 반동을 쓰지 않습니다.",
-            enInstruction = "Squeeze glutes then lower slowly, keep control, and stop before any painful range."
+            koInstruction = "둔근 수축 후 하강: 상단에서 허리를 꺾지 않고 둔근을 조인 뒤 골반을 천천히 매트로 내립니다.",
+            enInstruction = "Squeeze the glutes at the top without arching, then lower the hips slowly to the mat."
         )
     ),
     "cable_glute_kickback" to listOf(
@@ -1259,22 +1259,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_cable_glute_kickback_clean_v5_step_1,
             koLabel = "스트랩 연결",
             enLabel = "Attach strap",
-            koInstruction = "스트랩 연결: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Control the attach strap phase with steady breathing and no bouncing."
+            koInstruction = "스트랩 연결: 낮은 케이블에 발목 스트랩을 연결하고 손잡이나 기둥을 잡아 골반을 정면으로 둡니다.",
+            enInstruction = "Attach the ankle strap to a low cable, hold the frame, and keep the pelvis square."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_glute_kickback_clean_v5_step_2,
             koLabel = "뒤로 밀기",
             enLabel = "Kick back",
-            koInstruction = "뒤로 밀기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Control the kick back phase with steady breathing and no bouncing."
+            koInstruction = "뒤로 밀기: 무릎을 살짝 굽힌 채 발뒤꿈치를 뒤로 보내 엉덩이 뒤쪽으로 케이블을 밀어냅니다.",
+            enInstruction = "With a soft knee, drive the heel back and pull the cable using your glutes."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_glute_kickback_clean_v5_step_3,
             koLabel = "골반 고정 복귀",
             enLabel = "Return with pelvis fixed",
-            koInstruction = "골반 고정 복귀: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Return with pelvis fixed slowly, keep control, and stop before any painful range."
+            koInstruction = "골반 고정 복귀: 골반이 돌아가지 않게 버티며 다리를 천천히 몸 아래로 되돌립니다.",
+            enInstruction = "Keep the pelvis from rotating and return the leg slowly under the body."
         )
     ),
     "hip_abduction_machine" to listOf(
@@ -1351,22 +1351,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_straight_arm_pulldown_clean_v3_step_1,
             koLabel = "케이블 높이",
             enLabel = "Set cable height",
-            koInstruction = "케이블 높이: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set cable height and settle your breathing before the rep."
+            koInstruction = "케이블 높이: 높은 풀리에 바나 로프를 걸고 팔을 거의 편 상태로 엉덩이를 살짝 뒤로 보냅니다.",
+            enInstruction = "Attach a bar or rope to the high pulley and hinge slightly with arms almost straight."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_straight_arm_pulldown_clean_v3_step_2,
             koLabel = "허벅지 쪽 당기기",
             enLabel = "Pull toward thighs",
-            koInstruction = "허벅지 쪽 당기기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Pull toward thighs with steady tempo and keep the target muscle engaged."
+            koInstruction = "허벅지 쪽 당기기: 팔꿈치 각도를 크게 바꾸지 않고 광배근으로 손잡이를 허벅지 앞까지 내립니다.",
+            enInstruction = "Pull the handle toward the thighs with the lats while the elbow angle barely changes."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_straight_arm_pulldown_clean_v3_step_3,
             koLabel = "광배 긴장 복귀",
             enLabel = "Return with lats active",
-            koInstruction = "광배 긴장 복귀: 같은 경로로 천천히 돌아와 다음 반복을 준비합니다.",
-            enInstruction = "Return with lats active slowly, keep control, and stop before any painful range."
+            koInstruction = "광배 긴장 복귀: 어깨가 귀로 올라가지 않게 버티며 손잡이를 천천히 위로 되돌립니다.",
+            enInstruction = "Return the handle upward slowly without letting the shoulders shrug."
         )
     ),
     "machine_row" to listOf(
@@ -1374,22 +1374,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_machine_row_clean_v3_step_1,
             koLabel = "패드·손잡이 조정",
             enLabel = "Adjust pad and handles",
-            koInstruction = "패드·손잡이 조정: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to adjust pad and handles and settle your breathing before the rep."
+            koInstruction = "패드·손잡이 조정: 가슴 패드에 몸을 붙이고 팔을 뻗었을 때 손잡이가 편하게 잡히도록 좌석을 맞춥니다.",
+            enInstruction = "Set the seat so your chest stays on the pad and the handles are comfortable at reach."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_machine_row_clean_v3_step_2,
             koLabel = "당기기",
             enLabel = "Pull",
-            koInstruction = "당기기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Pull with steady tempo and keep the target muscle engaged."
+            koInstruction = "당기기: 가슴이 패드에서 뜨지 않게 유지하며 팔꿈치를 뒤로 보내 손잡이를 몸 쪽으로 당깁니다.",
+            enInstruction = "Pull the handles toward the body by driving elbows back while the chest stays on the pad."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_machine_row_clean_v3_step_3,
             koLabel = "통제 복귀",
             enLabel = "Controlled return",
-            koInstruction = "통제 복귀: 같은 경로로 천천히 돌아와 다음 반복을 준비합니다.",
-            enInstruction = "Controlled return slowly, keep control, and stop before any painful range."
+            koInstruction = "통제 복귀: 어깨가 앞으로 말리지 않게 견갑을 통제하며 팔을 천천히 뻗습니다.",
+            enInstruction = "Extend the arms slowly while controlling the shoulder blades."
         )
     ),
     "t_bar_row" to listOf(
@@ -1397,22 +1397,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_t_bar_row_clean_v2_step_1,
             koLabel = "패드 밀착",
             enLabel = "Brace on pad",
-            koInstruction = "패드 밀착: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Use this phase to brace on pad and settle your breathing before the rep."
+            koInstruction = "패드 밀착: 가슴을 인클라인 패드에 붙이고 발을 지지대에 단단히 둔 채 손잡이를 잡습니다.",
+            enInstruction = "Press the chest into the incline pad, brace the feet, and hold the handles."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_t_bar_row_clean_v2_step_2,
             koLabel = "당기기",
             enLabel = "Pull",
-            koInstruction = "당기기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Pull with steady tempo and keep the target muscle engaged."
+            koInstruction = "당기기: 가슴이 패드에서 뜨지 않게 팔꿈치를 뒤로 보내 손잡이를 하부 갈비뼈 쪽으로 당깁니다.",
+            enInstruction = "Drive elbows back and pull the handles toward the lower ribs without lifting off the pad."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_t_bar_row_clean_v2_step_3,
             koLabel = "놓치지 않고 하강",
             enLabel = "Lower without losing tension",
-            koInstruction = "놓치지 않고 하강: 통증 없는 범위에서 천천히 움직이고 반동을 쓰지 않습니다.",
-            enInstruction = "Lower without losing tension slowly, keep control, and stop before any painful range."
+            koInstruction = "놓치지 않고 하강: 견갑을 통제하며 손잡이를 시작 위치로 천천히 돌려놓습니다.",
+            enInstruction = "Control the shoulder blades and return the handles slowly to the start."
         )
     ),
     "barbell_bent_over_row" to listOf(
@@ -1487,22 +1487,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_cable_pullover_clean_v3_step_1,
             koLabel = "케이블 높이",
             enLabel = "Set cable height",
-            koInstruction = "케이블 높이: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set cable height and settle your breathing before the rep."
+            koInstruction = "케이블 높이: 높은 풀리 앞에서 엉덩이를 살짝 뒤로 빼고 팔을 길게 뻗어 손잡이를 잡습니다.",
+            enInstruction = "Stand at the high pulley, hinge slightly, and reach long to hold the handle."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_pullover_clean_v3_step_2,
             koLabel = "팔 길게 당기기",
             enLabel = "Pull with long arms",
-            koInstruction = "팔 길게 당기기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Pull with long arms with steady tempo and keep the target muscle engaged."
+            koInstruction = "팔 길게 당기기: 팔꿈치를 살짝만 굽힌 채 손잡이를 허벅지 앞쪽으로 당기며 광배근을 조입니다.",
+            enInstruction = "With only a slight elbow bend, pull the handle toward the front of the thighs with the lats."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_pullover_clean_v3_step_3,
             koLabel = "범위 내 복귀",
             enLabel = "Return in range",
-            koInstruction = "범위 내 복귀: 같은 경로로 천천히 돌아와 다음 반복을 준비합니다.",
-            enInstruction = "Return in range slowly, keep control, and stop before any painful range."
+            koInstruction = "범위 내 복귀: 허리가 꺾이지 않게 같은 경로로 손잡이를 천천히 올려 시작 자세로 돌아갑니다.",
+            enInstruction = "Raise the handle back along the same path without arching the lower back."
         )
     ),
     "inverted_row" to listOf(
@@ -1510,8 +1510,8 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_inverted_row_clean_v2_step_1,
             koLabel = "바 아래 자세",
             enLabel = "Set under bar",
-            koInstruction = "바 아래 자세: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set under bar and settle your breathing before the rep."
+            koInstruction = "바 아래 자세: 바 아래에 누워 양손으로 바를 잡고 발뒤꿈치부터 머리까지 긴 선을 만듭니다.",
+            enInstruction = "Lie under the bar, grip it with both hands, and make one long line from heels to head."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_inverted_row_clean_v2_step_2,
@@ -1533,8 +1533,8 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_dumbbell_shrug_clean_v2_step_1,
             koLabel = "몸통 세우기",
             enLabel = "Stand tall",
-            koInstruction = "몸통 세우기: 움직임을 작게 시작해 균형과 속도를 먼저 통제합니다.",
-            enInstruction = "Control the stand tall phase with steady breathing and no bouncing."
+            koInstruction = "몸통 세우기: 양손 덤벨을 몸 옆에 두고 복부를 조여 어깨가 앞으로 말리지 않게 섭니다.",
+            enInstruction = "Hold dumbbells by the sides, brace the abs, and stand without letting shoulders roll forward."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_dumbbell_shrug_clean_v2_step_2,
@@ -1556,22 +1556,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_pec_deck_fly_clean_v3_step_1,
             koLabel = "패드 높이",
             enLabel = "Set pad height",
-            koInstruction = "패드 높이: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set pad height and settle your breathing before the rep."
+            koInstruction = "패드 높이: 팔꿈치나 전완이 패드에 편하게 닿도록 좌석 높이를 맞추고 가슴을 세웁니다.",
+            enInstruction = "Adjust the seat so elbows or forearms sit comfortably on the pads, then lift the chest."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_pec_deck_fly_clean_v3_step_2,
             koLabel = "앞으로 모으기",
             enLabel = "Bring forward",
-            koInstruction = "앞으로 모으기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Control the bring forward phase with steady breathing and no bouncing."
+            koInstruction = "앞으로 모으기: 팔꿈치 각도를 유지한 채 양쪽 패드를 가슴 앞에서 모읍니다.",
+            enInstruction = "Keep the elbow angle steady and bring both pads together in front of the chest."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_pec_deck_fly_clean_v3_step_3,
             koLabel = "가슴 범위 내 복귀",
             enLabel = "Return in chest range",
-            koInstruction = "가슴 범위 내 복귀: 같은 경로로 천천히 돌아와 다음 반복을 준비합니다.",
-            enInstruction = "Return in chest range slowly, keep control, and stop before any painful range."
+            koInstruction = "가슴 범위 내 복귀: 어깨가 과하게 뒤로 젖혀지기 전까지만 패드를 천천히 열어 돌아갑니다.",
+            enInstruction = "Open the pads slowly only until the shoulders stay comfortable."
         )
     ),
     "incline_machine_press" to listOf(
@@ -1632,29 +1632,29 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_assisted_dip_clean_v2_step_1,
             koLabel = "보조 패드 진입",
             enLabel = "Enter assist pad",
-            koInstruction = "보조 패드 진입: 움직임을 작게 시작해 균형과 속도를 먼저 통제합니다.",
-            enInstruction = "Control the enter assist pad phase with steady breathing and no bouncing."
+            koInstruction = "보조 패드 진입: 손잡이를 잡고 한쪽 무릎씩 보조 패드에 올려 몸을 안정시킵니다.",
+            enInstruction = "Hold the handles and place one knee at a time on the assist pad to stabilize."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_assisted_dip_clean_v2_step_2,
             koLabel = "손잡이 지지",
             enLabel = "Support handles",
-            koInstruction = "손잡이 지지: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Control the support handles phase with steady breathing and no bouncing."
+            koInstruction = "손잡이 지지: 어깨를 낮추고 팔꿈치를 살짝 굽힌 채 몸통을 손잡이 사이에 세웁니다.",
+            enInstruction = "Depress the shoulders, keep elbows softly bent, and stack the torso between the handles."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_assisted_dip_clean_v2_step_3,
             koLabel = "통증 없는 하강",
             enLabel = "Lower pain-free",
-            koInstruction = "통증 없는 하강: 통증 없는 범위에서 천천히 움직이고 반동을 쓰지 않습니다.",
-            enInstruction = "Lower pain-free slowly, keep control, and stop before any painful range."
+            koInstruction = "통증 없는 하강: 팔꿈치를 뒤로 접으며 어깨 앞쪽이 편한 범위까지만 몸을 내립니다.",
+            enInstruction = "Bend the elbows back and lower only as far as the front of the shoulders stays comfortable."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_assisted_dip_clean_v2_step_4,
             koLabel = "밀어 올라오기",
             enLabel = "Drive up",
-            koInstruction = "밀어 올라오기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Drive up with steady tempo and keep the target muscle engaged."
+            koInstruction = "밀어 올라오기: 손잡이를 아래로 누르며 팔꿈치를 펴 보조 패드와 함께 올라옵니다.",
+            enInstruction = "Press the handles down and extend the elbows as the assist pad rises with you."
         )
     ),
     "cable_chest_press" to listOf(
@@ -1662,29 +1662,29 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_cable_chest_press_clean_v2_step_1,
             koLabel = "케이블 높이",
             enLabel = "Set cable height",
-            koInstruction = "케이블 높이: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set cable height and settle your breathing before the rep."
+            koInstruction = "케이블 높이: 손잡이가 가슴 중간 높이에서 당겨지도록 양쪽 케이블을 맞춥니다.",
+            enInstruction = "Set both cable handles so they pull from mid-chest height."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_chest_press_clean_v2_step_2,
             koLabel = "스탠스 잡기",
             enLabel = "Set stance",
-            koInstruction = "스탠스 잡기: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set stance and settle your breathing before the rep."
+            koInstruction = "스탠스 잡기: 한 발을 앞으로 두고 양손 손잡이를 가슴 옆에 세워 몸통을 고정합니다.",
+            enInstruction = "Step one foot forward and hold both handles beside the chest with the torso braced."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_chest_press_clean_v2_step_3,
             koLabel = "앞으로 밀기",
             enLabel = "Press forward",
-            koInstruction = "앞으로 밀기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Press forward with steady tempo and keep the target muscle engaged."
+            koInstruction = "앞으로 밀기: 어깨가 들리지 않게 양손을 같은 속도로 가슴 앞쪽으로 밀어냅니다.",
+            enInstruction = "Press both hands forward evenly without letting the shoulders shrug."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_chest_press_clean_v2_step_4,
             koLabel = "몸통 고정 복귀",
             enLabel = "Return",
-            koInstruction = "몸통 고정 복귀: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Return slowly, keep control, and stop before any painful range."
+            koInstruction = "몸통 고정 복귀: 케이블 장력을 유지하며 손잡이를 가슴 옆 시작 위치로 천천히 되돌립니다.",
+            enInstruction = "Keep cable tension and return the handles slowly beside the chest."
         )
     ),
     "close_grip_pushup" to listOf(
@@ -1722,29 +1722,29 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_arnold_press_clean_v2_step_1,
             koLabel = "얼굴 앞 시작",
             enLabel = "Start in front",
-            koInstruction = "얼굴 앞 시작: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Control the start in front phase with steady breathing and no bouncing."
+            koInstruction = "얼굴 앞 시작: 손바닥이 얼굴을 향하게 덤벨을 어깨 앞에 두고 복부를 조입니다.",
+            enInstruction = "Hold dumbbells in front of the shoulders with palms facing you and brace the trunk."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_arnold_press_clean_v2_step_2,
             koLabel = "회전 시작",
             enLabel = "Begin rotation",
-            koInstruction = "회전 시작: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Control the begin rotation phase with steady breathing and no bouncing."
+            koInstruction = "회전 시작: 팔꿈치를 벌리며 손바닥이 앞을 향하도록 덤벨을 바깥으로 돌립니다.",
+            enInstruction = "Rotate the dumbbells outward as elbows open and palms turn forward."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_arnold_press_clean_v2_step_3,
             koLabel = "위로 밀기",
             enLabel = "Press up",
-            koInstruction = "위로 밀기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Press up with steady tempo and keep the target muscle engaged."
+            koInstruction = "위로 밀기: 회전한 자세에서 덤벨을 머리 위로 밀되 허리를 젖히지 않습니다.",
+            enInstruction = "Press overhead from the rotated position without leaning back."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_arnold_press_clean_v2_step_4,
             koLabel = "같은 경로 복귀",
             enLabel = "Return same path",
-            koInstruction = "같은 경로 복귀: 같은 경로로 천천히 돌아와 다음 반복을 준비합니다.",
-            enInstruction = "Return same path slowly, keep control, and stop before any painful range."
+            koInstruction = "같은 경로 복귀: 덤벨을 어깨 앞으로 내리며 손바닥이 다시 얼굴을 향하게 돌립니다.",
+            enInstruction = "Lower along the same path and rotate palms back toward the face."
         )
     ),
     "front_raise" to listOf(
@@ -1782,22 +1782,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_cable_lateral_raise_clean_v2_step_1,
             koLabel = "낮은 케이블 세팅",
             enLabel = "Set low cable",
-            koInstruction = "낮은 케이블 세팅: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set low cable and settle your breathing before the rep."
+            koInstruction = "낮은 케이블 세팅: 낮은 풀리에 손잡이를 연결하고 케이블이 몸 앞을 지나가게 옆으로 섭니다.",
+            enInstruction = "Attach a handle to the low pulley and stand side-on so the cable crosses in front."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_lateral_raise_clean_v2_step_2,
             koLabel = "옆으로 올리기",
             enLabel = "Raise to side",
-            koInstruction = "옆으로 올리기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Raise to side with steady tempo and keep the target muscle engaged."
+            koInstruction = "옆으로 올리기: 팔꿈치를 살짝 굽힌 채 손잡이를 어깨 높이까지 옆으로 들어 올립니다.",
+            enInstruction = "With a soft elbow bend, raise the handle out to shoulder height."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_lateral_raise_clean_v2_step_3,
             koLabel = "장력 유지 하강",
             enLabel = "Lower with tension",
-            koInstruction = "장력 유지 하강: 통증 없는 범위에서 천천히 움직이고 반동을 쓰지 않습니다.",
-            enInstruction = "Lower with tension slowly, keep control, and stop before any painful range."
+            koInstruction = "장력 유지 하강: 케이블이 느슨해지기 전까지 손잡이를 천천히 내려 어깨 긴장을 유지합니다.",
+            enInstruction = "Lower the handle slowly while keeping cable tension on the shoulder."
         )
     ),
     "landmine_press" to listOf(
@@ -1858,8 +1858,8 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_hammer_curl_clean_v2_step_1,
             koLabel = "중립 그립",
             enLabel = "Neutral grip",
-            koInstruction = "중립 그립: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to neutral grip and settle your breathing before the rep."
+            koInstruction = "중립 그립: 양손 덤벨을 몸 옆에 두고 손바닥이 서로 마주 보게 세웁니다.",
+            enInstruction = "Hold the dumbbells by your sides with palms facing each other."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_hammer_curl_clean_v2_step_2,
@@ -1881,8 +1881,8 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_preacher_curl_machine_clean_v2_step_1,
             koLabel = "상완 패드 고정",
             enLabel = "Fix upper arms",
-            koInstruction = "상완 패드 고정: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Control the fix upper arms phase with steady breathing and no bouncing."
+            koInstruction = "상완 패드 고정: 상완을 패드에 붙이고 손목이 꺾이지 않게 손잡이를 잡습니다.",
+            enInstruction = "Pin the upper arms to the pad and hold the handles with straight wrists."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_preacher_curl_machine_clean_v2_step_2,
@@ -1927,8 +1927,8 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_reverse_curl_clean_v2_step_1,
             koLabel = "손등 위 그립",
             enLabel = "Overhand grip",
-            koInstruction = "손등 위 그립: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to overhand grip and settle your breathing before the rep."
+            koInstruction = "손등 위 그립: 손등이 위를 향하게 바를 잡고 팔꿈치를 옆구리 가까이에 둡니다.",
+            enInstruction = "Grip the bar palms-down and keep elbows close to the ribs."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_reverse_curl_clean_v2_step_2,
@@ -1950,22 +1950,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_side_plank_clean_v2_step_1,
             koLabel = "팔꿈치 위치",
             enLabel = "Set elbow",
-            koInstruction = "팔꿈치 위치: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set elbow and settle your breathing before the rep."
+            koInstruction = "팔꿈치 위치: 팔꿈치를 어깨 바로 아래에 두고 옆으로 누워 다리를 길게 포갭니다.",
+            enInstruction = "Lie on your side with the elbow under the shoulder and legs stacked long."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_side_plank_clean_v2_step_2,
             koLabel = "골반 들어 일직선",
             enLabel = "Lift hips into line",
-            koInstruction = "골반 들어 일직선: 움직임을 작게 시작해 균형과 속도를 먼저 통제합니다.",
-            enInstruction = "Lift hips into line with steady tempo and keep the target muscle engaged."
+            koInstruction = "골반 들어 일직선: 팔꿈치와 발 옆면으로 바닥을 밀어 머리부터 발끝까지 긴 선을 만듭니다.",
+            enInstruction = "Press through the elbow and the sides of the feet to form a long head-to-heel line."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_side_plank_clean_v2_step_3,
             koLabel = "호흡 유지",
             enLabel = "Keep breathing",
-            koInstruction = "호흡 유지: 목과 허리에 과한 긴장이 들어가지 않게 안정적으로 유지합니다.",
-            enInstruction = "Control the keep breathing phase with steady breathing and no bouncing."
+            koInstruction = "호흡 유지: 골반이 뒤로 빠지거나 아래로 떨어지지 않게 버티며 천천히 호흡합니다.",
+            enInstruction = "Breathe slowly while keeping the hips from dropping or rotating backward."
         )
     ),
     "reverse_crunch" to listOf(
@@ -1973,22 +1973,22 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_reverse_crunch_clean_v2_step_1,
             koLabel = "누운 자세",
             enLabel = "Lie down",
-            koInstruction = "누운 자세: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Control the lie down phase with steady breathing and no bouncing."
+            koInstruction = "누운 자세: 매트에 누워 무릎을 굽히고 허리가 뜨지 않게 갈비뼈를 낮춥니다.",
+            enInstruction = "Lie on the mat with knees bent and ribs down so the lower back does not pop up."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_reverse_crunch_clean_v2_step_2,
             koLabel = "골반 말기",
             enLabel = "Curl pelvis",
-            koInstruction = "골반 말기: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Curl pelvis with steady tempo and keep the target muscle engaged."
+            koInstruction = "골반 말기: 복부 힘으로 골반을 말아 무릎이 가슴 쪽으로 가까워지게 합니다.",
+            enInstruction = "Use the abs to curl the pelvis so the knees move closer to the chest."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_reverse_crunch_clean_v2_step_3,
             koLabel = "반동 없이 하강",
             enLabel = "Lower without momentum",
-            koInstruction = "반동 없이 하강: 통증 없는 범위에서 천천히 움직이고 반동을 쓰지 않습니다.",
-            enInstruction = "Lower without momentum slowly, keep control, and stop before any painful range."
+            koInstruction = "반동 없이 하강: 허리가 튀어 오르지 않게 골반과 다리를 천천히 내려놓습니다.",
+            enInstruction = "Lower the pelvis and legs slowly without letting the lower back spring upward."
         )
     ),
     "cable_crunch" to listOf(
@@ -2171,29 +2171,29 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_battle_rope_clean_v2_step_1,
             koLabel = "스탠스 잡기",
             enLabel = "Set stance",
-            koInstruction = "스탠스 잡기: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to set stance and settle your breathing before the rep."
+            koInstruction = "스탠스 잡기: 무릎과 엉덩이를 살짝 굽히고 로프 끝을 양손으로 잡아 몸통을 낮춥니다.",
+            enInstruction = "Bend hips and knees slightly, hold the rope ends, and set a low athletic stance."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_battle_rope_clean_v2_step_2,
             koLabel = "몸통 고정",
             enLabel = "Brace torso",
-            koInstruction = "몸통 고정: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Use this phase to brace torso and settle your breathing before the rep."
+            koInstruction = "몸통 고정: 복부를 조여 어깨와 골반이 흔들리지 않게 하고 로프를 가볍게 긴장시킵니다.",
+            enInstruction = "Brace the torso so shoulders and hips stay quiet while the ropes stay lightly tensioned."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_battle_rope_clean_v2_step_3,
             koLabel = "팔 교대 웨이브",
             enLabel = "Alternate waves",
-            koInstruction = "팔 교대 웨이브: 목표 근육에 힘을 유지하고 몸통이 흔들리지 않게 움직입니다.",
-            enInstruction = "Control the alternate waves phase with steady breathing and no bouncing."
+            koInstruction = "팔 교대 웨이브: 한 손씩 빠르게 올리고 내려 로프 파형이 좌우로 교대되게 합니다.",
+            enInstruction = "Raise and lower one hand at a time so the rope waves alternate side to side."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_battle_rope_clean_v2_step_4,
             koLabel = "자세 유지 종료",
             enLabel = "Finish tall",
-            koInstruction = "자세 유지 종료: 장비와 몸의 기준점을 맞춘 뒤 호흡을 정리합니다.",
-            enInstruction = "Control the finish tall phase with steady breathing and no bouncing."
+            koInstruction = "자세 유지 종료: 마지막 파형까지 허리를 꺾지 않고 같은 낮은 자세를 유지합니다.",
+            enInstruction = "Keep the low stance through the final waves without arching the lower back."
         )
     ),
     "sled_push" to listOf(
