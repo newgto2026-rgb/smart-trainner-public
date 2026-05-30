@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Smart Trainer</string>
+    <string name="login_subtitle">Manage your weekly workout plan and set-by-set logs in one place.</string>
+    <string name="login_start_title">Start now</string>
+    <string name="login_start_detail">Start without signing in. Your records are saved on this device first.</string>
+    <string name="login_continue_default">Start</string>
+</resources>

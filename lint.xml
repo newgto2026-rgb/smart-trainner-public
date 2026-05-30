@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="ConvertToWebp">
+        <ignore path="app/src/main/res/drawable-mdpi/brand_launcher_symbol.png" />
+        <ignore path="app/src/main/res/drawable-hdpi/brand_launcher_symbol.png" />
+        <ignore path="app/src/main/res/drawable-xhdpi/brand_launcher_symbol.png" />
+        <ignore path="app/src/main/res/drawable-xxhdpi/brand_launcher_symbol.png" />
+        <ignore path="app/src/main/res/drawable-xxxhdpi/brand_launcher_symbol.png" />
+        <ignore path="core/designsystem/src/main/res/drawable-nodpi/brand_ai_runner_lockup.png" />
+        <ignore path="core/designsystem/src/main/res/drawable-nodpi/brand_ai_runner_symbol.png" />
+        <ignore path="core/designsystem/src/main/res/drawable-nodpi/brand_ai_runner_wordmark.png" />
+        <ignore regexp="feature/training/impl/src/main/res/drawable-nodpi/exercise_.*\.png" />
+    </issue>
+</lint>

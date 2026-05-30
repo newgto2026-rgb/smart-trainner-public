@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.SmartTrainner" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowSplashScreenBackground">#F6FAFC</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_empty_icon</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+    </style>
+</resources>

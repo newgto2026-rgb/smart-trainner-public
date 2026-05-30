@@ -1,0 +1,245 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="3100" viewBox="0 0 1800 3100">
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffcf7"/>
+      <stop offset="0.52" stop-color="#f3fbf6"/>
+      <stop offset="1" stop-color="#eef6fb"/>
+    </linearGradient>
+    <linearGradient id="deep" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#102f3a"/>
+      <stop offset="0.55" stop-color="#131d32"/>
+      <stop offset="1" stop-color="#30243a"/>
+    </linearGradient>
+    <linearGradient id="fire" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f05a44"/>
+      <stop offset="0.55" stop-color="#dc3f37"/>
+      <stop offset="1" stop-color="#b92f4a"/>
+    </linearGradient>
+    <linearGradient id="tealFire" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e04f42"/>
+      <stop offset="0.48" stop-color="#287e72"/>
+      <stop offset="1" stop-color="#e7b75f"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#10141f" flood-opacity="0.13"/>
+    </filter>
+    <style>
+      .pageTitle { font: 900 58px Arial, sans-serif; fill: #10141f; }
+      .pageSub { font: 600 25px Arial, sans-serif; fill: #687180; }
+      .no { font: 900 26px Arial, sans-serif; fill: #e04f42; }
+      .title { font: 900 34px Arial, sans-serif; fill: #10141f; }
+      .titleLight { font: 900 34px Arial, sans-serif; fill: #fffcf8; }
+      .desc { font: 600 20px Arial, sans-serif; fill: #687180; }
+      .descLight { font: 600 20px Arial, sans-serif; fill: #d5dce2; }
+      .brand { font: 900 43px Arial, sans-serif; fill: #10141f; }
+      .brandLight { font: 900 43px Arial, sans-serif; fill: #fffcf8; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="3100" fill="url(#page)"/>
+  <text x="70" y="94" class="pageTitle">Arm + Dumbbell Logo Samples</text>
+  <text x="70" y="140" class="pageSub">근육질 팔이 아령을 높이 드는 방향. 장난감 느낌을 줄이고 헬스 앱다운 힘과 신뢰감을 우선했습니다.</text>
+
+  <!-- shared icon recipe: dumbbell overhead + flexed arm silhouette -->
+
+  <!-- 01 -->
+  <g transform="translate(70 205)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#ffffff" stroke="#e1dad0" stroke-width="2"/>
+    <text x="36" y="58" class="no">01</text>
+    <text x="86" y="58" class="title">Classic Power Arm</text>
+    <text x="36" y="96" class="desc">가장 직관적인 헬스 앱 아이콘. 팔과 아령이 바로 읽힘.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="#10141f"/>
+      <rect x="47" y="27" width="94" height="16" rx="8" fill="#fffcf8"/>
+      <rect x="29" y="18" width="22" height="34" rx="9" fill="#e04f42"/>
+      <rect x="137" y="18" width="22" height="34" rx="9" fill="#287e72"/>
+      <rect x="82" y="42" width="26" height="20" rx="9" fill="#fffcf8"/>
+      <path d="M96 57 C120 74 124 105 108 131 C94 126 84 111 84 96 C84 78 88 65 96 57Z" fill="#e04f42"/>
+      <path d="M110 128 C99 163 56 166 36 136 C54 133 70 121 80 101 C90 109 101 119 110 128Z" fill="#e04f42"/>
+      <circle cx="53" cy="136" r="20" fill="#e04f42"/>
+      <path d="M94 72 C104 84 106 100 99 114" fill="none" stroke="#ffb1a5" stroke-width="7" stroke-linecap="round"/>
+    </g>
+    <text x="305" y="225" class="brand">Smart Trainner</text>
+    <text x="305" y="275" class="desc">추천 후보. 제일 단순하고 앱 아이콘으로 강함.</text>
+  </g>
+
+  <!-- 02 -->
+  <g transform="translate(940 205)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#ffffff" stroke="#e1dad0" stroke-width="2"/>
+    <text x="36" y="58" class="no">02</text>
+    <text x="86" y="58" class="title">Premium Line Arm</text>
+    <text x="36" y="96" class="desc">더 성숙한 라인형. 피트니스 스튜디오 브랜드 느낌.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="#fffcf8" stroke="#10141f" stroke-width="10"/>
+      <path d="M41 35 H147" stroke="#10141f" stroke-width="16" stroke-linecap="round"/>
+      <path d="M27 25 V47 M161 25 V47" stroke="#10141f" stroke-width="18" stroke-linecap="round"/>
+      <path d="M93 45 C119 66 123 100 108 129" fill="none" stroke="#10141f" stroke-width="22" stroke-linecap="round"/>
+      <path d="M109 129 C94 166 53 164 36 138" fill="none" stroke="#10141f" stroke-width="28" stroke-linecap="round"/>
+      <path d="M92 45 C111 62 113 90 102 111" fill="none" stroke="#e04f42" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="56" cy="137" r="10" fill="#287e72"/>
+    </g>
+    <text x="305" y="225" class="brand">Smart Trainner</text>
+    <text x="305" y="275" class="desc">고급스럽지만 작은 크기에서는 01보다 덜 강할 수 있음.</text>
+  </g>
+
+  <!-- 03 -->
+  <g transform="translate(70 765)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#10141f" stroke="#202838" stroke-width="2"/>
+    <text x="36" y="58" class="no">03</text>
+    <text x="86" y="58" class="titleLight">Gradient Lift</text>
+    <text x="36" y="96" class="descLight">스플래시에 잘 어울리는 강한 그라데이션 버전.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="url(#deep)"/>
+      <rect x="47" y="27" width="94" height="16" rx="8" fill="#fffcf8"/>
+      <rect x="29" y="18" width="22" height="34" rx="9" fill="#e7b75f"/>
+      <rect x="137" y="18" width="22" height="34" rx="9" fill="#e7b75f"/>
+      <rect x="82" y="42" width="26" height="20" rx="9" fill="#fffcf8"/>
+      <path d="M96 57 C120 74 124 105 108 131 C94 126 84 111 84 96 C84 78 88 65 96 57Z" fill="url(#fire)"/>
+      <path d="M110 128 C99 163 56 166 36 136 C54 133 70 121 80 101 C90 109 101 119 110 128Z" fill="url(#fire)"/>
+      <circle cx="53" cy="136" r="20" fill="#e04f42"/>
+      <path d="M118 119 L143 95" stroke="#287e72" stroke-width="13" stroke-linecap="round"/>
+    </g>
+    <text x="305" y="225" class="brandLight">Smart Trainner</text>
+    <text x="305" y="275" class="descLight">강한 인상. 다크 테마 면적은 앱 안에서 제한적으로 쓰는 게 좋음.</text>
+  </g>
+
+  <!-- 04 -->
+  <g transform="translate(940 765)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#ffffff" stroke="#e1dad0" stroke-width="2"/>
+    <text x="36" y="58" class="no">04</text>
+    <text x="86" y="58" class="title">Shield Lift</text>
+    <text x="36" y="96" class="desc">안전한 트레이닝/신뢰감을 더한 실드형.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="#fffcf8"/>
+      <path d="M94 17 L150 38 V86 C150 128 124 158 94 172 C64 158 38 128 38 86 V38Z" fill="#10141f"/>
+      <rect x="51" y="39" width="86" height="14" rx="7" fill="#fffcf8"/>
+      <rect x="35" y="31" width="20" height="30" rx="8" fill="#e04f42"/>
+      <rect x="133" y="31" width="20" height="30" rx="8" fill="#287e72"/>
+      <path d="M94 51 C113 70 115 99 104 121" fill="none" stroke="#fffcf8" stroke-width="18" stroke-linecap="round"/>
+      <path d="M103 120 C90 150 59 148 49 128" fill="none" stroke="#fffcf8" stroke-width="22" stroke-linecap="round"/>
+      <circle cx="62" cy="128" r="9" fill="#e7b75f"/>
+    </g>
+    <text x="305" y="225" class="brand">Smart Trainner</text>
+    <text x="305" y="275" class="desc">초보자 안전/트레이너 신뢰 메시지를 같이 가져감.</text>
+  </g>
+
+  <!-- 05 -->
+  <g transform="translate(70 1325)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#ffffff" stroke="#e1dad0" stroke-width="2"/>
+    <text x="36" y="58" class="no">05</text>
+    <text x="86" y="58" class="title">Circle Gym Badge</text>
+    <text x="36" y="96" class="desc">헬스장 배지처럼 보이는 원형 로고.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="#fffcf8"/>
+      <circle cx="94" cy="94" r="74" fill="#10141f"/>
+      <circle cx="94" cy="94" r="54" fill="#fffcf8"/>
+      <path d="M61 57 H127" stroke="#10141f" stroke-width="13" stroke-linecap="round"/>
+      <path d="M48 48 V66 M140 48 V66" stroke="#10141f" stroke-width="15" stroke-linecap="round"/>
+      <path d="M91 66 C109 81 111 104 101 124" fill="none" stroke="#e04f42" stroke-width="18" stroke-linecap="round"/>
+      <path d="M102 123 C88 148 60 146 49 128" fill="none" stroke="#287e72" stroke-width="22" stroke-linecap="round"/>
+      <circle cx="94" cy="94" r="7" fill="#e7b75f"/>
+    </g>
+    <text x="305" y="225" class="brand">Smart Trainner</text>
+    <text x="305" y="275" class="desc">브랜드 배지감은 좋지만 앱 아이콘 안에서는 조금 복잡함.</text>
+  </g>
+
+  <!-- 06 -->
+  <g transform="translate(940 1325)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#ffffff" stroke="#e1dad0" stroke-width="2"/>
+    <text x="36" y="58" class="no">06</text>
+    <text x="86" y="58" class="title">AI Plate Arm</text>
+    <text x="36" y="96" class="desc">작은 AI 노드만 얹은 팔+아령. 과하지 않은 스마트함.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="#10141f"/>
+      <rect x="47" y="29" width="94" height="14" rx="7" fill="#fffcf8"/>
+      <rect x="29" y="19" width="22" height="34" rx="9" fill="#e04f42"/>
+      <rect x="137" y="19" width="22" height="34" rx="9" fill="#287e72"/>
+      <path d="M96 57 C120 74 124 105 108 131 C94 126 84 111 84 96 C84 78 88 65 96 57Z" fill="#fffcf8"/>
+      <path d="M110 128 C99 163 56 166 36 136 C54 133 70 121 80 101 C90 109 101 119 110 128Z" fill="#fffcf8"/>
+      <circle cx="53" cy="136" r="20" fill="#fffcf8"/>
+      <path d="M121 110 L142 88" stroke="#e7b75f" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="146" cy="84" r="8" fill="#e7b75f"/>
+      <circle cx="74" cy="84" r="7" fill="#287e72"/>
+    </g>
+    <text x="305" y="225" class="brand">Smart Trainner</text>
+    <text x="305" y="275" class="desc">헬스 로고가 먼저 보이고 AI는 보조로 느껴짐.</text>
+  </g>
+
+  <!-- 07 -->
+  <g transform="translate(70 1885)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#10141f" stroke="#202838" stroke-width="2"/>
+    <text x="36" y="58" class="no">07</text>
+    <text x="86" y="58" class="titleLight">Hardcore Silhouette</text>
+    <text x="36" y="96" class="descLight">가장 헬스장다운 강한 실루엣.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="#0b0f18"/>
+      <path d="M37 35 H151" stroke="#fffcf8" stroke-width="18" stroke-linecap="round"/>
+      <path d="M20 23 V49 M168 23 V49" stroke="#fffcf8" stroke-width="21" stroke-linecap="round"/>
+      <path d="M93 48 C124 67 130 105 109 138" fill="none" stroke="#fffcf8" stroke-width="28" stroke-linecap="round"/>
+      <path d="M108 137 C92 176 47 169 30 140" fill="none" stroke="#fffcf8" stroke-width="34" stroke-linecap="round"/>
+      <path d="M108 137 C99 152 80 159 61 154" fill="none" stroke="#e04f42" stroke-width="9" stroke-linecap="round"/>
+    </g>
+    <text x="305" y="225" class="brandLight">Smart Trainner</text>
+    <text x="305" y="275" class="descLight">남성적/강한 인상. 초보 친화 톤과는 조절 필요.</text>
+  </g>
+
+  <!-- 08 -->
+  <g transform="translate(940 1885)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#ffffff" stroke="#e1dad0" stroke-width="2"/>
+    <text x="36" y="58" class="no">08</text>
+    <text x="86" y="58" class="title">Trainer App Icon</text>
+    <text x="36" y="96" class="desc">앱 아이콘 최적화. 굵은 형태 + 적은 디테일.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="url(#deep)"/>
+      <rect x="47" y="29" width="94" height="16" rx="8" fill="#e7b75f"/>
+      <rect x="29" y="18" width="22" height="36" rx="9" fill="#e7b75f"/>
+      <rect x="137" y="18" width="22" height="36" rx="9" fill="#e7b75f"/>
+      <path d="M96 57 C119 75 122 104 106 129 C93 125 84 111 84 96 C84 78 88 65 96 57Z" fill="#fffcf8"/>
+      <path d="M108 126 C98 160 58 164 37 136 C56 133 72 121 80 101 C89 109 99 118 108 126Z" fill="#fffcf8"/>
+      <circle cx="54" cy="135" r="18" fill="#fffcf8"/>
+      <path d="M129 121 H151" stroke="#287e72" stroke-width="13" stroke-linecap="round"/>
+      <circle cx="156" cy="121" r="9" fill="#287e72"/>
+    </g>
+    <text x="305" y="225" class="brand">Smart Trainner</text>
+    <text x="305" y="275" class="desc">내 추천. 세련되고 강하면서 앱 아이콘으로 안정적.</text>
+  </g>
+
+  <!-- 09 -->
+  <g transform="translate(70 2445)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#ffffff" stroke="#e1dad0" stroke-width="2"/>
+    <text x="36" y="58" class="no">09</text>
+    <text x="86" y="58" class="title">Motion Arm</text>
+    <text x="36" y="96" class="desc">팔이 올라가는 동작감을 더한 버전.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="#fffcf8"/>
+      <path d="M35 122 C54 96 75 77 98 52" fill="none" stroke="#e04f42" stroke-width="26" stroke-linecap="round"/>
+      <path d="M99 52 C121 72 124 104 106 130" fill="none" stroke="#287e72" stroke-width="24" stroke-linecap="round"/>
+      <path d="M106 130 C91 162 55 163 36 136" fill="none" stroke="#10141f" stroke-width="30" stroke-linecap="round"/>
+      <path d="M50 32 H145" stroke="#10141f" stroke-width="16" stroke-linecap="round"/>
+      <path d="M32 23 V49 M158 23 V49" stroke="#10141f" stroke-width="19" stroke-linecap="round"/>
+      <circle cx="126" cy="46" r="7" fill="#e7b75f"/>
+    </g>
+    <text x="305" y="225" class="brand">Smart Trainner</text>
+    <text x="305" y="275" class="desc">동적이고 젊은 느낌. 단순 아이콘보다는 캠페인/스플래시에 좋음.</text>
+  </g>
+
+  <!-- 10 -->
+  <g transform="translate(940 2445)" filter="url(#shadow)">
+    <rect width="790" height="500" rx="32" fill="#ffffff" stroke="#e1dad0" stroke-width="2"/>
+    <text x="36" y="58" class="no">10</text>
+    <text x="86" y="58" class="title">ST Power Mark</text>
+    <text x="36" y="96" class="desc">팔+아령에 S/T 이니셜을 살짝 결합.</text>
+    <g transform="translate(62 145)">
+      <rect width="188" height="188" rx="42" fill="#10141f"/>
+      <path d="M46 38 H142" stroke="#fffcf8" stroke-width="16" stroke-linecap="round"/>
+      <path d="M29 28 V50 M159 28 V50" stroke="#fffcf8" stroke-width="18" stroke-linecap="round"/>
+      <path d="M94 54 C120 74 124 104 108 130" fill="none" stroke="#e04f42" stroke-width="22" stroke-linecap="round"/>
+      <path d="M109 130 C94 164 56 165 36 137" fill="none" stroke="#e04f42" stroke-width="28" stroke-linecap="round"/>
+      <text x="61" y="148" font-family="Arial, sans-serif" font-size="58" font-weight="900" fill="#fffcf8">ST</text>
+      <rect x="118" y="103" width="25" height="10" rx="5" fill="#287e72"/>
+      <circle cx="148" cy="108" r="8" fill="#e7b75f"/>
+    </g>
+    <text x="305" y="225" class="brand">Smart Trainner</text>
+    <text x="305" y="275" class="desc">브랜드명 기억에는 좋지만 아이콘 안 정보가 약간 많음.</text>
+  </g>
+</svg>
