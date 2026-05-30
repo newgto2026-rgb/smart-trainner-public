@@ -160,12 +160,23 @@ class TrainingViewModel @Inject constructor(
         observeWeeklySummary(weekStart),
         observeExercises()
     ) { templates, routinePlan, logState, summary, exercises ->
+        val exercisesById = exercises.associateBy { it.id }
+        val recentLogs = logState.latestLogs
+            .sortedByDescending { it.performedAt }
+            .take(RECENT_WORKOUT_LOG_LIMIT)
+            .map { log ->
+                RecentWorkoutLogUiModel(
+                    log = log,
+                    exercise = exercisesById[log.exerciseId]
+                )
+            }
         TrainingDataState(
             templates = templates,
             plan = routinePlan.plan,
             routineProgress = routinePlan.routineProgress,
             logs = logState.weeklyLogs,
             latestLogs = logState.latestLogs,
+            recentLogs = recentLogs,
             summary = summary,
             exercises = exercises
         )
@@ -199,16 +210,6 @@ class TrainingViewModel @Inject constructor(
         val selectedPlanned = recordingPlanned
             ?: nextDayUi?.startExercise
             ?: data.plan.firstIncomplete(completedIds)
-        val exercisesById = data.exercises.associateBy { it.id }
-        val recentLogs = data.latestLogs
-            .sortedByDescending { it.performedAt }
-            .take(RECENT_WORKOUT_LOG_LIMIT)
-            .map { log ->
-                RecentWorkoutLogUiModel(
-                    log = log,
-                    exercise = exercisesById[log.exerciseId]
-                )
-            }
         TrainingUiState(
             routine = RoutineUiState(
                 templates = data.templates,
@@ -237,7 +238,7 @@ class TrainingViewModel @Inject constructor(
                 selectedExerciseId = control.selectedExerciseId
             ),
             analysis = AnalysisUiState(
-                recentLogs = recentLogs,
+                recentLogs = data.recentLogs,
                 summary = data.summary
             ),
             selectedExercise = selectedExercise,
@@ -765,6 +766,7 @@ class TrainingViewModel @Inject constructor(
         val routineProgress: RoutineProgress,
         val logs: List<com.smarttrainner.core.model.WorkoutLog>,
         val latestLogs: List<com.smarttrainner.core.model.WorkoutLog>,
+        val recentLogs: List<RecentWorkoutLogUiModel>,
         val summary: com.smarttrainner.core.model.WeeklySummary,
         val exercises: List<com.smarttrainner.core.model.Exercise>
     )
