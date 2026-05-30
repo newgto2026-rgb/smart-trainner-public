@@ -194,6 +194,50 @@ class TrainingViewModelRoutineTest {
     }
 
     @Test
+    fun uiState_exposesLatestThreeRecentLogs() = runTest {
+        val oldest = repository.completedLog(
+            dayIndex = 0,
+            performedAt = LocalDateTime.of(2026, 5, 21, 9, 0)
+        )
+        val secondLatest = repository.completedLog(
+            dayIndex = 1,
+            performedAt = LocalDateTime.of(2026, 5, 23, 9, 0)
+        )
+        val latest = repository.completedLog(
+            dayIndex = 2,
+            performedAt = LocalDateTime.of(2026, 5, 24, 9, 0)
+        )
+        val thirdLatest = repository.completedLog(
+            dayIndex = 3,
+            performedAt = LocalDateTime.of(2026, 5, 22, 9, 0)
+        )
+        repository.setLogs(emptyList())
+        repository.setLatestLogs(listOf(oldest, secondLatest, latest, thirdLatest))
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            val state = awaitItem()
+
+            assertThat(state.recentLogs.map { it.log.performedAt })
+                .containsExactly(
+                    latest.performedAt,
+                    secondLatest.performedAt,
+                    thirdLatest.performedAt
+                )
+                .inOrder()
+            assertThat(state.recentLogs.map { it.exercise?.id })
+                .containsExactly(
+                    latest.exerciseId,
+                    secondLatest.exerciseId,
+                    thirdLatest.exerciseId
+                )
+                .inOrder()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun showExerciseMethod_keepsPlanTabSelected() = runTest {
         val viewModel = viewModel()
 
@@ -804,14 +848,21 @@ private class FakeTrainingRepository : TrainingRepository {
         )
     )
     private val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
+    private val latestLogs = MutableStateFlow<List<WorkoutLog>>(emptyList())
 
     fun reset() {
         progress.value = RoutineProgress(template.id, 0, null, null)
         logs.value = emptyList()
+        latestLogs.value = emptyList()
     }
 
     fun setLogs(value: List<WorkoutLog>) {
         logs.value = value
+        latestLogs.value = value
+    }
+
+    fun setLatestLogs(value: List<WorkoutLog>) {
+        latestLogs.value = value
     }
 
     fun plannedExercise(dayIndex: Int, exerciseIndex: Int = 0): PlannedExercise =
@@ -853,7 +904,7 @@ private class FakeTrainingRepository : TrainingRepository {
 
     override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = logs
 
-    override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
+    override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
 
     override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> = MutableStateFlow(
         WeeklySummary(

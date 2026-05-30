@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.smarttrainner.app.MainActivity
@@ -201,7 +202,8 @@ class TrainingUiTest {
             composeRule.onAllNodesWithTag("training_next_routine_day_1").fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.onNodeWithTag("training_next_routine_day_1").assertIsDisplayed()
-        composeRule.onNodeWithTag("training_complete_routine_day").performClick()
+        scrollToNodeWithTag("training_complete_routine_day")
+        composeRule.onNodeWithTag("training_complete_routine_day").assertIsDisplayed().performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_next_routine_day_2").fetchSemanticsNodes().isNotEmpty()
         }
@@ -224,8 +226,7 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_custom_focus_none").assertIsDisplayed()
         composeRule.onAllNodesWithTag("training_custom_focus_FULL_BODY").assertCountEquals(0)
 
-        composeRule.onNodeWithTag("training_custom_routine_name").performTextClearance()
-        composeRule.onNodeWithTag("training_custom_routine_name").performTextInput("My 4 Day Split")
+        composeRule.onNodeWithTag("training_custom_routine_name").performTextReplacement("My 4 Day Split")
         composeRule.onNodeWithTag("training_custom_routine_name").performImeAction()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("training_custom_focus_CHEST").performClick()
@@ -332,7 +333,8 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_next_routine_day_1").assertIsDisplayed()
         composeRule.onNodeWithTag("training_next_routine_focus_CHEST").assertIsDisplayed()
         composeRule.onAllNodesWithTag("training_next_routine_time_estimate").assertCountEquals(0)
-        composeRule.onNodeWithTag("training_complete_routine_day").performClick()
+        scrollToNodeWithTag("training_complete_routine_day")
+        composeRule.onNodeWithTag("training_complete_routine_day").assertIsDisplayed().performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_next_routine_day_2").fetchSemanticsNodes().isNotEmpty()
         }

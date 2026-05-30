@@ -13,8 +13,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -154,6 +155,7 @@ internal fun NextRoutineDayCard(
                     .fillMaxWidth()
                     .height(8.dp)
             )
+            RoutineDayBadgeRow(routineDay)
             Text(
                 text = stringResource(
                     R.string.training_routine_completed_progress,
@@ -178,9 +180,10 @@ internal fun NextRoutineDayCard(
                         items = focusItems,
                         maxItemsPerRow = 4
                     ) { focus ->
-                        AssistChip(
-                            onClick = {},
-                            label = { Text(focus.localizedShortLabel()) },
+                        TrainingBadge(
+                            text = focus.localizedShortLabel(),
+                            containerColor = SmartTrainnerColors.CoralSoft,
+                            contentColor = SmartTrainnerColors.Ink,
                             modifier = Modifier.testTag("training_next_routine_focus_${focus.name}")
                         )
                     }
@@ -234,4 +237,35 @@ internal fun NextRoutineDayCard(
             }
         }
     }
+}
+
+@Composable
+internal fun RoutineDayBadgeRow(routineDay: NextRoutineDayUiModel) {
+    TrainingBadgeRow(
+        badges = listOf(
+            TrainingBadgeSpec(
+                text = stringResource(R.string.training_routine_badge_duration, routineDay.sessionMinutes),
+                icon = Icons.Default.Timer,
+                containerColor = SmartTrainnerColors.CoralSoft,
+                contentColor = SmartTrainnerColors.Ink,
+                testTag = "training_next_routine_badge_duration"
+            ),
+            TrainingBadgeSpec(
+                text = stringResource(R.string.training_routine_badge_exercises, routineDay.totalExerciseCount),
+                icon = Icons.Default.FitnessCenter,
+                containerColor = SmartTrainnerColors.GreenSoft,
+                contentColor = SmartTrainnerColors.Ink,
+                testTag = "training_next_routine_badge_exercises"
+            ),
+            TrainingBadgeSpec(
+                text = stringResource(R.string.training_routine_badge_recovery, routineDay.minRecoveryHours),
+                icon = Icons.Default.DateRange,
+                containerColor = SmartTrainnerColors.AmberSoft,
+                contentColor = SmartTrainnerColors.Ink,
+                testTag = "training_next_routine_badge_recovery"
+            )
+        ),
+        maxItemsPerRow = 3,
+        modifier = Modifier.testTag("training_next_routine_badges")
+    )
 }
