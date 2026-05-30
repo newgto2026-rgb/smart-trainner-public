@@ -36,7 +36,6 @@ android {
 
 dependencies {
     implementation(project(":feature:training:api"))
-    implementation(project(":feature:analysis:api"))
     implementation(project(":feature:exercise:api"))
     implementation(project(":feature:routine:api"))
     implementation(project(":feature:workout:api"))

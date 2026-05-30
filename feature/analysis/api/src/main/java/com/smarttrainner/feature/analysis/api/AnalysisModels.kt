@@ -7,6 +7,9 @@ import com.smarttrainner.core.model.WorkoutLog
 
 interface AnalysisFeatureEntry {
     @Composable
+    fun Route()
+
+    @Composable
     fun Content(state: AnalysisUiState)
 }
 

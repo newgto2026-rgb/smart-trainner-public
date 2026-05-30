@@ -10,7 +10,6 @@ import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObservePlanTemplatesUseCase
 import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
-import com.smarttrainner.core.domain.ObserveWeeklySummaryUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.RecommendRoutineUseCase
 import com.smarttrainner.core.domain.ResolveRoutineCycleCompletionUseCase
@@ -190,50 +189,6 @@ class TrainingViewModelRoutineTest {
             assertThat(state.completedPlannedExerciseIds).isEmpty()
             assertThat(state.nextRoutineDayUi?.completedExerciseCount).isEqualTo(0)
             assertThat(state.nextRoutineDayUi?.startExercise?.id).isEqualTo(repository.plannedExercise(0).id)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun uiState_exposesLatestThreeRecentLogs() = runTest {
-        val oldest = repository.completedLog(
-            dayIndex = 0,
-            performedAt = LocalDateTime.of(2026, 5, 21, 9, 0)
-        )
-        val secondLatest = repository.completedLog(
-            dayIndex = 1,
-            performedAt = LocalDateTime.of(2026, 5, 23, 9, 0)
-        )
-        val latest = repository.completedLog(
-            dayIndex = 2,
-            performedAt = LocalDateTime.of(2026, 5, 24, 9, 0)
-        )
-        val thirdLatest = repository.completedLog(
-            dayIndex = 3,
-            performedAt = LocalDateTime.of(2026, 5, 22, 9, 0)
-        )
-        repository.setLogs(emptyList())
-        repository.setLatestLogs(listOf(oldest, secondLatest, latest, thirdLatest))
-        val viewModel = viewModel()
-
-        viewModel.uiState.test {
-            skipItems(1)
-            val state = awaitItem()
-
-            assertThat(state.recentLogs.map { it.log.performedAt })
-                .containsExactly(
-                    latest.performedAt,
-                    secondLatest.performedAt,
-                    thirdLatest.performedAt
-                )
-                .inOrder()
-            assertThat(state.recentLogs.map { it.exercise?.id })
-                .containsExactly(
-                    latest.exerciseId,
-                    secondLatest.exerciseId,
-                    thirdLatest.exerciseId
-                )
-                .inOrder()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -756,7 +711,6 @@ class TrainingViewModelRoutineTest {
         observeRoutineProgress = ObserveRoutineProgressUseCase(repository),
         observeWorkoutLogs = ObserveWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
-        observeWeeklySummary = ObserveWeeklySummaryUseCase(repository),
         getLatestWorkoutLog = GetLatestWorkoutLogUseCase(repository),
         recommendRoutine = RecommendRoutineUseCase(),
         resolveRoutineCycleCompletion = ResolveRoutineCycleCompletionUseCase(),

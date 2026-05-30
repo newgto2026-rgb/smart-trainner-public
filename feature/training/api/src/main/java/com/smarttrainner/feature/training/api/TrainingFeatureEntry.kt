@@ -11,7 +11,4 @@ interface TrainingFeatureEntry {
 
     @Composable
     fun Exercises()
-
-    @Composable
-    fun Analysis()
 }

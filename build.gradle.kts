@@ -55,7 +55,6 @@ val checkModuleBoundaries by tasks.registering {
             ":feature:routine:impl" to ":feature:exercise:api",
             ":feature:workout:api" to ":feature:exercise:api",
             ":feature:workout:impl" to ":feature:exercise:api",
-            ":feature:training:impl" to ":feature:analysis:api",
             ":feature:training:impl" to ":feature:exercise:api",
             ":feature:training:impl" to ":feature:routine:api",
             ":feature:training:impl" to ":feature:workout:api"

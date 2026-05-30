@@ -281,7 +281,6 @@ Current transitional allowlist:
 - `:feature:routine:impl -> :feature:exercise:api`
 - `:feature:workout:api -> :feature:exercise:api`
 - `:feature:workout:impl -> :feature:exercise:api`
-- `:feature:training:impl -> :feature:analysis:api`
 - `:feature:training:impl -> :feature:exercise:api`
 - `:feature:training:impl -> :feature:routine:api`
 - `:feature:training:impl -> :feature:workout:api`
@@ -292,13 +291,31 @@ Next PR scope:
 - Decide whether exercise media should remain an exercise feature service consumed through app composition, or move to a neutral core presentation contract that does not make routine/workout APIs depend on exercise API.
 - Add a failing guard once the transitional allowlist is empty.
 
+## Phase 16: Analysis State Ownership
+
+Status: stacked after Phase 15 on `codex/modularization-analysis-viewmodel`.
+
+Move the analysis tab from training-coordinated state to a feature-owned route and ViewModel. This is the first destination where app directly routes to a feature entry instead of going through the broad training facade.
+
+First PR scope:
+
+- Add `AnalysisFeatureEntry.Route()` and an `AnalysisViewModel` in `:feature:analysis:impl`.
+- Have app inject `AnalysisFeatureEntry` directly and render the analysis destination through that entry.
+- Remove analysis state construction from `TrainingViewModel` and `TrainingUiState`.
+- Remove `:feature:training:impl -> :feature:analysis:api` from dependencies and the transitional allowlist.
+
+Next PR scope:
+
+- Repeat the feature-owned route/ViewModel pattern for exercise catalog or routine, depending on which can be separated from workout recording with the smallest coordination surface.
+- Continue moving feature entry injection into app as each destination stops requiring the training coordinator.
+
 ## Strict Feature Isolation Audit
 
 Current state is not strict feature ignorance:
 
 - `:feature:routine:api` knows `:feature:exercise:api` through `ExerciseMediaFeatureEntry`.
 - `:feature:workout:api` knows `:feature:exercise:api` through `ExerciseMediaFeatureEntry`.
-- `:feature:training:impl` knows all feature APIs while it remains the temporary coordinator.
+- `:feature:training:impl` still knows exercise, routine, and workout APIs while it remains the temporary coordinator.
 - `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
 
 Current guardrails still enforce the important lower-level boundary:

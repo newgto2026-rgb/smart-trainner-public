@@ -51,6 +51,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:network"))
+    implementation(project(":feature:analysis:api"))
     implementation(project(":feature:analysis:entry"))
     implementation(project(":feature:exercise:entry"))
     implementation(project(":feature:routine:entry"))

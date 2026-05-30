@@ -29,10 +29,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.training.api.TrainingFeatureEntry
 
 @Composable
 fun SmartTrainnerMainScreen(
+    analysisFeatureEntry: AnalysisFeatureEntry,
     trainingFeatureEntry: TrainingFeatureEntry
 ) {
     val navController = rememberNavController()
@@ -69,7 +71,7 @@ fun SmartTrainnerMainScreen(
                         SmartTrainnerDestination.Home -> trainingFeatureEntry.Home()
                         SmartTrainnerDestination.Routine -> trainingFeatureEntry.Routine()
                         SmartTrainnerDestination.Exercises -> trainingFeatureEntry.Exercises()
-                        SmartTrainnerDestination.Analysis -> trainingFeatureEntry.Analysis()
+                        SmartTrainnerDestination.Analysis -> analysisFeatureEntry.Route()
                     }
                 }
             }

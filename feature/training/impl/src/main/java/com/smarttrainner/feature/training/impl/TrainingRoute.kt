@@ -177,7 +177,6 @@ private fun TrainingScreen(
     val recordingPlannedExercise = state.recordingPlannedExercise
     val routineState = state.routine
     val exerciseCatalogState = state.exerciseCatalog
-    val analysisState = state.analysis
     val workoutRecordingState = state.workoutRecording
     val routineActions = remember(
         onTemplateSelected,

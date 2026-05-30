@@ -1,7 +1,6 @@
 package com.smarttrainner.feature.training.impl
 
 import androidx.compose.runtime.Composable
-import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseMediaFeatureEntry
@@ -11,7 +10,6 @@ import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 import javax.inject.Inject
 
 class TrainingFeatureEntryImpl @Inject constructor(
-    private val analysisFeatureEntry: AnalysisFeatureEntry,
     private val exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     private val exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     private val exerciseMediaFeatureEntry: ExerciseMediaFeatureEntry,
@@ -66,20 +64,6 @@ class TrainingFeatureEntryImpl @Inject constructor(
                     state = state.exerciseCatalog,
                     actions = exerciseCatalogActions
                 )
-            }
-        }
-    }
-
-    @Composable
-    override fun Analysis() {
-        TrainingRoute(
-            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-            exerciseMediaFeatureEntry = exerciseMediaFeatureEntry,
-            routineFeatureEntry = routineFeatureEntry,
-            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-        ) { state, _, _ ->
-            item {
-                analysisFeatureEntry.Content(state.analysis)
             }
         }
     }

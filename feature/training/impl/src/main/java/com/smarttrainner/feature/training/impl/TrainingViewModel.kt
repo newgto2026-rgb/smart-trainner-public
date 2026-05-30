@@ -9,7 +9,6 @@ import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObservePlanTemplatesUseCase
 import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
-import com.smarttrainner.core.domain.ObserveWeeklySummaryUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.RecommendRoutineUseCase
 import com.smarttrainner.core.domain.ResolveRoutineCycleCompletionUseCase
@@ -26,8 +25,6 @@ import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogInput
-import com.smarttrainner.feature.analysis.api.AnalysisUiState
-import com.smarttrainner.feature.analysis.api.RecentWorkoutLogUiModel
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
 import com.smarttrainner.feature.routine.api.CustomRoutineDayFormState
@@ -62,7 +59,6 @@ class TrainingViewModel @Inject constructor(
     observeRoutineProgress: ObserveRoutineProgressUseCase,
     observeWorkoutLogs: ObserveWorkoutLogsUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
-    observeWeeklySummary: ObserveWeeklySummaryUseCase,
     private val getLatestWorkoutLog: GetLatestWorkoutLogUseCase,
     private val recommendRoutine: RecommendRoutineUseCase,
     private val resolveRoutineCycleCompletion: ResolveRoutineCycleCompletionUseCase,
@@ -161,27 +157,14 @@ class TrainingViewModel @Inject constructor(
         observePlanTemplates(),
         routinePlanState,
         logState,
-        observeWeeklySummary(weekStart),
         observeExercises()
-    ) { templates, routinePlan, logState, summary, exercises ->
-        val exercisesById = exercises.associateBy { it.id }
-        val recentLogs = logState.latestLogs
-            .sortedByDescending { it.performedAt }
-            .take(RECENT_WORKOUT_LOG_LIMIT)
-            .map { log ->
-                RecentWorkoutLogUiModel(
-                    log = log,
-                    exercise = exercisesById[log.exerciseId]
-                )
-            }
+    ) { templates, routinePlan, logState, exercises ->
         TrainingDataState(
             templates = templates,
             plan = routinePlan.plan,
             routineProgress = routinePlan.routineProgress,
             logs = logState.weeklyLogs,
             latestLogs = logState.latestLogs,
-            recentLogs = recentLogs,
-            summary = summary,
             exercises = exercises
         )
     }
@@ -241,10 +224,6 @@ class TrainingViewModel @Inject constructor(
                 exercises = data.exercises,
                 latestWorkoutLogs = data.latestLogs,
                 selectedExerciseId = control.selectedExerciseId
-            ),
-            analysis = AnalysisUiState(
-                recentLogs = data.recentLogs,
-                summary = data.summary
             ),
             workoutRecording = WorkoutRecordingUiState(
                 recordingPlannedExercise = recordingPlanned,
@@ -775,8 +754,6 @@ class TrainingViewModel @Inject constructor(
         val routineProgress: RoutineProgress,
         val logs: List<com.smarttrainner.core.model.WorkoutLog>,
         val latestLogs: List<com.smarttrainner.core.model.WorkoutLog>,
-        val recentLogs: List<RecentWorkoutLogUiModel>,
-        val summary: com.smarttrainner.core.model.WeeklySummary,
         val exercises: List<com.smarttrainner.core.model.Exercise>
     )
 
@@ -816,5 +793,3 @@ class TrainingViewModel @Inject constructor(
         val showRecommendations: Boolean
     )
 }
-
-private const val RECENT_WORKOUT_LOG_LIMIT = 3

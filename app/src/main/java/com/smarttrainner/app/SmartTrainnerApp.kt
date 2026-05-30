@@ -49,11 +49,13 @@ import com.smarttrainner.core.designsystem.SmartTrainnerBrandSplashImage
 import com.smarttrainner.core.designsystem.SmartTrainnerBrandWordmarkImage
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
+import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.training.api.TrainingFeatureEntry
 import kotlinx.coroutines.delay
 
 @Composable
 fun SmartTrainnerApp(
+    analysisFeatureEntry: AnalysisFeatureEntry,
     trainingFeatureEntry: TrainingFeatureEntry,
     viewModel: SmartTrainnerAppViewModel = hiltViewModel()
 ) {
@@ -73,7 +75,10 @@ fun SmartTrainnerApp(
         state.activeSession == null -> LoginScreen(
             onContinueDefaultSession = viewModel::continueWithDefaultSession
         )
-        else -> SmartTrainnerMainScreen(trainingFeatureEntry = trainingFeatureEntry)
+        else -> SmartTrainnerMainScreen(
+            analysisFeatureEntry = analysisFeatureEntry,
+            trainingFeatureEntry = trainingFeatureEntry
+        )
     }
 }
 

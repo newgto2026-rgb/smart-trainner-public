@@ -15,6 +15,7 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -31,6 +32,7 @@ dependencies {
     kapt(libs.hilt.compiler)
 
     androidTestImplementation(libs.androidx.test.runner)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
 
 kapt {
