@@ -275,11 +275,9 @@ First PR scope:
 - Keep direct feature implementation and entry dependencies blocked.
 - Document that each allowlisted edge needs an owner-removal plan before strict feature isolation is complete.
 
-Current transitional allowlist after Phase 17:
+Current transitional allowlist after Phase 18:
 
-- `:feature:training:impl -> :feature:exercise:api`
-- `:feature:training:impl -> :feature:routine:api`
-- `:feature:training:impl -> :feature:workout:api`
+- Empty. New cross-feature API dependencies fail `checkModuleBoundaries`.
 
 Next PR scope:
 
@@ -320,15 +318,36 @@ First PR scope:
 
 Next PR scope:
 
-- Move the exercise catalog destination to an exercise-owned route/ViewModel only after the app can coordinate recording/detail flows without routing through training.
-- Continue reducing the remaining `:feature:training:impl` allowlist entries by moving destination state ownership out of the temporary training coordinator.
+- Split the app-owned training coordinator into feature-owned route/ViewModels now that feature modules no longer depend on each other.
+- Move Hilt feature-entry bindings into an app-owned composition root if the entry modules become unnecessary.
+
+## Phase 18: App-Owned Training Coordinator
+
+Status: stacked after Phase 17 on `codex/modularization-app-training-coordinator`.
+
+Remove `:feature:training:*` as a feature module because it was no longer a cohesive feature. Its remaining responsibility was cross-feature orchestration for home/routine/exercises and workout recording. That responsibility now lives in `:app`, which is allowed to know feature contracts as the routing and composition control tower.
+
+First PR scope:
+
+- Move the temporary `TrainingViewModel`, coordinator routes, mappers, resources, and unit tests from `:feature:training:impl` into `:app`.
+- Remove `:feature:training:api`, `:feature:training:entry`, and `:feature:training:impl` from Gradle settings and app dependencies.
+- Inject exercise, routine, workout, and analysis feature entries directly in `MainActivity`.
+- Render home/routine/exercises through app-owned coordinator route functions instead of a broad `TrainingFeatureEntry` facade.
+- Empty the cross-feature API dependency allowlist.
+
+Next PR scope:
+
+- Move exercise catalog/detail state from the app coordinator into `:feature:exercise:impl`.
+- Move routine state and custom routine state from the app coordinator into `:feature:routine:impl`.
+- Move workout recording save/prefill state from the app coordinator into `:feature:workout:impl`.
 
 ## Strict Feature Isolation Audit
 
-Current state is not strict feature ignorance:
+Current state is strict at the feature-module dependency level, but not yet strict at the state-ownership level:
 
-- `:feature:routine:*` and `:feature:workout:*` no longer know `:feature:exercise:api` for exercise media; they depend on `:core:ui`'s renderer port.
-- `:feature:training:impl` still knows exercise, routine, and workout APIs while it remains the temporary coordinator.
+- `:feature:analysis`, `:feature:exercise`, `:feature:routine`, and `:feature:workout` no longer depend on another feature's API, implementation, or entry module.
+- `:app` knows the feature APIs and entries because it owns routing and temporary cross-feature composition.
+- The temporary `TrainingViewModel` is now app-owned and still coordinates exercise, routine, and workout state; this must be split into feature-owned ViewModels before the architecture is fully modular.
 - `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
 
 Current guardrails still enforce the important lower-level boundary:

@@ -50,11 +50,7 @@ val checkModuleBoundaries by tasks.registering {
         fun isFeatureImpl(path: String) = isFeature(path) && path.endsWith(":impl")
         fun featureName(path: String) = path.split(":").getOrNull(2)
 
-        val allowedCrossFeatureApiDependencies = setOf(
-            ":feature:training:impl" to ":feature:exercise:api",
-            ":feature:training:impl" to ":feature:routine:api",
-            ":feature:training:impl" to ":feature:workout:api"
-        )
+        val allowedCrossFeatureApiDependencies = emptySet<Pair<String, String>>()
         val allProjectPaths = allprojects.map { it.path }.toSet()
         val invalidAllowlistPaths = allowedCrossFeatureApiDependencies
             .flatMap { (source, target) -> listOf(source, target) }

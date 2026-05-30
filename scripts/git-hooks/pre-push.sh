@@ -118,16 +118,12 @@ if [ "$should_run_lint" -eq 1 ]; then
             ;;
         esac
         ;;
-      feature/training/api/*)
-        add_lint_task ":feature:training:api:lintDebug"
+      feature/*/api/*|feature/*/entry/*|feature/*/impl/*)
+        feature_module="$(printf "%s" "$changed_file" | cut -d/ -f2)"
+        feature_layer="$(printf "%s" "$changed_file" | cut -d/ -f3)"
+        add_lint_task ":feature:${feature_module}:${feature_layer}:lintDebug"
         ;;
-      feature/training/entry/*)
-        add_lint_task ":feature:training:entry:lintDebug"
-        ;;
-      feature/training/impl/*)
-        add_lint_task ":feature:training:impl:lintDebug"
-        ;;
-      feature/training/*)
+      feature/*)
         should_run_full_lint=1
         ;;
       AGENTS.md|docs/agent/*|docs/agent/*/*|docs/ai-rework/*|docs/ai-rework/*/*)

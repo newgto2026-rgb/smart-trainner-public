@@ -29,13 +29,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
+import com.smarttrainner.app.training.TrainingExercisesRoute
+import com.smarttrainner.app.training.TrainingHomeRoute
+import com.smarttrainner.app.training.TrainingRoutineRoute
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
-import com.smarttrainner.feature.training.api.TrainingFeatureEntry
+import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
+import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
+import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
+import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 
 @Composable
 fun SmartTrainnerMainScreen(
     analysisFeatureEntry: AnalysisFeatureEntry,
-    trainingFeatureEntry: TrainingFeatureEntry
+    exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
+    exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
+    exerciseMediaRenderer: ExerciseMediaRenderer,
+    routineFeatureEntry: RoutineFeatureEntry,
+    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
     val navController = rememberNavController()
     val destinations = SmartTrainnerDestination.entries
@@ -68,9 +79,25 @@ fun SmartTrainnerMainScreen(
             destinations.forEach { destination ->
                 composable(destination.route) {
                     when (destination) {
-                        SmartTrainnerDestination.Home -> trainingFeatureEntry.Home()
-                        SmartTrainnerDestination.Routine -> trainingFeatureEntry.Routine()
-                        SmartTrainnerDestination.Exercises -> trainingFeatureEntry.Exercises()
+                        SmartTrainnerDestination.Home -> TrainingHomeRoute(
+                            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                            exerciseMediaRenderer = exerciseMediaRenderer,
+                            routineFeatureEntry = routineFeatureEntry,
+                            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+                        )
+                        SmartTrainnerDestination.Routine -> TrainingRoutineRoute(
+                            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                            exerciseMediaRenderer = exerciseMediaRenderer,
+                            routineFeatureEntry = routineFeatureEntry,
+                            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+                        )
+                        SmartTrainnerDestination.Exercises -> TrainingExercisesRoute(
+                            exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
+                            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                            exerciseMediaRenderer = exerciseMediaRenderer,
+                            routineFeatureEntry = routineFeatureEntry,
+                            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+                        )
                         SmartTrainnerDestination.Analysis -> analysisFeatureEntry.Route()
                     }
                 }

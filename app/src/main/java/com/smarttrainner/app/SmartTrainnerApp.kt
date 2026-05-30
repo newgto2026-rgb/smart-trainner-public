@@ -49,14 +49,22 @@ import com.smarttrainner.core.designsystem.SmartTrainnerBrandSplashImage
 import com.smarttrainner.core.designsystem.SmartTrainnerBrandWordmarkImage
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
-import com.smarttrainner.feature.training.api.TrainingFeatureEntry
+import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
+import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
+import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
+import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 import kotlinx.coroutines.delay
 
 @Composable
 fun SmartTrainnerApp(
     analysisFeatureEntry: AnalysisFeatureEntry,
-    trainingFeatureEntry: TrainingFeatureEntry,
+    exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
+    exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
+    exerciseMediaRenderer: ExerciseMediaRenderer,
+    routineFeatureEntry: RoutineFeatureEntry,
+    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     viewModel: SmartTrainnerAppViewModel = hiltViewModel()
 ) {
     var showSplash by rememberSaveable { mutableStateOf(true) }
@@ -77,7 +85,11 @@ fun SmartTrainnerApp(
         )
         else -> SmartTrainnerMainScreen(
             analysisFeatureEntry = analysisFeatureEntry,
-            trainingFeatureEntry = trainingFeatureEntry
+            exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
+            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+            exerciseMediaRenderer = exerciseMediaRenderer,
+            routineFeatureEntry = routineFeatureEntry,
+            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
         )
     }
 }
