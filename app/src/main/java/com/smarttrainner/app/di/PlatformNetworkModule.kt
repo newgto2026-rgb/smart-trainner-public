@@ -1,5 +1,6 @@
-package com.smarttrainner.core.network
+package com.smarttrainner.app.di
 
+import com.smarttrainner.core.network.SmartTrainnerApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +15,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 @Module
 @InstallIn(SingletonComponent::class)
-object NetworkModule {
+object PlatformNetworkModule {
     @Provides
     @Singleton
     fun provideJson(): Json = Json {
@@ -39,7 +40,7 @@ object NetworkModule {
         client: OkHttpClient,
         json: Json
     ): SmartTrainnerApi = Retrofit.Builder()
-        .baseUrl(BuildConfig.SMART_TRAINNER_SERVER_BASE_URL)
+        .baseUrl(com.smarttrainner.core.network.BuildConfig.SMART_TRAINNER_SERVER_BASE_URL)
         .client(client)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()

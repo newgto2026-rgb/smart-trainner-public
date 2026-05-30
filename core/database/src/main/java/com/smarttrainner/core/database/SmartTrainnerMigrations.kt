@@ -1,37 +1,9 @@
 package com.smarttrainner.core.database
 
-import android.content.Context
-import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 
-@Module
-@InstallIn(SingletonComponent::class)
-object DatabaseModule {
-    @Provides
-    @Singleton
-    fun provideDatabase(
-        @ApplicationContext context: Context
-    ): SmartTrainnerDatabase = Room.databaseBuilder(
-        context,
-        SmartTrainnerDatabase::class.java,
-        "smart_trainner.db"
-    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
-
-    @Provides
-    fun provideWorkoutLogDao(database: SmartTrainnerDatabase): WorkoutLogDao =
-        database.workoutLogDao()
-
-    @Provides
-    fun provideCustomRoutineDao(database: SmartTrainnerDatabase): CustomRoutineDao =
-        database.customRoutineDao()
-
+object SmartTrainnerMigrations {
     private val MIGRATION_1_2 = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -152,4 +124,6 @@ object DatabaseModule {
             db.execSQL("ALTER TABLE `workout_set_logs` ADD COLUMN `restSeconds` INTEGER")
         }
     }
+
+    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
 }

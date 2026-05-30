@@ -2,8 +2,6 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.hilt.android)
-    alias(libs.plugins.kotlin.kapt)
 }
 
 val serverBaseUrlProperty = providers.gradleProperty("smarttrainner.serverBaseUrl")
@@ -51,22 +49,12 @@ android {
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
     implementation(libs.retrofit)
-    implementation(libs.retrofit.kotlinx.serialization)
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
 
     androidTestImplementation(libs.androidx.test.runner)
-}
-
-kapt {
-    correctErrorTypes = true
 }
 
 tasks.matching { it.name == "preReleaseBuild" }.configureEach {

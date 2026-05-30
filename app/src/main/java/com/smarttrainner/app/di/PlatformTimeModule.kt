@@ -1,4 +1,4 @@
-package com.smarttrainner.core.datastore
+package com.smarttrainner.app.di
 
 import dagger.Module
 import dagger.Provides
@@ -9,7 +9,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object TimeModule {
+object PlatformTimeModule {
     @Provides
     @Singleton
     fun provideClock(): Clock = Clock.systemUTC()

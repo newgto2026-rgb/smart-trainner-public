@@ -24,6 +24,13 @@ val checkModuleBoundaries by tasks.registering {
     val appMainKotlinSources = layout.projectDirectory.dir("app/src/main").asFileTree.matching {
         include("**/*.kt")
     }
+    val productionKotlinSources = files(
+        allprojects.map { project ->
+            project.layout.projectDirectory.dir("src/main").asFileTree.matching {
+                include("**/*.kt")
+            }
+        }
+    )
     val projectEdges = providers.provider {
         allprojects.flatMap { sourceProject ->
             sourceProject.configurations
@@ -41,6 +48,8 @@ val checkModuleBoundaries by tasks.registering {
     inputs.property("projectEdges", projectEdges)
     inputs.files(appMainKotlinSources)
         .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(productionKotlinSources)
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 
     doLast {
         val implementationCoreModules = setOf(
@@ -57,6 +66,7 @@ val checkModuleBoundaries by tasks.registering {
         fun featureName(path: String) = path.split(":").getOrNull(2)
 
         val allowedCrossFeatureApiDependencies = emptySet<Pair<String, String>>()
+        val allowedFeaturePrivateModules = emptySet<String>()
         val allowedAppFeatureImplDependencies = setOf(
             ":app" to ":feature:analysis:impl",
             ":app" to ":feature:exercise:impl",
@@ -74,6 +84,22 @@ val checkModuleBoundaries by tasks.registering {
             throw GradleException(
                 "Module boundary allowlists contain stale or invalid project paths: " +
                     invalidAllowlistPaths.joinToString()
+            )
+        }
+
+        val unapprovedFeaturePrivateModules = allProjectPaths
+            .filter { path ->
+                val parts = path.split(":")
+                parts.size == 4 &&
+                    parts[1] == "feature" &&
+                    parts[3] in setOf("domain", "data", "network") &&
+                    path !in allowedFeaturePrivateModules
+            }
+            .sorted()
+        if (unapprovedFeaturePrivateModules.isNotEmpty()) {
+            throw GradleException(
+                "Feature-local domain/data/network modules require an explicit ownership decision: " +
+                    unapprovedFeaturePrivateModules.joinToString()
             )
         }
 
@@ -135,6 +161,21 @@ val checkModuleBoundaries by tasks.registering {
                     if (coreImplementationReferencePattern.containsMatchIn(line)) {
                         violations +=
                             "${sourceFile.relativeTo(projectDir)}:${index + 1}: core data/storage/network references in :app are allowed only in app-owned DI composition modules."
+                    }
+                }
+            }
+        }
+
+        productionKotlinSources.files.forEach { sourceFile ->
+            val normalizedPath = sourceFile.path.replace('\\', '/')
+            if ("/app/src/main/java/com/smarttrainner/app/di/" in normalizedPath) return@forEach
+
+            sourceFile.useLines { lines ->
+                lines.forEachIndexed { index, line ->
+                    val trimmed = line.trimStart()
+                    if (trimmed.startsWith("@Module") || trimmed.startsWith("@InstallIn(")) {
+                        violations +=
+                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: production Hilt modules must live in app-owned DI composition modules."
                     }
                 }
             }

@@ -612,6 +612,29 @@ Next PR scope:
 - Re-audit the remaining app `TrainingViewModel` and coordinator routes to confirm they hold only cross-feature handoff state.
 - Consider whether `TrainingMappers.kt` should be split by storage concern after DI assembly no longer hides repository ownership.
 
+## Phase 31: App-Owned Platform Provider DI Assembly
+
+Status: stacked after Phase 30 on `codex/modularization-app-owned-platform-di`.
+
+Move the remaining production Hilt provider modules out of core implementation modules and into the app composition root. Core modules still own their contracts and implementation classes: Room database/DAO contracts stay in `:core:database`, DataStore access stays in `:core:datastore`, and Retrofit DTO/API contracts stay in `:core:network`. The app now owns the final provider assembly for those platform resources.
+
+First PR scope:
+
+- Move database, network, and clock provider modules to `app/src/main/java/com/smarttrainner/app/di`.
+- Remove Hilt Gradle plugin/compiler usage from core modules that no longer declare production Hilt modules.
+- Extend `checkModuleBoundaries` so production `@Module`/`@InstallIn` declarations are allowed only in app-owned DI composition modules.
+- Extend `checkModuleBoundaries` so new `:feature:*:domain`, `:feature:*:data`, or `:feature:*:network` modules require an explicit ownership decision before they can be introduced.
+
+Split decision:
+
+- Do not move Room entities, DAOs, migrations, DataStore data sources, Retrofit API contracts, or DTOs into app. App owns wiring; core modules still own implementation contracts and storage/network types.
+- Do not add `:feature:*:network`, `:feature:*:data`, or `:feature:*:domain` here. The provider wiring is app-level composition, and the currently wired repositories remain shared core contracts.
+
+Next PR scope:
+
+- Tighten remaining feature API route contracts, starting with unused public API surface such as analysis content rendering that app no longer consumes.
+- Continue auditing test fakes and fixtures so app tests depend on domain contracts first and implementation fixtures only when intentionally exercising production content.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -624,16 +647,19 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Core domain persistence contracts are no longer one broad `TrainingRepository`; use cases depend on concern-specific shared contracts.
 - Core data repository implementations now mirror those concern-specific contracts instead of one catch-all implementation.
 - App-owned DI composition now binds shared core-domain repository contracts to their core-data implementations.
+- App-owned DI composition now owns production platform providers for Room, Retrofit, and app-wide time.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:
 
 - `core:*` must not depend on `feature:*`.
 - Feature modules must not depend on data, storage, or network implementation modules.
+- New feature-local domain/data/network modules require an explicit ownership decision before being introduced.
 - Feature API modules must not depend on feature implementation or entry modules.
 - Feature implementation modules must not depend on other feature implementation or entry modules directly.
 - Only `:app` may depend on the listed feature implementation modules for composition-root DI.
 - App production code may reference core data/storage/network implementation packages only from app-owned DI composition modules.
+- Production Hilt modules may be declared only in app-owned DI composition modules.
 
 ## Split Decision
 
