@@ -1267,7 +1267,7 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             koLabel = "뒤로 밀기",
             enLabel = "Kick back",
             koInstruction = "뒤로 밀기: 무릎을 살짝 굽힌 채 발뒤꿈치를 뒤로 보내 엉덩이 뒤쪽으로 케이블을 밀어냅니다.",
-            enInstruction = "With a soft knee, drive the heel back and move the cable from the glute."
+            enInstruction = "With a soft knee, drive the heel back and pull the cable using your glutes."
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_cable_glute_kickback_clean_v5_step_3,
