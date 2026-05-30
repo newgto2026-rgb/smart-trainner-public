@@ -377,8 +377,27 @@ First PR scope:
 
 Next PR scope:
 
-- Move exercise catalog state behind a feature-owned route once the shared `LazyListScope` shell is split or the catalog can own its list surface.
 - Move routine state and custom routine builder state into `:feature:routine:impl`.
+- Revisit `:feature:*:entry` Hilt bindings once feature-owned routes no longer require coordinator-mediated state.
+
+## Phase 21: Exercise Catalog State Ownership
+
+Status: stacked after Phase 20 on `codex/modularization-exercise-catalog-viewmodel`.
+
+Move exercise catalog state construction out of the app-owned training coordinator. App still owns the selected exercise id because it coordinates catalog selection with exercise detail and workout recording, but exercise list data and latest-log display inputs now come from `:feature:exercise:impl`.
+
+First PR scope:
+
+- Add `ExerciseCatalogViewModel` in `:feature:exercise:impl`.
+- Add `ExerciseCatalogFeatureEntry.rememberUiState(...)` so app can embed catalog content in the existing shared `LazyListScope` shell without constructing catalog state.
+- Remove `ExerciseCatalogUiState` from `TrainingUiState` and `TrainingViewModel`.
+- Keep app-owned `selectedExerciseId` only as the cross-feature selection handle until app-level flow coordination is reduced further.
+- Add exercise catalog ViewModel unit coverage.
+
+Next PR scope:
+
+- Move routine state and custom routine builder state into `:feature:routine:impl`.
+- Revisit the shared training shell so feature routes can own full list surfaces instead of providing `LazyListScope` content.
 - Revisit `:feature:*:entry` Hilt bindings once feature-owned routes no longer require coordinator-mediated state.
 
 ## Strict Feature Isolation Audit
@@ -387,7 +406,7 @@ Current state is strict at the feature-module dependency level, but not yet stri
 
 - `:feature:analysis`, `:feature:exercise`, `:feature:routine`, and `:feature:workout` no longer depend on another feature's API, implementation, or entry module.
 - `:app` knows the feature APIs and entries because it owns routing and temporary cross-feature composition.
-- The temporary `TrainingViewModel` is now app-owned and still coordinates routine state, exercise catalog state, custom routine builder state, and cross-feature selection ids; workout recording state and exercise detail state are feature-owned.
+- The temporary `TrainingViewModel` is now app-owned and still coordinates routine state, custom routine builder state, and cross-feature selection ids; workout recording state, exercise detail state, and exercise catalog state are feature-owned.
 - `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
 
 Current guardrails still enforce the important lower-level boundary:

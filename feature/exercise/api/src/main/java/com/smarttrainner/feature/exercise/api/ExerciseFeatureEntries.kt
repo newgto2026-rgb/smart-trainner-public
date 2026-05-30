@@ -5,6 +5,9 @@ import androidx.compose.runtime.Composable
 import com.smarttrainner.core.model.ExerciseId
 
 interface ExerciseCatalogFeatureEntry {
+    @Composable
+    fun rememberUiState(selectedExerciseId: ExerciseId?): ExerciseCatalogUiState
+
     fun LazyListScope.Content(
         state: ExerciseCatalogUiState,
         actions: ExerciseCatalogActions

@@ -24,7 +24,6 @@ import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
-import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
 import com.smarttrainner.feature.routine.api.CustomRoutineDayFormState
 import com.smarttrainner.feature.routine.api.CustomRoutineExerciseFormState
@@ -225,11 +224,6 @@ class TrainingViewModel @Inject constructor(
                 latestWorkoutLogs = data.latestLogs,
                 completedPlannedExerciseIds = presentation.completedIds,
                 completeDayError = control.completeDayFailed
-            ),
-            exerciseCatalog = ExerciseCatalogUiState(
-                exercises = data.exercises,
-                latestWorkoutLogs = data.latestLogs,
-                selectedExerciseId = control.selectedExerciseId
             ),
             recordingPlannedExercise = recordingPlanned,
             selectedExerciseId = control.selectedExerciseId,

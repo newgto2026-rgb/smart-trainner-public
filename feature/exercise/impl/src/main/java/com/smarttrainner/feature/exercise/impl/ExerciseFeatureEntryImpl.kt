@@ -22,6 +22,16 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
     ExerciseCatalogFeatureEntry,
     ExerciseDetailFeatureEntry,
     ExerciseMediaRenderer {
+    @Composable
+    override fun rememberUiState(selectedExerciseId: ExerciseId?): ExerciseCatalogUiState {
+        val viewModel: ExerciseCatalogViewModel = hiltViewModel()
+        LaunchedEffect(selectedExerciseId) {
+            viewModel.updateSelection(selectedExerciseId)
+        }
+        val state by viewModel.uiState.collectAsStateWithLifecycle()
+        return state
+    }
+
     override fun LazyListScope.Content(
         state: ExerciseCatalogUiState,
         actions: ExerciseCatalogActions

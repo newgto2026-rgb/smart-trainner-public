@@ -1,6 +1,9 @@
 package com.smarttrainner.app.training
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
@@ -60,15 +63,21 @@ fun TrainingExercisesRoute(
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
 ) {
+    val viewModel: TrainingViewModel = hiltViewModel()
+    val trainingState by viewModel.uiState.collectAsStateWithLifecycle()
+    val exerciseCatalogState = exerciseCatalogFeatureEntry.rememberUiState(
+        selectedExerciseId = trainingState.selectedExerciseId
+    )
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         exerciseMediaRenderer = exerciseMediaRenderer,
         routineFeatureEntry = routineFeatureEntry,
-        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-    ) { state, _, exerciseCatalogActions ->
+        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+        viewModel = viewModel
+    ) { _, _, exerciseCatalogActions ->
         with(exerciseCatalogFeatureEntry) {
             Content(
-                state = state.exerciseCatalog,
+                state = exerciseCatalogState,
                 actions = exerciseCatalogActions
             )
         }

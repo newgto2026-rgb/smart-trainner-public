@@ -162,7 +162,6 @@ private fun TrainingScreen(
     val selectedExerciseId = state.selectedExerciseId
     val recordingPlannedExercise = state.recordingPlannedExercise
     val routineState = state.routine
-    val exerciseCatalogState = state.exerciseCatalog
     val routineActions = remember(
         onTemplateSelected,
         onRoutineDaysPerWeekChanged,

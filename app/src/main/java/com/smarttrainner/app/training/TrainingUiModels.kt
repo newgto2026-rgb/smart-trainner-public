@@ -9,7 +9,6 @@ import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
-import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
 import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
 import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
@@ -18,7 +17,6 @@ import java.time.LocalDate
 
 data class TrainingUiState(
     val routine: RoutineUiState = RoutineUiState(),
-    val exerciseCatalog: ExerciseCatalogUiState = ExerciseCatalogUiState(),
     val recordingPlannedExercise: PlannedExercise? = null,
     val selectedExerciseId: ExerciseId? = null,
     val selectedPlannedExercise: PlannedExercise? = null
@@ -69,13 +67,13 @@ data class TrainingUiState(
         get() = routine.customRoutineBuilder
 
     val exercises: List<Exercise>
-        get() = exerciseCatalog.exercises
+        get() = routine.exercises
 
     val logs: List<WorkoutLog>
         get() = routine.logs
 
     val latestWorkoutLogs: List<WorkoutLog>
-        get() = exerciseCatalog.latestWorkoutLogs
+        get() = routine.latestWorkoutLogs
 
     val completedPlannedExerciseIds: Set<PlannedExerciseId>
         get() = routine.completedPlannedExerciseIds
