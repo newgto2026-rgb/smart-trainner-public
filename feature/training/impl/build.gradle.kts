@@ -39,6 +39,7 @@ dependencies {
     implementation(project(":feature:analysis:api"))
     implementation(project(":feature:exercise:api"))
     implementation(project(":feature:routine:api"))
+    implementation(project(":feature:workout:api"))
     implementation(project(":core:model"))
     implementation(project(":core:domain"))
     implementation(project(":core:designsystem"))

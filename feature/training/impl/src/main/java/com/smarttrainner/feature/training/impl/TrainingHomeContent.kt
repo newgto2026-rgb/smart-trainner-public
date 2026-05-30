@@ -35,6 +35,7 @@ import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
+import com.smarttrainner.feature.workout.api.RecordFormError
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.homeContent(
     state: TrainingUiState,

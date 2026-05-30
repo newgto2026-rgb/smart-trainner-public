@@ -17,41 +17,18 @@ import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
 import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
 import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
 import com.smarttrainner.feature.routine.api.RoutineUiState
+import com.smarttrainner.feature.workout.api.RecordFormError
+import com.smarttrainner.feature.workout.api.RecordFormState
+import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
 import java.time.LocalDate
-
-enum class RecordFormError {
-    SELECT_EXERCISE,
-    SETS,
-    REPS,
-    WEIGHT,
-    DURATION,
-    REST,
-    SAVE_FAILED,
-    COMPLETE_DAY_FAILED
-}
-
-data class RecordFormState(
-    val setEntries: List<RecordSetFormState> = emptyList(),
-    val memo: String = ""
-)
-
-data class RecordSetFormState(
-    val reps: String = "",
-    val weightKg: String = "",
-    val durationMinutes: String = "",
-    val restSeconds: String = ""
-)
 
 data class TrainingUiState(
     val routine: RoutineUiState = RoutineUiState(),
     val exerciseCatalog: ExerciseCatalogUiState = ExerciseCatalogUiState(),
     val analysis: AnalysisUiState = AnalysisUiState(),
+    val workoutRecording: WorkoutRecordingUiState = WorkoutRecordingUiState(),
     val selectedExercise: Exercise? = null,
-    val selectedPlannedExercise: PlannedExercise? = null,
-    val recordingPlannedExercise: PlannedExercise? = null,
-    val recordForm: RecordFormState = RecordFormState(),
-    val formError: RecordFormError? = null,
-    val recordSaved: Boolean = false
+    val selectedPlannedExercise: PlannedExercise? = null
 ) {
     val selectedExerciseId: ExerciseId?
         get() = selectedExercise?.id
@@ -109,6 +86,18 @@ data class TrainingUiState(
 
     val latestWorkoutLogs: List<WorkoutLog>
         get() = exerciseCatalog.latestWorkoutLogs
+
+    val recordingPlannedExercise: PlannedExercise?
+        get() = workoutRecording.recordingPlannedExercise
+
+    val recordForm: RecordFormState
+        get() = workoutRecording.recordForm
+
+    val formError: RecordFormError?
+        get() = workoutRecording.formError
+
+    val recordSaved: Boolean
+        get() = workoutRecording.recordSaved
 
     val recentLogs: List<RecentWorkoutLogUiModel>
         get() = analysis.recentLogs

@@ -36,6 +36,10 @@ import com.smarttrainner.feature.routine.api.CustomRoutineFormError
 import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
 import com.smarttrainner.feature.routine.api.RoutineUiState
 import com.smarttrainner.feature.routine.api.allowedCustomRoutineMuscleGroups
+import com.smarttrainner.feature.workout.api.RecordFormError
+import com.smarttrainner.feature.workout.api.RecordFormState
+import com.smarttrainner.feature.workout.api.RecordSetFormState
+import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
@@ -241,12 +245,16 @@ class TrainingViewModel @Inject constructor(
                 recentLogs = data.recentLogs,
                 summary = data.summary
             ),
+            workoutRecording = WorkoutRecordingUiState(
+                recordingPlannedExercise = recordingPlanned,
+                weeklyLogs = data.logs,
+                latestWorkoutLogs = data.latestLogs,
+                recordForm = control.recordForm,
+                formError = control.formError,
+                recordSaved = control.recordSaved
+            ),
             selectedExercise = selectedExercise,
-            selectedPlannedExercise = selectedPlanned,
-            recordingPlannedExercise = recordingPlanned,
-            recordForm = control.recordForm,
-            formError = control.formError,
-            recordSaved = control.recordSaved
+            selectedPlannedExercise = selectedPlanned
         )
     }.stateIn(
         scope = viewModelScope,

@@ -23,6 +23,7 @@ import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.training.api.TrainingDestination
+import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 
 @Composable
 fun TrainingRoute(
@@ -132,6 +133,7 @@ private fun TrainingScreen(
     val routineState = state.routine
     val exerciseCatalogState = state.exerciseCatalog
     val analysisState = state.analysis
+    val workoutRecordingState = state.workoutRecording
     val routineActions = remember(
         onTemplateSelected,
         onRoutineDaysPerWeekChanged,
@@ -202,10 +204,20 @@ private fun TrainingScreen(
             onExerciseSelected = onExerciseSelected
         )
     }
-    if (recordingPlannedExercise != null && selectedExercise == null) {
-        RecordDialog(
-            state = state,
-            planned = recordingPlannedExercise,
+    val workoutRecordingActions = remember(
+        workoutRecordingState.recordingPlannedExercise,
+        onSetRepsChanged,
+        onSetWeightChanged,
+        onSetDurationChanged,
+        onSetRestChanged,
+        onAddSet,
+        onRemoveSet,
+        onMemoChanged,
+        onSaveRecord,
+        onExerciseMethodSelected,
+        onRecordDialogDismiss
+    ) {
+        WorkoutRecordingActions(
             onSetRepsChanged = onSetRepsChanged,
             onSetWeightChanged = onSetWeightChanged,
             onSetDurationChanged = onSetDurationChanged,
@@ -214,8 +226,19 @@ private fun TrainingScreen(
             onRemoveSet = onRemoveSet,
             onMemoChanged = onMemoChanged,
             onSaveRecord = onSaveRecord,
-            onExerciseMethodSelected = { onExerciseMethodSelected(recordingPlannedExercise.exercise.id) },
-            onDismissRequest = onRecordDialogDismiss
+            onExerciseMethodSelected = {
+                workoutRecordingState.recordingPlannedExercise
+                    ?.exercise
+                    ?.id
+                    ?.let(onExerciseMethodSelected)
+            },
+            onDismiss = onRecordDialogDismiss
+        )
+    }
+    if (recordingPlannedExercise != null && selectedExercise == null) {
+        RecordDialog(
+            state = workoutRecordingState,
+            actions = workoutRecordingActions
         )
     }
     if (routineState.showRoutineLibraryDialog) {

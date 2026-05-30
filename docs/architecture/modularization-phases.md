@@ -81,6 +81,8 @@ First PR scope:
 
 ## Phase 5: Workout Recording Flow Boundary
 
+Status: stacked after Phase 4 on `codex/modularization-workout-feature`.
+
 Candidate modules:
 
 - `:feature:workout:api`
@@ -88,6 +90,13 @@ Candidate modules:
 - `:feature:workout:impl`
 
 Move workout start, record dialog, set entry form, save flow, and workout log row rendering behind a workout feature contract. This phase should decide whether recording is a top-level destination or an internal flow launched from routine and exercise features.
+
+First PR scope:
+
+- Introduce `:feature:workout:api`.
+- Move workout recording form state, form errors, recording UI state, and recording actions into the workout contract.
+- Pass the record dialog through `WorkoutRecordingUiState` and `WorkoutRecordingActions` instead of the full training state.
+- Keep save/prefill orchestration in `TrainingViewModel` until routine and exercise implementations no longer launch recording through training composition state.
 
 ## Phase 6: Dependency And DI Cleanup
 

@@ -42,25 +42,18 @@ import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.ui.SmartTrainnerNumberField
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.PlannedExercise
-import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.feature.workout.api.RecordFormError
+import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
+import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
 
 @Composable
 internal fun RecordDialog(
-    state: TrainingUiState,
-    planned: PlannedExercise,
-    onSetRepsChanged: (Int, String) -> Unit,
-    onSetWeightChanged: (Int, String) -> Unit,
-    onSetDurationChanged: (Int, String) -> Unit,
-    onSetRestChanged: (Int, String) -> Unit,
-    onAddSet: () -> Unit,
-    onRemoveSet: (Int) -> Unit,
-    onMemoChanged: (String) -> Unit,
-    onSaveRecord: () -> Unit,
-    onExerciseMethodSelected: () -> Unit,
-    onDismissRequest: () -> Unit
+    state: WorkoutRecordingUiState,
+    actions: WorkoutRecordingActions
 ) {
+    val planned = state.recordingPlannedExercise ?: return
     Dialog(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = actions.onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
@@ -88,19 +81,11 @@ internal fun RecordDialog(
                     RecordForm(
                         state = state,
                         planned = planned,
-                        onSetRepsChanged = onSetRepsChanged,
-                        onSetWeightChanged = onSetWeightChanged,
-                        onSetDurationChanged = onSetDurationChanged,
-                        onSetRestChanged = onSetRestChanged,
-                        onAddSet = onAddSet,
-                        onRemoveSet = onRemoveSet,
-                        onMemoChanged = onMemoChanged,
-                        onSaveRecord = onSaveRecord,
-                        onExerciseMethodSelected = onExerciseMethodSelected
+                        actions = actions
                     )
                 }
                 IconButton(
-                    onClick = onDismissRequest,
+                    onClick = actions.onDismiss,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(4.dp)
@@ -114,22 +99,14 @@ internal fun RecordDialog(
 
 @Composable
 internal fun RecordForm(
-    state: TrainingUiState,
+    state: WorkoutRecordingUiState,
     planned: PlannedExercise,
-    onSetRepsChanged: (Int, String) -> Unit,
-    onSetWeightChanged: (Int, String) -> Unit,
-    onSetDurationChanged: (Int, String) -> Unit,
-    onSetRestChanged: (Int, String) -> Unit,
-    onAddSet: () -> Unit,
-    onRemoveSet: (Int) -> Unit,
-    onMemoChanged: (String) -> Unit,
-    onSaveRecord: () -> Unit,
-    onExerciseMethodSelected: () -> Unit
+    actions: WorkoutRecordingActions
 ) {
     val showReps = planned.repRange != null
     val showDuration = planned.durationMinutes != null || !showReps
     val showWeight = showReps
-    val displayLog = state.logs.firstOrNull { it.plannedExerciseId == planned.id }
+    val displayLog = state.weeklyLogs.firstOrNull { it.plannedExerciseId == planned.id }
         ?: state.latestWorkoutLogs.latestForExercise(planned.exercise.id)
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -147,7 +124,7 @@ internal fun RecordForm(
             }
         }
         OutlinedButton(
-            onClick = onExerciseMethodSelected,
+            onClick = actions.onExerciseMethodSelected,
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -186,7 +163,7 @@ internal fun RecordForm(
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(
-                        onClick = { onRemoveSet(index) },
+                        onClick = { actions.onRemoveSet(index) },
                         enabled = state.recordForm.setEntries.size > 1,
                         modifier = Modifier
                             .testTag("training_remove_set_button_$index")
@@ -205,7 +182,7 @@ internal fun RecordForm(
                         SmartTrainnerNumberField(
                             label = stringResource(R.string.training_reps),
                             value = setEntry.reps,
-                            onValueChange = { onSetRepsChanged(index, it) },
+                            onValueChange = { actions.onSetRepsChanged(index, it) },
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("training_set_reps_input_$index")
@@ -215,7 +192,7 @@ internal fun RecordForm(
                         SmartTrainnerNumberField(
                             label = stringResource(R.string.training_weight_short),
                             value = setEntry.weightKg,
-                            onValueChange = { onSetWeightChanged(index, it) },
+                            onValueChange = { actions.onSetWeightChanged(index, it) },
                             keyboardType = KeyboardType.Decimal,
                             modifier = Modifier
                                 .weight(1f)
@@ -226,7 +203,7 @@ internal fun RecordForm(
                         SmartTrainnerNumberField(
                             label = stringResource(R.string.training_duration),
                             value = setEntry.durationMinutes,
-                            onValueChange = { onSetDurationChanged(index, it) },
+                            onValueChange = { actions.onSetDurationChanged(index, it) },
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("training_set_duration_input_$index")
@@ -235,7 +212,7 @@ internal fun RecordForm(
                     SmartTrainnerNumberField(
                         label = stringResource(R.string.training_rest_seconds),
                         value = setEntry.restSeconds,
-                        onValueChange = { onSetRestChanged(index, it) },
+                        onValueChange = { actions.onSetRestChanged(index, it) },
                         modifier = Modifier
                             .weight(1f)
                             .testTag("training_set_rest_input_$index")
@@ -244,7 +221,7 @@ internal fun RecordForm(
             }
         }
         OutlinedButton(
-            onClick = onAddSet,
+            onClick = actions.onAddSet,
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -255,7 +232,7 @@ internal fun RecordForm(
             Text(stringResource(R.string.training_add_set))
         }
         Button(
-            onClick = onSaveRecord,
+            onClick = actions.onSaveRecord,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("training_save_record"),
@@ -274,7 +251,7 @@ internal fun RecordForm(
         }
         OutlinedTextField(
             value = state.recordForm.memo,
-            onValueChange = onMemoChanged,
+            onValueChange = actions.onMemoChanged,
             label = { Text(stringResource(R.string.training_memo)) },
             modifier = Modifier.fillMaxWidth(),
             minLines = 1,
