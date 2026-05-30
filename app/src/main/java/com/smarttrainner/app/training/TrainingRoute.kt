@@ -115,8 +115,10 @@ private fun TrainingScreen(
     }
     routineRouteState.Dialogs()
     if (selectedExerciseId != null) {
-        val selectedPlannedExercise = if (state.recordingPlannedExercise == null) {
-            routineRouteState.recordablePlannedExerciseFor(selectedExerciseId)
+        val selectedPlannedExercise = if (recordingPlannedExercise == null) {
+            remember(routineRouteState, selectedExerciseId) {
+                routineRouteState.recordablePlannedExerciseFor(selectedExerciseId)
+            }
         } else {
             null
         }

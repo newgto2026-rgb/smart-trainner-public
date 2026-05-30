@@ -19,6 +19,6 @@ internal fun RoutineUiState.recordablePlannedExerciseFor(exerciseId: ExerciseId)
     }
 
 private fun WeeklyPlan.plannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =
-    days
-        .flatMap { it.exercises }
-        .firstOrNull { it.exercise.id == exerciseId }
+    days.firstNotNullOfOrNull { day ->
+        day.exercises.firstOrNull { it.exercise.id == exerciseId }
+    }
