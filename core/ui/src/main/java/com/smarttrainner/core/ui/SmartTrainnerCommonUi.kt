@@ -3,9 +3,14 @@ package com.smarttrainner.core.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -20,8 +25,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 
@@ -123,6 +131,108 @@ fun SmartTrainnerMetricTile(
                 fontWeight = FontWeight.Bold
             )
             Text(text = label, color = SmartTrainnerColors.Muted, style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
+
+data class SmartTrainnerBadgeSpec(
+    val text: String,
+    val icon: ImageVector? = null,
+    val containerColor: Color = SmartTrainnerColors.SteelSoft,
+    val contentColor: Color = SmartTrainnerColors.Ink,
+    val borderColor: Color? = null,
+    val testTag: String? = null
+)
+
+@Composable
+fun SmartTrainnerBadge(
+    text: String,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    containerColor: Color = SmartTrainnerColors.SteelSoft,
+    contentColor: Color = SmartTrainnerColors.Ink,
+    borderColor: Color? = null
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        color = containerColor,
+        border = borderColor?.let { BorderStroke(1.dp, it) }
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = contentColor
+                )
+            }
+            Text(
+                text = text,
+                color = contentColor,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun SmartTrainnerBadgeRow(
+    badges: List<SmartTrainnerBadgeSpec>,
+    maxItemsPerRow: Int,
+    modifier: Modifier = Modifier
+) {
+    BoxWithConstraints(modifier = modifier) {
+        val rowLimit = if (maxWidth < 360.dp) {
+            maxItemsPerRow.coerceAtMost(2)
+        } else {
+            maxItemsPerRow
+        }.coerceAtLeast(1)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            badges.chunked(rowLimit).forEach { rowBadges ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rowBadges.forEach { badge ->
+                        SmartTrainnerBadge(
+                            text = badge.text,
+                            icon = badge.icon,
+                            containerColor = badge.containerColor,
+                            contentColor = badge.contentColor,
+                            borderColor = badge.borderColor,
+                            modifier = badge.testTag?.let { Modifier.testTag(it) } ?: Modifier
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SmartTrainnerProgressBar(
+    progress: Float,
+    modifier: Modifier = Modifier,
+    color: Color = SmartTrainnerColors.Green,
+    trackColor: Color = SmartTrainnerColors.Line
+) {
+    val boundedProgress = progress.coerceIn(0f, 1f)
+    Box(
+        modifier = modifier.background(trackColor, RoundedCornerShape(8.dp))
+    ) {
+        if (boundedProgress > 0f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(boundedProgress)
+                    .fillMaxHeight()
+                    .background(color, RoundedCornerShape(8.dp))
+            )
         }
     }
 }

@@ -114,6 +114,20 @@ First PR scope:
 - Fail builds when feature implementations or entries depend on other feature implementations/entries directly.
 - Wire boundary checks into lint tasks so normal quality gates catch dependency direction regressions.
 
+## Phase 7: Analysis Implementation Module
+
+Status: stacked after Phase 6 on `codex/modularization-analysis-impl`.
+
+Move the analysis destination implementation out of `:feature:training:impl` after its API contract exists. The training feature may provide the analysis state while it remains the temporary coordinator, but it should call only the analysis API entry point.
+
+First PR scope:
+
+- Introduce `:feature:analysis:impl` and `:feature:analysis:entry`.
+- Add `AnalysisFeatureEntry` to `:feature:analysis:api`.
+- Move analysis UI and analysis-specific resources into `:feature:analysis:impl`.
+- Register the analysis entry binding in Hilt and have `:app` include the entry module.
+- Keep `:feature:training:impl` depending only on `:feature:analysis:api`, not the analysis implementation.
+
 ## Split Decision
 
 `routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress, exercise selection, and recording forms. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.

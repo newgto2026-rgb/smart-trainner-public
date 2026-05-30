@@ -20,6 +20,7 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.training.api.TrainingDestination
@@ -28,11 +29,13 @@ import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 @Composable
 fun TrainingRoute(
     destination: TrainingDestination,
+    analysisFeatureEntry: AnalysisFeatureEntry,
     viewModel: TrainingViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     TrainingScreen(
         destination = destination,
+        analysisFeatureEntry = analysisFeatureEntry,
         state = state,
         onTemplateSelected = viewModel::selectTemplate,
         onRoutineDaysPerWeekChanged = viewModel::updateRoutineDaysPerWeek,
@@ -83,6 +86,7 @@ fun TrainingRoute(
 @Composable
 private fun TrainingScreen(
     destination: TrainingDestination,
+    analysisFeatureEntry: AnalysisFeatureEntry,
     state: TrainingUiState,
     onTemplateSelected: (String) -> Unit,
     onRoutineDaysPerWeekChanged: (Int) -> Unit,
@@ -327,7 +331,9 @@ private fun TrainingScreen(
                     state = exerciseCatalogState,
                     actions = exerciseCatalogActions
                 )
-                TrainingDestination.Analysis -> analysisContent(analysisState)
+                TrainingDestination.Analysis -> item {
+                    analysisFeatureEntry.Content(analysisState)
+                }
             }
         }
     }

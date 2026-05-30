@@ -38,7 +38,6 @@ import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WeeklyPlan
-import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import java.time.LocalDate
@@ -518,28 +517,6 @@ internal fun routineDayFocusResource(focus: String): Int? = when (focus) {
     "팔 보조와 컨디셔닝" -> R.string.training_day_focus_arm_accessories_conditioning
     "이두·삼두 보조와 컨디셔닝" -> R.string.training_day_focus_biceps_triceps_conditioning
     else -> null
-}
-
-@Composable
-internal fun WeeklySummary.localizedInsight(): String {
-    if (isKoreanLocale()) return insight
-    val weakestMuscle = MuscleGroup.entries
-        .filterNot {
-            it == MuscleGroup.CARDIO ||
-                it == MuscleGroup.ARMS ||
-                it == MuscleGroup.FULL_BODY
-        }
-        .minByOrNull { muscleBalance[it] ?: 0 }
-    return when {
-        plannedExerciseCount == 0 -> stringResource(R.string.training_insight_empty_plan)
-        completedExerciseCount == 0 -> stringResource(R.string.training_insight_no_logs)
-        completionRate >= 80 -> stringResource(R.string.training_insight_good_rate)
-        totalVolumeKg > 0 && weakestMuscle != null -> stringResource(
-            R.string.training_insight_balance,
-            weakestMuscle.localizedLabel()
-        )
-        else -> stringResource(R.string.training_insight_steady)
-    }
 }
 
 @Composable

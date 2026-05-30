@@ -1,8 +1,14 @@
 package com.smarttrainner.feature.analysis.api
 
+import androidx.compose.runtime.Composable
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
+
+interface AnalysisFeatureEntry {
+    @Composable
+    fun Content(state: AnalysisUiState)
+}
 
 data class AnalysisUiState(
     val recentLogs: List<RecentWorkoutLogUiModel> = emptyList(),
