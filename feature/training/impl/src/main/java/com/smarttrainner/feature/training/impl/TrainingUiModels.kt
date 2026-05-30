@@ -105,6 +105,11 @@ data class NextRoutineDayUiModel(
     val minRecoveryHours: Int
 )
 
+data class RecentWorkoutLogUiModel(
+    val log: WorkoutLog,
+    val exercise: Exercise?
+)
+
 data class TrainingUiState(
     val selectedTab: TrainingTab = TrainingTab.HOME,
     val templates: List<PlanTemplate> = emptyList(),
@@ -125,6 +130,7 @@ data class TrainingUiState(
     val exercises: List<Exercise> = emptyList(),
     val logs: List<WorkoutLog> = emptyList(),
     val latestWorkoutLogs: List<WorkoutLog> = emptyList(),
+    val recentLogs: List<RecentWorkoutLogUiModel> = emptyList(),
     val completedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
     val summary: WeeklySummary? = null,
     val selectedExercise: Exercise? = null,

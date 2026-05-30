@@ -6,6 +6,13 @@
     <string name="training_app_title">Smart Trainer</string>
     <string name="training_today_title">Today Training</string>
     <string name="training_week_summary">This Week</string>
+    <string name="training_recent_records">Recent records</string>
+    <string name="training_recent_records_count">Latest %1$d</string>
+    <string name="training_recent_record_date">%1$d/%2$d</string>
+    <string name="training_record_metric_sets">Sets: %1$d</string>
+    <string name="training_record_metric_reps">Reps: %1$d</string>
+    <string name="training_record_metric_weight">%1$.1f kg</string>
+    <string name="training_record_metric_duration">Time: %1$d min</string>
     <string name="training_start_record">Start Workout</string>
     <string name="training_completed">Done</string>
     <string name="training_incomplete">Planned</string>
@@ -63,6 +70,9 @@
     <string name="training_today_focus_title">Today: %1$s</string>
     <string name="training_routine_day_subtitle">Day %1$d · %2$s · about %3$d min</string>
     <string name="training_routine_completed_progress">Routine progress: %1$d/%2$d</string>
+    <string name="training_routine_badge_duration">About %1$d min</string>
+    <string name="training_routine_badge_exercises">Moves: %1$d</string>
+    <string name="training_routine_badge_recovery">Recovery: %1$d h</string>
     <string name="training_routine_main_focus">Main focus</string>
     <string name="training_routine_examples">Today workout plan</string>
     <string name="training_next_routine_day">Next workout: %1$s</string>
@@ -104,6 +114,7 @@
     <string name="training_routine_schedule">Routine schedule</string>
     <string name="training_routine_schedule_day_title">Day %1$d · %2$s</string>
     <string name="training_recommended_routine">Recommended routine</string>
+    <string name="training_recommendation_best_fit">Best fit</string>
     <string name="training_alternative_routines">Alternatives</string>
     <string name="training_routine_settings_title">Workout settings</string>
     <string name="training_routine_settings_body">Set the routine constraints first. Your current routine changes only after you choose and start a recommendation.</string>

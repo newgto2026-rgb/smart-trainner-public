@@ -6,6 +6,13 @@
     <string name="training_app_title">Smart Trainer</string>
     <string name="training_today_title">오늘의 트레이닝</string>
     <string name="training_week_summary">이번 주 요약</string>
+    <string name="training_recent_records">최근 기록</string>
+    <string name="training_recent_records_count">최근 %1$d개</string>
+    <string name="training_recent_record_date">%1$d월 %2$d일</string>
+    <string name="training_record_metric_sets">세트 %1$d개</string>
+    <string name="training_record_metric_reps">반복 %1$d회</string>
+    <string name="training_record_metric_weight">%1$.1fkg</string>
+    <string name="training_record_metric_duration">운동 %1$d분</string>
     <string name="training_start_record">운동 시작</string>
     <string name="training_completed">완료</string>
     <string name="training_incomplete">예정</string>
@@ -63,6 +70,9 @@
     <string name="training_today_focus_title">오늘은 %1$s</string>
     <string name="training_routine_day_subtitle">%1$d일차 · %2$s · 약 %3$d분</string>
     <string name="training_routine_completed_progress">루틴 진행: %2$d개 중 %1$d개 기록</string>
+    <string name="training_routine_badge_duration">약 %1$d분</string>
+    <string name="training_routine_badge_exercises">운동 %1$d개</string>
+    <string name="training_routine_badge_recovery">회복 %1$d시간</string>
     <string name="training_routine_main_focus">주요 부위</string>
     <string name="training_routine_examples">오늘 운동 계획</string>
     <string name="training_next_routine_day">다음 운동: %1$s</string>
@@ -104,6 +114,7 @@
     <string name="training_routine_schedule">운동 스케줄</string>
     <string name="training_routine_schedule_day_title">%1$d일차 · %2$s</string>
     <string name="training_recommended_routine">추천 루틴</string>
+    <string name="training_recommendation_best_fit">추천</string>
     <string name="training_alternative_routines">대안 루틴</string>
     <string name="training_routine_settings_title">운동 설정</string>
     <string name="training_routine_settings_body">먼저 루틴 조건을 정합니다. 현재 루틴은 추천을 고르고 시작하기 전까지 바뀌지 않습니다.</string>

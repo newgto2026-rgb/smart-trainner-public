@@ -192,6 +192,16 @@ class TrainingViewModel @Inject constructor(
         val selectedPlanned = recordingPlanned
             ?: nextDayUi?.startExercise
             ?: data.plan.firstIncomplete(completedIds)
+        val exercisesById = data.exercises.associateBy { it.id }
+        val recentLogs = data.latestLogs
+            .sortedByDescending { it.performedAt }
+            .take(RECENT_WORKOUT_LOG_LIMIT)
+            .map { log ->
+                RecentWorkoutLogUiModel(
+                    log = log,
+                    exercise = exercisesById[log.exerciseId]
+                )
+            }
         TrainingUiState(
             selectedTab = control.selectedTab,
             templates = data.templates,
@@ -212,6 +222,7 @@ class TrainingViewModel @Inject constructor(
             exercises = data.exercises,
             logs = data.logs,
             latestWorkoutLogs = data.latestLogs,
+            recentLogs = recentLogs,
             completedPlannedExerciseIds = completedIds,
             summary = data.summary,
             selectedExercise = selectedExercise,
@@ -788,3 +799,5 @@ class TrainingViewModel @Inject constructor(
         val showRecommendations: Boolean
     )
 }
+
+private const val RECENT_WORKOUT_LOG_LIMIT = 3

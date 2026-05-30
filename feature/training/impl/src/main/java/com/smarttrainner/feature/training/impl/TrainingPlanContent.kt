@@ -145,12 +145,7 @@ internal fun CurrentRoutineSummaryCard(
                 )
                 RoutineSourceChip(template.source, template.source.currentRoutineSourceTag())
             }
-            Text(
-                text = template.localizedMeta(),
-                color = SmartTrainnerColors.Coral,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
-            )
+            RoutineTemplateBadgeRow(template)
             RoutineFocusFlow(template)
             if (template.source == RoutineSource.CUSTOM) {
                 OutlinedButton(

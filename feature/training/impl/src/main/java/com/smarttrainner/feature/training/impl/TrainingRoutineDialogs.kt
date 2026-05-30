@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -419,7 +421,17 @@ internal fun RoutineRecommendationsDialog(
                             template = template,
                             selected = template.id == previewTemplate?.id,
                             onClick = { onTemplatePreviewSelected(template.id) },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            highlightLabel = if (index == 0) {
+                                stringResource(R.string.training_recommendation_best_fit)
+                            } else {
+                                null
+                            },
+                            highlightTestTag = if (index == 0) {
+                                "training_recommendation_best_fit"
+                            } else {
+                                null
+                            }
                         )
                     }
                     previewTemplate?.let { template ->
@@ -583,7 +595,9 @@ internal fun PlanTemplateCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     cardTestTag: String = "training_template_card_${template.id}",
-    sourceTestTag: String = template.source.routineSourceTag()
+    sourceTestTag: String = template.source.routineSourceTag(),
+    highlightLabel: String? = null,
+    highlightTestTag: String? = null
 ) {
     Card(
         modifier = modifier
@@ -615,27 +629,25 @@ internal fun PlanTemplateCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 if (selected) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = SmartTrainnerColors.GreenSoft
-                    ) {
-                        Text(
-                            text = stringResource(R.string.training_selected),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                            color = SmartTrainnerColors.Green,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    TrainingBadge(
+                        text = stringResource(R.string.training_selected),
+                        icon = Icons.Default.CheckCircle,
+                        containerColor = SmartTrainnerColors.GreenSoft,
+                        contentColor = SmartTrainnerColors.Ink
+                    )
+                }
+                if (highlightLabel != null) {
+                    TrainingBadge(
+                        text = highlightLabel,
+                        icon = Icons.Default.CheckCircle,
+                        containerColor = SmartTrainnerColors.AmberSoft,
+                        contentColor = SmartTrainnerColors.Ink,
+                        modifier = highlightTestTag?.let { Modifier.testTag(it) } ?: Modifier
+                    )
                 }
             }
             RoutineSourceChip(template.source, sourceTestTag)
-            Text(
-                text = template.localizedMeta(),
-                color = SmartTrainnerColors.Coral,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
-            )
+            RoutineTemplateBadgeRow(template)
             if (template.source == RoutineSource.SYSTEM) {
                 Text(
                     text = template.structure.localizedLabel(),
@@ -657,26 +669,58 @@ internal fun PlanTemplateCard(
 }
 
 @Composable
-internal fun RoutineSourceChip(source: RoutineSource, testTag: String = source.routineSourceTag()) {
-    Surface(
-        modifier = Modifier.testTag(testTag),
-        shape = RoundedCornerShape(8.dp),
-        color = if (source == RoutineSource.CUSTOM) SmartTrainnerColors.GreenSoft else SmartTrainnerColors.CoralSoft
-    ) {
-        Text(
-            text = stringResource(
-                if (source == RoutineSource.CUSTOM) {
-                    R.string.training_custom_routine_badge
-                } else {
-                    R.string.training_default_routine_badge
-                }
+internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
+    val badges = if (template.source == RoutineSource.CUSTOM) {
+        listOf(
+            TrainingBadgeSpec(
+                text = stringResource(R.string.training_custom_template_meta, template.days.size),
+                icon = Icons.Default.DateRange,
+                containerColor = SmartTrainnerColors.GreenSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+    } else {
+        listOf(
+            TrainingBadgeSpec(
+                text = template.level.localizedLabel(),
+                containerColor = SmartTrainnerColors.SteelSoft,
+                contentColor = SmartTrainnerColors.Ink
             ),
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-            color = if (source == RoutineSource.CUSTOM) SmartTrainnerColors.Green else SmartTrainnerColors.Coral,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold
+            TrainingBadgeSpec(
+                text = stringResource(R.string.training_days_per_week_option, template.daysPerWeek),
+                icon = Icons.Default.DateRange,
+                containerColor = SmartTrainnerColors.GreenSoft,
+                contentColor = SmartTrainnerColors.Ink
+            ),
+            TrainingBadgeSpec(
+                text = stringResource(R.string.training_minutes_option, template.sessionMinutes),
+                icon = Icons.Default.Timer,
+                containerColor = SmartTrainnerColors.CoralSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
         )
     }
+    TrainingBadgeRow(
+        badges = badges,
+        maxItemsPerRow = 3
+    )
+}
+
+@Composable
+internal fun RoutineSourceChip(source: RoutineSource, testTag: String = source.routineSourceTag()) {
+    TrainingBadge(
+        modifier = Modifier.testTag(testTag),
+        text = stringResource(
+            if (source == RoutineSource.CUSTOM) {
+                R.string.training_custom_routine_badge
+            } else {
+                R.string.training_default_routine_badge
+            }
+        ),
+        icon = if (source == RoutineSource.CUSTOM) Icons.Default.Edit else Icons.Default.FitnessCenter,
+        containerColor = if (source == RoutineSource.CUSTOM) SmartTrainnerColors.GreenSoft else SmartTrainnerColors.CoralSoft,
+        contentColor = SmartTrainnerColors.Ink
+    )
 }
 
 internal fun RoutineSource.routineSourceTag(): String = if (this == RoutineSource.CUSTOM) {

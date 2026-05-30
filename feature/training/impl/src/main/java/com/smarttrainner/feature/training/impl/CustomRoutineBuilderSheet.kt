@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -27,12 +28,13 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.RemoveCircleOutline
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -79,6 +82,8 @@ internal fun CustomRoutineBuilderSheet(
     onSave: () -> Unit,
     onDismissRequest: () -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -135,6 +140,7 @@ internal fun CustomRoutineBuilderSheet(
                             .testTag("training_custom_routine_name"),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                         shape = RoundedCornerShape(8.dp)
                     )
                     CustomDayTabs(
@@ -235,10 +241,18 @@ private fun CustomDayTabs(
         builder.days.mapIndexed { index, day -> index to day }.chunked(3).forEach { rowDays ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowDays.forEach { (dayIndex, _) ->
-                    AssistChip(
+                    val selected = dayIndex == builder.selectedDayIndex
+                    FilterChip(
+                        selected = selected,
                         onClick = { onDaySelected(dayIndex) },
                         label = { Text(stringResource(R.string.training_day_label, dayIndex + 1)) },
-                        modifier = Modifier.testTag("training_custom_day_tab_$dayIndex")
+                        modifier = Modifier.testTag("training_custom_day_tab_$dayIndex"),
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = SmartTrainnerColors.SurfaceRaised,
+                            labelColor = SmartTrainnerColors.Muted,
+                            selectedContainerColor = SmartTrainnerColors.CoralSoft,
+                            selectedLabelColor = SmartTrainnerColors.Ink
+                        )
                     )
                 }
             }
