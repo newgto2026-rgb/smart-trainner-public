@@ -60,6 +60,19 @@ val checkModuleBoundaries by tasks.registering {
             ":feature:training:impl" to ":feature:routine:api",
             ":feature:training:impl" to ":feature:workout:api"
         )
+        val allProjectPaths = allprojects.map { it.path }.toSet()
+        val invalidAllowlistPaths = allowedCrossFeatureApiDependencies
+            .flatMap { (source, target) -> listOf(source, target) }
+            .filterNot { it in allProjectPaths }
+            .distinct()
+            .sorted()
+
+        if (invalidAllowlistPaths.isNotEmpty()) {
+            throw GradleException(
+                "allowedCrossFeatureApiDependencies contains stale or invalid project paths: " +
+                    invalidAllowlistPaths.joinToString()
+            )
+        }
 
         val violations = mutableListOf<String>()
 
