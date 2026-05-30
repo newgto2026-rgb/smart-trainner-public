@@ -66,7 +66,9 @@ val checkModuleBoundaries by tasks.registering {
         fun featureName(path: String) = path.split(":").getOrNull(2)
 
         val allowedCrossFeatureApiDependencies = emptySet<Pair<String, String>>()
-        val allowedFeaturePrivateModules = emptySet<String>()
+        val allowedFeaturePrivateModules = setOf(
+            ":feature:routine:domain"
+        )
         val allowedAppFeatureImplDependencies = setOf(
             ":app" to ":feature:analysis:impl",
             ":app" to ":feature:exercise:impl",

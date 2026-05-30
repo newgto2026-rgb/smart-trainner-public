@@ -728,6 +728,31 @@ Next PR scope:
 - Then split routine repository contracts into shared core reads and routine-private commands before considering `:feature:routine:data`.
 - Keep checking that feature modules do not know about one another and that `:app` remains the routing and DI composition root.
 
+## Phase 36: Routine Feature Domain Policies
+
+Status: stacked after Phase 35 on `codex/modularization-routine-domain-policies`.
+
+Introduce the first feature-local domain module for routine-only policy. This follows the ownership rule that shared repository contracts stay in `:core:domain`, while logic used only by one feature can live under that feature.
+
+First PR scope:
+
+- Add `:feature:routine:domain` as an explicitly approved feature-local domain module.
+- Move `RecommendRoutineUseCase`, `ResolveRoutineCycleCompletionUseCase`, and `EvaluateRoutineReadinessUseCase` from `:core:domain` to `:feature:routine:domain`.
+- Point `:feature:routine:impl` at the new routine domain module for those policies.
+- Move the policy unit tests with the moved policies; keep custom routine validation and routine completion command tests in `:core:domain`.
+
+Split decision:
+
+- Keep `AdvanceRoutineDayUseCase` and `CompleteRoutineDayUseCase` in `:core:domain` for this PR because `CompleteRoutineDayUseCase` still depends on the shared `RoutineProgressRepository` command contract. Moving only `AdvanceRoutineDayUseCase` would either make core depend on a feature or duplicate the policy.
+- Do not add `:feature:routine:data` yet. The next repository step should first split shared core read contracts from routine-only command contracts.
+- Keep weekly plan/template reads in core while analysis/summary flows derive shared data from them.
+
+Next PR scope:
+
+- Split routine command contracts, especially current routine progress/custom routine commands, away from shared plan/template reads.
+- After that split, evaluate `:feature:routine:data` with app-owned DI assembly as the only place that sees the implementation.
+- Revisit whether `CompleteRoutineDayUseCase`, `StartRoutineUseCase`, custom routine save/delete, and routine progress repository commands should move together.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -745,13 +770,14 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Workout recording API now exposes only its dialog route entry; its form state, validation errors, and rendering actions are implementation details.
 - Exercise detail API now exposes only its dialog route entry; its detail UI state and rendering actions are implementation details.
 - Routine route and dialog rendering now goes through `RoutineFeatureEntry`; `RoutineRouteState` is no longer a public rendering facade.
+- Routine-only recommendation, readiness, and cycle-completion policies now live in `:feature:routine:domain`.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:
 
 - `core:*` must not depend on `feature:*`.
 - Feature modules must not depend on data, storage, or network implementation modules.
-- New feature-local domain/data/network modules require an explicit ownership decision before being introduced.
+- New feature-local domain/data/network modules require an explicit ownership decision before being introduced; `:feature:routine:domain` is the current approved feature-local module.
 - Feature API modules must not depend on feature implementation or entry modules.
 - Feature implementation modules must not depend on other feature implementation or entry modules directly.
 - Only `:app` may depend on the listed feature implementation modules for composition-root DI.

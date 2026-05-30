@@ -11,8 +11,6 @@ import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObservePlanTemplatesUseCase
 import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
-import com.smarttrainner.core.domain.RecommendRoutineUseCase
-import com.smarttrainner.core.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.core.domain.RoutinePlanRepository
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SaveCustomRoutineUseCase
@@ -45,6 +43,8 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.feature.routine.domain.RecommendRoutineUseCase
+import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
