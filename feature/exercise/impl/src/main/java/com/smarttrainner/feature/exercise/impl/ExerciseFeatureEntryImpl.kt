@@ -4,6 +4,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,11 +26,10 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
     @Composable
     override fun rememberUiState(selectedExerciseId: ExerciseId?): ExerciseCatalogUiState {
         val viewModel: ExerciseCatalogViewModel = hiltViewModel()
-        LaunchedEffect(selectedExerciseId) {
-            viewModel.updateSelection(selectedExerciseId)
-        }
         val state by viewModel.uiState.collectAsStateWithLifecycle()
-        return state
+        return remember(state, selectedExerciseId) {
+            state.copy(selectedExerciseId = selectedExerciseId)
+        }
     }
 
     override fun LazyListScope.Content(

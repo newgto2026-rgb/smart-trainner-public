@@ -45,7 +45,7 @@ class ExerciseCatalogViewModelTest {
     }
 
     @Test
-    fun uiState_loadsExercisesLatestLogsAndSelectedExercise() = runTest {
+    fun uiState_loadsExercisesAndLatestLogs() = runTest {
         val exercises = listOf(
             exercise("chest_press", MuscleGroup.CHEST),
             exercise("back_pull", MuscleGroup.BACK)
@@ -61,29 +61,12 @@ class ExerciseCatalogViewModelTest {
 
         viewModel.uiState.test {
             skipItems(1)
-            viewModel.updateSelection(ExerciseId("back_pull"))
             advanceUntilIdle()
 
-            val state = viewModel.uiState.value
+            val state = awaitItem()
             assertThat(state.exercises).containsExactlyElementsIn(exercises).inOrder()
             assertThat(state.latestWorkoutLogs).containsExactly(latestLog)
-            assertThat(state.selectedExerciseId?.value).isEqualTo("back_pull")
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun updateSelection_nullClearsSelectedExercise() = runTest {
-        val viewModel = viewModel()
-
-        viewModel.uiState.test {
-            skipItems(1)
-            viewModel.updateSelection(ExerciseId("chest_press"))
-            advanceUntilIdle()
-            viewModel.updateSelection(null)
-            advanceUntilIdle()
-
-            assertThat(viewModel.uiState.value.selectedExerciseId).isNull()
+            assertThat(state.selectedExerciseId).isNull()
             cancelAndIgnoreRemainingEvents()
         }
     }
