@@ -29,9 +29,7 @@ import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
-import com.smarttrainner.feature.exercise.api.ExerciseDetailActions
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
-import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
@@ -161,7 +159,7 @@ private fun TrainingScreen(
     onRecordDialogDismiss: () -> Unit,
     content: TrainingRouteContent
 ) {
-    val selectedExercise = state.selectedExercise
+    val selectedExerciseId = state.selectedExerciseId
     val recordingPlannedExercise = state.recordingPlannedExercise
     val routineState = state.routine
     val exerciseCatalogState = state.exerciseCatalog
@@ -239,7 +237,7 @@ private fun TrainingScreen(
             onExerciseSelected = onExerciseSelected
         )
     }
-    if (recordingPlannedExercise != null && selectedExercise == null) {
+    if (recordingPlannedExercise != null && selectedExerciseId == null) {
         workoutRecordingFeatureEntry.DialogRoute(
             plannedExercise = recordingPlannedExercise,
             onRecordSaved = onRecordSaved,
@@ -252,26 +250,21 @@ private fun TrainingScreen(
         state = routineState,
         actions = routineActions
     )
-    if (selectedExercise != null) {
+    if (selectedExerciseId != null) {
         val selectedPlannedExercise = if (state.recordingPlannedExercise == null && !routineState.customRoutineBuilder.visible) {
             routineState.plan?.days
                 ?.flatMap { it.exercises }
-                ?.firstOrNull { it.exercise.id == selectedExercise.id }
+                ?.firstOrNull { it.exercise.id == selectedExerciseId }
         } else {
             null
         }
-        exerciseDetailFeatureEntry.Dialog(
-            state = ExerciseDetailUiState(
-                exercise = selectedExercise,
-                latestWorkoutLog = state.latestWorkoutLogs.latestForExercise(selectedExercise.id),
-                showRecordAction = selectedPlannedExercise != null
-            ),
-            actions = ExerciseDetailActions(
-                onDismiss = onExerciseDetailDismiss,
-                onRecordRequested = {
-                    selectedPlannedExercise?.let(onRecordSelected)
-                }
-            )
+        exerciseDetailFeatureEntry.DialogRoute(
+            exerciseId = selectedExerciseId,
+            showRecordAction = selectedPlannedExercise != null,
+            onDismiss = onExerciseDetailDismiss,
+            onRecordRequested = {
+                selectedPlannedExercise?.let(onRecordSelected)
+            }
         )
     }
 

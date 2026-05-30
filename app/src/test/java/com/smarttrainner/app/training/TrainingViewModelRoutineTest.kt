@@ -233,7 +233,7 @@ class TrainingViewModelRoutineTest {
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
-            assertThat(state.selectedExercise?.id?.value).isEqualTo("chest_press")
+            assertThat(state.selectedExerciseId?.value).isEqualTo("chest_press")
             assertThat(state.recordingPlannedExercise?.id).isEqualTo(planned.id)
             cancelAndIgnoreRemainingEvents()
         }

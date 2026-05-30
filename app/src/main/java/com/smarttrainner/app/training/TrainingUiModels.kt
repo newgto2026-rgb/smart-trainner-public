@@ -20,12 +20,9 @@ data class TrainingUiState(
     val routine: RoutineUiState = RoutineUiState(),
     val exerciseCatalog: ExerciseCatalogUiState = ExerciseCatalogUiState(),
     val recordingPlannedExercise: PlannedExercise? = null,
-    val selectedExercise: Exercise? = null,
+    val selectedExerciseId: ExerciseId? = null,
     val selectedPlannedExercise: PlannedExercise? = null
 ) {
-    val selectedExerciseId: ExerciseId?
-        get() = selectedExercise?.id
-
     val templates: List<PlanTemplate>
         get() = routine.templates
 

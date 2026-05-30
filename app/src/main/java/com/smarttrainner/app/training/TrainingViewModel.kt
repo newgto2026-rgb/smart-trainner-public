@@ -199,7 +199,6 @@ class TrainingViewModel @Inject constructor(
         val recommendation = presentation.recommendation
         val previewTemplateId = control.routineDialogState.previewTemplateId
             ?: recommendation.primaryTemplateId
-        val selectedExercise = data.exercises.firstOrNull { it.id == control.selectedExerciseId }
         val recordingPlanned = data.plan.findPlannedExercise(control.selectedPlannedExerciseId)
         val selectedPlanned = recordingPlanned
             ?: presentation.nextRoutineDayUi?.startExercise
@@ -233,7 +232,7 @@ class TrainingViewModel @Inject constructor(
                 selectedExerciseId = control.selectedExerciseId
             ),
             recordingPlannedExercise = recordingPlanned,
-            selectedExercise = selectedExercise,
+            selectedExerciseId = control.selectedExerciseId,
             selectedPlannedExercise = selectedPlanned
         )
     }.stateIn(

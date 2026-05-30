@@ -25,7 +25,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.Exercise
-import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanLevel
 import com.smarttrainner.core.model.PlanTemplate
@@ -146,10 +145,6 @@ internal fun <T> List<T>.toCollapsedText(): String? =
 
 internal fun Double.toRecordInput(): String =
     if (rem(1.0) == 0.0) toLong().toString() else toString()
-
-internal fun List<WorkoutLog>.latestForExercise(exerciseId: ExerciseId): WorkoutLog? =
-    firstOrNull { it.exerciseId == exerciseId }
-        ?: filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
 
 @Composable
 internal fun WeeklyPlan.localizedName(): String =
