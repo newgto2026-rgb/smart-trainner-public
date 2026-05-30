@@ -19,7 +19,7 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.smarttrainner.app.MainActivity
-import com.smarttrainner.core.data.DataModule
+import com.smarttrainner.app.di.CoreRepositoryBindingsModule
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.RoutinePlanRepository
 import com.smarttrainner.core.domain.RoutineProgressRepository
@@ -37,7 +37,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @HiltAndroidTest
-@UninstallModules(DataModule::class)
+@UninstallModules(CoreRepositoryBindingsModule::class)
 @RunWith(AndroidJUnit4::class)
 class TrainingUiTest {
     @get:Rule(order = 0)

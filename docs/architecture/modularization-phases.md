@@ -589,6 +589,29 @@ Next PR scope:
 - Re-audit remaining app coordinator responsibilities now that feature routing, feature ViewModels, DI assembly, and shared data implementations are no longer catch-all structures.
 - Consider splitting `TrainingMappers.kt` by storage concern only if mapper growth starts obscuring ownership.
 
+## Phase 30: App-Owned Core Repository DI Assembly
+
+Status: stacked after Phase 29 on `codex/modularization-app-owned-core-data-di`.
+
+Move shared repository binding assembly out of `:core:data` and into the app composition root. Repository interfaces remain in `:core:domain`; implementations remain in `:core:data`; the app now owns the final choice of which implementation satisfies each shared contract.
+
+First PR scope:
+
+- Replace the core-data `DataModule` with app-owned `CoreRepositoryBindingsModule`.
+- Keep repository implementation classes in `:core:data` and bind them from `app/src/main/java/com/smarttrainner/app/di`.
+- Update Hilt UI tests to uninstall the app-owned repository binding module before binding in-memory repository fakes.
+- Extend `checkModuleBoundaries` so app production code may reference `core:data`, `core:database`, `core:datastore`, or `core:network` only from app-owned DI composition modules.
+
+Split decision:
+
+- Do not move database, datastore, or network provider modules in this phase. Those modules still own platform/resource construction for their implementation details; this phase targets app-level repository contract assembly.
+- Do not add `:feature:*:domain`, `:feature:*:data`, or `:feature:*:network`. The repository contracts remain shared across multiple feature flows.
+
+Next PR scope:
+
+- Re-audit the remaining app `TrainingViewModel` and coordinator routes to confirm they hold only cross-feature handoff state.
+- Consider whether `TrainingMappers.kt` should be split by storage concern after DI assembly no longer hides repository ownership.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -600,6 +623,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - App no longer owns the routine/exercise `LazyListScope` screen assembly; shared screen chrome lives in `:core:ui`, and feature APIs expose composable route surfaces.
 - Core domain persistence contracts are no longer one broad `TrainingRepository`; use cases depend on concern-specific shared contracts.
 - Core data repository implementations now mirror those concern-specific contracts instead of one catch-all implementation.
+- App-owned DI composition now binds shared core-domain repository contracts to their core-data implementations.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:
@@ -609,6 +633,7 @@ Current guardrails still enforce the important lower-level boundary:
 - Feature API modules must not depend on feature implementation or entry modules.
 - Feature implementation modules must not depend on other feature implementation or entry modules directly.
 - Only `:app` may depend on the listed feature implementation modules for composition-root DI.
+- App production code may reference core data/storage/network implementation packages only from app-owned DI composition modules.
 
 ## Split Decision
 

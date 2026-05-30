@@ -79,6 +79,8 @@ val checkModuleBoundaries by tasks.registering {
 
         val violations = mutableListOf<String>()
         val featureImplReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.impl(\.|$)""")
+        val coreImplementationReferencePattern =
+            Regex("""com\.smarttrainner\.core\.(data|database|datastore|network)(\.|$)""")
 
         projectEdges.get().forEach { edgeString ->
             val parts = edgeString.split("|")
@@ -129,6 +131,10 @@ val checkModuleBoundaries by tasks.registering {
                     if (featureImplReferencePattern.containsMatchIn(line)) {
                         violations +=
                             "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature implementation references in :app are allowed only in app-owned DI composition modules."
+                    }
+                    if (coreImplementationReferencePattern.containsMatchIn(line)) {
+                        violations +=
+                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: core data/storage/network references in :app are allowed only in app-owned DI composition modules."
                     }
                 }
             }
