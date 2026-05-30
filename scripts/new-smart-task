@@ -25,20 +25,22 @@ fi
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/.." && pwd)"
 expected_repo="newgto2026-rgb/smart-trainner-public"
-remote_url="$(git -C "$repo_root" remote get-url origin)"
+remote_url="$(git -C "$repo_root" remote get-url origin 2>/dev/null || true)"
 
-case "$remote_url" in
-  git@github.com:newgto2026-rgb/smart-trainner-public.git|\
-  ssh://git@github.com/newgto2026-rgb/smart-trainner-public.git|\
-  https://github.com/newgto2026-rgb/smart-trainner-public.git|\
-  https://github.com/newgto2026-rgb/smart-trainner-public)
-    ;;
-  *)
-    printf 'origin must point to %s before creating a task worktree.\n' "$expected_repo" >&2
-    printf 'Current origin: %s\n' "$remote_url" >&2
-    exit 1
-    ;;
-esac
+if [[ -z "$remote_url" ]]; then
+  printf 'Error: "origin" remote is not configured.\n' >&2
+  exit 1
+fi
+
+normalized_remote_url="${remote_url%/}"
+normalized_remote_url="${normalized_remote_url%.git}"
+normalized_remote_url="${normalized_remote_url%/}"
+
+if [[ "$normalized_remote_url" != *"$expected_repo" ]]; then
+  printf 'origin must point to %s before creating a task worktree.\n' "$expected_repo" >&2
+  printf 'Current origin: %s\n' "$remote_url" >&2
+  exit 1
+fi
 
 branch="codex/$task_name"
 worktree_root="${SMART_TRAINNER_WORKTREE_ROOT:-$HOME/.codex/worktrees}"

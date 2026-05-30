@@ -3,7 +3,7 @@
 ## Source Of Truth
 - GitHub app repo: `newgto2026-rgb/smart-trainner-public`.
 - The `origin` remote for this checkout should point to `https://github.com/newgto2026-rgb/smart-trainner-public.git`.
-- `/Users/kimtaenyun/AndroidStudioProjects/MyFirstApp` is read-only reference material. Do not modify it.
+- A local `MyFirstApp` checkout, when available, is read-only reference material. Use `SMART_TRAINNER_REFERENCE_APP` or your local checkout path to locate it; do not modify it.
 
 ## New Task Workflow
 - Start every new task from the latest public `main` by running `scripts/new-smart-task <task-name>`.
