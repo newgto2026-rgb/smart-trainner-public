@@ -10,7 +10,7 @@ internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel
     dayIndex: Int,
     completedIds: Set<PlannedExerciseId>
 ): NextRoutineDayUiModel {
-    val nextDay = template?.days?.let { days ->
+    val nextDay = template?.days?.takeIf { it.isNotEmpty() }?.let { days ->
         days.getOrNull((dayIndex + 1) % days.size)
     }
     return NextRoutineDayUiModel(

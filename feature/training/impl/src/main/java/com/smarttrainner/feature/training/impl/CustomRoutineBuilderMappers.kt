@@ -3,19 +3,10 @@ package com.smarttrainner.feature.training.impl
 import com.smarttrainner.core.model.CustomRoutineDayInput
 import com.smarttrainner.core.model.CustomRoutineExerciseInput
 import com.smarttrainner.core.model.CustomRoutineInput
-import com.smarttrainner.core.model.RoutineRecommendationInput
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 internal const val MAX_CUSTOM_ROUTINE_DAYS = 7
-
-internal fun RoutineRecommendationFormState.toInput(): RoutineRecommendationInput =
-    RoutineRecommendationInput(
-        daysPerWeek = daysPerWeek,
-        sessionMinutes = sessionMinutes,
-        experience = experience,
-        feeling = feeling
-    )
 
 internal fun defaultBuilderDay(): CustomRoutineDayFormState = CustomRoutineDayFormState(
     title = "",

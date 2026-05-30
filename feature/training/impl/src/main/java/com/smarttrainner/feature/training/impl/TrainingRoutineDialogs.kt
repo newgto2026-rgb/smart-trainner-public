@@ -54,7 +54,6 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
-import java.time.LocalDate
 
 @Composable
 internal fun RoutineRecommendationControls(
@@ -517,7 +516,7 @@ internal fun RoutinePreviewSchedule(
 @Composable
 internal fun TodayProgressLine(state: TrainingUiState) {
     val todaysExercises = state.plan?.days
-        ?.firstOrNull { it.date == LocalDate.now() }
+        ?.firstOrNull { it.date == state.today }
         ?.exercises
         .orEmpty()
     val completed = todaysExercises.count { it.id in state.completedPlannedExerciseIds }

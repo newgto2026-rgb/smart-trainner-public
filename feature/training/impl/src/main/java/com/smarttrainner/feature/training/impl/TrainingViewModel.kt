@@ -196,6 +196,7 @@ class TrainingViewModel @Inject constructor(
             selectedTab = control.selectedTab,
             templates = data.templates,
             selectedTemplateId = data.plan.templateId,
+            today = LocalDate.now(clock),
             plan = data.plan,
             activeRoutineProgress = data.routineProgress,
             nextRoutineDay = nextRoutineDay,

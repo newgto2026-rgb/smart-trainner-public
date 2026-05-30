@@ -15,6 +15,7 @@ import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
+import java.time.LocalDate
 
 enum class TrainingTab {
     HOME,
@@ -108,6 +109,7 @@ data class TrainingUiState(
     val selectedTab: TrainingTab = TrainingTab.HOME,
     val templates: List<PlanTemplate> = emptyList(),
     val selectedTemplateId: String = "",
+    val today: LocalDate = LocalDate.EPOCH,
     val plan: WeeklyPlan? = null,
     val activeRoutineProgress: RoutineProgress? = null,
     val nextRoutineDay: WorkoutDayPlan? = null,
