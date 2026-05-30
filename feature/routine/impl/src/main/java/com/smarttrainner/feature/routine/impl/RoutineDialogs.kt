@@ -1,16 +1,13 @@
 package com.smarttrainner.feature.routine.impl
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -42,7 +39,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +52,7 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.ui.SmartTrainnerProgressBar
 import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
 import com.smarttrainner.feature.routine.api.RoutineUiState
 
@@ -541,52 +538,12 @@ internal fun TodayProgressLine(state: RoutineUiState) {
             color = SmartTrainnerColors.Muted,
             style = MaterialTheme.typography.bodyMedium
         )
-        RoutineProgressBar(
+        SmartTrainnerProgressBar(
             progress = if (total == 0) 0f else completed.toFloat() / total,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
         )
-    }
-}
-
-@Composable
-internal fun RoutineProgressBar(
-    progress: Float,
-    modifier: Modifier = Modifier,
-    color: Color = SmartTrainnerColors.Green,
-    trackColor: Color = SmartTrainnerColors.Line
-) {
-    val boundedProgress = progress.coerceIn(0f, 1f)
-    Box(
-        modifier = modifier
-            .background(trackColor, RoundedCornerShape(8.dp))
-    ) {
-        if (boundedProgress > 0f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(boundedProgress)
-                    .fillMaxHeight()
-                    .background(color, RoundedCornerShape(8.dp))
-            )
-        }
-    }
-}
-
-@Composable
-internal fun <T> WrappedChipRows(
-    items: List<T>,
-    maxItemsPerRow: Int,
-    content: @Composable (T) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        items.chunked(maxItemsPerRow.coerceAtLeast(1)).forEach { rowItems ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                rowItems.forEach { item ->
-                    content(item)
-                }
-            }
-        }
     }
 }
 

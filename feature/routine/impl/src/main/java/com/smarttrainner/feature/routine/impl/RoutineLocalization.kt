@@ -44,23 +44,21 @@ import java.util.Locale
 
 @Composable
 internal fun LocalDate.dayOfWeekShort(): String =
-    if (isKoreanLocale()) {
-        when (dayOfWeek.value) {
-            1 -> "월"
-            2 -> "화"
-            3 -> "수"
-            4 -> "목"
-            5 -> "금"
-            6 -> "토"
-            else -> "일"
-        }
-    } else {
-        dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
-    }
+    dayOfWeek.getDisplayName(TextStyle.SHORT, currentLocale())
 
 @Composable
 internal fun isKoreanLocale(): Boolean =
-    LocalConfiguration.current.locales[0].language.equals("ko", ignoreCase = true)
+    currentLocale().language.equals("ko", ignoreCase = true)
+
+@Composable
+private fun currentLocale(): Locale {
+    val locales = LocalConfiguration.current.locales
+    return if (locales.isEmpty) {
+        Locale.getDefault()
+    } else {
+        locales[0] ?: Locale.getDefault()
+    }
+}
 
 @Composable
 internal fun Exercise.localizedName(): String =
@@ -147,8 +145,7 @@ internal fun Double.toRecordInput(): String =
     if (rem(1.0) == 0.0) toLong().toString() else toString()
 
 internal fun List<WorkoutLog>.latestForExercise(exerciseId: ExerciseId): WorkoutLog? =
-    firstOrNull { it.exerciseId == exerciseId }
-        ?: filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
+    filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
 
 @Composable
 internal fun WeeklyPlan.localizedName(): String =
@@ -431,11 +428,13 @@ internal fun PlanTemplateDay.previewTitle(source: RoutineSource): String =
             )
         } ?: planDayScheduleTitle(title, dayNumber)
     } else {
+        val primaryFocusLabel = primaryFocus?.localizedTodayFocusLabel()
+        val planFocusLabel = focus.takeIf { it.isNotBlank() }?.localizedPlanFocus()
         stringResource(
             R.string.routine_routine_preview_day_title,
             dayNumber,
-            requireNotNull(primaryFocus).localizedTodayFocusLabel(),
-            focus.localizedPlanFocus()
+            primaryFocusLabel ?: planFocusLabel ?: planDayDisplayTitle(title, dayNumber),
+            planFocusLabel ?: primaryFocusLabel ?: planDayDisplayTitle(title, dayNumber)
         )
     }
 

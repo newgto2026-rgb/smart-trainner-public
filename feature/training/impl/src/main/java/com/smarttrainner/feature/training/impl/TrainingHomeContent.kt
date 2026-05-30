@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineSource
+import com.smarttrainner.core.ui.SmartTrainnerProgressBar
+import com.smarttrainner.core.ui.SmartTrainnerWrappedRows
 import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
 import com.smarttrainner.feature.workout.api.RecordFormError
 
@@ -151,7 +153,7 @@ internal fun NextRoutineDayCard(
                     )
                 }
             }
-            RoutineProgressBar(
+            SmartTrainnerProgressBar(
                 progress = if (routineDay.totalExerciseCount == 0) {
                     0f
                 } else {
@@ -182,7 +184,7 @@ internal fun NextRoutineDayCard(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
-                    WrappedChipRows(
+                    SmartTrainnerWrappedRows(
                         items = focusItems,
                         maxItemsPerRow = 4
                     ) { focus ->

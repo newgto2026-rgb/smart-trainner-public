@@ -234,6 +234,27 @@ fun SmartTrainnerProgressBar(
 }
 
 @Composable
+fun <T> SmartTrainnerWrappedRows(
+    items: List<T>,
+    maxItemsPerRow: Int,
+    modifier: Modifier = Modifier,
+    content: @Composable (T) -> Unit
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items.chunked(maxItemsPerRow.coerceAtLeast(1)).forEach { rowItems ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                rowItems.forEach { item ->
+                    content(item)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun SmartTrainnerNumberField(
     label: String,
     value: String,
