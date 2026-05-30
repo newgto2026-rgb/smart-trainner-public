@@ -100,9 +100,19 @@ First PR scope:
 
 ## Phase 6: Dependency And DI Cleanup
 
+Status: stacked after Phase 5 on `codex/modularization-boundary-guardrails`.
+
 - Reduce direct `:app` dependencies on storage and network implementation modules where Hilt aggregation allows it.
 - Introduce a composition module only if it removes real app dependency noise without hiding runtime requirements.
 - Add module dependency checks so feature implementations cannot depend on each other directly.
+
+First PR scope:
+
+- Add a root `checkModuleBoundaries` verification task.
+- Fail builds when `core:*` depends on `feature:*`.
+- Fail builds when feature modules depend on data/storage/network implementations.
+- Fail builds when feature implementations or entries depend on other feature implementations/entries directly.
+- Wire boundary checks into lint tasks so normal quality gates catch dependency direction regressions.
 
 ## Split Decision
 
