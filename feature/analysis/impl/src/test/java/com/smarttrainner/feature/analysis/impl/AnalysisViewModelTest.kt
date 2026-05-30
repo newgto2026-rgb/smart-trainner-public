@@ -25,6 +25,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,6 +33,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -115,12 +118,51 @@ class AnalysisViewModelTest {
         }
     }
 
-    private fun viewModel() = AnalysisViewModel(
+    @Test
+    fun uiState_recomputesWeekStartWhenCollectionRestarts() = runTest {
+        val clock = MutableClock(fixedClock.instant(), fixedClock.zone)
+        val viewModel = viewModel(clock)
+
+        viewModel.uiState.test {
+            skipItems(1)
+            assertThat(awaitItem().summary?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        clock.setInstant(Instant.parse("2026-05-25T12:00:00Z"))
+        advanceTimeBy(5_001)
+        runCurrent()
+
+        viewModel.uiState.test {
+            assertThat(awaitItem().summary?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+            assertThat(awaitItem().summary?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
+            assertThat(repository.requestedWeekStartDates)
+                .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    private fun viewModel(clock: Clock = fixedClock) = AnalysisViewModel(
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
         observeWeeklySummary = ObserveWeeklySummaryUseCase(repository),
         observeExercises = ObserveExercisesUseCase(repository),
-        clock = fixedClock
+        clock = clock
     )
+}
+
+private class MutableClock(
+    private var currentInstant: Instant,
+    private val currentZone: ZoneId
+) : Clock() {
+    fun setInstant(instant: Instant) {
+        currentInstant = instant
+    }
+
+    override fun getZone(): ZoneId = currentZone
+
+    override fun withZone(zone: ZoneId): Clock = MutableClock(currentInstant, zone)
+
+    override fun instant(): Instant = currentInstant
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -162,6 +204,7 @@ private class FakeAnalysisRepository : TrainingRepository {
 
     override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> {
         requestedWeekStartDates += weekStartDate
+        summary.value = summary(weekStartDate)
         return summary
     }
 

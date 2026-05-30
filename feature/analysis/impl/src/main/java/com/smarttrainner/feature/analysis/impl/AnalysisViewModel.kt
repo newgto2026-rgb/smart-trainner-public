@@ -13,37 +13,43 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class AnalysisViewModel @Inject constructor(
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
     observeWeeklySummary: ObserveWeeklySummaryUseCase,
     observeExercises: ObserveExercisesUseCase,
     clock: Clock
 ) : ViewModel() {
-    private val weekStart = LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-
-    val uiState = combine(
-        observeLatestWorkoutLogs(),
-        observeWeeklySummary(weekStart),
-        observeExercises()
-    ) { latestLogs, summary, exercises ->
-        val exercisesById = exercises.associateBy { it.id }
-        AnalysisUiState(
-            recentLogs = latestLogs
-                .sortedByDescending { it.performedAt }
-                .take(RECENT_WORKOUT_LOG_LIMIT)
-                .map { log ->
-                    RecentWorkoutLogUiModel(
-                        log = log,
-                        exercise = exercisesById[log.exerciseId]
-                    )
-                },
-            summary = summary
-        )
+    val uiState = flow {
+        emit(LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)))
+    }.flatMapLatest { weekStart ->
+        combine(
+            observeLatestWorkoutLogs(),
+            observeWeeklySummary(weekStart),
+            observeExercises()
+        ) { latestLogs, summary, exercises ->
+            val exercisesById = exercises.associateBy { it.id }
+            AnalysisUiState(
+                recentLogs = latestLogs
+                    .sortedByDescending { it.performedAt }
+                    .take(RECENT_WORKOUT_LOG_LIMIT)
+                    .map { log ->
+                        RecentWorkoutLogUiModel(
+                            log = log,
+                            exercise = exercisesById[log.exerciseId]
+                        )
+                    },
+                summary = summary
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
