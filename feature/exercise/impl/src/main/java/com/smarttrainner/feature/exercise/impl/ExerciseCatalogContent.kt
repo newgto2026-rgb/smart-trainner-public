@@ -250,5 +250,4 @@ private fun Double.toRecordInput(): String =
     if (rem(1.0) == 0.0) toLong().toString() else toString()
 
 private fun List<WorkoutLog>.latestForExercise(exerciseId: ExerciseId): WorkoutLog? =
-    firstOrNull { it.exerciseId == exerciseId }
-        ?: filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
+    filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
