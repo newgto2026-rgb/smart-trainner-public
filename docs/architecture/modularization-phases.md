@@ -490,6 +490,32 @@ Next PR scope:
 - Split broad core-domain repository contracts before introducing feature-owned data/domain/network modules.
 - Continue shrinking app training code to route selection, tab composition, and explicit cross-feature handoffs only.
 
+## Phase 26: Feature-Owned Training Surfaces
+
+Status: stacked after Phase 25 on `codex/modularization-feature-owned-training-surfaces`.
+
+Stop using app-owned `LazyListScope` assembly as the public routine/exercise screen contract. App still owns navigation, route selection, and cross-feature dialog handoffs, but routine and exercise now expose composable route surfaces instead of asking app to provide a list container.
+
+First PR scope:
+
+- Move the shared training screen chrome, background, safe-drawing insets, header, and scrolling surface into `:core:ui`.
+- Replace routine API `LazyListScope` fragments with composable `RoutineRouteState` route methods.
+- Replace exercise catalog API `rememberUiState` plus `LazyListScope.Content` with a feature-owned composable route.
+- Keep app `TrainingRoute` focused on workout-recording, exercise-detail, and routine dialog coordination.
+- Move exercise catalog UI state out of the public API and back into `:feature:exercise:impl`.
+
+Split decision:
+
+- Do not add `:feature:*:domain`, `:feature:*:data`, or `:feature:*:network` in this phase. The pressure point is UI ownership, not feature-private repository ownership.
+- Keep shared screen chrome in `:core:ui` because multiple feature routes use it and it contains no feature-specific state.
+- Keep app passing app-level chrome strings into feature routes; features own the screen body and common surface usage, while app remains the navigation control tower.
+
+Next PR scope:
+
+- Split the broad `TrainingRepository` contract inside `:core:domain` into smaller shared contracts before considering feature-owned domain/data modules.
+- Revisit `:feature:*:entry` Hilt bindings and move composition-root bindings into app once the route APIs no longer force coordinator-mediated screen state.
+- Continue tightening feature APIs by removing state/action rendering escape hatches that only exist for previews or tests.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -498,6 +524,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - `:app` knows the feature APIs and entries because it owns routing and cross-feature composition.
 - App `TrainingViewModel` now coordinates selected exercise id and a generic single/continuous recording flow; workout recording, exercise detail, exercise catalog, analysis, routine, custom routine builder state, and routine continuation policy are feature-owned.
 - App no longer imports routine UI/action/form models or raw routine coordinator state; it consumes only the routine feature entry and opaque route API.
+- App no longer owns the routine/exercise `LazyListScope` screen assembly; shared screen chrome lives in `:core:ui`, and feature APIs expose composable route surfaces.
 - `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
 
 Current guardrails still enforce the important lower-level boundary:

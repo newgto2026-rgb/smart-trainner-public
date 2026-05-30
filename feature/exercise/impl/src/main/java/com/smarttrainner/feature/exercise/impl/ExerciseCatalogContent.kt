@@ -30,7 +30,6 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
-import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 
 private val armDetailGroups = listOf(
     MuscleGroup.BICEPS,

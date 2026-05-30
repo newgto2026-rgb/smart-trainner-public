@@ -1,10 +1,10 @@
 package com.smarttrainner.feature.routine.api
 
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
+import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 
 data class RoutineFeatureCallbacks(
     val onWorkoutStarted: (PlannedExercise) -> Unit = {},
@@ -20,9 +20,14 @@ interface RoutineRouteState {
 
     fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise?
 
-    fun LazyListScope.HomeSummary()
+    @Composable
+    fun HomeSummaryRoute(chrome: SmartTrainnerScreenChrome)
 
-    fun LazyListScope.Content(exerciseMediaRenderer: ExerciseMediaRenderer)
+    @Composable
+    fun Route(
+        chrome: SmartTrainnerScreenChrome,
+        exerciseMediaRenderer: ExerciseMediaRenderer
+    )
 
     @Composable
     fun Dialogs()

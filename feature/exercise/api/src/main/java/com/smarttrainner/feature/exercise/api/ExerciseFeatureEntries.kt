@@ -1,15 +1,14 @@
 package com.smarttrainner.feature.exercise.api
 
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 
 interface ExerciseCatalogFeatureEntry {
     @Composable
-    fun rememberUiState(selectedExerciseId: ExerciseId?): ExerciseCatalogUiState
-
-    fun LazyListScope.Content(
-        state: ExerciseCatalogUiState,
+    fun Route(
+        chrome: SmartTrainnerScreenChrome,
+        selectedExerciseId: ExerciseId?,
         actions: ExerciseCatalogActions
     )
 }

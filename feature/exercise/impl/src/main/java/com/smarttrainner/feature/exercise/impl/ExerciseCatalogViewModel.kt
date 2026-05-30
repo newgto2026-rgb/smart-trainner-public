@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
-import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,7 +15,7 @@ class ExerciseCatalogViewModel @Inject constructor(
     observeExercises: ObserveExercisesUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase
 ) : ViewModel() {
-    val uiState = combine(
+    internal val uiState = combine(
         observeExercises(),
         observeLatestWorkoutLogs()
     ) { exercises, latestLogs ->

@@ -1,6 +1,5 @@
 package com.smarttrainner.feature.exercise.impl
 
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -10,9 +9,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
+import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
-import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 import com.smarttrainner.feature.exercise.api.ExerciseDetailActions
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
@@ -24,22 +24,22 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
     ExerciseDetailFeatureEntry,
     ExerciseMediaRenderer {
     @Composable
-    override fun rememberUiState(selectedExerciseId: ExerciseId?): ExerciseCatalogUiState {
-        val viewModel: ExerciseCatalogViewModel = hiltViewModel()
-        val state by viewModel.uiState.collectAsStateWithLifecycle()
-        return remember(state, selectedExerciseId) {
-            state.copy(selectedExerciseId = selectedExerciseId)
-        }
-    }
-
-    override fun LazyListScope.Content(
-        state: ExerciseCatalogUiState,
+    override fun Route(
+        chrome: SmartTrainnerScreenChrome,
+        selectedExerciseId: ExerciseId?,
         actions: ExerciseCatalogActions
     ) {
-        exerciseCatalogContent(
-            state = state,
-            actions = actions
-        )
+        val viewModel: ExerciseCatalogViewModel = hiltViewModel()
+        val state by viewModel.uiState.collectAsStateWithLifecycle()
+        val routeState = remember(state, selectedExerciseId) {
+            state.copy(selectedExerciseId = selectedExerciseId)
+        }
+        SmartTrainnerScreenScaffold(chrome = chrome) {
+            exerciseCatalogContent(
+                state = routeState,
+                actions = actions
+            )
+        }
     }
 
     @Composable

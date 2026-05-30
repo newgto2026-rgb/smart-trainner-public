@@ -1,6 +1,5 @@
 package com.smarttrainner.feature.routine.impl
 
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -10,6 +9,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
+import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
+import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
 import com.smarttrainner.feature.routine.api.RoutineFeatureCallbacks
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineRouteState
@@ -81,19 +82,28 @@ private class DefaultRoutineRouteState(
     override fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =
         state.recordablePlannedExerciseFor(exerciseId)
 
-    override fun LazyListScope.HomeSummary() {
-        homeSummaryContent(
-            state = state,
-            actions = actions
-        )
+    @Composable
+    override fun HomeSummaryRoute(chrome: SmartTrainnerScreenChrome) {
+        SmartTrainnerScreenScaffold(chrome = chrome) {
+            homeSummaryContent(
+                state = state,
+                actions = actions
+            )
+        }
     }
 
-    override fun LazyListScope.Content(exerciseMediaRenderer: ExerciseMediaRenderer) {
-        planContent(
-            state = state,
-            actions = actions,
-            exerciseMediaRenderer = exerciseMediaRenderer
-        )
+    @Composable
+    override fun Route(
+        chrome: SmartTrainnerScreenChrome,
+        exerciseMediaRenderer: ExerciseMediaRenderer
+    ) {
+        SmartTrainnerScreenScaffold(chrome = chrome) {
+            planContent(
+                state = state,
+                actions = actions,
+                exerciseMediaRenderer = exerciseMediaRenderer
+            )
+        }
     }
 
     @Composable

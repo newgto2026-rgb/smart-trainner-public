@@ -2,16 +2,23 @@ package com.smarttrainner.core.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -33,10 +40,74 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.designsystem.SmartTrainnerGradients
 
 enum class SmartTrainnerUiTone {
     Neutral,
     Success
+}
+
+data class SmartTrainnerScreenChrome(
+    val title: String,
+    val subtitle: String
+)
+
+@Composable
+fun SmartTrainnerScreenScaffold(
+    chrome: SmartTrainnerScreenChrome,
+    modifier: Modifier = Modifier,
+    content: LazyListScope.() -> Unit
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(SmartTrainnerGradients.screen())
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+            contentPadding = PaddingValues(start = 18.dp, top = 14.dp, end = 18.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            item { SmartTrainnerScreenHeader(chrome = chrome) }
+            content()
+        }
+    }
+}
+
+@Composable
+private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = Color.Transparent,
+        shadowElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .background(SmartTrainnerGradients.brandLight(), RoundedCornerShape(8.dp))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = chrome.title,
+                    modifier = Modifier.testTag("training_app_title"),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    color = SmartTrainnerColors.Ink
+                )
+                Text(
+                    text = chrome.subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SmartTrainnerColors.Muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
 }
 
 @Composable
