@@ -1,4 +1,4 @@
-package com.smarttrainner.app.training
+package com.smarttrainner.feature.workout.impl
 
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
@@ -102,9 +102,9 @@ internal fun List<RecordSetFormState>.toWorkoutSetLogs(planned: PlannedExercise)
         )
     }
 
-fun String.onlyNumber(): String = filter { it.isDigit() }.take(3)
+internal fun String.onlyNumber(): String = filter { it.isDigit() }.take(3)
 
-fun String.onlyDecimal(): String {
+internal fun String.onlyDecimal(): String {
     var dotSeen = false
     return filter { char ->
         when {

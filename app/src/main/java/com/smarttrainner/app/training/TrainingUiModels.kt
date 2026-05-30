@@ -14,15 +14,12 @@ import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
 import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
 import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
 import com.smarttrainner.feature.routine.api.RoutineUiState
-import com.smarttrainner.feature.workout.api.RecordFormError
-import com.smarttrainner.feature.workout.api.RecordFormState
-import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
 import java.time.LocalDate
 
 data class TrainingUiState(
     val routine: RoutineUiState = RoutineUiState(),
     val exerciseCatalog: ExerciseCatalogUiState = ExerciseCatalogUiState(),
-    val workoutRecording: WorkoutRecordingUiState = WorkoutRecordingUiState(),
+    val recordingPlannedExercise: PlannedExercise? = null,
     val selectedExercise: Exercise? = null,
     val selectedPlannedExercise: PlannedExercise? = null
 ) {
@@ -82,18 +79,6 @@ data class TrainingUiState(
 
     val latestWorkoutLogs: List<WorkoutLog>
         get() = exerciseCatalog.latestWorkoutLogs
-
-    val recordingPlannedExercise: PlannedExercise?
-        get() = workoutRecording.recordingPlannedExercise
-
-    val recordForm: RecordFormState
-        get() = workoutRecording.recordForm
-
-    val formError: RecordFormError?
-        get() = workoutRecording.formError
-
-    val recordSaved: Boolean
-        get() = workoutRecording.recordSaved
 
     val completedPlannedExerciseIds: Set<PlannedExerciseId>
         get() = routine.completedPlannedExerciseIds

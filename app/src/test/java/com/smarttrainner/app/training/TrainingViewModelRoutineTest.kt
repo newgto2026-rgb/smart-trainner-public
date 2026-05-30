@@ -4,7 +4,6 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.CompleteRoutineDayUseCase
 import com.smarttrainner.core.domain.AdvanceRoutineDayUseCase
-import com.smarttrainner.core.domain.GetLatestWorkoutLogUseCase
 import com.smarttrainner.core.domain.ObserveCurrentWeeklyPlanUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
@@ -14,7 +13,6 @@ import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.RecommendRoutineUseCase
 import com.smarttrainner.core.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.core.domain.SaveCustomRoutineUseCase
-import com.smarttrainner.core.domain.SaveWorkoutLogUseCase
 import com.smarttrainner.core.domain.StartRoutineUseCase
 import com.smarttrainner.core.domain.TrainingRepository
 import com.smarttrainner.core.domain.ValidateCustomRoutineUseCase
@@ -250,13 +248,12 @@ class TrainingViewModelRoutineTest {
             awaitItem()
 
             viewModel.startWorkout(repository.plannedExercise(dayIndex = 0, exerciseIndex = 0))
-            viewModel.saveRecord()
+            viewModel.handleRecordSaved(repository.plannedExercise(dayIndex = 0, exerciseIndex = 0))
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
             assertThat(state.recordingPlannedExercise?.id)
                 .isEqualTo(repository.plannedExercise(dayIndex = 0, exerciseIndex = 1).id)
-            assertThat(state.recordSaved).isFalse()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -269,46 +266,13 @@ class TrainingViewModelRoutineTest {
             skipItems(1)
             awaitItem()
 
-            viewModel.selectPlannedExercise(repository.plannedExercise(dayIndex = 1))
-            viewModel.saveRecord()
+            val planned = repository.plannedExercise(dayIndex = 1)
+            viewModel.selectPlannedExercise(planned)
+            viewModel.handleRecordSaved(planned)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
             assertThat(state.recordingPlannedExercise).isNull()
-            assertThat(state.recordSaved).isFalse()
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun startWorkout_prefillsSetCountRepsAndWeightFromLatestExerciseLog() = runTest {
-        repository.setLogs(
-            listOf(
-                repository.completedLog(
-                    dayIndex = 0,
-                    performedAt = LocalDateTime.of(2026, 5, 19, 7, 0),
-                    setEntries = listOf(
-                        WorkoutSetLog(order = 1, reps = 7, weightKg = 42.5, durationMinutes = null),
-                        WorkoutSetLog(order = 2, reps = 8, weightKg = 45.0, durationMinutes = null, restSeconds = 120),
-                        WorkoutSetLog(order = 3, reps = 6, weightKg = 47.5, durationMinutes = null, restSeconds = 150),
-                        WorkoutSetLog(order = 4, reps = 5, weightKg = 50.0, durationMinutes = null, restSeconds = 180)
-                    )
-                )
-            )
-        )
-        val viewModel = viewModel()
-
-        viewModel.uiState.test {
-            skipItems(1)
-            awaitItem()
-
-            viewModel.startWorkout(repository.plannedExercise(dayIndex = 0, exerciseIndex = 0))
-            advanceUntilIdle()
-
-            val setEntries = viewModel.uiState.value.recordForm.setEntries
-            assertThat(setEntries.map { it.reps }).containsExactly("7", "8", "6", "5").inOrder()
-            assertThat(setEntries.map { it.weightKg }).containsExactly("42.5", "45", "47.5", "50").inOrder()
-            assertThat(setEntries.map { it.restSeconds }).containsExactly("90", "120", "150", "180").inOrder()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -740,13 +704,11 @@ class TrainingViewModelRoutineTest {
         observeRoutineProgress = ObserveRoutineProgressUseCase(repository),
         observeWorkoutLogs = ObserveWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
-        getLatestWorkoutLog = GetLatestWorkoutLogUseCase(repository),
         recommendRoutine = RecommendRoutineUseCase(),
         resolveRoutineCycleCompletion = ResolveRoutineCycleCompletionUseCase(),
         startRoutine = StartRoutineUseCase(repository),
         completeRoutineDay = CompleteRoutineDayUseCase(repository, AdvanceRoutineDayUseCase()),
         saveCustomRoutineUseCase = SaveCustomRoutineUseCase(repository, ValidateCustomRoutineUseCase()),
-        saveWorkoutLog = SaveWorkoutLogUseCase(repository),
         clock = clock
     )
 }

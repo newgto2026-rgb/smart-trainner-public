@@ -6,7 +6,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
@@ -32,7 +35,6 @@ import com.smarttrainner.feature.exercise.api.ExerciseDetailUiState
 import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.feature.routine.api.RoutineActions
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
-import com.smarttrainner.feature.workout.api.WorkoutRecordingActions
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 
 internal typealias TrainingRouteContent = LazyListScope.(
@@ -90,14 +92,7 @@ internal fun TrainingRoute(
         onWorkoutStarted = viewModel::startWorkout,
         onRecordSelected = viewModel::selectPlannedExercise,
         onCompleteRoutineDay = viewModel::completeCurrentRoutineDay,
-        onSetRepsChanged = viewModel::updateSetReps,
-        onSetWeightChanged = viewModel::updateSetWeight,
-        onSetDurationChanged = viewModel::updateSetDuration,
-        onSetRestChanged = viewModel::updateSetRest,
-        onAddSet = viewModel::addSetEntry,
-        onRemoveSet = viewModel::removeSetEntry,
-        onMemoChanged = viewModel::updateMemo,
-        onSaveRecord = viewModel::saveRecord,
+        onRecordSaved = viewModel::handleRecordSaved,
         onExerciseDetailDismiss = viewModel::dismissExerciseDetail,
         onRecordDialogDismiss = viewModel::dismissRecordDialog,
         content = content
@@ -161,14 +156,7 @@ private fun TrainingScreen(
     onWorkoutStarted: (PlannedExercise) -> Unit,
     onRecordSelected: (PlannedExercise) -> Unit,
     onCompleteRoutineDay: () -> Unit,
-    onSetRepsChanged: (Int, String) -> Unit,
-    onSetWeightChanged: (Int, String) -> Unit,
-    onSetDurationChanged: (Int, String) -> Unit,
-    onSetRestChanged: (Int, String) -> Unit,
-    onAddSet: () -> Unit,
-    onRemoveSet: (Int) -> Unit,
-    onMemoChanged: (String) -> Unit,
-    onSaveRecord: () -> Unit,
+    onRecordSaved: (PlannedExercise) -> Unit,
     onExerciseDetailDismiss: () -> Unit,
     onRecordDialogDismiss: () -> Unit,
     content: TrainingRouteContent
@@ -177,7 +165,6 @@ private fun TrainingScreen(
     val recordingPlannedExercise = state.recordingPlannedExercise
     val routineState = state.routine
     val exerciseCatalogState = state.exerciseCatalog
-    val workoutRecordingState = state.workoutRecording
     val routineActions = remember(
         onTemplateSelected,
         onRoutineDaysPerWeekChanged,
@@ -252,42 +239,12 @@ private fun TrainingScreen(
             onExerciseSelected = onExerciseSelected
         )
     }
-
-    val workoutRecordingActions = remember(
-        workoutRecordingState.recordingPlannedExercise,
-        onSetRepsChanged,
-        onSetWeightChanged,
-        onSetDurationChanged,
-        onSetRestChanged,
-        onAddSet,
-        onRemoveSet,
-        onMemoChanged,
-        onSaveRecord,
-        onExerciseMethodSelected,
-        onRecordDialogDismiss
-    ) {
-        WorkoutRecordingActions(
-            onSetRepsChanged = onSetRepsChanged,
-            onSetWeightChanged = onSetWeightChanged,
-            onSetDurationChanged = onSetDurationChanged,
-            onSetRestChanged = onSetRestChanged,
-            onAddSet = onAddSet,
-            onRemoveSet = onRemoveSet,
-            onMemoChanged = onMemoChanged,
-            onSaveRecord = onSaveRecord,
-            onExerciseMethodSelected = {
-                workoutRecordingState.recordingPlannedExercise
-                    ?.exercise
-                    ?.id
-                    ?.let(onExerciseMethodSelected)
-            },
-            onDismiss = onRecordDialogDismiss
-        )
-    }
     if (recordingPlannedExercise != null && selectedExercise == null) {
-        workoutRecordingFeatureEntry.Dialog(
-            state = workoutRecordingState,
-            actions = workoutRecordingActions,
+        workoutRecordingFeatureEntry.DialogRoute(
+            plannedExercise = recordingPlannedExercise,
+            onRecordSaved = onRecordSaved,
+            onExerciseMethodSelected = onExerciseMethodSelected,
+            onDismiss = onRecordDialogDismiss,
             exerciseMediaRenderer = exerciseMediaRenderer
         )
     }
@@ -324,7 +281,9 @@ private fun TrainingScreen(
             .background(SmartTrainnerGradients.screen())
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing),
             contentPadding = PaddingValues(start = 18.dp, top = 14.dp, end = 18.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {

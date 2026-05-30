@@ -3,7 +3,6 @@ package com.smarttrainner.app.training
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.domain.CompleteRoutineDayUseCase
-import com.smarttrainner.core.domain.GetLatestWorkoutLogUseCase
 import com.smarttrainner.core.domain.ObserveCurrentWeeklyPlanUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
@@ -13,7 +12,6 @@ import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.RecommendRoutineUseCase
 import com.smarttrainner.core.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.core.domain.SaveCustomRoutineUseCase
-import com.smarttrainner.core.domain.SaveWorkoutLogUseCase
 import com.smarttrainner.core.domain.StartRoutineUseCase
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
@@ -26,7 +24,6 @@ import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
-import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogUiState
 import com.smarttrainner.feature.routine.api.CustomRoutineBuilderState
 import com.smarttrainner.feature.routine.api.CustomRoutineDayFormState
@@ -36,15 +33,10 @@ import com.smarttrainner.feature.routine.api.NextRoutineDayUiModel
 import com.smarttrainner.feature.routine.api.RoutineRecommendationFormState
 import com.smarttrainner.feature.routine.api.RoutineUiState
 import com.smarttrainner.feature.routine.api.allowedCustomRoutineMuscleGroups
-import com.smarttrainner.feature.workout.api.RecordFormError
-import com.smarttrainner.feature.workout.api.RecordFormState
-import com.smarttrainner.feature.workout.api.RecordSetFormState
-import com.smarttrainner.feature.workout.api.WorkoutRecordingUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -67,13 +59,11 @@ class TrainingViewModel @Inject constructor(
     observeRoutineProgress: ObserveRoutineProgressUseCase,
     observeWorkoutLogs: ObserveWorkoutLogsUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
-    private val getLatestWorkoutLog: GetLatestWorkoutLogUseCase,
     private val recommendRoutine: RecommendRoutineUseCase,
     private val resolveRoutineCycleCompletion: ResolveRoutineCycleCompletionUseCase,
     private val startRoutine: StartRoutineUseCase,
     private val completeRoutineDay: CompleteRoutineDayUseCase,
     private val saveCustomRoutineUseCase: SaveCustomRoutineUseCase,
-    private val saveWorkoutLog: SaveWorkoutLogUseCase,
     private val clock: Clock
 ) : ViewModel() {
     private val weekStartFlow = flow {
@@ -82,7 +72,6 @@ class TrainingViewModel @Inject constructor(
 
     private val selectedExerciseId = MutableStateFlow<ExerciseId?>(null)
     private val selectedPlannedExerciseId = MutableStateFlow<PlannedExerciseId?>(null)
-    private val recordForm = MutableStateFlow(RecordFormState())
     private val recordingMode = MutableStateFlow(RecordingMode.SINGLE)
     private val recommendationForm = MutableStateFlow(RoutineRecommendationFormState())
     private val routinePreviewTemplateId = MutableStateFlow<String?>(null)
@@ -90,9 +79,7 @@ class TrainingViewModel @Inject constructor(
     private val showRoutineSettingsDialog = MutableStateFlow(false)
     private val showRoutineRecommendationsDialog = MutableStateFlow(false)
     private val customRoutineBuilder = MutableStateFlow(CustomRoutineBuilderState())
-    private val formError = MutableStateFlow<RecordFormError?>(null)
-    private val recordSaved = MutableStateFlow(false)
-    private var recordPrefillToken = 0L
+    private val completeDayFailed = MutableStateFlow(false)
 
     private val routineDialogState = combine(
         routinePreviewTemplateId,
@@ -109,17 +96,15 @@ class TrainingViewModel @Inject constructor(
     }
 
     private val formControlState = combine(
-        recordForm,
         recommendationForm,
         customRoutineBuilder,
-        formError,
+        completeDayFailed,
         routineDialogState
-    ) { form, recommendation, builder, error, routineDialog ->
+    ) { recommendation, builder, completeDayFailed, routineDialog ->
         TrainingFormControlState(
-            recordForm = form,
             recommendationForm = recommendation,
             customRoutineBuilder = builder,
-            formError = error,
+            completeDayFailed = completeDayFailed,
             routineDialogState = routineDialog
         )
     }
@@ -132,19 +117,11 @@ class TrainingViewModel @Inject constructor(
         TrainingControlState(
             selectedExerciseId = exerciseId,
             selectedPlannedExerciseId = plannedExerciseId,
-            recordForm = formControl.recordForm,
             recommendationForm = formControl.recommendationForm,
             customRoutineBuilder = formControl.customRoutineBuilder,
-            formError = formControl.formError,
+            completeDayFailed = formControl.completeDayFailed,
             routineDialogState = formControl.routineDialogState
         )
-    }
-
-    private val saveState = combine(
-        controlState,
-        recordSaved
-    ) { control, saved ->
-        control.copy(recordSaved = saved)
     }
 
     private val routinePlanState = weekStartFlow.flatMapLatest { weekStart ->
@@ -215,7 +192,7 @@ class TrainingViewModel @Inject constructor(
     }
 
     val uiState = combine(
-        saveState,
+        controlState,
         presentationState
     ) { control, presentation ->
         val data = presentation.data
@@ -248,21 +225,14 @@ class TrainingViewModel @Inject constructor(
                 logs = data.logs,
                 latestWorkoutLogs = data.latestLogs,
                 completedPlannedExerciseIds = presentation.completedIds,
-                completeDayError = control.formError == RecordFormError.COMPLETE_DAY_FAILED
+                completeDayError = control.completeDayFailed
             ),
             exerciseCatalog = ExerciseCatalogUiState(
                 exercises = data.exercises,
                 latestWorkoutLogs = data.latestLogs,
                 selectedExerciseId = control.selectedExerciseId
             ),
-            workoutRecording = WorkoutRecordingUiState(
-                recordingPlannedExercise = recordingPlanned,
-                weeklyLogs = data.logs,
-                latestWorkoutLogs = data.latestLogs,
-                recordForm = control.recordForm,
-                formError = control.formError,
-                recordSaved = control.recordSaved
-            ),
+            recordingPlannedExercise = recordingPlanned,
             selectedExercise = selectedExercise,
             selectedPlannedExercise = selectedPlanned
         )
@@ -589,10 +559,9 @@ class TrainingViewModel @Inject constructor(
                 completedDayIndex = dayIndex,
                 completedAt = clock.instant()
             )
-            formError.value = if (result.isSuccess) null else RecordFormError.COMPLETE_DAY_FAILED
+            completeDayFailed.value = result.isFailure
             if (result.isSuccess) {
                 selectedPlannedExerciseId.value = null
-                recordSaved.value = false
             }
         }
     }
@@ -613,168 +582,34 @@ class TrainingViewModel @Inject constructor(
         recordingMode.value = RecordingMode.SINGLE
         selectedPlannedExerciseId.value = exercise.id
         selectedExerciseId.value = null
-        prefillRecordForm(exercise)
-        formError.value = null
-        recordSaved.value = false
     }
 
     fun startWorkout(exercise: PlannedExercise) {
         recordingMode.value = RecordingMode.ROUTINE
         selectedPlannedExerciseId.value = exercise.id
         selectedExerciseId.value = null
-        prefillRecordForm(exercise)
-        formError.value = null
-        recordSaved.value = false
     }
 
     fun dismissRecordDialog() {
-        recordPrefillToken += 1
         selectedPlannedExerciseId.value = null
         recordingMode.value = RecordingMode.SINGLE
-        formError.value = null
-        recordSaved.value = false
     }
 
-    fun updateSetReps(index: Int, value: String) {
-        updateSetEntry(index) { it.copy(reps = value.onlyNumber()) }
-    }
-
-    fun updateSetWeight(index: Int, value: String) {
-        updateSetEntry(index) { it.copy(weightKg = value.onlyDecimal()) }
-    }
-
-    fun updateSetDuration(index: Int, value: String) {
-        updateSetEntry(index) { it.copy(durationMinutes = value.onlyNumber()) }
-    }
-
-    fun updateSetRest(index: Int, value: String) {
-        updateSetEntry(index) { it.copy(restSeconds = value.onlyNumber()) }
-    }
-
-    fun addSetEntry() {
-        val planned = uiState.value.recordingPlannedExercise ?: return
-        recordForm.update { form ->
-            if (form.setEntries.size >= MAX_RECORD_SETS) return@update form
-            val last = form.setEntries.lastOrNull()
-            form.copy(
-                setEntries = form.setEntries + (last ?: planned.defaultSetForm())
-            )
-        }
-        formError.value = null
-    }
-
-    fun removeSetEntry(index: Int) {
-        recordForm.update { form ->
-            if (form.setEntries.size <= 1 || index !in form.setEntries.indices) {
-                form
-            } else {
-                form.copy(setEntries = form.setEntries.filterIndexed { entryIndex, _ -> entryIndex != index })
-            }
-        }
-        formError.value = null
-    }
-
-    fun updateMemo(value: String) = recordForm.update { it.copy(memo = value.take(120)) }
-
-    fun saveRecord() {
-        val state = uiState.value
-        val planned = state.plan?.findPlannedExercise(selectedPlannedExerciseId.value)
-        if (planned == null) {
-            formError.value = RecordFormError.SELECT_EXERCISE
-            return
-        }
-        val form = recordForm.value
-        val validationError = validateSetEntries(planned, form.setEntries)
-        if (validationError != null) {
-            formError.value = validationError
-            return
-        }
-        val setEntries = form.setEntries.toWorkoutSetLogs(planned)
-        val firstReps = setEntries.firstOrNull { it.reps != null }?.reps
-        val firstWeight = setEntries.firstOrNull { it.weightKg != null }?.weightKg
-        val totalDuration = setEntries.sumOf { it.durationMinutes ?: 0 }.takeIf { it > 0 }
+    fun handleRecordSaved(planned: PlannedExercise) {
         val continueRoutine = recordingMode.value == RecordingMode.ROUTINE
-
-        viewModelScope.launch {
-            val result = saveWorkoutLog(
-                WorkoutLogInput(
-                    plannedExerciseId = planned.id,
-                    exerciseId = planned.exercise.id,
-                    performedAt = LocalDateTime.now(clock),
-                    sets = setEntries.size,
-                    reps = firstReps,
-                    weightKg = firstWeight,
-                    durationMinutes = totalDuration,
-                    memo = form.memo,
-                    completed = true,
-                    setEntries = setEntries
-                )
+        val nextPlanned = if (continueRoutine) {
+            uiState.value.plan?.nextIncompleteInSameDay(
+                currentId = planned.id,
+                completedIds = uiState.value.completedPlannedExerciseIds + planned.id
             )
-            if (result.isSuccess) {
-                formError.value = null
-                val latestState = uiState.value
-                val nextPlanned = if (continueRoutine) {
-                    latestState.plan?.nextIncompleteInSameDay(
-                        currentId = planned.id,
-                        completedIds = latestState.completedPlannedExerciseIds + planned.id
-                    )
-                } else {
-                    null
-                }
-                if (nextPlanned != null) {
-                    selectedPlannedExerciseId.value = nextPlanned.id
-                    prefillRecordForm(nextPlanned)
-                    recordSaved.value = false
-                } else {
-                    recordPrefillToken += 1
-                    selectedPlannedExerciseId.value = null
-                    recordingMode.value = RecordingMode.SINGLE
-                    recordForm.value = RecordFormState()
-                    recordSaved.value = false
-                }
-            } else {
-                formError.value = RecordFormError.SAVE_FAILED
-                recordSaved.value = false
-            }
+        } else {
+            null
         }
-    }
-
-    private fun prefillRecordForm(planned: PlannedExercise) {
-        val currentState = uiState.value
-        val previousLog = currentState.latestWorkoutLogs.latestRecordForExercise(planned.exercise.id)
-            ?: currentState.logs.latestRecordForExercise(planned.exercise.id)
-        val initialForm = RecordFormState(setEntries = planned.defaultSetForms(previousLog))
-        val token = recordPrefillToken + 1
-        recordPrefillToken = token
-        recordForm.value = initialForm
-
-        viewModelScope.launch {
-            val latestLog = getLatestWorkoutLog(planned.exercise.id) ?: return@launch
-            val latestForm = RecordFormState(setEntries = planned.defaultSetForms(latestLog))
-            if (
-                recordPrefillToken == token &&
-                selectedPlannedExerciseId.value == planned.id &&
-                recordForm.value == initialForm
-            ) {
-                recordForm.value = latestForm
-            }
-        }
-    }
-
-    private fun updateSetEntry(
-        index: Int,
-        update: (RecordSetFormState) -> RecordSetFormState
-    ) {
-        recordForm.update { form ->
-            if (index !in form.setEntries.indices) {
-                form
-            } else {
-                form.copy(
-                    setEntries = form.setEntries.mapIndexed { entryIndex, entry ->
-                        if (entryIndex == index) update(entry) else entry
-                    }
-                )
-            }
+        if (nextPlanned != null) {
+            selectedPlannedExerciseId.value = nextPlanned.id
+        } else {
+            selectedPlannedExerciseId.value = null
+            recordingMode.value = RecordingMode.SINGLE
         }
     }
 
@@ -809,22 +644,19 @@ class TrainingViewModel @Inject constructor(
     )
 
     private data class TrainingFormControlState(
-        val recordForm: RecordFormState,
         val recommendationForm: RoutineRecommendationFormState,
         val customRoutineBuilder: CustomRoutineBuilderState,
-        val formError: RecordFormError?,
+        val completeDayFailed: Boolean,
         val routineDialogState: RoutineDialogState
     )
 
     private data class TrainingControlState(
         val selectedExerciseId: ExerciseId?,
         val selectedPlannedExerciseId: PlannedExerciseId?,
-        val recordForm: RecordFormState,
         val recommendationForm: RoutineRecommendationFormState,
         val customRoutineBuilder: CustomRoutineBuilderState,
-        val formError: RecordFormError?,
-        val routineDialogState: RoutineDialogState,
-        val recordSaved: Boolean = false
+        val completeDayFailed: Boolean,
+        val routineDialogState: RoutineDialogState
     )
 
     private data class RoutineDialogState(

@@ -341,13 +341,33 @@ Next PR scope:
 - Move routine state and custom routine state from the app coordinator into `:feature:routine:impl`.
 - Move workout recording save/prefill state from the app coordinator into `:feature:workout:impl`.
 
+## Phase 19: Workout Recording State Ownership
+
+Status: stacked after Phase 18 on `codex/modularization-workout-recording-viewmodel`.
+
+Move workout recording form state out of the app-owned training coordinator and into the workout feature. App still chooses when the recording dialog is shown and receives a save-complete callback, but reps/weight/duration/rest/memo state, validation, latest-log prefill, and save orchestration now belong to `:feature:workout:impl`.
+
+First PR scope:
+
+- Add `WorkoutRecordingViewModel` in `:feature:workout:impl`.
+- Move record form mapping, validation, default set prefill, and save input construction from app into workout impl.
+- Add `WorkoutRecordingFeatureEntry.DialogRoute(...)` so app passes only the selected `PlannedExercise`, save callback, exercise-detail callback, dismiss callback, and core media renderer.
+- Remove workout recording form state and actions from `TrainingViewModel` and `TrainingUiState`.
+- Add workout ViewModel unit coverage for latest-log prefill and save orchestration.
+
+Next PR scope:
+
+- Move exercise catalog/detail state from the app coordinator into `:feature:exercise:impl`.
+- Move routine state and custom routine state from the app coordinator into `:feature:routine:impl`.
+- Revisit `:feature:*:entry` Hilt bindings once feature-owned routes no longer require coordinator-mediated state.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level, but not yet strict at the state-ownership level:
 
 - `:feature:analysis`, `:feature:exercise`, `:feature:routine`, and `:feature:workout` no longer depend on another feature's API, implementation, or entry module.
 - `:app` knows the feature APIs and entries because it owns routing and temporary cross-feature composition.
-- The temporary `TrainingViewModel` is now app-owned and still coordinates exercise, routine, and workout state; this must be split into feature-owned ViewModels before the architecture is fully modular.
+- The temporary `TrainingViewModel` is now app-owned and still coordinates exercise and routine state plus cross-feature recording flow selection; this must keep shrinking into feature-owned ViewModels before the architecture is fully modular.
 - `:feature:*:entry` modules own Hilt bindings today; app includes those entry modules, but the final composition root is not purely app-owned yet.
 
 Current guardrails still enforce the important lower-level boundary:
@@ -360,4 +380,4 @@ Current guardrails still enforce the important lower-level boundary:
 
 ## Split Decision
 
-`routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress, exercise selection, and recording forms. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.
+`routine`, `exercise`, `analysis`, and `workout` are valid feature candidates because they map to user-visible destinations or flows. They should not be split all at once while a single `TrainingViewModel` still coordinates routine progress and exercise selection. The safer path is to land the app shell first, then move one cohesive destination or flow per PR.
