@@ -2,12 +2,12 @@ package com.smarttrainner.feature.exercise.api
 
 import androidx.compose.runtime.Composable
 import com.smarttrainner.core.model.ExerciseId
-import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 
 interface ExerciseCatalogFeatureEntry {
     @Composable
     fun Route(
-        chrome: SmartTrainnerScreenChrome,
+        title: String,
+        subtitle: String,
         selectedExerciseId: ExerciseId?,
         actions: ExerciseCatalogActions
     )

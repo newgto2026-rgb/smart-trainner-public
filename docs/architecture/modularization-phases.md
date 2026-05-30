@@ -922,6 +922,30 @@ Next PR scope:
 - Audit `SmartTrainnerScreenChrome` in routine/exercise APIs as the next remaining common UI type exposed through public feature route contracts.
 - Revisit workout command ownership separately; workout recording writes may justify `:feature:workout:domain` and `:feature:workout:data`, but this UI composition cleanup does not.
 
+## Phase 44: Feature Route Chrome Contract Trim
+
+Status: stacked after Phase 43 on `codex/modularization-feature-route-chrome-contract`.
+
+Keep app-owned routing responsible for the route title/subtitle values, but do not expose the shared `SmartTrainnerScreenChrome` UI type through feature APIs. Feature implementations can still render the shared scaffold internally because that is implementation UI composition, not a public contract.
+
+First PR scope:
+
+- Replace `SmartTrainnerScreenChrome` parameters in exercise and routine public route APIs with `title` and `subtitle` strings.
+- Construct `SmartTrainnerScreenChrome` inside exercise/routine implementations before calling `SmartTrainnerScreenScaffold`.
+- Keep app training routes as the control tower for selecting route title/subtitle values.
+- Remove `:core:ui` from `:feature:exercise:api` and `:feature:routine:api`.
+
+Split decision:
+
+- Do not add a new shared route chrome model in `:core:model`. The contract is currently only two display strings and does not need a domain or model type.
+- Do not move the shared scaffold out of `:core:ui`; it is still common UI reused by feature implementations.
+- Do not add feature domain/data/network modules for this phase because the change is public UI-contract hygiene, not repository ownership.
+
+Next PR scope:
+
+- Continue trimming public feature API wrappers, especially single-callback action holder types.
+- Re-audit workout recording repository commands separately for possible `:feature:workout:domain` and `:feature:workout:data` ownership.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -948,7 +972,9 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Routine common badge and empty-state UI now use `:core:ui`; only routine-specific content-description wrapping remains in `:feature:routine:impl`.
 - Routine API no longer exports unused Compose foundation or desugaring dependencies; its public dependencies are limited to the contracts still referenced by app routing and handoffs.
 - Routine and workout APIs no longer expose `ExerciseMediaRenderer`; app DI provides the renderer to feature implementations instead of app navigation manually threading a common UI renderer.
-- Workout API no longer depends on `:core:ui`; routine/exercise APIs still reference `SmartTrainnerScreenChrome` until route chrome ownership is tightened.
+- Workout API no longer depends on `:core:ui` after removing the media renderer from its public route contract.
+- Exercise and routine APIs no longer expose `SmartTrainnerScreenChrome`; app passes only route title/subtitle strings, and feature implementations build common UI chrome internally.
+- Exercise, routine, and workout API modules no longer depend on `:core:ui`; common UI is an implementation dependency where needed.
 - Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 

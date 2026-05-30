@@ -8,12 +8,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import javax.inject.Inject
 
 class ExerciseFeatureEntryImpl @Inject constructor() :
@@ -22,14 +22,20 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
     ExerciseMediaRenderer {
     @Composable
     override fun Route(
-        chrome: SmartTrainnerScreenChrome,
+        title: String,
+        subtitle: String,
         selectedExerciseId: ExerciseId?,
         actions: ExerciseCatalogActions
     ) {
         val viewModel: ExerciseCatalogViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         val routeState = state.copy(selectedExerciseId = selectedExerciseId)
-        SmartTrainnerScreenScaffold(chrome = chrome) {
+        SmartTrainnerScreenScaffold(
+            chrome = SmartTrainnerScreenChrome(
+                title = title,
+                subtitle = subtitle
+            )
+        ) {
             exerciseCatalogContent(
                 state = routeState,
                 actions = actions

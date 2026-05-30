@@ -6,7 +6,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.R
-import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogActions
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
@@ -26,7 +25,7 @@ fun TrainingHomeRoute(
         routineFeatureEntry = routineFeatureEntry,
         viewModel = viewModel
     )
-    val chrome = trainingScreenChrome(routineRouteState)
+    val routeChrome = trainingRouteChrome(routineRouteState)
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
@@ -36,7 +35,8 @@ fun TrainingHomeRoute(
     ) {
         routineFeatureEntry.HomeSummaryRoute(
             routeState = routineRouteState,
-            chrome = chrome
+            title = routeChrome.title,
+            subtitle = routeChrome.subtitle
         )
     }
 }
@@ -52,7 +52,7 @@ fun TrainingRoutineRoute(
         routineFeatureEntry = routineFeatureEntry,
         viewModel = viewModel
     )
-    val chrome = trainingScreenChrome(routineRouteState)
+    val routeChrome = trainingRouteChrome(routineRouteState)
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
@@ -62,7 +62,8 @@ fun TrainingRoutineRoute(
     ) {
         routineFeatureEntry.Route(
             routeState = routineRouteState,
-            chrome = chrome
+            title = routeChrome.title,
+            subtitle = routeChrome.subtitle
         )
     }
 }
@@ -80,7 +81,7 @@ fun TrainingExercisesRoute(
         routineFeatureEntry = routineFeatureEntry,
         viewModel = viewModel
     )
-    val chrome = trainingScreenChrome(routineRouteState)
+    val routeChrome = trainingRouteChrome(routineRouteState)
     val exerciseCatalogActions = remember(viewModel) {
         ExerciseCatalogActions(
             onExerciseSelected = viewModel::selectExercise
@@ -94,7 +95,8 @@ fun TrainingExercisesRoute(
         routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {
         exerciseCatalogFeatureEntry.Route(
-            chrome = chrome,
+            title = routeChrome.title,
+            subtitle = routeChrome.subtitle,
             selectedExerciseId = trainingState.selectedExerciseId,
             actions = exerciseCatalogActions
         )
@@ -102,11 +104,16 @@ fun TrainingExercisesRoute(
 }
 
 @Composable
-private fun trainingScreenChrome(routineRouteState: RoutineRouteState): SmartTrainnerScreenChrome =
-    SmartTrainnerScreenChrome(
+private fun trainingRouteChrome(routineRouteState: RoutineRouteState): TrainingRouteChrome =
+    TrainingRouteChrome(
         title = stringResource(R.string.app_name),
         subtitle = routineRouteState.currentRoutineName
     )
+
+private data class TrainingRouteChrome(
+    val title: String,
+    val subtitle: String
+)
 
 @Composable
 private fun rememberRoutineRouteState(

@@ -75,10 +75,16 @@ class RoutineFeatureEntryImpl @Inject constructor(
     @Composable
     override fun HomeSummaryRoute(
         routeState: RoutineRouteState,
-        chrome: SmartTrainnerScreenChrome
+        title: String,
+        subtitle: String
     ) {
         val routineState = routeState.asDefaultRoutineRouteState()
-        SmartTrainnerScreenScaffold(chrome = chrome) {
+        SmartTrainnerScreenScaffold(
+            chrome = SmartTrainnerScreenChrome(
+                title = title,
+                subtitle = subtitle
+            )
+        ) {
             homeSummaryContent(
                 state = routineState.state,
                 actions = routineState.actions
@@ -89,10 +95,16 @@ class RoutineFeatureEntryImpl @Inject constructor(
     @Composable
     override fun Route(
         routeState: RoutineRouteState,
-        chrome: SmartTrainnerScreenChrome
+        title: String,
+        subtitle: String
     ) {
         val routineState = routeState.asDefaultRoutineRouteState()
-        SmartTrainnerScreenScaffold(chrome = chrome) {
+        SmartTrainnerScreenScaffold(
+            chrome = SmartTrainnerScreenChrome(
+                title = title,
+                subtitle = subtitle
+            )
+        ) {
             planContent(
                 state = routineState.state,
                 actions = routineState.actions,
