@@ -41,8 +41,6 @@ import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.core.ui.SmartTrainnerMetricTile
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
-import com.smarttrainner.feature.analysis.api.AnalysisUiState
-import com.smarttrainner.feature.analysis.api.RecentWorkoutLogUiModel
 import java.util.Locale
 
 @Composable

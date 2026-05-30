@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveWeeklySummaryUseCase
-import com.smarttrainner.feature.analysis.api.AnalysisUiState
-import com.smarttrainner.feature.analysis.api.RecentWorkoutLogUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
@@ -28,7 +26,7 @@ class AnalysisViewModel @Inject constructor(
     observeExercises: ObserveExercisesUseCase,
     clock: Clock
 ) : ViewModel() {
-    val uiState = flow {
+    internal val uiState = flow {
         emit(LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)))
     }.flatMapLatest { weekStart ->
         combine(

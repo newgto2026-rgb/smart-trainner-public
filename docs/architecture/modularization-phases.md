@@ -632,8 +632,30 @@ Split decision:
 
 Next PR scope:
 
-- Tighten remaining feature API route contracts, starting with unused public API surface such as analysis content rendering that app no longer consumes.
+- Tighten remaining feature API route contracts beyond analysis, especially feature APIs that expose helper/rendering surfaces not consumed by app routing.
 - Continue auditing test fakes and fixtures so app tests depend on domain contracts first and implementation fixtures only when intentionally exercising production content.
+
+## Phase 32: Analysis Route-Only API Contract
+
+Status: stacked after Phase 31 on `codex/modularization-analysis-route-contract`.
+
+Tighten the analysis feature API so it exposes only the app-routable feature entry. The app already delegates the analysis destination through `AnalysisFeatureEntry.Route()`, so the content-rendering API and UI state models are implementation details rather than cross-module contracts.
+
+First PR scope:
+
+- Remove `AnalysisFeatureEntry.Content(state)` from `:feature:analysis:api`.
+- Move analysis UI state models into `:feature:analysis:impl`.
+- Drop `:core:model` and core library desugaring from the analysis API module once the public API no longer exposes domain/UI state models.
+
+Split decision:
+
+- Do not introduce `:feature:analysis:domain` or `:feature:analysis:data`; analysis still consumes shared core-domain use cases and has no feature-private repository contract.
+- Keep the app's responsibility limited to routing and DI composition; analysis view model state remains feature-owned.
+
+Next PR scope:
+
+- Continue tightening public feature APIs that still expose helper surfaces beyond app-owned routing needs.
+- Re-audit whether exercise media rendering should remain as a shared core UI contract or be separated from `ExerciseFeatureEntryImpl` ownership.
 
 ## Strict Feature Isolation Audit
 
@@ -648,6 +670,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Core data repository implementations now mirror those concern-specific contracts instead of one catch-all implementation.
 - App-owned DI composition now binds shared core-domain repository contracts to their core-data implementations.
 - App-owned DI composition now owns production platform providers for Room, Retrofit, and app-wide time.
+- Analysis API now exposes only a route entry; its content-rendering surface and UI state models are implementation details.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:

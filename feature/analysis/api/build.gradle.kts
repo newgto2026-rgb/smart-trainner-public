@@ -18,7 +18,6 @@ android {
     }
 
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -28,8 +27,6 @@ android {
 }
 
 dependencies {
-    api(project(":core:model"))
     api(platform(libs.androidx.compose.bom))
     api(libs.androidx.compose.runtime)
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
