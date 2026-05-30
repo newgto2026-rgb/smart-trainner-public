@@ -14,3 +14,20 @@ interface ExerciseMediaRenderer {
         contentDescription: String?
     )
 }
+
+@Composable
+fun ExerciseMediaRenderer.Image(
+    exercise: Exercise,
+    modifier: Modifier = Modifier,
+    stepIndex: Int? = null,
+    cleanThumbnailCrop: Boolean = false,
+    contentDescription: String? = null
+) {
+    Image(
+        exercise = exercise,
+        modifier = modifier,
+        stepIndex = stepIndex,
+        cleanThumbnailCrop = cleanThumbnailCrop,
+        contentDescription = contentDescription
+    )
+}
