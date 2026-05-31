@@ -1069,6 +1069,29 @@ Next PR scope:
 
 - Review whether `:core:network` should remain wired in app DI while no repository consumes `SmartTrainnerApi`.
 
+## Phase 50: Drop Unused Network Wiring
+
+Status: stacked after Phase 49 on `codex/modularization-drop-unused-network-wiring`.
+
+Keep `:core:network` as the place where shared remote API contracts and DTOs belong, but remove app-level Retrofit assembly until a repository actually consumes `SmartTrainnerApi`. App-owned DI should be the final composition root for platform providers, not a home for unused future wiring.
+
+First PR scope:
+
+- Remove `PlatformNetworkModule` from app DI.
+- Remove the app dependency on `:core:network`.
+- Remove app-only JSON/OkHttp/Retrofit dependencies that were used only by the deleted provider module.
+- Tighten `checkModuleBoundaries` so app DI no longer has an approved core-network provider file.
+
+Split decision:
+
+- Do not create any `:feature:*:network` module. No feature has a feature-private remote contract yet.
+- Do not delete `:core:network` in this PR; it remains the approved location for shared network contracts when a data implementation actually consumes them.
+- Reintroduce network provider assembly in app only alongside a real data repository consumer and an explicit boundary decision.
+
+Next PR scope:
+
+- Continue reviewing remaining core-domain read use cases to ensure they are genuinely shared.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -1081,7 +1104,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Core domain persistence contracts are no longer one broad `TrainingRepository`; use cases depend on concern-specific shared contracts.
 - Core data repository implementations now mirror those concern-specific contracts instead of one catch-all implementation.
 - App-owned DI composition now binds shared core-domain repository contracts to their core-data implementations.
-- App-owned DI composition now owns production platform providers for Room, Retrofit, and app-wide time.
+- App-owned DI composition now owns production platform providers for Room and app-wide time; unused Retrofit wiring has been removed until a real repository consumes `SmartTrainnerApi`.
 - Analysis API now exposes only a route entry; its content-rendering surface and UI state models are implementation details.
 - Analysis weekly summary projection contracts, use case, and calculator now live in `:feature:analysis:domain`.
 - Analysis summary projection implementation now lives in `:feature:analysis:data`; app-owned DI binds it to the analysis-owned summary contract.
@@ -1119,7 +1142,7 @@ Current guardrails still enforce the important lower-level boundary:
 - Feature implementation modules must not depend on feature data modules; feature UI code consumes domain contracts/use cases.
 - Only `:app` may depend on the listed feature implementation modules for composition-root DI.
 - Only `:app` may depend on listed feature data modules for composition-root DI.
-- App production code may reference core data/storage/network and feature implementation/data packages only from app-owned DI composition modules.
+- App production code may reference core data/storage and feature implementation/data packages only from app-owned DI composition modules; core network wiring must be explicitly reapproved when a real data consumer exists.
 - App DI may reference feature data implementations only from approved feature-data repository binding modules.
 - Production Hilt modules may be declared only in app-owned DI composition modules.
 

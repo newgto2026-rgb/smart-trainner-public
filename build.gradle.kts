@@ -194,8 +194,7 @@ val checkModuleBoundaries by tasks.registering {
 
         val appDiCoreImplementationFiles = setOf(
             "CoreRepositoryBindingsModule.kt",
-            "PlatformDatabaseModule.kt",
-            "PlatformNetworkModule.kt"
+            "PlatformDatabaseModule.kt"
         )
         val appDiFeatureImplementationFiles = setOf("FeatureEntryBindingsModule.kt")
         val appDiFeatureDataFiles = setOf(
