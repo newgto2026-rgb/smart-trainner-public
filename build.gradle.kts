@@ -146,6 +146,7 @@ val checkModuleBoundaries by tasks.registering {
         val navigationReferencePattern =
             Regex("""\b(androidx\.navigation|NavHost|NavController|NavGraph|NavBackStackEntry|rememberNavController|currentBackStackEntryAsState)\b""")
         val navigationRouteDslPattern = Regex("""\b(composable|navigation)\s*\(""")
+        val navigationCommandPattern = Regex("""\bnavigate\s*\(""")
 
         projectEdges.get().forEach { edgeString ->
             val parts = edgeString.split("|")
@@ -221,6 +222,7 @@ val checkModuleBoundaries by tasks.registering {
             "WorkoutDataRepositoryBindingsModule.kt"
         )
         val appDiFeatureDomainFiles = appDiFeatureDataFiles
+        val appNavigationFiles = setOf("SmartTrainnerNavigation.kt")
 
         appMainKotlinSources.files.forEach { sourceFile ->
             val normalizedPath = sourceFile.path.replace('\\', '/')
@@ -277,15 +279,21 @@ val checkModuleBoundaries by tasks.registering {
             val normalizedPath = sourceFile.path.replace('\\', '/')
             val isAppSource = "/app/src/main/" in normalizedPath
             val isAppDiSource = "/app/src/main/java/com/smarttrainner/app/di/" in normalizedPath
+            val sourceFileName = sourceFile.name
 
             sourceFile.useLines { lines ->
                 lines.forEachIndexed { index, line ->
                     val usesNavigationRouting =
                         navigationReferencePattern.containsMatchIn(line) ||
-                            navigationRouteDslPattern.containsMatchIn(line)
+                            navigationRouteDslPattern.containsMatchIn(line) ||
+                            navigationCommandPattern.containsMatchIn(line)
                     if (!isAppSource && usesNavigationRouting) {
                         violations +=
                             "${sourceFile.relativeTo(projectDir)}:${index + 1}: navigation graph and routing APIs must stay in :app; feature/core modules expose route surfaces and callbacks only."
+                    }
+                    if (isAppSource && sourceFileName !in appNavigationFiles && usesNavigationRouting) {
+                        violations +=
+                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: app navigation graph and routing commands must stay in approved app navigation files."
                     }
                     val trimmed = line.trimStart()
                     if (

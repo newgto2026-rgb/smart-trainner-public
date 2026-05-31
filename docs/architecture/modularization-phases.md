@@ -1181,6 +1181,27 @@ Split decision:
 
 Next PR scope:
 
+- Lock down app-internal routing locality so Navigation Compose graph/controller calls stay in the explicit app navigation file.
+
+## Phase 55: App Navigation Locality Guard
+
+Status: stacked after Phase 54 on `codex/modularization-app-navigation-locality-guard`.
+
+Keep app as the routing control tower, but make that control tower explicit inside app as well. Navigation graph/controller APIs and routing commands should live in the app navigation file, while app training coordinator code should keep composing feature route surfaces and callbacks without owning a navigation controller.
+
+First PR scope:
+
+- Extend `checkModuleBoundaries` so app production source can use navigation graph/controller APIs only from approved app navigation files.
+- Include navigation route commands in the routing source scan.
+- Preserve feature API route surfaces and app-local handoff coordination without passing `NavController` outside the navigation root.
+
+Split decision:
+
+- Do not move `TrainingCoordinatorRoutes` into the navigation allowlist; it composes feature route surfaces but should not own graph/controller APIs.
+- Do not introduce a navigation abstraction module; the current app root remains small enough for a simple file allowlist.
+
+Next PR scope:
+
 - Continue checking shared workout-log/session contracts for actual cross-feature consumers.
 
 ## Strict Feature Isolation Audit
@@ -1240,6 +1261,7 @@ Current guardrails still enforce the important lower-level boundary:
 - App production code may reference core data/storage and feature implementation/data/domain packages only from app-owned DI composition modules; core network wiring must be explicitly reapproved when a real data consumer exists.
 - App DI may reference feature data implementations only from approved feature-data repository binding modules.
 - Navigation graph and routing APIs may be referenced only from `:app`; feature/core modules expose route surfaces and callbacks rather than owning navigation controllers.
+- App navigation graph/controller APIs and route commands may be referenced only from approved app navigation files.
 - Production Hilt modules may be declared only in app-owned DI composition modules.
 
 ## Split Decision
