@@ -1081,6 +1081,7 @@ First PR scope:
 - Remove the app dependency on `:core:network`.
 - Remove app-only JSON/OkHttp/Retrofit dependencies that were used only by the deleted provider module.
 - Tighten `checkModuleBoundaries` so app DI no longer has an approved core-network provider file.
+- Split the app source guardrail so any `com.smarttrainner.core.network` reference in `:app` fails until network wiring is explicitly reapproved.
 
 Split decision:
 

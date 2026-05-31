@@ -131,8 +131,9 @@ val checkModuleBoundaries by tasks.registering {
         val violations = mutableListOf<String>()
         val featureImplReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.impl(\.|$)""")
         val featureDataReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.data(\.|$)""")
+        val coreNetworkReferencePattern = Regex("""com\.smarttrainner\.core\.network(\.|$)""")
         val coreImplementationReferencePattern =
-            Regex("""com\.smarttrainner\.core\.(data|database|datastore|network)(\.|$)""")
+            Regex("""com\.smarttrainner\.core\.(data|database|datastore)(\.|$)""")
 
         projectEdges.get().forEach { edgeString ->
             val parts = edgeString.split("|")
@@ -228,13 +229,17 @@ val checkModuleBoundaries by tasks.registering {
                                 "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature data references in :app DI are allowed only in approved feature data repository binding modules."
                         }
                     }
+                    if (coreNetworkReferencePattern.containsMatchIn(line)) {
+                        violations +=
+                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: core network references are not allowed in :app until a real data repository consumer is introduced and the app network provider is explicitly reapproved."
+                    }
                     if (coreImplementationReferencePattern.containsMatchIn(line)) {
                         if (!isAppDiSource) {
                             violations +=
-                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: core data/storage/network references in :app are allowed only in app-owned DI composition modules."
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: core data/storage references in :app are allowed only in app-owned DI composition modules."
                         } else if (sourceFileName !in appDiCoreImplementationFiles) {
                             violations +=
-                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: core data/storage/network references in :app DI are allowed only in core repository or platform provider modules."
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: core data/storage references in :app DI are allowed only in core repository or platform provider modules."
                         }
                     }
                 }
