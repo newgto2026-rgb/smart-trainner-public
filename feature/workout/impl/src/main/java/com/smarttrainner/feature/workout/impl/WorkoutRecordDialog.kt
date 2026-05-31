@@ -46,8 +46,8 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerNumberField
 import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
-import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
+import com.smarttrainner.core.ui.SmartTrainnerMetricCluster
 import java.util.Locale
 
 @Composable
@@ -133,19 +133,31 @@ private fun RecordForm(
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 Text(
                     text = planned.exercise.localizedWorkoutName(),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = SmartTrainnerColors.Ink,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                SmartTrainnerBadgeRow(
-                    badges = planned.workoutMetricBadges(displayLog),
-                    maxItemsPerRow = 3
+                SmartTrainnerMetricCluster(
+                    label = stringResource(
+                        if (displayLog == null) {
+                            R.string.workout_metric_recommended
+                        } else {
+                            R.string.workout_metric_latest
+                        }
+                    ),
+                    metrics = planned.workoutMetricBadges(displayLog),
+                    maxItemsPerRow = 2,
+                    labelContainerColor = if (displayLog == null) {
+                        SmartTrainnerColors.CoralSoft
+                    } else {
+                        SmartTrainnerColors.SteelSoft
+                    }
                 )
             }
         }
@@ -317,13 +329,6 @@ private fun PlannedExercise.workoutMetricBadges(latestLog: WorkoutLog?): List<Sm
     latestLog?.workoutRecordMetricBadges() ?: buildList {
         add(
             SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.workout_metric_recommended),
-                containerColor = SmartTrainnerColors.CoralSoft,
-                contentColor = SmartTrainnerColors.Ink
-            )
-        )
-        add(
-            SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.workout_set_number, sets),
                 icon = Icons.Default.FitnessCenter,
                 containerColor = SmartTrainnerColors.GreenSoft,
@@ -367,13 +372,6 @@ private fun WorkoutLog.workoutRecordMetricBadges(): List<SmartTrainnerBadgeSpec>
     val durations = entries.mapNotNull { it.durationMinutes }.toCollapsedText()
     val rests = entries.mapNotNull { it.restSeconds }.toCollapsedText()
     return buildList {
-        add(
-            SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.workout_metric_latest),
-                containerColor = SmartTrainnerColors.SteelSoft,
-                contentColor = SmartTrainnerColors.Ink
-            )
-        )
         add(
             SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.workout_set_number, entries.size.coerceAtLeast(sets)),

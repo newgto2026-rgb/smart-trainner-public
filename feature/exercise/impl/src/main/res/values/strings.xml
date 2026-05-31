@@ -9,14 +9,12 @@
     <string name="exercise_all_exercises">Exercise count: %1$d</string>
     <string name="exercise_select_exercise_hint">Choose an exercise to see its method and step images in a large detail dialog.</string>
     <string name="exercise_set_number">Set %1$d</string>
-    <string name="exercise_target_reps">Sets: %1$d · Reps: %2$d-%3$d</string>
-    <string name="exercise_target_duration">Sets: %1$d · Min: %2$d</string>
-    <string name="exercise_recommended_record">Recommended: %1$s</string>
-    <string name="exercise_latest_record">Latest: %1$s</string>
     <string name="exercise_actual_reps">Reps %1$s</string>
     <string name="exercise_actual_weight">%1$s kg</string>
     <string name="exercise_actual_duration">%1$s min</string>
     <string name="exercise_actual_rest">Rest %1$s s</string>
+    <string name="exercise_metric_recommended">Target</string>
+    <string name="exercise_metric_latest">Recent</string>
     <string name="exercise_summary_template">A beginner-friendly %1$s pattern for %2$s using %3$s.</string>
     <string name="exercise_instruction_setup_template">Set up for %1$s with a tall posture and controlled breathing.</string>
     <string name="exercise_instruction_move_template">Move through the working range slowly and keep the target muscles engaged.</string>

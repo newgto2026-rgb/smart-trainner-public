@@ -479,12 +479,15 @@ class TrainingUiTest {
             try {
                 composeRule.onAllNodes(hasScrollAction())[index]
                     .performScrollToNode(hasTestTag(testTag))
-                lastFailure = null
-                break
+                if (composeRule.onAllNodesWithTag(testTag).fetchSemanticsNodes().isNotEmpty()) {
+                    lastFailure = null
+                    break
+                }
             } catch (error: AssertionError) {
                 lastFailure = error
             }
         }
         lastFailure?.let { throw it }
+        waitForNodeWithTag(testTag)
     }
 }

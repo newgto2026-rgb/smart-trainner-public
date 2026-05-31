@@ -40,9 +40,9 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
-import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
+import com.smarttrainner.core.ui.SmartTrainnerMetricCluster
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
     state: RoutineUiState,
@@ -241,12 +241,29 @@ internal fun PlanExerciseRow(
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
-                Text(exercise.exercise.localizedName(), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                SmartTrainnerBadgeRow(
-                    badges = exercise.trainingMetricBadges(displayLog),
-                    maxItemsPerRow = 3
+                Text(
+                    text = exercise.exercise.localizedName(),
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                SmartTrainnerMetricCluster(
+                    label = stringResource(
+                        if (displayLog == null) {
+                            R.string.routine_metric_recommended
+                        } else {
+                            R.string.routine_metric_latest
+                        }
+                    ),
+                    metrics = exercise.trainingMetricBadges(displayLog),
+                    maxItemsPerRow = 2,
+                    labelContainerColor = if (displayLog == null) {
+                        SmartTrainnerColors.CoralSoft
+                    } else {
+                        SmartTrainnerColors.SteelSoft
+                    }
                 )
             }
             if (completed) {
@@ -272,13 +289,6 @@ internal fun PlanExerciseRow(
 private fun PlannedExercise.trainingMetricBadges(
     displayLog: WorkoutLog?
 ): List<SmartTrainnerBadgeSpec> = displayLog?.recordMetricBadges() ?: buildList {
-    add(
-        SmartTrainnerBadgeSpec(
-            text = stringResource(R.string.routine_metric_recommended),
-            containerColor = SmartTrainnerColors.CoralSoft,
-            contentColor = SmartTrainnerColors.Ink
-        )
-    )
     add(
         SmartTrainnerBadgeSpec(
             text = stringResource(R.string.routine_set_number, sets),
@@ -324,13 +334,6 @@ private fun WorkoutLog.recordMetricBadges(): List<SmartTrainnerBadgeSpec> {
     val durations = entries.mapNotNull { it.durationMinutes }.toCollapsedText()
     val rests = entries.mapNotNull { it.restSeconds }.toCollapsedText()
     return buildList {
-        add(
-            SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.routine_metric_latest),
-                containerColor = SmartTrainnerColors.SteelSoft,
-                contentColor = SmartTrainnerColors.Ink
-            )
-        )
         add(
             SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.routine_set_number, entries.size.coerceAtLeast(sets)),
