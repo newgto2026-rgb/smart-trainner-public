@@ -1225,6 +1225,27 @@ Split decision:
 
 Next PR scope:
 
+- Split the remaining core-domain repository and use-case files by shared concern so file ownership matches the already-split contracts.
+
+## Phase 57: Core Domain Contract Taxonomy
+
+Status: stacked after Phase 56 on `codex/modularization-core-domain-taxonomy`.
+
+The shared core-domain contracts are correctly owned by core, but their source files still group unrelated concerns under broad training names. Split those files so the physical taxonomy matches the contract taxonomy: exercise catalog, weekly plan reads, workout log reads, and app session state.
+
+First PR scope:
+
+- Replace the broad `TrainingRepository.kt` file with concern-specific repository files for exercise, weekly plan, workout log, and session contracts.
+- Replace the broad `UseCases.kt` file with concern-specific use-case files for exercise, workout log, and session reads/commands.
+- Keep package names and public type names unchanged so this is a source-organization cleanup, not a contract migration.
+
+Split decision:
+
+- Keep these contracts in `:core:domain`: exercise catalog reads are consumed by exercise/routine/analysis, workout log reads are consumed by workout/exercise/routine/analysis, weekly plan reads are consumed by routine and analysis data, and session state gates the app shell.
+- Do not add feature-local domain/data/network modules in this phase. The concern split confirms current shared ownership rather than moving ownership.
+
+Next PR scope:
+
 - Continue checking shared workout-log/session contracts for actual cross-feature consumers.
 
 ## Strict Feature Isolation Audit
@@ -1237,6 +1258,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - App no longer imports routine UI/action/form models or raw routine coordinator state; it consumes only the routine feature entry and opaque route API.
 - App no longer owns the routine/exercise `LazyListScope` screen assembly; shared screen chrome lives in `:core:ui`, and feature APIs expose composable route surfaces.
 - Core domain persistence contracts are no longer one broad `TrainingRepository`; use cases depend on concern-specific shared contracts.
+- Core domain repository and use-case source files are split by shared concern instead of broad training buckets.
 - Core data repository implementations now mirror those concern-specific contracts instead of one catch-all implementation.
 - App-owned DI composition now binds shared core-domain repository contracts to their core-data implementations.
 - Shared weekly-plan repository implementation now lives in `:core:data`; routine data no longer implements the shared core weekly-plan contract.
