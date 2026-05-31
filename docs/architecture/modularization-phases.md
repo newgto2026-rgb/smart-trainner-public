@@ -1022,6 +1022,30 @@ Next PR scope:
 - Continue checking whether remaining shared core-domain contracts are truly shared or are feature-private commands/projections.
 - Keep app-owned DI modules explicit per feature data area instead of introducing a generic composition abstraction.
 
+## Phase 48: Routine Weekly Plan Use Case Ownership
+
+Status: stacked after Phase 47 on `codex/modularization-routine-weekly-plan-usecase`.
+
+Keep the shared weekly-plan read contract in `:core:domain`, but move the routine-only use-case wrapper into `:feature:routine:domain`. The repository contract is shared by routine route state and analysis summary data, while `ObserveCurrentWeeklyPlanUseCase` is injected only by the routine ViewModel.
+
+First PR scope:
+
+- Move `ObserveCurrentWeeklyPlanUseCase` from `:core:domain` to `:feature:routine:domain`.
+- Keep `WeeklyPlanRepository` in `:core:domain` because analysis data still composes it for weekly summary projection.
+- Point routine ViewModel and tests at the routine-domain use case.
+- Avoid adding new feature data or network modules; this is a use-case ownership trim only.
+
+Split decision:
+
+- Do not move `WeeklyPlanRepository` into routine domain while analysis data consumes that shared read contract.
+- Do not introduce `:feature:routine:network`; routine weekly plan data still uses local shared storage infrastructure.
+- Do not move workout-log read use cases in this PR because their production consumers span routine, workout, exercise, and analysis.
+
+Next PR scope:
+
+- Review unused app-shell/session use cases such as `SignOutUseCase`.
+- Review whether unused core network wiring should stay as future infrastructure or be removed until a feature consumes it.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -1044,6 +1068,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Routine-only recommendation, readiness, and cycle-completion policies now live in `:feature:routine:domain`.
 - Routine-only command contracts and command use cases now live in `:feature:routine:domain`.
 - Routine-only read contracts for template catalog and active progress now live in `:feature:routine:domain`.
+- The routine-only weekly-plan use-case wrapper now lives in `:feature:routine:domain`, while the shared weekly-plan repository contract remains in `:core:domain`.
 - Routine repository implementations now live in `:feature:routine:data`; app-owned DI binds them to the shared core weekly-plan contract and routine-owned read/command contracts.
 - Workout log shared reads remain in `:core:domain`; workout recording commands now live in `:feature:workout:domain`.
 - Workout recording persistence now lives in `:feature:workout:data`; app-owned DI binds it to the workout-owned command contract.

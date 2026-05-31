@@ -3,7 +3,6 @@ package com.smarttrainner.feature.routine.impl
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
-import com.smarttrainner.core.domain.ObserveCurrentWeeklyPlanUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
@@ -36,6 +35,7 @@ import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.feature.routine.domain.AdvanceRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CompleteRoutineDayUseCase
+import com.smarttrainner.feature.routine.domain.ObserveCurrentWeeklyPlanUseCase
 import com.smarttrainner.feature.routine.domain.ObservePlanTemplatesUseCase
 import com.smarttrainner.feature.routine.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.feature.routine.domain.RecommendRoutineUseCase
