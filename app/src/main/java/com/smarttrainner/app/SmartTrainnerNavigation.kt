@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -54,6 +55,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -101,69 +103,75 @@ fun SmartTrainnerMainScreen(
         }
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ProfileNavigationDrawer(
-                session = activeSession,
-                onLoginRequested = { closeDrawerAndRun(onLoginRequested) },
-                onLogout = { closeDrawerAndRun(onLogout) }
-            )
-        }
-    ) {
-        CompositionLocalProvider(
-            LocalSmartTrainnerHeaderActions provides {
-                ProfileHeaderMenuButton(
-                    session = activeSession,
-                    onOpenMenu = openDrawer
-                )
-            }
-        ) {
-            Scaffold(
-                containerColor = Color.Transparent,
-                bottomBar = {
-                    SmartTrainnerBottomBar(
-                        destinations = destinations,
-                        currentRoute = currentRoute,
-                        onDestinationSelected = { destination ->
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    ProfileNavigationDrawer(
+                        session = activeSession,
+                        onLoginRequested = { closeDrawerAndRun(onLoginRequested) },
+                        onLogout = { closeDrawerAndRun(onLogout) }
                     )
                 }
-            ) { padding ->
-                NavHost(
-                    navController = navController,
-                    startDestination = SmartTrainnerDestination.Home.route,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
+            }
+        ) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                CompositionLocalProvider(
+                    LocalSmartTrainnerHeaderActions provides {
+                        ProfileHeaderMenuButton(
+                            session = activeSession,
+                            onOpenMenu = openDrawer
+                        )
+                    }
                 ) {
-                    destinations.forEach { destination ->
-                        composable(destination.route) {
-                            when (destination) {
-                                SmartTrainnerDestination.Home -> TrainingHomeRoute(
-                                    exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                                    routineFeatureEntry = routineFeatureEntry,
-                                    workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-                                )
-                                SmartTrainnerDestination.Routine -> TrainingRoutineRoute(
-                                    exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                                    routineFeatureEntry = routineFeatureEntry,
-                                    workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-                                )
-                                SmartTrainnerDestination.Exercises -> TrainingExercisesRoute(
-                                    exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
-                                    exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                                    routineFeatureEntry = routineFeatureEntry,
-                                    workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-                                )
-                                SmartTrainnerDestination.Analysis -> analysisFeatureEntry.Route()
+                    Scaffold(
+                        containerColor = Color.Transparent,
+                        bottomBar = {
+                            SmartTrainnerBottomBar(
+                                destinations = destinations,
+                                currentRoute = currentRoute,
+                                onDestinationSelected = { destination ->
+                                    navController.navigate(destination.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            )
+                        }
+                    ) { padding ->
+                        NavHost(
+                            navController = navController,
+                            startDestination = SmartTrainnerDestination.Home.route,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding)
+                        ) {
+                            destinations.forEach { destination ->
+                                composable(destination.route) {
+                                    when (destination) {
+                                        SmartTrainnerDestination.Home -> TrainingHomeRoute(
+                                            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                                            routineFeatureEntry = routineFeatureEntry,
+                                            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+                                        )
+                                        SmartTrainnerDestination.Routine -> TrainingRoutineRoute(
+                                            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                                            routineFeatureEntry = routineFeatureEntry,
+                                            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+                                        )
+                                        SmartTrainnerDestination.Exercises -> TrainingExercisesRoute(
+                                            exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
+                                            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                                            routineFeatureEntry = routineFeatureEntry,
+                                            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+                                        )
+                                        SmartTrainnerDestination.Analysis -> analysisFeatureEntry.Route()
+                                    }
+                                }
                             }
                         }
                     }
