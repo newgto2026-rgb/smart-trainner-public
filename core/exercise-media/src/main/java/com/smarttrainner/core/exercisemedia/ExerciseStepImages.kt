@@ -274,7 +274,7 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_bulgarian_split_squat_clean_v1_step_1,
             koLabel = "앞발 위치 잡기",
             enLabel = "Set front foot",
-            koInstruction = "앞발 위치 잡기: 뒤발등을 벤치에 올리고 앞발은 뒤꿈치가 뜨지 않는 거리로 둡니다.",
+            koInstruction = "앞발 위치 잡기: 뒷발등을 벤치에 올리고 앞발은 뒤꿈치가 뜨지 않는 거리로 둡니다.",
             enInstruction = "Rest the rear foot on the bench and place the front foot where the heel can stay grounded."
         ),
         ExerciseStepVisual(
@@ -288,7 +288,7 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
             drawableResId = R.drawable.exercise_bulgarian_split_squat_clean_v1_step_3,
             koLabel = "수직 하강",
             enLabel = "Lower straight down",
-            koInstruction = "수직 하강: 앞무릎이 발끝 방향을 따라가게 하며 뒤무릎을 아래로 내립니다.",
+            koInstruction = "수직 하강: 앞무릎이 발끝 방향을 따라가게 하며 뒷무릎을 아래로 내립니다.",
             enInstruction = "Lower the back knee down while the front knee tracks in line with the toes."
         ),
         ExerciseStepVisual(
@@ -1590,9 +1590,9 @@ private val STEP_VISUALS: Map<String, List<ExerciseStepVisual>> = GENERATED_EXER
         ),
         ExerciseStepVisual(
             drawableResId = R.drawable.exercise_barbell_romanian_deadlift_clean_v1_step_2,
-            koLabel = "무릎 살짝 굽힘",
+            koLabel = "무릎 살짝 굽히기",
             enLabel = "Soft knees",
-            koInstruction = "무릎 살짝 굽힘: 무릎 각도를 크게 바꾸지 않고 복부와 등을 단단히 고정합니다.",
+            koInstruction = "무릎 살짝 굽히기: 무릎 각도를 크게 바꾸지 않고 복부와 등을 단단히 고정합니다.",
             enInstruction = "Keep only a small knee bend and brace the trunk and back firmly."
         ),
         ExerciseStepVisual(
