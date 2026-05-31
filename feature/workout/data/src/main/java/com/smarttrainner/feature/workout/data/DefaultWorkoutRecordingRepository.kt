@@ -22,6 +22,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 
 @Singleton
@@ -37,47 +38,59 @@ class DefaultWorkoutRecordingRepository @Inject constructor(
             exerciseId = exerciseId.value
         )?.toModel()
 
-    override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = runCatching {
-        val setEntries = input.setEntries.ifEmpty {
-            List(input.sets) { index ->
-                WorkoutSetLog(
-                    order = index + 1,
-                    reps = input.reps,
-                    weightKg = input.weightKg,
-                    durationMinutes = input.durationMinutes
-                )
+    override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> =
+        try {
+            val setEntries = input.setEntries.ifEmpty {
+                List(input.sets) { index ->
+                    WorkoutSetLog(
+                        order = index + 1,
+                        reps = input.reps,
+                        weightKg = input.weightKg,
+                        durationMinutes = input.durationMinutes
+                    )
+                }
             }
-        }
-        require(setEntries.size in 1..12) { "Sets must be between 1 and 12." }
-        require(setEntries.map { it.order }.distinct().size == setEntries.size) {
-            "Set order values must be unique."
-        }
-        setEntries.forEach { entry ->
-            require(entry.order in 1..12) { "Set order must be between 1 and 12." }
-            require(entry.reps != null || entry.durationMinutes != null) {
-                "Each set needs reps or duration."
+            require(setEntries.size in 1..12) { "Sets must be between 1 and 12." }
+            require(setEntries.map { it.order }.distinct().size == setEntries.size) {
+                "Set order values must be unique."
             }
-            require(entry.reps?.let { it in 1..50 } ?: true) { "Reps must be between 1 and 50." }
-            require(entry.weightKg?.let { it >= 0.0 } ?: true) { "Weight cannot be negative." }
-            require(entry.durationMinutes?.let { it in 1..240 } ?: true) {
-                "Duration must be between 1 and 240 minutes."
+            setEntries.forEach { entry ->
+                require(entry.order in 1..12) { "Set order must be between 1 and 12." }
+                require(entry.reps != null || entry.durationMinutes != null) {
+                    "Each set needs reps or duration."
+                }
+                require(entry.reps?.let { it in 1..50 } ?: true) { "Reps must be between 1 and 50." }
+                require(entry.weightKg?.let { it >= 0.0 } ?: true) { "Weight cannot be negative." }
+                require(entry.durationMinutes?.let { it in 1..240 } ?: true) {
+                    "Duration must be between 1 and 240 minutes."
+                }
+                require(entry.restSeconds?.let { it in 0..600 } ?: true) {
+                    "Rest must be between 0 and 600 seconds."
+                }
             }
-            require(entry.restSeconds?.let { it in 0..600 } ?: true) {
-                "Rest must be between 0 and 600 seconds."
-            }
-        }
-        val normalizedInput = input.copy(sets = setEntries.size, setEntries = setEntries)
-        val sessionId = activeSessionResolver.sessionId()
-        workoutLogDao.upsertWithSets(normalizedInput.toEntity(sessionId), setEntries.toEntities())
+            val normalizedInput = input.copy(sets = setEntries.size, setEntries = setEntries)
+            val sessionId = activeSessionResolver.sessionId()
+            workoutLogDao.upsertWithSets(normalizedInput.toEntity(sessionId), setEntries.toEntities())
 
-        val activeSession = preferences.activeSession.first()
-        if (activeSession?.isLinked == true) {
-            workoutLogApi.createWorkoutLog(
-                sessionId = sessionId,
-                request = normalizedInput.toBackupRequest()
-            )
+            val activeSession = preferences.activeSession.first()
+            if (activeSession?.isLinked == true) {
+                try {
+                    workoutLogApi.createWorkoutLog(
+                        sessionId = sessionId,
+                        request = normalizedInput.toBackupRequest()
+                    )
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    // Local persistence is authoritative; failed backups can be retried by a future sync worker.
+                }
+            }
+            Result.success(Unit)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Result.failure(error)
         }
-    }
 }
 
 internal fun WorkoutLogInput.toEntity(sessionId: String): WorkoutLogEntity = WorkoutLogEntity(

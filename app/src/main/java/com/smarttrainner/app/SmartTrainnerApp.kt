@@ -59,7 +59,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.smarttrainner.BuildConfig
 import com.smarttrainner.core.designsystem.SmartTrainnerBrandSplashImage
 import com.smarttrainner.core.designsystem.SmartTrainnerBrandWordmarkImage
@@ -454,11 +453,7 @@ private suspend fun requestGoogleSignInCredential(context: Context): SocialSignI
             credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL
     check(isGoogleIdCredential) { "Unsupported Google credential" }
 
-    val googleCredential = try {
-        GoogleIdTokenCredential.createFrom(credential.data)
-    } catch (error: GoogleIdTokenParsingException) {
-        throw error
-    }
+    val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
     return SocialSignInCredential(
         provider = AuthProvider.GOOGLE,
         idToken = googleCredential.idToken,

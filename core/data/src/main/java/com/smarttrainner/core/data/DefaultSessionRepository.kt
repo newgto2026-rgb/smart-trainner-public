@@ -12,6 +12,7 @@ import com.smarttrainner.core.network.SessionNetworkApi
 import com.smarttrainner.core.network.UserSessionDto
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import retrofit2.HttpException
 
@@ -31,38 +32,45 @@ class DefaultSessionRepository @Inject constructor(
     }
 
     override suspend fun checkNicknameAvailability(nickname: String): Result<Boolean> =
-        runCatching {
-            sessionApi.checkNicknameAvailability(nickname).data.available
+        try {
+            Result.success(sessionApi.checkNicknameAvailability(nickname).data.available)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Result.failure(error)
         }
 
     override suspend fun startSocialSession(
         credential: SocialSignInCredential,
         nickname: String
-    ): Result<UserSession> = runCatching {
-        when (credential.provider) {
-            AuthProvider.GOOGLE -> {
-                val session = sessionApi.signInWithGoogle(
-                    GoogleSignInRequest(
-                        idToken = credential.idToken,
-                        nickname = nickname
-                    )
-                ).data.toModel()
-                preferences.setActiveSession(session)
-                session
+    ): Result<UserSession> =
+        try {
+            val session = when (credential.provider) {
+                AuthProvider.GOOGLE -> {
+                    val signedInSession = try {
+                        sessionApi.signInWithGoogle(
+                            GoogleSignInRequest(
+                                idToken = credential.idToken,
+                                nickname = nickname
+                            )
+                        ).data.toModel()
+                    } catch (error: HttpException) {
+                        if (error.code() == 409) throw DuplicateNicknameException()
+                        throw error
+                    }
+                    preferences.setActiveSession(signedInSession)
+                    signedInSession
+                }
+
+                AuthProvider.LOCAL -> error("Local sessions do not use social sign-in")
             }
-
-            AuthProvider.LOCAL -> error("Local sessions do not use social sign-in")
+            Result.success(session)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Result.failure(error)
         }
-    }.mapNicknameConflict()
 }
-
-internal fun Result<UserSession>.mapNicknameConflict(): Result<UserSession> =
-    recoverCatching { error ->
-        if (error is HttpException && error.code() == 409) {
-            throw DuplicateNicknameException()
-        }
-        throw error
-    }
 
 internal fun UserSessionDto.toModel(): UserSession =
     UserSession(

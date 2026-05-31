@@ -23,7 +23,7 @@ android {
                 "String",
                 "SMART_TRAINNER_SERVER_BASE_URL",
                 quotedBuildConfigString(
-                    serverBaseUrlProperty.orElse("https://cute-lookup-dangerous-promotes.trycloudflare.com/").get()
+                    serverBaseUrlProperty.orElse("http://10.0.2.2:3001/").get()
                 )
             )
         }
