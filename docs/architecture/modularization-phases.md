@@ -1202,6 +1202,29 @@ Split decision:
 
 Next PR scope:
 
+- Lock down feature API modules so public route contracts cannot depend on or reference feature-private domain/data/network/implementation packages.
+
+## Phase 56: Feature API Purity Guard
+
+Status: stacked after Phase 55 on `codex/modularization-feature-api-purity-guard`.
+
+Keep feature API modules as app-facing route and callback contracts. Feature-local domain/data/network modules are private implementation boundaries and should not become public API dependencies just because they live under the same feature.
+
+First PR scope:
+
+- Extend `checkModuleBoundaries` so `:feature:*:api` modules cannot depend on feature domain, data, network, implementation, or entry modules.
+- Add source-level scanning so production feature API source cannot import feature domain/data/network/implementation packages.
+- Preserve app-owned routing and DI composition while keeping feature-owned domain/data contracts behind feature implementations and app DI.
+
+Split decision:
+
+- Do not move any repository contracts in this phase. This is a guardrail PR that protects the current API shape.
+- Keep shared repository contracts in `:core:domain` and shared implementations in `:core:data`.
+- Keep feature-private repository contracts in `:feature:<name>:domain` and implementations in `:feature:<name>:data` only when ownership has been explicitly approved.
+- Do not introduce `:feature:*:network`; no feature-private remote contract exists, and shared network contracts belong in `:core:network`.
+
+Next PR scope:
+
 - Continue checking shared workout-log/session contracts for actual cross-feature consumers.
 
 ## Strict Feature Isolation Audit
@@ -1252,7 +1275,7 @@ Current guardrails still enforce the important lower-level boundary:
 - Feature modules must not depend on shared `:core:data` implementations.
 - Feature data modules may use core storage/network infrastructure only through explicit allowlists; `:feature:routine:data` and `:feature:workout:data` currently may use `:core:database` and `:core:datastore`, while `:feature:analysis:data` currently uses only shared core domain/model contracts.
 - New feature-local domain/data/network modules require an explicit ownership decision before being introduced; `:feature:analysis:domain`, `:feature:analysis:data`, `:feature:exercise:domain`, `:feature:routine:domain`, `:feature:routine:data`, `:feature:workout:domain`, and `:feature:workout:data` are the current approved feature-local modules.
-- Feature API modules must not depend on feature implementation or entry modules.
+- Feature API modules must not depend on feature domain, data, network, implementation, or entry modules, and feature API source must not reference those private packages.
 - Feature implementation modules must not depend on other feature implementation or entry modules directly.
 - Feature implementation modules must not depend on feature data modules; feature UI code consumes domain contracts/use cases.
 - Only `:app` may depend on the listed feature implementation modules for composition-root DI.

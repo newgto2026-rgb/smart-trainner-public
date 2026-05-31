@@ -63,6 +63,7 @@ val checkModuleBoundaries by tasks.registering {
         fun isFeatureApi(path: String) = isFeature(path) && path.endsWith(":api")
         fun isFeatureDomain(path: String) = isFeature(path) && path.endsWith(":domain")
         fun isFeatureData(path: String) = isFeature(path) && path.endsWith(":data")
+        fun isFeatureNetwork(path: String) = isFeature(path) && path.endsWith(":network")
         fun isFeatureEntry(path: String) = isFeature(path) && path.endsWith(":entry")
         fun isFeatureImpl(path: String) = isFeature(path) && path.endsWith(":impl")
         fun featureName(path: String) = path.split(":").getOrNull(2)
@@ -140,6 +141,7 @@ val checkModuleBoundaries by tasks.registering {
         val featureImplReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.impl(\.|$)""")
         val featureDataReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.data(\.|$)""")
         val featureDomainReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.domain(\.|$)""")
+        val featureNetworkReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.network(\.|$)""")
         val coreNetworkReferencePattern = Regex("""com\.smarttrainner\.core\.network(\.|$)""")
         val coreImplementationReferencePattern =
             Regex("""com\.smarttrainner\.core\.(data|database|datastore)(\.|$)""")
@@ -167,8 +169,15 @@ val checkModuleBoundaries by tasks.registering {
                     (source to target) !in allowedFeatureDataCoreInfrastructureDependencies -> {
                     violations += "$edge: core infrastructure is allowed only for explicitly approved feature data modules."
                 }
-                isFeatureApi(source) && (isFeatureImpl(target) || isFeatureEntry(target)) -> {
-                    violations += "$edge: feature API modules must not depend on implementation or entry modules."
+                isFeatureApi(source) &&
+                    (
+                        isFeatureDomain(target) ||
+                            isFeatureData(target) ||
+                            isFeatureNetwork(target) ||
+                            isFeatureImpl(target) ||
+                            isFeatureEntry(target)
+                        ) -> {
+                    violations += "$edge: feature API modules must expose only app-facing route contracts; feature domain, data, network, implementation, and entry modules stay private."
                 }
                 isFeatureImpl(source) && (isFeatureImpl(target) || isFeatureEntry(target)) -> {
                     violations += "$edge: feature implementations must not depend on feature implementations or entries directly."
@@ -279,10 +288,23 @@ val checkModuleBoundaries by tasks.registering {
             val normalizedPath = sourceFile.path.replace('\\', '/')
             val isAppSource = "/app/src/main/" in normalizedPath
             val isAppDiSource = "/app/src/main/java/com/smarttrainner/app/di/" in normalizedPath
+            val isFeatureApiSource = "/feature/" in normalizedPath && "/api/src/main/" in normalizedPath
             val sourceFileName = sourceFile.name
 
             sourceFile.useLines { lines ->
                 lines.forEachIndexed { index, line ->
+                    if (
+                        isFeatureApiSource &&
+                        (
+                            featureDomainReferencePattern.containsMatchIn(line) ||
+                                featureDataReferencePattern.containsMatchIn(line) ||
+                                featureNetworkReferencePattern.containsMatchIn(line) ||
+                                featureImplReferencePattern.containsMatchIn(line)
+                            )
+                    ) {
+                        violations +=
+                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature API source must not reference feature domain, data, network, or implementation packages."
+                    }
                     val usesNavigationRouting =
                         navigationReferencePattern.containsMatchIn(line) ||
                             navigationRouteDslPattern.containsMatchIn(line) ||
