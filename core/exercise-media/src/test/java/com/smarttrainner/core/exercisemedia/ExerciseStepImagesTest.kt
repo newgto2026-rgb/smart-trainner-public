@@ -7,10 +7,12 @@ class ExerciseStepImagesTest {
     @Test
     fun everySeedExerciseIdHasVariableStepVisuals() {
         val expectedExerciseIds = setOf(
+            "bodyweight_squat",
             "leg_press",
             "goblet_squat",
             "box_squat",
             "dumbbell_split_squat",
+            "bulgarian_split_squat",
             "walking_lunge",
             "leg_extension",
             "leg_curl",
@@ -22,6 +24,7 @@ class ExerciseStepImagesTest {
             "chest_supported_row",
             "one_arm_dumbbell_row",
             "assisted_pullup",
+            "pullup",
             "face_pull",
             "machine_chest_press",
             "dumbbell_bench_press",
@@ -47,6 +50,7 @@ class ExerciseStepImagesTest {
             "barbell_back_squat",
             "barbell_bench_press",
             "conventional_deadlift",
+            "barbell_romanian_deadlift",
             "barbell_overhead_press",
             "dumbbell_step_up",
             "glute_bridge",
@@ -65,6 +69,7 @@ class ExerciseStepImagesTest {
             "incline_machine_press",
             "dumbbell_floor_press",
             "assisted_dip",
+            "dip",
             "cable_chest_press",
             "close_grip_pushup",
             "arnold_press",
@@ -133,11 +138,16 @@ class ExerciseStepImagesTest {
         assertThat(exerciseStepVisuals("dumbbell_curl")).hasSize(2)
         assertThat(exerciseStepVisuals("leg_press")).hasSize(3)
         assertThat(exerciseStepVisuals("goblet_squat")).hasSize(4)
+        assertThat(exerciseStepVisuals("bodyweight_squat")).hasSize(4)
+        assertThat(exerciseStepVisuals("bulgarian_split_squat")).hasSize(4)
         assertThat(exerciseStepVisuals("romanian_deadlift")).hasSize(5)
         assertThat(exerciseStepVisuals("dead_bug")).hasSize(4)
+        assertThat(exerciseStepVisuals("pullup")).hasSize(4)
+        assertThat(exerciseStepVisuals("dip")).hasSize(4)
         assertThat(exerciseStepVisuals("barbell_back_squat")).hasSize(5)
         assertThat(exerciseStepVisuals("barbell_bench_press")).hasSize(4)
         assertThat(exerciseStepVisuals("conventional_deadlift")).hasSize(5)
+        assertThat(exerciseStepVisuals("barbell_romanian_deadlift")).hasSize(4)
         assertThat(exerciseStepVisuals("dumbbell_deadlift")).hasSize(4)
         assertThat(exerciseStepVisuals("dumbbell_floor_press")).hasSize(4)
         assertThat(exerciseStepVisuals("elliptical")).hasSize(3)

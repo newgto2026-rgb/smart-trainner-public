@@ -39,6 +39,19 @@ class SeedTrainingContentTest {
     }
 
     @Test
+    fun exerciseCatalogIncludesPopularMissingBasics() {
+        val exerciseIds = SeedTrainingContent.exercises.map { it.id.value }
+
+        assertThat(exerciseIds).containsAtLeast(
+            "bodyweight_squat",
+            "pullup",
+            "dip",
+            "bulgarian_split_squat",
+            "barbell_romanian_deadlift"
+        )
+    }
+
+    @Test
     fun kettlebellCatalogCoversSafeBeginnerAndIntermediatePatterns() {
         val kettlebellExercises = SeedTrainingContent.exercises.filter {
             it.equipment == EquipmentType.KETTLEBELL
