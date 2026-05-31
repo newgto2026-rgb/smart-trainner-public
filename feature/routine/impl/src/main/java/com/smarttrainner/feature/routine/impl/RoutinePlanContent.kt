@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -34,21 +34,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
+import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExercise
+import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.WorkoutLog
-import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.core.ui.SmartTrainnerMetricCluster
 
-internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
+internal fun LazyListScope.planContent(
     state: RoutineUiState,
     actions: RoutineActions,
     exerciseMediaRenderer: ExerciseMediaRenderer
 ) {
+    val weeklyLogsByPlannedExerciseId = state.logs.firstByPlannedExerciseId()
+    val latestLogsByExerciseId = state.latestWorkoutLogs.latestByExerciseId()
+
     item {
         Text(
             text = stringResource(R.string.routine_current_routine),
@@ -100,18 +105,29 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
         )
     }
     state.plan?.days.orEmpty().forEach { day ->
-        item {
-            DayPlanSection(
+        item(
+            key = "routine-day-${day.date}-header",
+            contentType = "routine-day-header"
+        ) {
+            DayPlanHeader(
                 title = day.title,
                 focus = day.focus,
                 primaryFocus = day.primaryFocus,
-                dayNumber = day.dayNumber,
-                exercises = day.exercises,
-                weeklyLogs = state.logs,
-                latestLogs = state.latestWorkoutLogs,
-                completedIds = state.completedPlannedExerciseIds,
+                dayNumber = day.dayNumber
+            )
+        }
+        items(
+            items = day.exercises,
+            key = { it.id.value },
+            contentType = { "routine-plan-exercise" }
+        ) { exercise ->
+            PlanExerciseRow(
+                exercise = exercise,
+                displayLog = weeklyLogsByPlannedExerciseId[exercise.id]
+                    ?: latestLogsByExerciseId[exercise.exercise.id],
+                completed = exercise.id in state.completedPlannedExerciseIds,
                 exerciseMediaRenderer = exerciseMediaRenderer,
-                onRecordSelected = actions.onRecordSelected
+                onClick = { actions.onRecordSelected(exercise) }
             )
         }
     }
@@ -169,17 +185,11 @@ internal fun CurrentRoutineSummaryCard(
 }
 
 @Composable
-internal fun DayPlanSection(
+internal fun DayPlanHeader(
     title: String,
     focus: String,
     primaryFocus: RoutineFocus?,
-    dayNumber: Int,
-    exercises: List<PlannedExercise>,
-    weeklyLogs: List<com.smarttrainner.core.model.WorkoutLog>,
-    latestLogs: List<com.smarttrainner.core.model.WorkoutLog>,
-    completedIds: Set<com.smarttrainner.core.model.PlannedExerciseId>,
-    exerciseMediaRenderer: ExerciseMediaRenderer,
-    onRecordSelected: (PlannedExercise) -> Unit
+    dayNumber: Int
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -196,16 +206,6 @@ internal fun DayPlanSection(
         }
         focusText?.let {
             Text(text = it, style = MaterialTheme.typography.bodySmall, color = SmartTrainnerColors.Muted)
-        }
-        exercises.forEach { exercise ->
-            PlanExerciseRow(
-                exercise = exercise,
-                displayLog = weeklyLogs.firstOrNull { it.plannedExerciseId == exercise.id }
-                    ?: latestLogs.latestForExercise(exercise.exercise.id),
-                completed = exercise.id in completedIds,
-                exerciseMediaRenderer = exerciseMediaRenderer,
-                onClick = { onRecordSelected(exercise) }
-            )
         }
     }
 }
@@ -382,3 +382,22 @@ private fun WorkoutLog.recordMetricBadges(): List<SmartTrainnerBadgeSpec> {
         }
     }
 }
+
+private fun List<WorkoutLog>.firstByPlannedExerciseId(): Map<PlannedExerciseId, WorkoutLog> =
+    buildMap {
+        for (log in this@firstByPlannedExerciseId) {
+            if (log.plannedExerciseId !in this) {
+                put(log.plannedExerciseId, log)
+            }
+        }
+    }
+
+private fun List<WorkoutLog>.latestByExerciseId(): Map<ExerciseId, WorkoutLog> =
+    buildMap {
+        for (log in this@latestByExerciseId) {
+            val current = get(log.exerciseId)
+            if (current == null || log.performedAt > current.performedAt) {
+                put(log.exerciseId, log)
+            }
+        }
+    }
