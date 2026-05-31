@@ -118,8 +118,8 @@ fun SmartTrainnerApp(
                         }
                         .onFailure { error ->
                             viewModel.onGoogleCredentialFailed(
-                                cancelled = error is GetCredentialCancellationException ||
-                                    error is NoCredentialException
+                                cancelled = error is GetCredentialCancellationException,
+                                credentialUnavailable = error is NoCredentialException
                             )
                         }
                 }
@@ -411,12 +411,14 @@ private fun LoginMessageText(
         LoginMessage.NICKNAME_TAKEN -> R.string.login_nickname_taken
         LoginMessage.NICKNAME_REQUIRED -> R.string.login_nickname_required
         LoginMessage.GOOGLE_CANCELLED -> R.string.login_google_cancelled
+        LoginMessage.GOOGLE_UNAVAILABLE -> R.string.login_google_unavailable
         LoginMessage.LOGIN_FAILED -> R.string.login_failed
     }
     val color = when (message) {
         LoginMessage.NICKNAME_AVAILABLE -> SmartTrainnerColors.Green
         LoginMessage.NICKNAME_TAKEN,
         LoginMessage.NICKNAME_REQUIRED,
+        LoginMessage.GOOGLE_UNAVAILABLE,
         LoginMessage.LOGIN_FAILED -> MaterialTheme.colorScheme.error
         LoginMessage.GOOGLE_CANCELLED -> SmartTrainnerColors.Muted
     }

@@ -37,6 +37,7 @@ enum class LoginMessage {
     NICKNAME_TAKEN,
     NICKNAME_REQUIRED,
     GOOGLE_CANCELLED,
+    GOOGLE_UNAVAILABLE,
     LOGIN_FAILED
 }
 
@@ -212,13 +213,17 @@ class SmartTrainnerAppViewModel @Inject constructor(
         }
     }
 
-    fun onGoogleCredentialFailed(cancelled: Boolean) {
+    fun onGoogleCredentialFailed(cancelled: Boolean, credentialUnavailable: Boolean = false) {
         pendingSocialCredential = null
         loginState.update {
             it.copy(
                 awaitingNickname = false,
-                loginFailed = !cancelled,
-                loginMessage = if (cancelled) LoginMessage.GOOGLE_CANCELLED else LoginMessage.LOGIN_FAILED,
+                loginFailed = !cancelled || credentialUnavailable,
+                loginMessage = when {
+                    credentialUnavailable -> LoginMessage.GOOGLE_UNAVAILABLE
+                    cancelled -> LoginMessage.GOOGLE_CANCELLED
+                    else -> LoginMessage.LOGIN_FAILED
+                },
                 isSigningIn = false
             )
         }

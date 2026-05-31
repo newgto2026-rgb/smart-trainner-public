@@ -12,6 +12,7 @@
     <string name="login_finish_google">로그인 완료</string>
     <string name="login_back">뒤로</string>
     <string name="login_google_cancelled">Google 로그인이 취소되었습니다</string>
+    <string name="login_google_unavailable">Google 계정을 찾을 수 없습니다</string>
     <string name="login_failed">로그인할 수 없습니다</string>
     <string name="login_continue_default">로그인 없이 계속</string>
     <string name="login_local_only_notice">로그인 없이 계속하면 기록은 이 기기에만 저장됩니다.</string>

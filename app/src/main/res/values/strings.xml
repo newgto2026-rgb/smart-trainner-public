@@ -12,6 +12,7 @@
     <string name="login_finish_google">Finish login</string>
     <string name="login_back">Back</string>
     <string name="login_google_cancelled">Google sign-in cancelled</string>
+    <string name="login_google_unavailable">No Google account found</string>
     <string name="login_failed">Could not sign in</string>
     <string name="login_continue_default">Continue without login</string>
     <string name="login_local_only_notice">Without login, records stay only on this device.</string>

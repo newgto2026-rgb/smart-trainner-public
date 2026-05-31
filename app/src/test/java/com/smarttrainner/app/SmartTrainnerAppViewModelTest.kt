@@ -68,6 +68,20 @@ class SmartTrainnerAppViewModelTest {
         assertThat(viewModel.uiState.value.loginMessage).isEqualTo(LoginMessage.NICKNAME_TAKEN)
     }
 
+    @Test
+    fun onGoogleCredentialFailed_marksUnavailableCredentialsSeparately() = runTest {
+        val repository = FakeSessionRepository()
+        val viewModel = viewModel(repository)
+        collectState(viewModel)
+
+        viewModel.onGoogleSignInStarted()
+        viewModel.onGoogleCredentialFailed(cancelled = false, credentialUnavailable = true)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.loginFailed).isTrue()
+        assertThat(viewModel.uiState.value.loginMessage).isEqualTo(LoginMessage.GOOGLE_UNAVAILABLE)
+    }
+
     private fun viewModel(repository: SessionRepository) = SmartTrainnerAppViewModel(
         observeActiveSession = ObserveActiveSessionUseCase(repository),
         startDefaultSession = StartDefaultSessionUseCase(repository),
