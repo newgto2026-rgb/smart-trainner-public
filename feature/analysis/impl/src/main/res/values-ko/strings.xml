@@ -1,0 +1,33 @@
+<resources>
+    <string name="analysis_week_summary">이번 주 요약</string>
+    <string name="analysis_recent_records">최근 기록</string>
+    <string name="analysis_recent_records_count">최근 %1$d개</string>
+    <string name="analysis_recent_record_date">%1$d월 %2$d일</string>
+    <string name="analysis_record_metric_sets">세트 %1$d개</string>
+    <string name="analysis_record_metric_reps">반복 %1$d회</string>
+    <string name="analysis_record_metric_weight">%1$.1fkg</string>
+    <string name="analysis_record_metric_duration">운동 %1$d분</string>
+    <string name="analysis_completion_rate">완료율</string>
+    <string name="analysis_total_sets">총 세트</string>
+    <string name="analysis_streak">연속 기록</string>
+    <string name="analysis_muscle_balance">부위별 완료</string>
+    <string name="analysis_empty_logs">아직 기록이 없습니다. 오늘 운동을 마치면 바로 변화가 보입니다.</string>
+    <string name="analysis_days_value">%1$d일</string>
+    <string name="analysis_count_value">%1$d회</string>
+    <string name="analysis_insight_empty_plan">먼저 루틴을 선택하면 주간 흐름을 볼 수 있어요.</string>
+    <string name="analysis_insight_no_logs">운동 하나를 기록하면 첫 주간 흐름이 열립니다.</string>
+    <string name="analysis_insight_good_rate">이번 주 꾸준함이 좋아요. 루틴 흐름을 계속 이어가세요.</string>
+    <string name="analysis_insight_balance">%1$s 운동을 조금 더 더하면 균형이 좋아집니다.</string>
+    <string name="analysis_insight_steady">차분히 흐름이 만들어지고 있어요. 한 번 더 기록하면 신호가 선명해집니다.</string>
+    <string name="analysis_muscle_lower_body">하체</string>
+    <string name="analysis_muscle_back">등</string>
+    <string name="analysis_muscle_chest">가슴</string>
+    <string name="analysis_muscle_shoulders">어깨</string>
+    <string name="analysis_muscle_arms">팔</string>
+    <string name="analysis_muscle_biceps">이두</string>
+    <string name="analysis_muscle_triceps">삼두</string>
+    <string name="analysis_muscle_forearms">전완근</string>
+    <string name="analysis_muscle_core">코어</string>
+    <string name="analysis_muscle_cardio">유산소</string>
+    <string name="analysis_muscle_full_body">전신</string>
+</resources>

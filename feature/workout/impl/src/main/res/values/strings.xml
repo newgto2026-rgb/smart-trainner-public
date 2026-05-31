@@ -1,0 +1,33 @@
+<resources>
+    <string name="workout_set_entries_title">Set Log</string>
+    <string name="workout_add_set">Add Set</string>
+    <string name="workout_remove_set">Remove Set</string>
+    <string name="workout_reps">Reps</string>
+    <string name="workout_weight_short">kg</string>
+    <string name="workout_duration">Minutes</string>
+    <string name="workout_rest_seconds">Rest (s)</string>
+    <string name="workout_memo">Memo</string>
+    <string name="workout_save_record">Save Workout</string>
+    <string name="workout_rest">Rest: %1$d s</string>
+    <string name="workout_set_number">Set %1$d</string>
+    <string name="workout_error_select">Choose an exercise to record first.</string>
+    <string name="workout_error_sets">Record between 1 and 12 sets.</string>
+    <string name="workout_error_reps">Enter reps between 1 and 50.</string>
+    <string name="workout_error_weight">Weight must be 0 or higher.</string>
+    <string name="workout_error_duration">Enter time between 1 and 240 minutes.</string>
+    <string name="workout_error_rest">Enter rest between 0 and 600 seconds.</string>
+    <string name="workout_error_save">Could not save this workout.</string>
+    <string name="workout_error_complete_day">Could not complete this routine day.</string>
+    <string name="workout_saved">Workout saved.</string>
+    <string name="workout_close_record">Close workout log</string>
+    <string name="workout_record_dialog_title">Log %1$s</string>
+    <string name="workout_show_exercise_method">View Exercise Method</string>
+    <string name="workout_target_reps">Sets: %1$d · Reps: %2$d-%3$d</string>
+    <string name="workout_target_duration">Sets: %1$d · Min: %2$d</string>
+    <string name="workout_recommended_record">Recommended: %1$s</string>
+    <string name="workout_latest_record">Latest: %1$s</string>
+    <string name="workout_actual_reps">Reps %1$s</string>
+    <string name="workout_actual_weight">%1$s kg</string>
+    <string name="workout_actual_duration">%1$s min</string>
+    <string name="workout_actual_rest">Rest %1$s s</string>
+</resources>

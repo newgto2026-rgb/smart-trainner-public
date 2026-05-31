@@ -122,12 +122,6 @@ class TrainingPreferencesDataSource @Inject constructor(
         )
     }
 
-    suspend fun clearActiveSession() {
-        context.trainingDataStore.edit { preferences ->
-            preferences.remove(ACTIVE_SESSION_ID)
-        }
-    }
-
     private companion object {
         const val DEFAULT_TEMPLATE_ID = "beginner-full-body-3day"
         const val DEFAULT_DISPLAY_NAME = "Local Athlete"

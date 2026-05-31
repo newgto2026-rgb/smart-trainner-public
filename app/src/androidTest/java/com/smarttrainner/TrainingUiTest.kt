@@ -19,9 +19,20 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.smarttrainner.app.MainActivity
-import com.smarttrainner.core.data.DataModule
+import com.smarttrainner.app.di.AnalysisDataRepositoryBindingsModule
+import com.smarttrainner.app.di.CoreRepositoryBindingsModule
+import com.smarttrainner.app.di.RoutineDataRepositoryBindingsModule
+import com.smarttrainner.app.di.WorkoutDataRepositoryBindingsModule
+import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.SessionRepository
-import com.smarttrainner.core.domain.TrainingRepository
+import com.smarttrainner.core.domain.WeeklyPlanRepository
+import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
+import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
+import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
+import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
+import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
+import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -33,7 +44,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @HiltAndroidTest
-@UninstallModules(DataModule::class)
+@UninstallModules(
+    AnalysisDataRepositoryBindingsModule::class,
+    CoreRepositoryBindingsModule::class,
+    RoutineDataRepositoryBindingsModule::class,
+    WorkoutDataRepositoryBindingsModule::class
+)
 @RunWith(AndroidJUnit4::class)
 class TrainingUiTest {
     @get:Rule(order = 0)
@@ -42,9 +58,43 @@ class TrainingUiTest {
     @get:Rule(order = 1)
     val composeRule = createEmptyComposeRule()
 
+    private val trainingRepository = InMemoryTrainingRepository()
+
     @BindValue
     @JvmField
-    val trainingRepository: TrainingRepository = InMemoryTrainingRepository()
+    val exerciseRepository: ExerciseRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val weeklyPlanRepository: WeeklyPlanRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val routinePlanCatalogRepository: RoutinePlanCatalogRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val routinePlanCommandRepository: RoutinePlanCommandRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val routineProgressRepository: RoutineProgressRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val routineProgressCommandRepository: RoutineProgressCommandRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val workoutLogRepository: WorkoutLogRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val workoutRecordingRepository: WorkoutRecordingRepository = trainingRepository
+
+    @BindValue
+    @JvmField
+    val weeklySummaryRepository: WeeklySummaryRepository = trainingRepository
 
     @BindValue
     @JvmField
@@ -348,7 +398,7 @@ class TrainingUiTest {
     }
 
     private fun resetTestState() {
-        (trainingRepository as InMemoryTrainingRepository).reset()
+        trainingRepository.reset()
         (sessionRepository as InMemorySessionRepository).reset()
     }
 

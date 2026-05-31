@@ -49,12 +49,20 @@ import com.smarttrainner.core.designsystem.SmartTrainnerBrandSplashImage
 import com.smarttrainner.core.designsystem.SmartTrainnerBrandWordmarkImage
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
-import com.smarttrainner.feature.training.api.TrainingFeatureEntry
+import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
+import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
+import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
+import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
+import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 import kotlinx.coroutines.delay
 
 @Composable
 fun SmartTrainnerApp(
-    trainingFeatureEntry: TrainingFeatureEntry,
+    analysisFeatureEntry: AnalysisFeatureEntry,
+    exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
+    exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
+    routineFeatureEntry: RoutineFeatureEntry,
+    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     viewModel: SmartTrainnerAppViewModel = hiltViewModel()
 ) {
     var showSplash by rememberSaveable { mutableStateOf(true) }
@@ -73,7 +81,13 @@ fun SmartTrainnerApp(
         state.activeSession == null -> LoginScreen(
             onContinueDefaultSession = viewModel::continueWithDefaultSession
         )
-        else -> trainingFeatureEntry.Content()
+        else -> SmartTrainnerMainScreen(
+            analysisFeatureEntry = analysisFeatureEntry,
+            exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
+            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+            routineFeatureEntry = routineFeatureEntry,
+            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+        )
     }
 }
 

@@ -16,8 +16,4 @@ class DefaultSessionRepository @Inject constructor(
     override suspend fun startDefaultSession(): Result<UserSession> = runCatching {
         preferences.startDefaultSession()
     }
-
-    override suspend fun signOut(): Result<Unit> = runCatching {
-        preferences.clearActiveSession()
-    }
 }

@@ -4,4 +4,8 @@
     <string name="login_start_title">Start now</string>
     <string name="login_start_detail">Start without signing in. Your records are saved on this device first.</string>
     <string name="login_continue_default">Start</string>
+    <string name="app_destination_home">Home</string>
+    <string name="app_destination_routine">Routine</string>
+    <string name="app_destination_exercises">Exercises</string>
+    <string name="app_destination_analysis">Analysis</string>
 </resources>

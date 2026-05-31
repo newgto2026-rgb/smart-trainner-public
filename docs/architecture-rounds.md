@@ -2,6 +2,8 @@
 
 Last updated: 2026-05-20 KST
 
+Note: this document captures the initial five-round architecture discussion. The `:feature:training:*` compromise described below was later superseded by Phase 18 in `docs/architecture/modularization-phases.md`, where the remaining training coordinator moved into `:app` and the training feature modules were removed.
+
 ## Round 1 - Current-State Diagnosis
 - Android had a healthy core split: `core:model`, `core:domain`, `core:data`, `core:database`, `core:datastore`, `core:network`, `core:designsystem`, and `core:testing`.
 - The weak point was feature ownership: `app` directly imported the concrete `TrainingRoute`, so the app shell knew implementation details.
