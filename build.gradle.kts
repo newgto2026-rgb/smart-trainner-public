@@ -143,6 +143,9 @@ val checkModuleBoundaries by tasks.registering {
         val coreNetworkReferencePattern = Regex("""com\.smarttrainner\.core\.network(\.|$)""")
         val coreImplementationReferencePattern =
             Regex("""com\.smarttrainner\.core\.(data|database|datastore)(\.|$)""")
+        val navigationReferencePattern =
+            Regex("""\b(androidx\.navigation|NavHost|NavController|NavGraph|NavBackStackEntry|rememberNavController|currentBackStackEntryAsState)\b""")
+        val navigationRouteDslPattern = Regex("""\b(composable|navigation)\s*\(""")
 
         projectEdges.get().forEach { edgeString ->
             val parts = edgeString.split("|")
@@ -272,12 +275,23 @@ val checkModuleBoundaries by tasks.registering {
 
         productionKotlinSources.files.forEach { sourceFile ->
             val normalizedPath = sourceFile.path.replace('\\', '/')
-            if ("/app/src/main/java/com/smarttrainner/app/di/" in normalizedPath) return@forEach
+            val isAppSource = "/app/src/main/" in normalizedPath
+            val isAppDiSource = "/app/src/main/java/com/smarttrainner/app/di/" in normalizedPath
 
             sourceFile.useLines { lines ->
                 lines.forEachIndexed { index, line ->
+                    val usesNavigationRouting =
+                        navigationReferencePattern.containsMatchIn(line) ||
+                            navigationRouteDslPattern.containsMatchIn(line)
+                    if (!isAppSource && usesNavigationRouting) {
+                        violations +=
+                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: navigation graph and routing APIs must stay in :app; feature/core modules expose route surfaces and callbacks only."
+                    }
                     val trimmed = line.trimStart()
-                    if (trimmed.startsWith("@Module") || trimmed.startsWith("@InstallIn(")) {
+                    if (
+                        !isAppDiSource &&
+                        (trimmed.startsWith("@Module") || trimmed.startsWith("@InstallIn("))
+                    ) {
                         violations +=
                             "${sourceFile.relativeTo(projectDir)}:${index + 1}: production Hilt modules must live in app-owned DI composition modules."
                     }

@@ -1136,6 +1136,28 @@ Split decision:
 
 Next PR scope:
 
+- Lock down routing ownership so navigation graph APIs remain app-owned and features expose only route surfaces and callbacks.
+
+## Phase 53: App Routing Ownership Guard
+
+Status: stacked after Phase 52 on `codex/modularization-navigation-boundary-guard`.
+
+Keep routing as an app-level control tower concern. Feature modules may expose composable route surfaces through feature API contracts and may receive callbacks for handoffs, but they must not own Navigation Compose graphs, controllers, or route DSL calls.
+
+First PR scope:
+
+- Tighten `checkModuleBoundaries` so production source outside `:app` fails if it references Navigation Compose graph/controller APIs.
+- Keep `SmartTrainnerNavigation` as the only production routing graph owner.
+- Preserve the current feature entry shape: app routes to feature API surfaces, feature implementations stay unaware of sibling features.
+
+Split decision:
+
+- Do not move routing helpers into a shared module; cross-feature route orchestration remains an app concern.
+- Do not introduce feature navigation modules; no feature currently owns a standalone navigation graph.
+- Keep feature callbacks explicit instead of passing `NavController` through feature APIs.
+
+Next PR scope:
+
 - Continue checking shared workout-log/session contracts for actual cross-feature consumers.
 
 ## Strict Feature Isolation Audit
@@ -1192,6 +1214,7 @@ Current guardrails still enforce the important lower-level boundary:
 - Only `:app` may depend on listed feature domain modules for composition-root DI.
 - App production code may reference core data/storage and feature implementation/data/domain packages only from app-owned DI composition modules; core network wiring must be explicitly reapproved when a real data consumer exists.
 - App DI may reference feature data implementations only from approved feature-data repository binding modules.
+- Navigation graph and routing APIs may be referenced only from `:app`; feature/core modules expose route surfaces and callbacks rather than owning navigation controllers.
 - Production Hilt modules may be declared only in app-owned DI composition modules.
 
 ## Split Decision
