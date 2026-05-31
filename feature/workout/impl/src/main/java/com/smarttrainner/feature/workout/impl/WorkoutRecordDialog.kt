@@ -43,7 +43,7 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerNumberField
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
+import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
 import java.util.Locale
 
 @Composable

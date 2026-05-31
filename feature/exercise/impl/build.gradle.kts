@@ -19,13 +19,6 @@ android {
         compose = true
     }
 
-    lint {
-        // Exercise start/return phases may intentionally share the same art.
-        disable += "IconDuplicates"
-        // Exercise step assets remain PNGs so the asset relocation stays reviewable.
-        disable += "ConvertToWebp"
-    }
-
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
@@ -42,6 +35,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
+    implementation(project(":core:exercise-media"))
     implementation(project(":core:ui"))
 
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

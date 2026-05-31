@@ -5,7 +5,6 @@
     <string name="exercise_safety">주의 포인트</string>
     <string name="exercise_close_detail">운동 상세 닫기</string>
     <string name="exercise_close_image_viewer">확대 이미지 닫기</string>
-    <string name="exercise_image_pending">이미지 검수 중</string>
     <string name="exercise_image_viewer_title">운동 이미지</string>
     <string name="exercise_all_exercises">기본 운동 %1$d개</string>
     <string name="exercise_select_exercise_hint">운동을 선택하면 큰 상세 창에서 방법과 단계 이미지를 볼 수 있습니다.</string>

@@ -1,4 +1,4 @@
-package com.smarttrainner.feature.exercise.impl
+package com.smarttrainner.core.exercisemedia
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,10 +22,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.model.Exercise
+import javax.inject.Inject
 
 private const val TRAINER_IMAGE_ASPECT_RATIO = 0.9f
 private const val TRAINER_THUMBNAIL_SCALE = 1.12f
 internal val TrainerExerciseImageBackground = Color(0xFFFAF6ED)
+
+class DefaultExerciseMediaRenderer @Inject constructor() : ExerciseMediaRenderer {
+    @Composable
+    override fun Image(
+        exercise: Exercise,
+        modifier: Modifier,
+        stepIndex: Int?,
+        cleanThumbnailCrop: Boolean,
+        contentDescription: String?
+    ) {
+        TrainerExerciseImage(
+            exercise = exercise,
+            modifier = modifier,
+            stepIndex = stepIndex,
+            cleanThumbnailCrop = cleanThumbnailCrop,
+            contentDescription = contentDescription
+        )
+    }
+}
 
 @Composable
 fun TrainerExerciseImage(

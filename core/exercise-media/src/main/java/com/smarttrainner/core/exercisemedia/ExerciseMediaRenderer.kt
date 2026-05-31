@@ -1,4 +1,4 @@
-package com.smarttrainner.core.ui
+package com.smarttrainner.core.exercisemedia
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

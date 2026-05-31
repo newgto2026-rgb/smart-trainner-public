@@ -1246,6 +1246,29 @@ Split decision:
 
 Next PR scope:
 
+- Move shared exercise media rendering out of the exercise feature implementation so routine/workout do not receive a feature implementation as a common renderer.
+
+## Phase 58: Core Exercise Media Module
+
+Status: stacked after Phase 57 on `codex/modularization-core-exercise-media`.
+
+Exercise images are consumed by exercise, routine, and workout surfaces. Keeping the renderer contract in a neutral package while binding the exercise feature implementation as the concrete renderer made the exercise feature double as a shared media service. Move the shared media renderer, drawable assets, and step visual map into a dedicated core exercise-media module.
+
+First PR scope:
+
+- Add `:core:exercise-media` for shared exercise image rendering and exercise step visual assets.
+- Move `ExerciseMediaRenderer`, `TrainerExerciseImage`, generated exercise step visuals, image resources, and image QA copy into the new core module.
+- Bind `DefaultExerciseMediaRenderer` from app-owned DI instead of binding `ExerciseFeatureEntryImpl` as a renderer.
+- Keep exercise catalog/detail route implementation in `:feature:exercise:impl`; only the shared media asset/rendering service moves.
+
+Split decision:
+
+- Do not put the concrete renderer in `:core:ui`. `:core:ui` remains for domain-free shared UI primitives and scaffolds, while `:core:exercise-media` is explicitly model-aware shared presentation.
+- Do not introduce a feature dependency for routine/workout media. They continue depending on a core-owned media contract and app-owned DI composition.
+- Do not create a feature-local data/domain/network module for media assets. These are presentation resources, not repositories or remote contracts.
+
+Next PR scope:
+
 - Continue checking shared workout-log/session contracts for actual cross-feature consumers.
 
 ## Strict Feature Isolation Audit
@@ -1259,6 +1282,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - App no longer owns the routine/exercise `LazyListScope` screen assembly; shared screen chrome lives in `:core:ui`, and feature APIs expose composable route surfaces.
 - Core domain persistence contracts are no longer one broad `TrainingRepository`; use cases depend on concern-specific shared contracts.
 - Core domain repository and use-case source files are split by shared concern instead of broad training buckets.
+- Shared exercise media rendering and assets now live in `:core:exercise-media`; the exercise feature implementation is no longer used as a common media service.
 - Core data repository implementations now mirror those concern-specific contracts instead of one catch-all implementation.
 - App-owned DI composition now binds shared core-domain repository contracts to their core-data implementations.
 - Shared weekly-plan repository implementation now lives in `:core:data`; routine data no longer implements the shared core weekly-plan contract.
@@ -1282,10 +1306,10 @@ Current state is strict at the feature-module dependency level. State ownership 
 - App training flow state now lives in an app-local reducer so `TrainingViewModel` is a thin coordinator shell, while cross-feature routing remains app-owned.
 - Routine common badge and empty-state UI now use `:core:ui`; only routine-specific content-description wrapping remains in `:feature:routine:impl`.
 - Routine API no longer exports unused Compose foundation or desugaring dependencies; its public dependencies are limited to the contracts still referenced by app routing and handoffs.
-- Routine and workout APIs no longer expose `ExerciseMediaRenderer`; app DI provides the renderer to feature implementations instead of app navigation manually threading a common UI renderer.
+- Routine and workout APIs no longer expose `ExerciseMediaRenderer`; app DI provides the core exercise-media renderer to feature implementations instead of app navigation manually threading a common renderer.
 - Workout API no longer depends on `:core:ui` after removing the media renderer from its public route contract.
 - Exercise and routine APIs no longer expose `SmartTrainnerScreenChrome`; app passes only route title/subtitle strings, and feature implementations build common UI chrome internally.
-- Exercise, routine, and workout API modules no longer depend on `:core:ui`; common UI is an implementation dependency where needed.
+- Exercise, routine, and workout API modules no longer depend on `:core:ui`; common UI/media is an implementation dependency where needed.
 - Exercise catalog API no longer exposes a single-callback action wrapper; app passes `onExerciseSelected` directly as the route handoff.
 - Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
 - `WeeklyPlanRepository` is now bound from `:core:data`, while routine data binds only routine-owned catalog/command/progress contracts.

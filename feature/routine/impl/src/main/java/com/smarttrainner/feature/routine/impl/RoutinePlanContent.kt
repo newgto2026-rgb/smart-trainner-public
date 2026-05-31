@@ -39,7 +39,7 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.WorkoutLog
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
+import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(

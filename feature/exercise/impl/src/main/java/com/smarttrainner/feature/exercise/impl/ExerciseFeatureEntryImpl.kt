@@ -3,12 +3,9 @@ package com.smarttrainner.feature.exercise.impl
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
@@ -17,8 +14,7 @@ import javax.inject.Inject
 
 class ExerciseFeatureEntryImpl @Inject constructor() :
     ExerciseCatalogFeatureEntry,
-    ExerciseDetailFeatureEntry,
-    ExerciseMediaRenderer {
+    ExerciseDetailFeatureEntry {
     @Composable
     override fun Route(
         title: String,
@@ -69,20 +65,4 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
         )
     }
 
-    @Composable
-    override fun Image(
-        exercise: Exercise,
-        modifier: Modifier,
-        stepIndex: Int?,
-        cleanThumbnailCrop: Boolean,
-        contentDescription: String?
-    ) {
-        TrainerExerciseImage(
-            exercise = exercise,
-            modifier = modifier,
-            stepIndex = stepIndex,
-            cleanThumbnailCrop = cleanThumbnailCrop,
-            contentDescription = contentDescription
-        )
-    }
 }

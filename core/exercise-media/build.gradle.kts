@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.smarttrainner.core.ui"
+    namespace = "com.smarttrainner.core.exercisemedia"
     compileSdk = 36
 
     defaultConfig {
@@ -15,6 +15,15 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    lint {
+        // Exercise start/return phases may intentionally share the same art.
+        disable += "IconDuplicates"
+        // Exercise step assets remain PNGs so asset relocation stays reviewable.
+        disable += "ConvertToWebp"
+        // Compose lint crashes on the moved renderer with this detector in this AGP/lint combo.
+        disable += "SuspiciousModifierThen"
     }
 
     compileOptions {
@@ -27,10 +36,13 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:designsystem"))
+    implementation(project(":core:model"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.javax.inject)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.truth)
 }

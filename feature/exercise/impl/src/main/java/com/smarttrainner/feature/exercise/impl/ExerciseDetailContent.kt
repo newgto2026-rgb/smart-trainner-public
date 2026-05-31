@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.exercisemedia.TrainerExerciseImage
 import com.smarttrainner.core.model.Exercise
 
 @Composable

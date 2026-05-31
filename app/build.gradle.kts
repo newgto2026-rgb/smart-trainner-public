@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":core:datastore"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
+    implementation(project(":core:exercise-media"))
     implementation(project(":core:model"))
     implementation(project(":core:ui"))
     implementation(project(":feature:analysis:api"))

@@ -1,8 +1,8 @@
-package com.smarttrainner.feature.exercise.impl
+package com.smarttrainner.core.exercisemedia
 
 import androidx.annotation.DrawableRes
 
-internal data class ExerciseStepVisual(
+data class ExerciseStepVisual(
     @DrawableRes val drawableResId: Int,
     val koLabel: String,
     val enLabel: String,
@@ -10,17 +10,20 @@ internal data class ExerciseStepVisual(
     val enInstruction: String
 )
 
-internal val exerciseStepVisualExerciseIds: Set<String>
+val exerciseStepVisualExerciseIds: Set<String>
     get() = STEP_VISUALS.keys
 
-internal fun exerciseStepVisuals(exerciseId: String): List<ExerciseStepVisual> =
+fun exerciseStepVisuals(exerciseId: String): List<ExerciseStepVisual> =
     STEP_VISUALS[exerciseId].orEmpty()
 
-internal fun exerciseArtNeedsQaReplacement(exerciseId: String): Boolean =
+fun exerciseUsesGeneratedTextBackedVisuals(exerciseId: String): Boolean =
+    exerciseId in GENERATED_EXERCISE_TEXT_BACKED_IDS
+
+fun exerciseArtNeedsQaReplacement(exerciseId: String): Boolean =
     exerciseId in ART_QA_REPLACEMENT_BLOCKLIST
 
 @DrawableRes
-internal fun exerciseThumbnailDrawableResId(exerciseId: String): Int? =
+fun exerciseThumbnailDrawableResId(exerciseId: String): Int? =
     if (exerciseId in THUMBNAIL_ASSET_BLOCKLIST || exerciseId in ART_QA_REPLACEMENT_BLOCKLIST) {
         null
     } else {

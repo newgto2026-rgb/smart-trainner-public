@@ -1,6 +1,7 @@
 package com.smarttrainner.app.di
 
-import com.smarttrainner.core.ui.ExerciseMediaRenderer
+import com.smarttrainner.core.exercisemedia.DefaultExerciseMediaRenderer
+import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.analysis.impl.AnalysisFeatureEntryImpl
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
@@ -28,7 +29,7 @@ abstract class FeatureEntryBindingsModule {
     abstract fun bindExerciseDetailFeatureEntry(impl: ExerciseFeatureEntryImpl): ExerciseDetailFeatureEntry
 
     @Binds
-    abstract fun bindExerciseMediaRenderer(impl: ExerciseFeatureEntryImpl): ExerciseMediaRenderer
+    abstract fun bindExerciseMediaRenderer(impl: DefaultExerciseMediaRenderer): ExerciseMediaRenderer
 
     @Binds
     abstract fun bindRoutineFeatureEntry(impl: RoutineFeatureEntryImpl): RoutineFeatureEntry

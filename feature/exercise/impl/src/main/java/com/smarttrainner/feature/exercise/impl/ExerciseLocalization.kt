@@ -3,6 +3,8 @@ package com.smarttrainner.feature.exercise.impl
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import com.smarttrainner.core.exercisemedia.exerciseStepVisuals
+import com.smarttrainner.core.exercisemedia.exerciseUsesGeneratedTextBackedVisuals
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
@@ -35,7 +37,7 @@ internal fun Exercise.localizedStepItems(): List<LocalizedExerciseStep> {
     val visuals = exerciseStepVisuals(id.value)
     if (visuals.isNotEmpty()) {
         val isKo = isKoreanLocale()
-        if (id.value in GENERATED_EXERCISE_TEXT_BACKED_IDS) {
+        if (exerciseUsesGeneratedTextBackedVisuals(id.value)) {
             val copy = if (isKo) {
                 koreanSeedStepItems()
             } else {

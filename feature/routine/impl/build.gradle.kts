@@ -35,6 +35,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
+    implementation(project(":core:exercise-media"))
     implementation(project(":core:ui"))
 
     implementation(platform(libs.androidx.compose.bom))

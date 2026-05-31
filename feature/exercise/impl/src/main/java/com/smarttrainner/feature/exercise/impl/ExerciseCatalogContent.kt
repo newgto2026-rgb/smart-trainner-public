@@ -28,6 +28,7 @@ import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.exercisemedia.TrainerExerciseImage
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 
 private val armDetailGroups = listOf(

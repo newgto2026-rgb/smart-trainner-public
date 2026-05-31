@@ -5,7 +5,6 @@
     <string name="exercise_safety">Safety Cues</string>
     <string name="exercise_close_detail">Close exercise detail</string>
     <string name="exercise_close_image_viewer">Close enlarged image</string>
-    <string name="exercise_image_pending">Image QA pending</string>
     <string name="exercise_image_viewer_title">Exercise image</string>
     <string name="exercise_all_exercises">Exercise count: %1$d</string>
     <string name="exercise_select_exercise_hint">Choose an exercise to see its method and step images in a large detail dialog.</string>
