@@ -520,7 +520,7 @@ class RoutineViewModelTest {
     }
 
     @Test
-    fun saveCustomRoutine_makesNewRoutineCurrentAndClosesBuilder() = runTest {
+    fun saveCustomRoutine_keepsCurrentRoutineWhenStartAfterSaveIsFalse() = runTest {
         val viewModel = viewModel()
 
         viewModel.uiState.test {
@@ -535,7 +535,7 @@ class RoutineViewModelTest {
 
             val saved = viewModel.uiState.value
             assertThat(saved.customRoutineBuilder.visible).isFalse()
-            assertThat(saved.activeRoutineProgress?.templateId).isEqualTo("custom-test")
+            assertThat(saved.activeRoutineProgress?.templateId).isEqualTo("intermediate-body-part-4day")
             assertThat(saved.customTemplates.map { it.id }).contains("custom-test")
             val customTemplate = saved.customTemplates.single { it.id == "custom-test" }
             assertThat(customTemplate.focusSummary).isEmpty()
@@ -561,6 +561,40 @@ class RoutineViewModelTest {
             val started = viewModel.uiState.value
             assertThat(started.customRoutineBuilder.visible).isFalse()
             assertThat(started.activeRoutineProgress?.templateId).isEqualTo("custom-test")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun saveCustomRoutine_editingExistingRoutineDoesNotResetProgress() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            awaitItem()
+
+            viewModel.showCreateCustomRoutine()
+            viewModel.updateCustomRoutineName("My split")
+            viewModel.addExerciseToCustomRoutine(ExerciseId("back_pull"))
+            viewModel.saveCustomRoutine(startAfterSave = true)
+            advanceUntilIdle()
+
+            repository.progress.value = repository.progress.value.copy(dayIndex = 1)
+            advanceUntilIdle()
+
+            viewModel.editCustomRoutine("custom-test")
+            advanceUntilIdle()
+
+            viewModel.updateCustomRoutineName("My edited split")
+            viewModel.saveCustomRoutine(startAfterSave = false)
+            advanceUntilIdle()
+
+            val saved = viewModel.uiState.value
+            assertThat(saved.customRoutineBuilder.visible).isFalse()
+            assertThat(saved.activeRoutineProgress?.templateId).isEqualTo("custom-test")
+            assertThat(saved.activeRoutineProgress?.dayIndex).isEqualTo(1)
+            assertThat(saved.customTemplates.single { it.id == "custom-test" }.name)
+                .isEqualTo("My edited split")
             cancelAndIgnoreRemainingEvents()
         }
     }

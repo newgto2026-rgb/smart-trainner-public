@@ -468,14 +468,13 @@ class RoutineViewModel @Inject constructor(
             customRoutineBuilder.update { it.copy(error = validationError ?: CustomRoutineFormError.EMPTY_DAY) }
             return
         }
-        val shouldStartAfterSave = startAfterSave || builder.editingRoutineId == null
         viewModelScope.launch {
             val result = saveCustomRoutineUseCase(
                 input = input,
                 availableExerciseIds = state.exercises.map { it.id }.toSet()
             )
             result.onSuccess { template ->
-                if (shouldStartAfterSave) {
+                if (startAfterSave) {
                     startRoutine(template.id)
                 }
                 customRoutineBuilder.value = CustomRoutineBuilderState()

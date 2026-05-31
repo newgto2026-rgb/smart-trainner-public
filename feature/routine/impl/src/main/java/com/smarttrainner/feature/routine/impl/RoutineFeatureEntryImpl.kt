@@ -163,7 +163,9 @@ class RoutineFeatureEntryImpl @Inject constructor(
                 onRemoveExercise = actions.onCustomRoutineExerciseRemoved,
                 onMoveExerciseUp = actions.onCustomRoutineExerciseMovedUp,
                 onMoveExerciseDown = actions.onCustomRoutineExerciseMovedDown,
-                onSave = { actions.onCustomRoutineSaved(false) },
+                onSave = {
+                    actions.onCustomRoutineSaved(state.customRoutineBuilder.editingRoutineId == null)
+                },
                 onDismissRequest = actions.onCustomRoutineBuilderDismiss
             )
         }
