@@ -38,6 +38,7 @@ android {
 
 dependencies {
     implementation(project(":feature:exercise:api"))
+    implementation(project(":feature:exercise:domain"))
     implementation(project(":core:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))

@@ -2,10 +2,10 @@ package com.smarttrainner.feature.exercise.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smarttrainner.core.domain.GetExerciseUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.feature.exercise.domain.GetExerciseUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi

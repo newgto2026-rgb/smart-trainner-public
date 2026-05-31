@@ -1093,6 +1093,29 @@ Next PR scope:
 
 - Continue reviewing remaining core-domain read use cases to ensure they are genuinely shared.
 
+## Phase 51: Exercise Detail Use Case Ownership
+
+Status: stacked after Phase 50 on `codex/modularization-exercise-detail-usecase`.
+
+Keep `ExerciseRepository` and shared exercise list reads in `:core:domain`, because exercise catalog, routine planning, and analysis consume the shared exercise catalog. Move the exercise-detail-only lookup use case into `:feature:exercise:domain`.
+
+First PR scope:
+
+- Add `:feature:exercise:domain` as an approved feature-local domain module.
+- Move `GetExerciseUseCase` from `:core:domain` to `:feature:exercise:domain`.
+- Point exercise detail ViewModel and tests at the exercise-domain use case.
+- Keep `ObserveExercisesUseCase` in `:core:domain` because it is consumed by exercise, routine, and analysis.
+
+Split decision:
+
+- Do not create `:feature:exercise:data`; the repository contract and implementation remain shared core catalog infrastructure.
+- Do not create `:feature:exercise:network`; there is no exercise-private remote contract.
+- Do not move `ExerciseRepository` until exercise catalog data is no longer shared across multiple features.
+
+Next PR scope:
+
+- Continue checking shared workout-log/session contracts for actual cross-feature consumers.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -1110,6 +1133,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Analysis weekly summary projection contracts, use case, and calculator now live in `:feature:analysis:domain`.
 - Analysis summary projection implementation now lives in `:feature:analysis:data`; app-owned DI binds it to the analysis-owned summary contract.
 - App-shell session startup remains a shared core contract; unused sign-out command surface has been removed until a real auth/sign-out workflow exists.
+- Exercise-detail-only lookup use case now lives in `:feature:exercise:domain`, while the shared exercise repository and exercise-list use case remain in `:core:domain`.
 - Workout recording API now exposes only its dialog route entry; its form state, validation errors, and rendering actions are implementation details.
 - Exercise detail API now exposes only its dialog route entry; its detail UI state and rendering actions are implementation details.
 - Routine route and dialog rendering now goes through `RoutineFeatureEntry`; `RoutineRouteState` is no longer a public rendering facade.
@@ -1137,7 +1161,7 @@ Current guardrails still enforce the important lower-level boundary:
 - `core:*` must not depend on `feature:*`.
 - Feature modules must not depend on shared `:core:data` implementations.
 - Feature data modules may use core storage/network infrastructure only through explicit allowlists; `:feature:routine:data` and `:feature:workout:data` currently may use `:core:database` and `:core:datastore`, while `:feature:analysis:data` currently uses only shared core domain/model contracts.
-- New feature-local domain/data/network modules require an explicit ownership decision before being introduced; `:feature:analysis:domain`, `:feature:analysis:data`, `:feature:routine:domain`, `:feature:routine:data`, `:feature:workout:domain`, and `:feature:workout:data` are the current approved feature-local modules.
+- New feature-local domain/data/network modules require an explicit ownership decision before being introduced; `:feature:analysis:domain`, `:feature:analysis:data`, `:feature:exercise:domain`, `:feature:routine:domain`, `:feature:routine:data`, `:feature:workout:domain`, and `:feature:workout:data` are the current approved feature-local modules.
 - Feature API modules must not depend on feature implementation or entry modules.
 - Feature implementation modules must not depend on other feature implementation or entry modules directly.
 - Feature implementation modules must not depend on feature data modules; feature UI code consumes domain contracts/use cases.

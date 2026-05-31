@@ -3,7 +3,6 @@ package com.smarttrainner.feature.exercise.impl
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
-import com.smarttrainner.core.domain.GetExerciseUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.CustomRoutineInput
@@ -20,6 +19,7 @@ import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
+import com.smarttrainner.feature.exercise.domain.GetExerciseUseCase
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime

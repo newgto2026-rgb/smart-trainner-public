@@ -70,6 +70,7 @@ val checkModuleBoundaries by tasks.registering {
         val allowedFeaturePrivateModules = setOf(
             ":feature:analysis:domain",
             ":feature:analysis:data",
+            ":feature:exercise:domain",
             ":feature:routine:domain",
             ":feature:routine:data",
             ":feature:workout:domain",
