@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +30,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +53,10 @@ data class SmartTrainnerScreenChrome(
     val title: String,
     val subtitle: String
 )
+
+val LocalSmartTrainnerHeaderActions = staticCompositionLocalOf<(@Composable RowScope.() -> Unit)?> {
+    null
+}
 
 @Composable
 fun SmartTrainnerScreenScaffold(
@@ -78,6 +84,7 @@ fun SmartTrainnerScreenScaffold(
 
 @Composable
 private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
+    val headerActions = LocalSmartTrainnerHeaderActions.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -90,21 +97,37 @@ private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = chrome.title,
-                    modifier = Modifier.testTag("training_app_title"),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Black,
-                    color = SmartTrainnerColors.Ink
-                )
-                Text(
-                    text = chrome.subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SmartTrainnerColors.Muted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = chrome.title,
+                        modifier = Modifier.testTag("training_app_title"),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = SmartTrainnerColors.Ink
+                    )
+                    Text(
+                        text = chrome.subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SmartTrainnerColors.Muted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                headerActions?.let { actions ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        content = actions
+                    )
+                }
             }
         }
     }

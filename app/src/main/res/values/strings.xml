@@ -16,6 +16,10 @@
     <string name="login_failed">Could not sign in</string>
     <string name="login_continue_default">Continue without login</string>
     <string name="login_local_only_notice">Without login, records stay only on this device.</string>
+    <string name="profile_menu_open">Open profile menu</string>
+    <string name="profile_drawer_title">Profile</string>
+    <string name="profile_google_account">Google account</string>
+    <string name="profile_local_account">Local account</string>
     <string name="profile_menu_logout">Log out</string>
     <string name="app_destination_home">Home</string>
     <string name="app_destination_routine">Routine</string>
