@@ -123,6 +123,8 @@ class TrainingUiTest {
         waitForNodeWithTag("training_next_routine_day_card")
         scrollToNodeWithTag("training_next_routine_day_card")
         composeRule.onNodeWithTag("training_next_routine_day_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("training_next_routine_time_estimate").assertIsDisplayed()
+        composeRule.onNodeWithTag("training_next_routine_badge_duration").assertIsDisplayed()
         composeRule.onNodeWithTag("training_tab_home").assertIsDisplayed()
         composeRule.onNodeWithTag("training_tab_analysis").assertIsDisplayed()
         composeRule.onAllNodesWithTag("training_tab_record").assertCountEquals(0)

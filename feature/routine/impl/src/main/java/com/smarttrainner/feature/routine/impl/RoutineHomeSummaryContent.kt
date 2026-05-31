@@ -122,7 +122,8 @@ internal fun NextRoutineDayCard(
                 val fallbackDayTitle = planDayDisplayTitle(routineDay.day.title, routineDay.dayNumber)
                 val hasCustomDayTitle = routineDay.day.title
                     .hasMeaningfulPlanDayTitle(routineDay.dayNumber)
-                val shouldShowCustomDayLabel = routineDay.primaryFocus != null || hasCustomDayTitle
+                val shouldShowCustomDayLabel = isCustomRoutine &&
+                    (routineDay.primaryFocus != null || hasCustomDayTitle)
                 Text(
                     text = routineDay.primaryFocus?.let { focus ->
                         stringResource(R.string.routine_today_focus_title, focus.localizedTodayFocusLabel())
