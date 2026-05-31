@@ -30,4 +30,6 @@
     <string name="workout_actual_weight">%1$s kg</string>
     <string name="workout_actual_duration">%1$s min</string>
     <string name="workout_actual_rest">Rest %1$s s</string>
+    <string name="workout_metric_recommended">Target</string>
+    <string name="workout_metric_latest">Latest</string>
 </resources>

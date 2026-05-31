@@ -30,4 +30,6 @@
     <string name="workout_actual_weight">kg %1$s</string>
     <string name="workout_actual_duration">%1$s분</string>
     <string name="workout_actual_rest">휴식 %1$s초</string>
+    <string name="workout_metric_recommended">권장</string>
+    <string name="workout_metric_latest">최근</string>
 </resources>

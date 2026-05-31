@@ -112,6 +112,8 @@
     <string name="routine_remove_custom_day">Remove day</string>
     <string name="routine_remove_set">Remove Set</string>
     <string name="routine_rest">Rest: %1$d s</string>
+    <string name="routine_metric_recommended">Target</string>
+    <string name="routine_metric_latest">Latest</string>
     <string name="routine_routine_days_question">Weekly availability</string>
     <string name="routine_routine_badge_duration">About %1$d min</string>
     <string name="routine_routine_badge_exercises">Moves: %1$d</string>

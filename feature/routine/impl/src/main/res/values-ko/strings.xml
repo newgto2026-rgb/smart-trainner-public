@@ -112,6 +112,8 @@
     <string name="routine_remove_custom_day">일차 삭제</string>
     <string name="routine_remove_set">세트 삭제</string>
     <string name="routine_rest">휴식 %1$d초</string>
+    <string name="routine_metric_recommended">권장</string>
+    <string name="routine_metric_latest">최근</string>
     <string name="routine_complete_routine_day">오늘 운동 완료</string>
     <string name="routine_routine_badge_duration">약 %1$d분</string>
     <string name="routine_routine_badge_exercises">운동 %1$d개</string>
