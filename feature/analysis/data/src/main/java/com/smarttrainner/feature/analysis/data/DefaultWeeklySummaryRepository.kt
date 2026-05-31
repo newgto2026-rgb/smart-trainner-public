@@ -1,10 +1,10 @@
-package com.smarttrainner.core.data
+package com.smarttrainner.feature.analysis.data
 
-import com.smarttrainner.core.domain.WeeklySummaryCalculator
 import com.smarttrainner.core.domain.WeeklyPlanRepository
-import com.smarttrainner.core.domain.WeeklySummaryRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.WeeklySummary
+import com.smarttrainner.feature.analysis.domain.WeeklySummaryCalculator
+import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton

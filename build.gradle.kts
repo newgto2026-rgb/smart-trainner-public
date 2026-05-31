@@ -68,6 +68,8 @@ val checkModuleBoundaries by tasks.registering {
 
         val allowedCrossFeatureApiDependencies = emptySet<Pair<String, String>>()
         val allowedFeaturePrivateModules = setOf(
+            ":feature:analysis:domain",
+            ":feature:analysis:data",
             ":feature:routine:domain",
             ":feature:routine:data",
             ":feature:workout:domain",
@@ -86,6 +88,7 @@ val checkModuleBoundaries by tasks.registering {
             ":app" to ":feature:workout:impl"
         )
         val allowedAppFeatureDataDependencies = setOf(
+            ":app" to ":feature:analysis:data",
             ":app" to ":feature:routine:data",
             ":app" to ":feature:workout:data"
         )
@@ -196,6 +199,7 @@ val checkModuleBoundaries by tasks.registering {
         )
         val appDiFeatureImplementationFiles = setOf("FeatureEntryBindingsModule.kt")
         val appDiFeatureDataFiles = setOf(
+            "AnalysisDataRepositoryBindingsModule.kt",
             "RoutineDataRepositoryBindingsModule.kt",
             "WorkoutDataRepositoryBindingsModule.kt"
         )

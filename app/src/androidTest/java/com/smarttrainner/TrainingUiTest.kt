@@ -19,14 +19,15 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.smarttrainner.app.MainActivity
+import com.smarttrainner.app.di.AnalysisDataRepositoryBindingsModule
 import com.smarttrainner.app.di.CoreRepositoryBindingsModule
 import com.smarttrainner.app.di.RoutineDataRepositoryBindingsModule
 import com.smarttrainner.app.di.WorkoutDataRepositoryBindingsModule
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklyPlanRepository
-import com.smarttrainner.core.domain.WeeklySummaryRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
@@ -44,6 +45,7 @@ import org.junit.runner.RunWith
 
 @HiltAndroidTest
 @UninstallModules(
+    AnalysisDataRepositoryBindingsModule::class,
     CoreRepositoryBindingsModule::class,
     RoutineDataRepositoryBindingsModule::class,
     WorkoutDataRepositoryBindingsModule::class

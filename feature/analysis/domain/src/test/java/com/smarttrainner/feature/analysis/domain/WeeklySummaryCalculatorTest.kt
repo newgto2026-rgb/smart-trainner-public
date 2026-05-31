@@ -1,4 +1,4 @@
-package com.smarttrainner.core.domain
+package com.smarttrainner.feature.analysis.domain
 
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.model.DifficultyLevel

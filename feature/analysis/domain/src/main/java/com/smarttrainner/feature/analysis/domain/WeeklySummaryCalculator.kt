@@ -1,12 +1,13 @@
-package com.smarttrainner.core.domain
+package com.smarttrainner.feature.analysis.domain
 
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import java.time.LocalDate
+import javax.inject.Inject
 
-class WeeklySummaryCalculator {
+class WeeklySummaryCalculator @Inject constructor() {
     fun calculate(
         weekStartDate: LocalDate,
         plan: WeeklyPlan,

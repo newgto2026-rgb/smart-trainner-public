@@ -5,8 +5,6 @@ import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
-import com.smarttrainner.core.domain.ObserveWeeklySummaryUseCase
-import com.smarttrainner.core.domain.WeeklySummaryRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.DifficultyLevel
@@ -22,6 +20,8 @@ import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
+import com.smarttrainner.feature.analysis.domain.ObserveWeeklySummaryUseCase
+import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate

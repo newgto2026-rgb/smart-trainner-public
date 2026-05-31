@@ -4,8 +4,6 @@ import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.SeedTrainingContent
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklyPlanRepository
-import com.smarttrainner.core.domain.WeeklySummaryRepository
-import com.smarttrainner.core.domain.WeeklySummaryCalculator
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.AuthProvider
 import com.smarttrainner.core.model.CustomRoutineInput
@@ -27,6 +25,8 @@ import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
+import com.smarttrainner.feature.analysis.domain.WeeklySummaryCalculator
+import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository

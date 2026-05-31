@@ -28,12 +28,6 @@ class ObserveLatestWorkoutLogsUseCase @Inject constructor(
     operator fun invoke() = repository.observeLatestWorkoutLogs()
 }
 
-class ObserveWeeklySummaryUseCase @Inject constructor(
-    private val repository: WeeklySummaryRepository
-) {
-    operator fun invoke(weekStartDate: LocalDate) = repository.observeWeeklySummary(weekStartDate)
-}
-
 class GetExerciseUseCase @Inject constructor(
     private val repository: ExerciseRepository
 ) {

@@ -53,6 +53,8 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:ui"))
     implementation(project(":feature:analysis:api"))
+    implementation(project(":feature:analysis:data"))
+    implementation(project(":feature:analysis:domain"))
     implementation(project(":feature:analysis:impl"))
     implementation(project(":feature:exercise:api"))
     implementation(project(":feature:exercise:impl"))

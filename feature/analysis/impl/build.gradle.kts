@@ -31,6 +31,7 @@ android {
 
 dependencies {
     implementation(project(":feature:analysis:api"))
+    implementation(project(":feature:analysis:domain"))
     implementation(project(":core:domain"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
