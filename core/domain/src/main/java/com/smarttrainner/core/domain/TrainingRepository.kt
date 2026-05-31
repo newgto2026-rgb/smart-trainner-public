@@ -25,5 +25,4 @@ interface WorkoutLogRepository {
 interface SessionRepository {
     fun observeActiveSession(): Flow<UserSession?>
     suspend fun startDefaultSession(): Result<UserSession>
-    suspend fun signOut(): Result<Unit>
 }

@@ -61,10 +61,6 @@ internal class InMemorySessionRepository : SessionRepository {
         return Result.success(session)
     }
 
-    override suspend fun signOut(): Result<Unit> {
-        activeSession.value = null
-        return Result.success(Unit)
-    }
 }
 
 internal class InMemoryTrainingRepository :

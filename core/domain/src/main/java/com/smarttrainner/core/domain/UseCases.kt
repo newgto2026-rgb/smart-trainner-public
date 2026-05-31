@@ -39,9 +39,3 @@ class StartDefaultSessionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() = repository.startDefaultSession()
 }
-
-class SignOutUseCase @Inject constructor(
-    private val repository: SessionRepository
-) {
-    suspend operator fun invoke() = repository.signOut()
-}

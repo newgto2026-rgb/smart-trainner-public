@@ -1046,6 +1046,29 @@ Next PR scope:
 - Review unused app-shell/session use cases such as `SignOutUseCase`.
 - Review whether unused core network wiring should stay as future infrastructure or be removed until a feature consumes it.
 
+## Phase 49: Session Contract Trim
+
+Status: stacked after Phase 48 on `codex/modularization-session-contract-trim`.
+
+Keep `SessionRepository` in `:core:domain` because active session state gates the app shell before any feature route is shown. Trim the unused sign-out command from the shared contract until a real sign-out/auth feature exists.
+
+First PR scope:
+
+- Remove `SignOutUseCase` from `:core:domain`.
+- Remove `SessionRepository.signOut()` from the shared session contract and implementations.
+- Remove the unused DataStore `clearActiveSession()` helper that only existed for the removed command.
+- Keep `ObserveActiveSessionUseCase` and `StartDefaultSessionUseCase` in core because app startup consumes them directly.
+
+Split decision:
+
+- Do not create `:feature:session:*` or `:feature:auth:*` modules yet; there is no implemented auth/sign-out destination or feature-owned workflow.
+- Do not move the session repository into a feature module because session state is app-shell coordination, not a feature-private concern.
+- If sign-out returns as a user-facing workflow, introduce it through the app/auth ownership boundary instead of keeping a speculative core-domain command.
+
+Next PR scope:
+
+- Review whether `:core:network` should remain wired in app DI while no repository consumes `SmartTrainnerApi`.
+
 ## Strict Feature Isolation Audit
 
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
@@ -1062,6 +1085,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Analysis API now exposes only a route entry; its content-rendering surface and UI state models are implementation details.
 - Analysis weekly summary projection contracts, use case, and calculator now live in `:feature:analysis:domain`.
 - Analysis summary projection implementation now lives in `:feature:analysis:data`; app-owned DI binds it to the analysis-owned summary contract.
+- App-shell session startup remains a shared core contract; unused sign-out command surface has been removed until a real auth/sign-out workflow exists.
 - Workout recording API now exposes only its dialog route entry; its form state, validation errors, and rendering actions are implementation details.
 - Exercise detail API now exposes only its dialog route entry; its detail UI state and rendering actions are implementation details.
 - Routine route and dialog rendering now goes through `RoutineFeatureEntry`; `RoutineRouteState` is no longer a public rendering facade.
