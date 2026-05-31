@@ -1,9 +1,20 @@
 <resources>
     <string name="app_name">Smart Trainer</string>
-    <string name="login_subtitle">Manage your weekly workout plan and set-by-set logs in one place.</string>
-    <string name="login_start_title">Start now</string>
-    <string name="login_start_detail">Start without signing in. Your records are saved on this device first.</string>
-    <string name="login_continue_default">Start</string>
+    <string name="login_title">Log in</string>
+    <string name="login_subtitle">Back up your workout records with Google.</string>
+    <string name="login_nickname_title">Choose a nickname</string>
+    <string name="login_nickname_label">Nickname</string>
+    <string name="login_check_nickname">Check</string>
+    <string name="login_nickname_available">Available</string>
+    <string name="login_nickname_taken">Already taken</string>
+    <string name="login_nickname_required">Use at least 2 characters</string>
+    <string name="login_continue_google">Continue with Google</string>
+    <string name="login_finish_google">Finish login</string>
+    <string name="login_back">Back</string>
+    <string name="login_google_cancelled">Google sign-in cancelled</string>
+    <string name="login_failed">Could not sign in</string>
+    <string name="login_continue_default">Continue without login</string>
+    <string name="login_local_only_notice">Without login, records stay only on this device.</string>
     <string name="app_destination_home">Home</string>
     <string name="app_destination_routine">Routine</string>
     <string name="app_destination_exercises">Exercises</string>

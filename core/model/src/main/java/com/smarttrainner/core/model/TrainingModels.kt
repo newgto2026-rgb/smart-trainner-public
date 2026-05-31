@@ -27,8 +27,11 @@ enum class AuthProvider {
 data class UserSession(
     val id: UserSessionId,
     val displayName: String,
+    val nickname: String,
     val email: String?,
     val provider: AuthProvider,
+    val providerAccountId: String?,
+    val avatarUrl: String?,
     val linkedAt: String?
 ) {
     val isLinked: Boolean

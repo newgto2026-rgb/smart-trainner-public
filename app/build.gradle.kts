@@ -6,6 +6,9 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
 }
 
+val googleWebClientIdProperty = providers.gradleProperty("smarttrainner.googleWebClientId")
+val defaultGoogleWebClientId = "292047926554-bhiahkvmvmf7s3ievasq6btd84e2hbbm.apps.googleusercontent.com"
+
 android {
     namespace = "com.smarttrainner"
     compileSdk = 36
@@ -20,8 +23,20 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "GOOGLE_WEB_CLIENT_ID",
+                "\"${googleWebClientIdProperty.orElse(defaultGoogleWebClientId).get()}\""
+            )
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField(
+                "String",
+                "GOOGLE_WEB_CLIENT_ID",
+                "\"${googleWebClientIdProperty.orElse(defaultGoogleWebClientId).get()}\""
+            )
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -30,6 +45,7 @@ android {
     }
 
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 
@@ -51,6 +67,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:exercise-media"))
     implementation(project(":core:model"))
+    implementation(project(":core:network"))
     implementation(project(":core:ui"))
     implementation(project(":feature:analysis:api"))
     implementation(project(":feature:analysis:data"))
@@ -74,6 +91,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.material)
@@ -83,6 +102,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
+    implementation(libs.googleid)
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

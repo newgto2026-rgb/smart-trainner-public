@@ -5,6 +5,7 @@ import com.smarttrainner.core.database.WorkoutLogEntity
 import com.smarttrainner.core.database.WorkoutLogWithSets
 import com.smarttrainner.core.database.WorkoutSetLogEntity
 import com.smarttrainner.core.datastore.ActiveSessionResolver
+import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.UserSessionId
@@ -12,15 +13,23 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.network.WorkoutLogBackupRequest
+import com.smarttrainner.core.network.WorkoutLogNetworkApi
+import com.smarttrainner.core.network.WorkoutSetLogBackupRequest
 import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 
 @Singleton
 class DefaultWorkoutRecordingRepository @Inject constructor(
     private val workoutLogDao: WorkoutLogDao,
-    private val activeSessionResolver: ActiveSessionResolver
+    private val activeSessionResolver: ActiveSessionResolver,
+    private val preferences: TrainingPreferencesDataSource,
+    private val workoutLogApi: WorkoutLogNetworkApi
 ) : WorkoutRecordingRepository {
     override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
         workoutLogDao.latestByExercise(
@@ -57,11 +66,17 @@ class DefaultWorkoutRecordingRepository @Inject constructor(
                 "Rest must be between 0 and 600 seconds."
             }
         }
-        workoutLogDao.upsertWithSets(
-            input.copy(sets = setEntries.size, setEntries = setEntries)
-                .toEntity(activeSessionResolver.sessionId()),
-            setEntries.toEntities()
-        )
+        val normalizedInput = input.copy(sets = setEntries.size, setEntries = setEntries)
+        val sessionId = activeSessionResolver.sessionId()
+        workoutLogDao.upsertWithSets(normalizedInput.toEntity(sessionId), setEntries.toEntities())
+
+        val activeSession = preferences.activeSession.first()
+        if (activeSession?.isLinked == true) {
+            workoutLogApi.createWorkoutLog(
+                sessionId = sessionId,
+                request = normalizedInput.toBackupRequest()
+            )
+        }
     }
 }
 
@@ -89,6 +104,24 @@ internal fun List<WorkoutSetLog>.toEntities(workoutLogId: Long = 0): List<Workou
         restSeconds = it.restSeconds
     )
 }
+
+internal fun WorkoutLogInput.toBackupRequest(): WorkoutLogBackupRequest = WorkoutLogBackupRequest(
+    date = performedAt.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+    exerciseId = exerciseId.value,
+    plannedExerciseId = plannedExerciseId.value,
+    sets = setEntries
+        .sortedBy { it.order }
+        .map {
+            WorkoutSetLogBackupRequest(
+                setIndex = it.order,
+                reps = it.reps,
+                weightKg = it.weightKg,
+                durationMinutes = it.durationMinutes,
+                completed = completed
+            )
+        },
+    notes = memo.takeIf { it.isNotBlank() }
+)
 
 internal fun WorkoutLogWithSets.toModel(): WorkoutLog {
     val legacySetEntries = List(log.sets.coerceAtLeast(0)) { index ->

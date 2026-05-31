@@ -3,6 +3,7 @@ package com.smarttrainner
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.SeedTrainingContent
 import com.smarttrainner.core.domain.SessionRepository
+import com.smarttrainner.core.domain.SocialSignInCredential
 import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.AuthProvider
@@ -53,9 +54,33 @@ internal class InMemorySessionRepository : SessionRepository {
         val session = UserSession(
             id = UserSessionId(TEST_SESSION_ID),
             displayName = "Test Athlete",
+            nickname = "test-athlete",
             email = null,
             provider = AuthProvider.LOCAL,
+            providerAccountId = null,
+            avatarUrl = null,
             linkedAt = null
+        )
+        activeSession.value = session
+        return Result.success(session)
+    }
+
+    override suspend fun checkNicknameAvailability(nickname: String): Result<Boolean> =
+        Result.success(nickname.trim().equals("taken", ignoreCase = true).not())
+
+    override suspend fun startSocialSession(
+        credential: SocialSignInCredential,
+        nickname: String
+    ): Result<UserSession> {
+        val session = UserSession(
+            id = UserSessionId(TEST_SESSION_ID),
+            displayName = credential.displayName ?: nickname,
+            nickname = nickname,
+            email = credential.email,
+            provider = credential.provider,
+            providerAccountId = "test-provider-account",
+            avatarUrl = credential.avatarUrl,
+            linkedAt = "2026-05-31T00:00:00Z"
         )
         activeSession.value = session
         return Result.success(session)

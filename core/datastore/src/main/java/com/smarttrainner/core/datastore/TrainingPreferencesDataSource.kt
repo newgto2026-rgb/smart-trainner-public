@@ -34,10 +34,13 @@ class TrainingPreferencesDataSource @Inject constructor(
         UserSession(
             id = UserSessionId(sessionId),
             displayName = preferences[sessionDisplayNameKey(sessionId)] ?: DEFAULT_DISPLAY_NAME,
+            nickname = preferences[sessionNicknameKey(sessionId)] ?: DEFAULT_NICKNAME,
             email = preferences[sessionEmailKey(sessionId)],
             provider = preferences[sessionProviderKey(sessionId)]
                 ?.let { runCatching { AuthProvider.valueOf(it) }.getOrNull() }
                 ?: AuthProvider.LOCAL,
+            providerAccountId = preferences[sessionProviderAccountIdKey(sessionId)],
+            avatarUrl = preferences[sessionAvatarUrlKey(sessionId)],
             linkedAt = preferences[sessionLinkedAtKey(sessionId)]
         )
     }
@@ -111,20 +114,44 @@ class TrainingPreferencesDataSource @Inject constructor(
             preferences[ACTIVE_SESSION_ID] = DEFAULT_USER_SESSION_ID
             preferences[sessionDisplayNameKey(DEFAULT_USER_SESSION_ID)] =
                 preferences[sessionDisplayNameKey(DEFAULT_USER_SESSION_ID)] ?: DEFAULT_DISPLAY_NAME
+            preferences[sessionNicknameKey(DEFAULT_USER_SESSION_ID)] =
+                preferences[sessionNicknameKey(DEFAULT_USER_SESSION_ID)] ?: DEFAULT_NICKNAME
             preferences[sessionProviderKey(DEFAULT_USER_SESSION_ID)] = AuthProvider.LOCAL.name
         }
         return UserSession(
             id = UserSessionId(DEFAULT_USER_SESSION_ID),
             displayName = DEFAULT_DISPLAY_NAME,
+            nickname = DEFAULT_NICKNAME,
             email = null,
             provider = AuthProvider.LOCAL,
+            providerAccountId = null,
+            avatarUrl = null,
             linkedAt = null
         )
+    }
+
+    suspend fun setActiveSession(session: UserSession) {
+        val sessionId = session.id.value
+        context.trainingDataStore.edit { preferences ->
+            preferences[ACTIVE_SESSION_ID] = sessionId
+            preferences[sessionDisplayNameKey(sessionId)] = session.displayName
+            preferences[sessionNicknameKey(sessionId)] = session.nickname
+            preferences[sessionProviderKey(sessionId)] = session.provider.name
+            session.email?.let { preferences[sessionEmailKey(sessionId)] = it }
+                ?: preferences.remove(sessionEmailKey(sessionId))
+            session.providerAccountId?.let { preferences[sessionProviderAccountIdKey(sessionId)] = it }
+                ?: preferences.remove(sessionProviderAccountIdKey(sessionId))
+            session.avatarUrl?.let { preferences[sessionAvatarUrlKey(sessionId)] = it }
+                ?: preferences.remove(sessionAvatarUrlKey(sessionId))
+            session.linkedAt?.let { preferences[sessionLinkedAtKey(sessionId)] = it }
+                ?: preferences.remove(sessionLinkedAtKey(sessionId))
+        }
     }
 
     private companion object {
         const val DEFAULT_TEMPLATE_ID = "beginner-full-body-3day"
         const val DEFAULT_DISPLAY_NAME = "Local Athlete"
+        const val DEFAULT_NICKNAME = "local-athlete"
         val ACTIVE_SESSION_ID = stringPreferencesKey("active_session_id")
 
         fun selectedTemplateIdKey(sessionId: String) =
@@ -151,11 +178,20 @@ class TrainingPreferencesDataSource @Inject constructor(
         fun sessionDisplayNameKey(sessionId: String) =
             stringPreferencesKey("session_display_name_$sessionId")
 
+        fun sessionNicknameKey(sessionId: String) =
+            stringPreferencesKey("session_nickname_$sessionId")
+
         fun sessionEmailKey(sessionId: String) =
             stringPreferencesKey("session_email_$sessionId")
 
         fun sessionProviderKey(sessionId: String) =
             stringPreferencesKey("session_provider_$sessionId")
+
+        fun sessionProviderAccountIdKey(sessionId: String) =
+            stringPreferencesKey("session_provider_account_id_$sessionId")
+
+        fun sessionAvatarUrlKey(sessionId: String) =
+            stringPreferencesKey("session_avatar_url_$sessionId")
 
         fun sessionCreatedAtKey(sessionId: String) =
             stringPreferencesKey("session_created_at_$sessionId")

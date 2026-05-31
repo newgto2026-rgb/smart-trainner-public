@@ -82,7 +82,8 @@ val checkModuleBoundaries by tasks.registering {
             ":feature:routine:data" to ":core:database",
             ":feature:routine:data" to ":core:datastore",
             ":feature:workout:data" to ":core:database",
-            ":feature:workout:data" to ":core:datastore"
+            ":feature:workout:data" to ":core:datastore",
+            ":feature:workout:data" to ":core:network"
         )
         val allowedAppFeatureImplDependencies = setOf(
             ":app" to ":feature:analysis:impl",
@@ -224,6 +225,7 @@ val checkModuleBoundaries by tasks.registering {
             "CoreRepositoryBindingsModule.kt",
             "PlatformDatabaseModule.kt"
         )
+        val appDiCoreNetworkFiles = setOf("PlatformNetworkModule.kt")
         val appDiFeatureImplementationFiles = setOf("FeatureEntryBindingsModule.kt")
         val appDiFeatureDataFiles = setOf(
             "AnalysisDataRepositoryBindingsModule.kt",
@@ -268,8 +270,13 @@ val checkModuleBoundaries by tasks.registering {
                         }
                     }
                     if (coreNetworkReferencePattern.containsMatchIn(line)) {
-                        violations +=
-                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: core network references are not allowed in :app until a real data repository consumer is introduced and the app network provider is explicitly reapproved."
+                        if (!isAppDiSource) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: core network references in :app are allowed only in app-owned DI composition modules."
+                        } else if (sourceFileName !in appDiCoreNetworkFiles) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: core network references in :app DI are allowed only in approved platform network provider modules."
+                        }
                     }
                     if (coreImplementationReferencePattern.containsMatchIn(line)) {
                         if (!isAppDiSource) {

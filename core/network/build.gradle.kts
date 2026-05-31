@@ -22,7 +22,9 @@ android {
             buildConfigField(
                 "String",
                 "SMART_TRAINNER_SERVER_BASE_URL",
-                quotedBuildConfigString(serverBaseUrlProperty.orElse("http://10.0.2.2:3001/").get())
+                quotedBuildConfigString(
+                    serverBaseUrlProperty.orElse("https://cute-lookup-dangerous-promotes.trycloudflare.com/").get()
+                )
             )
         }
         release {
@@ -49,7 +51,9 @@ android {
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.okhttp)
     implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)

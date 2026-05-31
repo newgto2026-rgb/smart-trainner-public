@@ -3,6 +3,9 @@ package com.smarttrainner.core.datastore
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import com.google.common.truth.Truth.assertThat
+import com.smarttrainner.core.model.AuthProvider
+import com.smarttrainner.core.model.UserSession
+import com.smarttrainner.core.model.UserSessionId
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -88,5 +91,29 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.lastCompletedDayIndex).isEqualTo(1)
         assertThat(progress.startedAt).isEqualTo(initialInstant.toString())
         assertThat(progress.cycleStartedAt).isEqualTo(initialInstant.toString())
+    }
+
+    @Test
+    fun setActiveSession_persistsLinkedAccountFields() = runTest {
+        dataSource.setActiveSession(
+            UserSession(
+                id = UserSessionId("google-user-1"),
+                displayName = "Kim",
+                nickname = "Lift Kim",
+                email = "kim@example.com",
+                provider = AuthProvider.GOOGLE,
+                providerAccountId = "google-subject-1",
+                avatarUrl = "https://example.com/kim.png",
+                linkedAt = initialInstant.toString()
+            )
+        )
+
+        val session = dataSource.activeSession.first()
+
+        assertThat(session?.id?.value).isEqualTo("google-user-1")
+        assertThat(session?.nickname).isEqualTo("Lift Kim")
+        assertThat(session?.provider).isEqualTo(AuthProvider.GOOGLE)
+        assertThat(session?.providerAccountId).isEqualTo("google-subject-1")
+        assertThat(session?.avatarUrl).isEqualTo("https://example.com/kim.png")
     }
 }

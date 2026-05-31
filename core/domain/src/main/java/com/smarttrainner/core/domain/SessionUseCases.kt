@@ -13,3 +13,18 @@ class StartDefaultSessionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() = repository.startDefaultSession()
 }
+
+class CheckNicknameAvailabilityUseCase @Inject constructor(
+    private val repository: SessionRepository
+) {
+    suspend operator fun invoke(nickname: String) = repository.checkNicknameAvailability(nickname)
+}
+
+class StartSocialSessionUseCase @Inject constructor(
+    private val repository: SessionRepository
+) {
+    suspend operator fun invoke(
+        credential: SocialSignInCredential,
+        nickname: String
+    ) = repository.startSocialSession(credential, nickname)
+}
