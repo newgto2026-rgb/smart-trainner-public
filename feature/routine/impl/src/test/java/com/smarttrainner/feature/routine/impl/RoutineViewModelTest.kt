@@ -520,7 +520,7 @@ class RoutineViewModelTest {
     }
 
     @Test
-    fun saveCustomRoutine_keepsCurrentRoutineAndClosesBuilder() = runTest {
+    fun saveCustomRoutine_makesNewRoutineCurrentAndClosesBuilder() = runTest {
         val viewModel = viewModel()
 
         viewModel.uiState.test {
@@ -535,7 +535,7 @@ class RoutineViewModelTest {
 
             val saved = viewModel.uiState.value
             assertThat(saved.customRoutineBuilder.visible).isFalse()
-            assertThat(saved.activeRoutineProgress?.templateId).isEqualTo("intermediate-body-part-4day")
+            assertThat(saved.activeRoutineProgress?.templateId).isEqualTo("custom-test")
             assertThat(saved.customTemplates.map { it.id }).contains("custom-test")
             val customTemplate = saved.customTemplates.single { it.id == "custom-test" }
             assertThat(customTemplate.focusSummary).isEmpty()
