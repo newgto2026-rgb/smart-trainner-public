@@ -3,6 +3,7 @@ package com.smarttrainner.app
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.app.training.MainDispatcherRule
 import com.smarttrainner.core.domain.CheckNicknameAvailabilityUseCase
+import com.smarttrainner.core.domain.ClearActiveSessionUseCase
 import com.smarttrainner.core.domain.DuplicateNicknameException
 import com.smarttrainner.core.domain.ObserveActiveSessionUseCase
 import com.smarttrainner.core.domain.SessionRepository
@@ -82,9 +83,24 @@ class SmartTrainnerAppViewModelTest {
         assertThat(viewModel.uiState.value.loginMessage).isEqualTo(LoginMessage.GOOGLE_UNAVAILABLE)
     }
 
+    @Test
+    fun returnToLogin_clearsActiveSession() = runTest {
+        val repository = FakeSessionRepository()
+        val viewModel = viewModel(repository)
+        collectState(viewModel)
+
+        viewModel.continueWithDefaultSession()
+        advanceUntilIdle()
+        viewModel.returnToLogin()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.activeSession).isNull()
+    }
+
     private fun viewModel(repository: SessionRepository) = SmartTrainnerAppViewModel(
         observeActiveSession = ObserveActiveSessionUseCase(repository),
         startDefaultSession = StartDefaultSessionUseCase(repository),
+        clearActiveSession = ClearActiveSessionUseCase(repository),
         checkNicknameAvailability = CheckNicknameAvailabilityUseCase(repository),
         startSocialSession = StartSocialSessionUseCase(repository)
     )
@@ -116,6 +132,11 @@ private class FakeSessionRepository(
         val session = userSession(provider = AuthProvider.LOCAL)
         activeSession.value = session
         return Result.success(session)
+    }
+
+    override suspend fun clearActiveSession(): Result<Unit> {
+        activeSession.value = null
+        return Result.success(Unit)
     }
 
     override suspend fun checkNicknameAvailability(nickname: String): Result<Boolean> =

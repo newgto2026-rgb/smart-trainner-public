@@ -14,6 +14,12 @@ class StartDefaultSessionUseCase @Inject constructor(
     suspend operator fun invoke() = repository.startDefaultSession()
 }
 
+class ClearActiveSessionUseCase @Inject constructor(
+    private val repository: SessionRepository
+) {
+    suspend operator fun invoke() = repository.clearActiveSession()
+}
+
 class CheckNicknameAvailabilityUseCase @Inject constructor(
     private val repository: SessionRepository
 ) {

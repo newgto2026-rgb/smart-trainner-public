@@ -16,6 +16,7 @@
     <string name="login_failed">로그인할 수 없습니다</string>
     <string name="login_continue_default">로그인 없이 계속</string>
     <string name="login_local_only_notice">로그인 없이 계속하면 기록은 이 기기에만 저장됩니다.</string>
+    <string name="profile_menu_logout">로그아웃</string>
     <string name="app_destination_home">홈</string>
     <string name="app_destination_routine">루틴</string>
     <string name="app_destination_exercises">운동</string>

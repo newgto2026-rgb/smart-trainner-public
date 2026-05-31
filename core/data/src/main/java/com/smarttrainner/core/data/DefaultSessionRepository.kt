@@ -26,6 +26,10 @@ class DefaultSessionRepository @Inject constructor(
         preferences.startDefaultSession()
     }
 
+    override suspend fun clearActiveSession(): Result<Unit> = runCatching {
+        preferences.clearActiveSession()
+    }
+
     override suspend fun checkNicknameAvailability(nickname: String): Result<Boolean> =
         runCatching {
             sessionApi.checkNicknameAvailability(nickname).data.available

@@ -3,6 +3,7 @@ package com.smarttrainner.app
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.domain.CheckNicknameAvailabilityUseCase
+import com.smarttrainner.core.domain.ClearActiveSessionUseCase
 import com.smarttrainner.core.domain.DuplicateNicknameException
 import com.smarttrainner.core.domain.ObserveActiveSessionUseCase
 import com.smarttrainner.core.domain.SocialSignInCredential
@@ -45,6 +46,7 @@ enum class LoginMessage {
 class SmartTrainnerAppViewModel @Inject constructor(
     observeActiveSession: ObserveActiveSessionUseCase,
     private val startDefaultSession: StartDefaultSessionUseCase,
+    private val clearActiveSession: ClearActiveSessionUseCase,
     private val checkNicknameAvailability: CheckNicknameAvailabilityUseCase,
     private val startSocialSession: StartSocialSessionUseCase
 ) : ViewModel() {
@@ -85,6 +87,14 @@ class SmartTrainnerAppViewModel @Inject constructor(
         }
     }
 
+    fun returnToLogin() {
+        pendingSocialCredential = null
+        nicknameCheckJob?.cancel()
+        viewModelScope.launch {
+            clearActiveSession()
+        }
+    }
+
     fun onGoogleSignInStarted() {
         loginState.update {
             it.copy(
@@ -109,7 +119,7 @@ class SmartTrainnerAppViewModel @Inject constructor(
         }
     }
 
-    fun returnToLogin() {
+    fun returnToLoginFromNickname() {
         pendingSocialCredential = null
         nicknameCheckJob?.cancel()
         loginState.update {

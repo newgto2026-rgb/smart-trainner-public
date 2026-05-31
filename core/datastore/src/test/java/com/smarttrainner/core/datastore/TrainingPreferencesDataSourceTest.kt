@@ -116,4 +116,13 @@ class TrainingPreferencesDataSourceTest {
         assertThat(session?.providerAccountId).isEqualTo("google-subject-1")
         assertThat(session?.avatarUrl).isEqualTo("https://example.com/kim.png")
     }
+
+    @Test
+    fun clearActiveSession_keepsStoredSessionButClearsActivePointer() = runTest {
+        dataSource.startDefaultSession()
+
+        dataSource.clearActiveSession()
+
+        assertThat(dataSource.activeSession.first()).isNull()
+    }
 }

@@ -65,6 +65,11 @@ internal class InMemorySessionRepository : SessionRepository {
         return Result.success(session)
     }
 
+    override suspend fun clearActiveSession(): Result<Unit> {
+        activeSession.value = null
+        return Result.success(Unit)
+    }
+
     override suspend fun checkNicknameAvailability(nickname: String): Result<Boolean> =
         Result.success(nickname.trim().equals("taken", ignoreCase = true).not())
 

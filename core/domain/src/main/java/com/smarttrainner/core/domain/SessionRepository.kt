@@ -17,6 +17,7 @@ class DuplicateNicknameException : IllegalStateException("Nickname is already ta
 interface SessionRepository {
     fun observeActiveSession(): Flow<UserSession?>
     suspend fun startDefaultSession(): Result<UserSession>
+    suspend fun clearActiveSession(): Result<Unit>
     suspend fun checkNicknameAvailability(nickname: String): Result<Boolean>
     suspend fun startSocialSession(
         credential: SocialSignInCredential,

@@ -95,18 +95,19 @@ fun SmartTrainnerApp(
     }
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val activeSession = state.activeSession
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     when {
         state.isLoading -> LoadingScreen()
-        state.activeSession == null && state.awaitingNickname -> NicknameScreen(
+        activeSession == null && state.awaitingNickname -> NicknameScreen(
             state = state,
             onNicknameChanged = viewModel::onNicknameChanged,
             onCheckNickname = viewModel::checkNickname,
             onContinueGoogle = viewModel::continueWithSocialSession,
-            onBackToLogin = viewModel::returnToLogin
+            onBackToLogin = viewModel::returnToLoginFromNickname
         )
-        state.activeSession == null -> LoginScreen(
+        activeSession == null -> LoginScreen(
             state = state,
             onContinueDefaultSession = viewModel::continueWithDefaultSession,
             onContinueGoogle = {
@@ -130,7 +131,10 @@ fun SmartTrainnerApp(
             exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
             exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
             routineFeatureEntry = routineFeatureEntry,
-            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+            activeSession = activeSession,
+            onLoginRequested = viewModel::returnToLogin,
+            onLogout = viewModel::returnToLogin
         )
     }
 }
