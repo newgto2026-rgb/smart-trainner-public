@@ -1,6 +1,5 @@
 package com.smarttrainner.app.di
 
-import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.feature.routine.data.DefaultRoutinePlanRepository
 import com.smarttrainner.feature.routine.data.DefaultRoutineProgressRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
@@ -15,11 +14,6 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RoutineDataRepositoryBindingsModule {
-    @Binds
-    abstract fun bindWeeklyPlanRepository(
-        repository: DefaultRoutinePlanRepository
-    ): WeeklyPlanRepository
-
     @Binds
     abstract fun bindRoutinePlanCatalogRepository(
         repository: DefaultRoutinePlanRepository

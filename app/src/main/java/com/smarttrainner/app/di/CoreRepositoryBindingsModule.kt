@@ -2,9 +2,11 @@ package com.smarttrainner.app.di
 
 import com.smarttrainner.core.data.DefaultExerciseRepository
 import com.smarttrainner.core.data.DefaultSessionRepository
+import com.smarttrainner.core.data.DefaultWeeklyPlanRepository
 import com.smarttrainner.core.data.DefaultWorkoutLogRepository
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.SessionRepository
+import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import dagger.Binds
 import dagger.Module
@@ -18,6 +20,11 @@ abstract class CoreRepositoryBindingsModule {
     abstract fun bindExerciseRepository(
         repository: DefaultExerciseRepository
     ): ExerciseRepository
+
+    @Binds
+    abstract fun bindWeeklyPlanRepository(
+        repository: DefaultWeeklyPlanRepository
+    ): WeeklyPlanRepository
 
     @Binds
     abstract fun bindWorkoutLogRepository(

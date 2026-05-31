@@ -4,20 +4,16 @@ import com.smarttrainner.core.database.CustomRoutineDao
 import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.domain.TrainingSeedStore
-import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.PlanTemplate
-import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import java.time.Clock
-import java.time.LocalDate
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -30,7 +26,7 @@ class DefaultRoutinePlanRepository @Inject constructor(
     private val activeSessionResolver: ActiveSessionResolver,
     private val seedStore: TrainingSeedStore,
     private val clock: Clock
-) : WeeklyPlanRepository, RoutinePlanCatalogRepository, RoutinePlanCommandRepository {
+) : RoutinePlanCatalogRepository, RoutinePlanCommandRepository {
     override fun observePlanTemplates(): Flow<List<PlanTemplate>> =
         observeCustomRoutines().map { customTemplates -> seedStore.templates + customTemplates }
 
@@ -38,19 +34,6 @@ class DefaultRoutinePlanRepository @Inject constructor(
         activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
             customRoutineDao.observeForSession(sessionId)
                 .map { routines -> routines.map { it.toPlanTemplate() } }
-        }
-
-    override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> =
-        activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
-            combine(
-                preferences.selectedTemplateId(sessionId),
-                customRoutineDao.observeForSession(sessionId)
-            ) { templateId, customRoutines ->
-                seedStore.buildWeeklyPlan(
-                    template = seedStore.templateById(templateId, customRoutines.map { it.toPlanTemplate() }),
-                    weekStartDate = weekStartDate
-                )
-            }
         }
 
     override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = runCatching {

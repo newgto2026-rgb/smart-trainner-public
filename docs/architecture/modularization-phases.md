@@ -1158,6 +1158,29 @@ Split decision:
 
 Next PR scope:
 
+- Split the shared weekly-plan repository implementation back into `:core:data` so routine data owns only routine-specific catalog/command/progress contracts.
+
+## Phase 54: Weekly Plan Core Data Ownership
+
+Status: stacked after Phase 53 on `codex/modularization-weekly-plan-core-data`.
+
+Keep `WeeklyPlanRepository` in `:core:domain` because routine, analysis, and app-level flows consume the current weekly plan. Its implementation should also live in shared core data, while `:feature:routine:data` owns only routine-specific custom routine catalog, selection command, and progress persistence.
+
+First PR scope:
+
+- Add `DefaultWeeklyPlanRepository` in `:core:data` for the shared `WeeklyPlanRepository` contract.
+- Move the `WeeklyPlanRepository` Hilt binding from routine data DI assembly to core repository DI assembly.
+- Remove the shared weekly-plan contract implementation from `DefaultRoutinePlanRepository`.
+- Keep routine data implementations bound only to routine-owned domain contracts.
+
+Split decision:
+
+- Do not move `WeeklyPlanRepository` to `:feature:routine:domain`; analysis data still composes it for weekly summaries.
+- Do not make `:feature:routine:data` depend on `:core:data`; duplicate the custom-routine read mapper in core data for now to preserve dependency direction.
+- Do not introduce a new shared mapper module until more storage-backed custom-routine projections need it.
+
+Next PR scope:
+
 - Continue checking shared workout-log/session contracts for actual cross-feature consumers.
 
 ## Strict Feature Isolation Audit
@@ -1172,6 +1195,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Core domain persistence contracts are no longer one broad `TrainingRepository`; use cases depend on concern-specific shared contracts.
 - Core data repository implementations now mirror those concern-specific contracts instead of one catch-all implementation.
 - App-owned DI composition now binds shared core-domain repository contracts to their core-data implementations.
+- Shared weekly-plan repository implementation now lives in `:core:data`; routine data no longer implements the shared core weekly-plan contract.
 - App-owned DI composition now owns production platform providers for Room and app-wide time; unused Retrofit wiring has been removed until a real repository consumes `SmartTrainnerApi`.
 - Analysis API now exposes only a route entry; its content-rendering surface and UI state models are implementation details.
 - Analysis weekly summary projection contracts, use case, and calculator now live in `:feature:analysis:domain`.
@@ -1198,6 +1222,7 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Exercise, routine, and workout API modules no longer depend on `:core:ui`; common UI is an implementation dependency where needed.
 - Exercise catalog API no longer exposes a single-callback action wrapper; app passes `onExerciseSelected` directly as the route handoff.
 - Core routine plan reads have narrowed to `WeeklyPlanRepository.observeCurrentWeeklyPlan`, which remains shared because weekly summary and analysis derive from it.
+- `WeeklyPlanRepository` is now bound from `:core:data`, while routine data binds only routine-owned catalog/command/progress contracts.
 - `:feature:*:entry` modules have been removed; Hilt feature-entry bindings now live in the app composition root.
 
 Current guardrails still enforce the important lower-level boundary:
