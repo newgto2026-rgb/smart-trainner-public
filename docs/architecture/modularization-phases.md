@@ -1114,6 +1114,28 @@ Split decision:
 
 Next PR scope:
 
+- Tighten app-side guardrails so feature-domain contracts are visible to app only where app-owned DI composes feature data implementations.
+
+## Phase 52: App Feature Domain Boundary Guard
+
+Status: stacked after Phase 51 on `codex/modularization-app-feature-domain-guard`.
+
+Keep `:app` as the final DI composition root while preventing feature-domain contracts from becoming app routing or app shell dependencies. App may know feature APIs for routing and may know feature implementations/data/domain only in approved DI composition modules.
+
+First PR scope:
+
+- Add an explicit app-to-feature-domain Gradle dependency allowlist for the feature-domain modules app needs only for repository binding assembly.
+- Tighten app source scanning so `com.smarttrainner.feature.*.domain` imports are allowed only from approved feature-data repository binding modules.
+- Keep app routing and app shell code dependent on feature APIs, not feature domain contracts.
+
+Split decision:
+
+- Do not move shared workout-log, exercise catalog, or session contracts in this phase; current production consumers still cross feature/app boundaries.
+- Do not add `:feature:*:network`; no feature-private remote contract exists.
+- Do not add `:feature:exercise:data`; exercise catalog storage remains shared core infrastructure.
+
+Next PR scope:
+
 - Continue checking shared workout-log/session contracts for actual cross-feature consumers.
 
 ## Strict Feature Isolation Audit
@@ -1121,7 +1143,7 @@ Next PR scope:
 Current state is strict at the feature-module dependency level. State ownership is now feature-owned for the major destination and dialog surfaces, with app keeping only cross-feature coordination:
 
 - `:feature:analysis`, `:feature:exercise`, `:feature:routine`, and `:feature:workout` no longer depend on another feature's API, implementation, or entry module.
-- `:app` knows feature APIs for routing and listed feature implementations only for app-owned DI composition.
+- `:app` knows feature APIs for routing and listed feature implementations/data/domain only for app-owned DI composition.
 - App `TrainingViewModel` now coordinates selected exercise id and a generic single/continuous recording flow; workout recording, exercise detail, exercise catalog, analysis, routine, custom routine builder state, and routine continuation policy are feature-owned.
 - App no longer imports routine UI/action/form models or raw routine coordinator state; it consumes only the routine feature entry and opaque route API.
 - App no longer owns the routine/exercise `LazyListScope` screen assembly; shared screen chrome lives in `:core:ui`, and feature APIs expose composable route surfaces.
@@ -1167,7 +1189,8 @@ Current guardrails still enforce the important lower-level boundary:
 - Feature implementation modules must not depend on feature data modules; feature UI code consumes domain contracts/use cases.
 - Only `:app` may depend on the listed feature implementation modules for composition-root DI.
 - Only `:app` may depend on listed feature data modules for composition-root DI.
-- App production code may reference core data/storage and feature implementation/data packages only from app-owned DI composition modules; core network wiring must be explicitly reapproved when a real data consumer exists.
+- Only `:app` may depend on listed feature domain modules for composition-root DI.
+- App production code may reference core data/storage and feature implementation/data/domain packages only from app-owned DI composition modules; core network wiring must be explicitly reapproved when a real data consumer exists.
 - App DI may reference feature data implementations only from approved feature-data repository binding modules.
 - Production Hilt modules may be declared only in app-owned DI composition modules.
 

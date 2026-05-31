@@ -61,6 +61,7 @@ val checkModuleBoundaries by tasks.registering {
 
         fun isFeature(path: String) = path.startsWith(":feature:")
         fun isFeatureApi(path: String) = isFeature(path) && path.endsWith(":api")
+        fun isFeatureDomain(path: String) = isFeature(path) && path.endsWith(":domain")
         fun isFeatureData(path: String) = isFeature(path) && path.endsWith(":data")
         fun isFeatureEntry(path: String) = isFeature(path) && path.endsWith(":entry")
         fun isFeatureImpl(path: String) = isFeature(path) && path.endsWith(":impl")
@@ -93,12 +94,18 @@ val checkModuleBoundaries by tasks.registering {
             ":app" to ":feature:routine:data",
             ":app" to ":feature:workout:data"
         )
+        val allowedAppFeatureDomainDependencies = setOf(
+            ":app" to ":feature:analysis:domain",
+            ":app" to ":feature:routine:domain",
+            ":app" to ":feature:workout:domain"
+        )
         val allProjectPaths = allprojects.map { it.path }.toSet()
         val invalidAllowlistPaths = (
             (allowedCrossFeatureApiDependencies +
                 allowedFeatureDataCoreInfrastructureDependencies +
                 allowedAppFeatureImplDependencies +
-                allowedAppFeatureDataDependencies)
+                allowedAppFeatureDataDependencies +
+                allowedAppFeatureDomainDependencies)
                 .flatMap { (source, target) -> listOf(source, target) } +
                 allowedFeaturePrivateModules
             )
@@ -132,6 +139,7 @@ val checkModuleBoundaries by tasks.registering {
         val violations = mutableListOf<String>()
         val featureImplReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.impl(\.|$)""")
         val featureDataReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.data(\.|$)""")
+        val featureDomainReferencePattern = Regex("""com\.smarttrainner\.feature\.[^.]+\.domain(\.|$)""")
         val coreNetworkReferencePattern = Regex("""com\.smarttrainner\.core\.network(\.|$)""")
         val coreImplementationReferencePattern =
             Regex("""com\.smarttrainner\.core\.(data|database|datastore)(\.|$)""")
@@ -191,6 +199,11 @@ val checkModuleBoundaries by tasks.registering {
                     (source to target) !in allowedAppFeatureDataDependencies -> {
                     violations += "$edge: app may depend on feature data only from the app-owned DI composition allowlist."
                 }
+                source == ":app" &&
+                    isFeatureDomain(target) &&
+                    (source to target) !in allowedAppFeatureDomainDependencies -> {
+                    violations += "$edge: app may depend on feature domain only from the app-owned DI composition allowlist."
+                }
             }
         }
 
@@ -204,6 +217,7 @@ val checkModuleBoundaries by tasks.registering {
             "RoutineDataRepositoryBindingsModule.kt",
             "WorkoutDataRepositoryBindingsModule.kt"
         )
+        val appDiFeatureDomainFiles = appDiFeatureDataFiles
 
         appMainKotlinSources.files.forEach { sourceFile ->
             val normalizedPath = sourceFile.path.replace('\\', '/')
@@ -228,6 +242,15 @@ val checkModuleBoundaries by tasks.registering {
                         } else if (sourceFileName !in appDiFeatureDataFiles) {
                             violations +=
                                 "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature data references in :app DI are allowed only in approved feature data repository binding modules."
+                        }
+                    }
+                    if (featureDomainReferencePattern.containsMatchIn(line)) {
+                        if (!isAppDiSource) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature domain references in :app are allowed only in app-owned DI composition modules."
+                        } else if (sourceFileName !in appDiFeatureDomainFiles) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: feature domain references in :app DI are allowed only in approved feature data repository binding modules."
                         }
                     }
                     if (coreNetworkReferencePattern.containsMatchIn(line)) {
