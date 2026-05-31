@@ -122,8 +122,7 @@ internal fun NextRoutineDayCard(
                 val fallbackDayTitle = planDayDisplayTitle(routineDay.day.title, routineDay.dayNumber)
                 val hasCustomDayTitle = routineDay.day.title
                     .hasMeaningfulPlanDayTitle(routineDay.dayNumber)
-                val shouldShowCustomDayLabel = isCustomRoutine &&
-                    (routineDay.primaryFocus != null || hasCustomDayTitle)
+                val shouldShowCustomDayLabel = routineDay.primaryFocus != null || hasCustomDayTitle
                 Text(
                     text = routineDay.primaryFocus?.let { focus ->
                         stringResource(R.string.routine_today_focus_title, focus.localizedTodayFocusLabel())
@@ -140,7 +139,7 @@ internal fun NextRoutineDayCard(
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
-                } else {
+                } else if (!isCustomRoutine) {
                     Text(
                         text = stringResource(
                             R.string.routine_routine_day_subtitle,
@@ -251,30 +250,39 @@ internal fun NextRoutineDayCard(
 
 @Composable
 internal fun RoutineDayBadgeRow(routineDay: NextRoutineDayUiModel) {
+    val isCustomRoutine = routineDay.routineTemplate?.source == RoutineSource.CUSTOM
     SmartTrainnerBadgeRow(
-        badges = listOf(
-            SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.routine_routine_badge_duration, routineDay.sessionMinutes),
-                icon = Icons.Default.Timer,
-                containerColor = SmartTrainnerColors.CoralSoft,
-                contentColor = SmartTrainnerColors.Ink,
-                testTag = "training_next_routine_badge_duration"
-            ),
-            SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.routine_routine_badge_exercises, routineDay.totalExerciseCount),
-                icon = Icons.Default.FitnessCenter,
-                containerColor = SmartTrainnerColors.GreenSoft,
-                contentColor = SmartTrainnerColors.Ink,
-                testTag = "training_next_routine_badge_exercises"
-            ),
-            SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.routine_routine_badge_recovery, routineDay.minRecoveryHours),
-                icon = Icons.Default.DateRange,
-                containerColor = SmartTrainnerColors.AmberSoft,
-                contentColor = SmartTrainnerColors.Ink,
-                testTag = "training_next_routine_badge_recovery"
+        badges = buildList {
+            if (!isCustomRoutine) {
+                add(
+                    SmartTrainnerBadgeSpec(
+                        text = stringResource(R.string.routine_routine_badge_duration, routineDay.sessionMinutes),
+                        icon = Icons.Default.Timer,
+                        containerColor = SmartTrainnerColors.CoralSoft,
+                        contentColor = SmartTrainnerColors.Ink,
+                        testTag = "training_next_routine_badge_duration"
+                    )
+                )
+            }
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.routine_routine_badge_exercises, routineDay.totalExerciseCount),
+                    icon = Icons.Default.FitnessCenter,
+                    containerColor = SmartTrainnerColors.GreenSoft,
+                    contentColor = SmartTrainnerColors.Ink,
+                    testTag = "training_next_routine_badge_exercises"
+                )
             )
-        ),
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.routine_routine_badge_recovery, routineDay.minRecoveryHours),
+                    icon = Icons.Default.DateRange,
+                    containerColor = SmartTrainnerColors.AmberSoft,
+                    contentColor = SmartTrainnerColors.Ink,
+                    testTag = "training_next_routine_badge_recovery"
+                )
+            )
+        },
         maxItemsPerRow = 3,
         modifier = Modifier.testTag("training_next_routine_badges")
     )
