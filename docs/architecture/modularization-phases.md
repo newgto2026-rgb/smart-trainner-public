@@ -1269,6 +1269,27 @@ Split decision:
 
 Next PR scope:
 
+- Split unused core network contracts by concern before any repository starts consuming them.
+
+## Phase 59: Core Network Contract Taxonomy
+
+Status: stacked after Phase 58 on `codex/modularization-core-network-taxonomy`.
+
+The network module was already correctly isolated from app DI, but its public contract was still one broad `SmartTrainnerApi` interface that mixed exercise catalog, plan generation, progress summary, session, and routine endpoints. Since no repository consumes remote contracts yet, split the core network contracts before data implementations start depending on the broad shape.
+
+First PR scope:
+
+- Replace the broad `SmartTrainnerApi` with concern-specific Retrofit contracts in `:core:network`.
+- Keep exercise, plan generation, progress, session, and routine DTOs in `:core:network`; they remain remote transport models, not domain models.
+- Do not add `:feature:*:network` modules. There is still no feature-private remote contract or repository consumer to justify feature network ownership.
+
+Split decision:
+
+- `ExerciseCatalogNetworkApi`, `PlanGenerationNetworkApi`, `ProgressSummaryNetworkApi`, `SessionNetworkApi`, and `RoutineNetworkApi` stay in `:core:network` because they model shared remote API surfaces.
+- Feature data modules should depend on these concern-specific core network contracts only when a real remote implementation is introduced and explicitly allowed by the module boundary guard.
+
+Next PR scope:
+
 - Continue checking shared workout-log/session contracts for actual cross-feature consumers.
 
 ## Strict Feature Isolation Audit
@@ -1286,7 +1307,8 @@ Current state is strict at the feature-module dependency level. State ownership 
 - Core data repository implementations now mirror those concern-specific contracts instead of one catch-all implementation.
 - App-owned DI composition now binds shared core-domain repository contracts to their core-data implementations.
 - Shared weekly-plan repository implementation now lives in `:core:data`; routine data no longer implements the shared core weekly-plan contract.
-- App-owned DI composition now owns production platform providers for Room and app-wide time; unused Retrofit wiring has been removed until a real repository consumes `SmartTrainnerApi`.
+- App-owned DI composition now owns production platform providers for Room and app-wide time; unused Retrofit wiring has been removed until a real repository consumes a concern-specific core network contract.
+- Core network contracts are split by remote concern instead of one broad API interface; no feature-local network module exists because there is no feature-private remote consumer yet.
 - Analysis API now exposes only a route entry; its content-rendering surface and UI state models are implementation details.
 - Analysis weekly summary projection contracts, use case, and calculator now live in `:feature:analysis:domain`.
 - Analysis summary projection implementation now lives in `:feature:analysis:data`; app-owned DI binds it to the analysis-owned summary contract.

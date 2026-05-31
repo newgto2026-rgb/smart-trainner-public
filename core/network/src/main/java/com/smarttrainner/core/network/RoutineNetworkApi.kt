@@ -6,24 +6,10 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
-import retrofit2.http.Path
 import retrofit2.http.POST
+import retrofit2.http.Path
 
-interface SmartTrainnerApi {
-    @GET("api/exercises")
-    suspend fun getExercises(): ExerciseCatalogResponse
-
-    @POST("api/plans/generate")
-    suspend fun generatePlan(@Body request: GeneratePlanRequest): TrainingPlanResponse
-
-    @GET("api/progress/summary")
-    suspend fun getProgressSummary(
-        @Header("x-smart-trainner-session-id") sessionId: String
-    ): ProgressSummaryResponse
-
-    @POST("api/sessions")
-    suspend fun createSession(@Body request: CreateSessionRequest): UserSessionResponse
-
+interface RoutineNetworkApi {
     @GET("api/routines")
     suspend fun getCustomRoutines(
         @Header("x-smart-trainner-session-id") sessionId: String
@@ -59,126 +45,6 @@ interface SmartTrainnerApi {
         @Path("id") id: String
     ): CustomRoutineSelectionResponse
 }
-
-@Serializable
-data class ExerciseCatalogResponse(
-    val data: List<ExerciseDto>,
-    val count: Int
-)
-
-@Serializable
-data class ExerciseDto(
-    val id: String,
-    val name: String,
-    val category: String,
-    val description: String,
-    val steps: List<String>,
-    val stepImages: List<ExerciseStepImageDto>,
-    val cautions: List<String>,
-    val imageKey: String,
-    val imageUrl: String? = null,
-    val muscleGroups: List<String>,
-    val equipment: List<String>,
-    val difficulty: String,
-    val defaultSets: Int? = null,
-    val defaultReps: Int? = null,
-    val defaultDurationMinutes: Int? = null
-)
-
-@Serializable
-data class ExerciseStepImageDto(
-    val step: Int,
-    val phase: String,
-    val imageKey: String,
-    val alt: String
-)
-
-@Serializable
-data class GeneratePlanRequest(
-    val goal: String = "general",
-    val daysPerWeek: Int = 3,
-    val level: String = "beginner"
-)
-
-@Serializable
-data class TrainingPlanResponse(
-    val data: WeeklyPlanDto
-)
-
-@Serializable
-data class WeeklyPlanDto(
-    val id: String? = null,
-    val name: String? = null,
-    val description: String? = null,
-    val goal: String,
-    val daysPerWeek: Int,
-    val level: String,
-    val days: List<PlanDayDto>
-)
-
-@Serializable
-data class PlanDayDto(
-    val day: Int,
-    val focus: String,
-    val exercises: List<PlanExerciseDto>
-)
-
-@Serializable
-data class PlanExerciseDto(
-    val exerciseId: String,
-    val name: String,
-    val sets: Int? = null,
-    val reps: Int? = null,
-    val durationMinutes: Int? = null
-)
-
-@Serializable
-data class ProgressSummaryResponse(
-    val data: ProgressSummaryDto
-)
-
-@Serializable
-data class ProgressSummaryDto(
-    val sessionId: String = "local-default",
-    val totalLogs: Int,
-    val totalVolumeKg: Double,
-    val totalDurationMinutes: Int,
-    val activeDays: Int,
-    val byExercise: List<ProgressExerciseDto>
-)
-
-@Serializable
-data class ProgressExerciseDto(
-    val exerciseId: String,
-    val name: String,
-    val logs: Int,
-    val volumeKg: Double,
-    val durationMinutes: Int
-)
-
-@Serializable
-data class CreateSessionRequest(
-    val id: String = "local-default",
-    val displayName: String = "Local Athlete",
-    val email: String? = null,
-    val provider: String = "local"
-)
-
-@Serializable
-data class UserSessionResponse(
-    val data: UserSessionDto
-)
-
-@Serializable
-data class UserSessionDto(
-    val id: String,
-    val displayName: String,
-    val email: String? = null,
-    val provider: String,
-    val createdAt: String,
-    val updatedAt: String,
-    val linkedAt: String? = null
-)
 
 @Serializable
 data class CustomRoutineListResponse(
