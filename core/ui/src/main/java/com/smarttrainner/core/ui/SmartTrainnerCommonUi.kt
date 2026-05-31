@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
@@ -282,6 +283,95 @@ fun SmartTrainnerBadgeRow(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SmartTrainnerMetricCluster(
+    label: String,
+    metrics: List<SmartTrainnerBadgeSpec>,
+    maxItemsPerRow: Int,
+    modifier: Modifier = Modifier,
+    labelContainerColor: Color = SmartTrainnerColors.CoralSoft,
+    labelContentColor: Color = SmartTrainnerColors.Ink,
+    metricAlpha: Float = 0.56f
+) {
+    BoxWithConstraints(modifier = modifier) {
+        val rowLimit = if (maxWidth < 220.dp) {
+            maxItemsPerRow.coerceAtMost(2)
+        } else {
+            maxItemsPerRow
+        }.coerceAtLeast(1)
+        val tokens = listOf(
+            SmartTrainnerBadgeSpec(
+                text = label,
+                containerColor = labelContainerColor,
+                contentColor = labelContentColor
+            ) to true
+        ) + metrics.map { it to false }
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            tokens.chunked(rowLimit).forEach { rowMetrics ->
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    rowMetrics.forEach { (metric, isFirstToken) ->
+                        val alpha = if (isFirstToken) 1f else metricAlpha
+                        val weight = if (isFirstToken) FontWeight.Bold else FontWeight.SemiBold
+                        val horizontalPadding = if (isFirstToken) 7.dp else 6.dp
+                        SmartTrainnerMetricToken(
+                            text = metric.text,
+                            icon = metric.icon,
+                            containerColor = metric.containerColor.copy(alpha = alpha),
+                            contentColor = metric.contentColor,
+                            borderColor = metric.borderColor,
+                            fontWeight = weight,
+                            horizontalPadding = horizontalPadding,
+                            modifier = metric.testTag?.let { Modifier.testTag(it) } ?: Modifier
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SmartTrainnerMetricToken(
+    text: String,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    containerColor: Color = SmartTrainnerColors.SteelSoft,
+    contentColor: Color = SmartTrainnerColors.Ink,
+    borderColor: Color? = null,
+    fontWeight: FontWeight = FontWeight.SemiBold,
+    horizontalPadding: Dp = 6.dp
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(6.dp),
+        color = containerColor,
+        border = borderColor?.let { BorderStroke(1.dp, it) }
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 3.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = contentColor
+                )
+            }
+            Text(
+                text = text,
+                color = contentColor,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = fontWeight,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

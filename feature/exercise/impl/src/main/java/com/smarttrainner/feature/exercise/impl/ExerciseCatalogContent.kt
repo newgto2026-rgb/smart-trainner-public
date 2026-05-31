@@ -11,8 +11,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,7 +33,10 @@ import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.exercisemedia.TrainerExerciseImage
+import com.smarttrainner.core.ui.SmartTrainnerBadge
+import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
+import com.smarttrainner.core.ui.SmartTrainnerMetricCluster
 
 private val armDetailGroups = listOf(
     MuscleGroup.BICEPS,
@@ -150,40 +157,66 @@ private fun ExerciseRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(8.dp),
-        color = if (selected) SmartTrainnerColors.CoralSoft else SmartTrainnerColors.SurfaceRaised,
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) SmartTrainnerColors.CoralSoft else SmartTrainnerColors.SurfaceRaised
+        ),
         border = BorderStroke(
             width = 1.dp,
             color = if (selected) SmartTrainnerColors.Coral else SmartTrainnerColors.Line
         )
     ) {
         Row(
-            modifier = Modifier.padding(10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             TrainerExerciseImage(
                 exercise = exercise,
-                modifier = Modifier.size(width = 72.dp, height = 80.dp),
+                modifier = Modifier.size(width = 76.dp, height = 84.dp),
                 cleanThumbnailCrop = true
             )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(exercise.localizedName(), fontWeight = FontWeight.Bold)
-                Text(
-                    text = exercise.localizedCatalogDisplayText(latestLog),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SmartTrainnerColors.Muted,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = exercise.equipment.localizedLabel(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = SmartTrainnerColors.Muted
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = exercise.localizedName(),
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    SmartTrainnerBadge(
+                        text = exercise.equipment.localizedLabel(),
+                        containerColor = SmartTrainnerColors.SteelSoft,
+                        contentColor = SmartTrainnerColors.Ink,
+                        borderColor = SmartTrainnerColors.Line
+                    )
+                }
+                SmartTrainnerMetricCluster(
+                    label = stringResource(
+                        if (latestLog == null) {
+                            R.string.exercise_metric_recommended
+                        } else {
+                            R.string.exercise_metric_latest
+                        }
+                    ),
+                    metrics = exercise.catalogMetricBadges(latestLog),
+                    maxItemsPerRow = 3,
+                    labelContainerColor = if (latestLog == null) {
+                        SmartTrainnerColors.CoralSoft
+                    } else {
+                        SmartTrainnerColors.SteelSoft
+                    }
                 )
             }
         }
@@ -191,41 +224,104 @@ private fun ExerciseRow(
 }
 
 @Composable
-private fun Exercise.localizedCatalogTargetText(): String {
-    val reps = defaultRepRange
-    return if (reps != null) {
-        stringResource(
-            R.string.exercise_target_reps,
-            defaultSets,
-            reps.first,
-            reps.last
+private fun Exercise.catalogMetricBadges(latestLog: WorkoutLog?): List<SmartTrainnerBadgeSpec> =
+    latestLog?.catalogRecordMetricBadges() ?: buildList {
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.exercise_set_number, defaultSets),
+                icon = Icons.Default.FitnessCenter,
+                containerColor = SmartTrainnerColors.GreenSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
         )
-    } else {
-        stringResource(R.string.exercise_target_duration, defaultSets, defaultDurationMinutes ?: 10)
+        val reps = defaultRepRange
+        if (reps != null) {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.exercise_actual_reps, "${reps.first}-${reps.last}"),
+                    containerColor = SmartTrainnerColors.CoralSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        } else {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(
+                        R.string.exercise_actual_duration,
+                        (defaultDurationMinutes ?: 10).toString()
+                    ),
+                    icon = Icons.Default.Timer,
+                    containerColor = SmartTrainnerColors.AmberSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.exercise_actual_rest, restSeconds.toString()),
+                icon = Icons.Default.Timer,
+                containerColor = SmartTrainnerColors.SteelSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
     }
-}
 
 @Composable
-private fun Exercise.localizedCatalogDisplayText(latestLog: WorkoutLog?): String =
-    latestLog?.localizedRecordDisplayText()?.let { recordText ->
-        stringResource(R.string.exercise_latest_record, recordText)
-    } ?: stringResource(R.string.exercise_recommended_record, localizedCatalogTargetText())
-
-@Composable
-private fun WorkoutLog.localizedRecordDisplayText(): String {
+private fun WorkoutLog.catalogRecordMetricBadges(): List<SmartTrainnerBadgeSpec> {
     val entries = displaySetEntries()
     val reps = entries.mapNotNull { it.reps }.toCollapsedText()
     val weights = entries.mapNotNull { it.weightKg }.map { it.toRecordInput() }.toCollapsedText()
     val durations = entries.mapNotNull { it.durationMinutes }.toCollapsedText()
     val rests = entries.mapNotNull { it.restSeconds }.toCollapsedText()
-    val parts = buildList {
-        add(stringResource(R.string.exercise_set_number, entries.size.coerceAtLeast(sets)))
-        reps?.let { add(stringResource(R.string.exercise_actual_reps, it)) }
-        weights?.let { add(stringResource(R.string.exercise_actual_weight, it)) }
-        durations?.let { add(stringResource(R.string.exercise_actual_duration, it)) }
-        rests?.let { add(stringResource(R.string.exercise_actual_rest, it)) }
+    return buildList {
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.exercise_set_number, entries.size.coerceAtLeast(sets)),
+                icon = Icons.Default.FitnessCenter,
+                containerColor = SmartTrainnerColors.GreenSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+        reps?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.exercise_actual_reps, it),
+                    containerColor = SmartTrainnerColors.CoralSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        weights?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.exercise_actual_weight, it),
+                    icon = Icons.Default.FitnessCenter,
+                    containerColor = SmartTrainnerColors.SteelSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        durations?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.exercise_actual_duration, it),
+                    icon = Icons.Default.Timer,
+                    containerColor = SmartTrainnerColors.AmberSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        rests?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.exercise_actual_rest, it),
+                    icon = Icons.Default.Timer,
+                    containerColor = SmartTrainnerColors.SteelSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
     }
-    return parts.joinToString(" · ")
 }
 
 private fun WorkoutLog.displaySetEntries(): List<WorkoutSetLog> =

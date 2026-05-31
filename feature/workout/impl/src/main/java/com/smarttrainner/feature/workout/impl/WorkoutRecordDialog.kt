@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.RemoveCircleOutline
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,6 +34,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -44,6 +46,8 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerNumberField
 import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
+import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
+import com.smarttrainner.core.ui.SmartTrainnerMetricCluster
 import java.util.Locale
 
 @Composable
@@ -127,8 +131,34 @@ private fun RecordForm(
                 cleanThumbnailCrop = true,
                 contentDescription = null
             )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(planned.localizedWorkoutDisplayText(displayLog), color = SmartTrainnerColors.Muted)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                Text(
+                    text = planned.exercise.localizedWorkoutName(),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = SmartTrainnerColors.Ink,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                SmartTrainnerMetricCluster(
+                    label = stringResource(
+                        if (displayLog == null) {
+                            R.string.workout_metric_recommended
+                        } else {
+                            R.string.workout_metric_latest
+                        }
+                    ),
+                    metrics = planned.workoutMetricBadges(displayLog),
+                    maxItemsPerRow = 2,
+                    labelContainerColor = if (displayLog == null) {
+                        SmartTrainnerColors.CoralSoft
+                    } else {
+                        SmartTrainnerColors.SteelSoft
+                    }
+                )
             }
         }
         OutlinedButton(
@@ -295,42 +325,100 @@ private fun isKoreanLocale(): Boolean {
 }
 
 @Composable
-private fun PlannedExercise.localizedWorkoutTargetText(): String {
-    val reps = repRange
-    return if (reps != null) {
-        stringResource(R.string.workout_target_reps, sets, reps.first, reps.last)
-    } else {
-        stringResource(R.string.workout_target_duration, sets, durationMinutes ?: 10)
+private fun PlannedExercise.workoutMetricBadges(latestLog: WorkoutLog?): List<SmartTrainnerBadgeSpec> =
+    latestLog?.workoutRecordMetricBadges() ?: buildList {
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.workout_set_number, sets),
+                icon = Icons.Default.FitnessCenter,
+                containerColor = SmartTrainnerColors.GreenSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+        val reps = repRange
+        if (reps != null) {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.workout_actual_reps, "${reps.first}-${reps.last}"),
+                    containerColor = SmartTrainnerColors.CoralSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        } else {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.workout_actual_duration, (durationMinutes ?: 10).toString()),
+                    icon = Icons.Default.Timer,
+                    containerColor = SmartTrainnerColors.AmberSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.workout_actual_rest, restSeconds.toString()),
+                icon = Icons.Default.Timer,
+                containerColor = SmartTrainnerColors.SteelSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
     }
-}
 
 @Composable
-private fun PlannedExercise.localizedWorkoutDisplayText(latestLog: WorkoutLog?): String =
-    latestLog?.localizedRecordDisplayText()?.let { recordText ->
-        stringResource(R.string.workout_latest_record, recordText)
-    } ?: stringResource(
-        R.string.workout_recommended_record,
-        listOf(
-            localizedWorkoutTargetText(),
-            stringResource(R.string.workout_rest, restSeconds)
-        ).joinToString(" · ")
-    )
-
-@Composable
-private fun WorkoutLog.localizedRecordDisplayText(): String {
+private fun WorkoutLog.workoutRecordMetricBadges(): List<SmartTrainnerBadgeSpec> {
     val entries = displaySetEntries()
     val reps = entries.mapNotNull { it.reps }.toCollapsedText()
     val weights = entries.mapNotNull { it.weightKg }.map { it.toRecordInput() }.toCollapsedText()
     val durations = entries.mapNotNull { it.durationMinutes }.toCollapsedText()
     val rests = entries.mapNotNull { it.restSeconds }.toCollapsedText()
-    val parts = buildList {
-        add(stringResource(R.string.workout_set_number, entries.size.coerceAtLeast(sets)))
-        reps?.let { add(stringResource(R.string.workout_actual_reps, it)) }
-        weights?.let { add(stringResource(R.string.workout_actual_weight, it)) }
-        durations?.let { add(stringResource(R.string.workout_actual_duration, it)) }
-        rests?.let { add(stringResource(R.string.workout_actual_rest, it)) }
+    return buildList {
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.workout_set_number, entries.size.coerceAtLeast(sets)),
+                icon = Icons.Default.FitnessCenter,
+                containerColor = SmartTrainnerColors.GreenSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+        reps?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.workout_actual_reps, it),
+                    containerColor = SmartTrainnerColors.CoralSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        weights?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.workout_actual_weight, it),
+                    containerColor = SmartTrainnerColors.SteelSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        durations?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.workout_actual_duration, it),
+                    icon = Icons.Default.Timer,
+                    containerColor = SmartTrainnerColors.AmberSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        rests?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.workout_actual_rest, it),
+                    icon = Icons.Default.Timer,
+                    containerColor = SmartTrainnerColors.SteelSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
     }
-    return parts.joinToString(" · ")
 }
 
 private fun WorkoutLog.displaySetEntries(): List<WorkoutSetLog> =

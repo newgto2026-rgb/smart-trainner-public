@@ -1,9 +1,9 @@
 package com.smarttrainner.feature.analysis.impl
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -30,7 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
-import com.smarttrainner.core.designsystem.SmartTrainnerGradients
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WeeklySummary
@@ -38,7 +36,6 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
-import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.core.ui.SmartTrainnerMetricTile
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
 import java.util.Locale
@@ -50,25 +47,7 @@ internal fun AnalysisContent(state: AnalysisUiState) {
         if (state.recentLogs.isNotEmpty()) {
             RecentRecordsCard(records = state.recentLogs)
         }
-        Text(
-            text = stringResource(R.string.analysis_muscle_balance),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        val summary = state.summary
-        if (summary == null || summary.muscleBalance.isEmpty()) {
-            SmartTrainnerEmptyState(text = stringResource(R.string.analysis_empty_logs))
-        } else {
-            val maxMuscleBalance = summary.muscleBalance.values.maxOrNull() ?: 1
-            summary.muscleBalance.entries.forEach { entry ->
-                MuscleBalanceRow(
-                    label = entry.key.localizedLabel(),
-                    count = entry.value,
-                    max = maxMuscleBalance
-                )
-            }
-            InsightCard(text = summary.insightText())
-        }
+        MuscleBalanceCard(summary = state.summary)
     }
 }
 
@@ -203,23 +182,18 @@ private fun WorkoutLog.metricBadges(): List<SmartTrainnerBadgeSpec> = buildList 
 @Composable
 private fun SummaryBand(summary: WeeklySummary?) {
     Card(
-        modifier = Modifier.testTag("training_summary_band"),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("training_summary_band"),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, SmartTrainnerColors.Line),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = CardDefaults.cardColors(containerColor = SmartTrainnerColors.SurfaceRaised)
     ) {
         Column(
-            modifier = Modifier
-                .background(SmartTrainnerGradients.brandLight())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = stringResource(R.string.analysis_week_summary),
-                color = SmartTrainnerColors.Ink,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            AnalysisSectionHeader(title = stringResource(R.string.analysis_week_summary))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmartTrainnerMetricTile(
                     label = stringResource(R.string.analysis_completion_rate),
@@ -251,6 +225,56 @@ private fun SummaryBand(summary: WeeklySummary?) {
 }
 
 @Composable
+private fun MuscleBalanceCard(summary: WeeklySummary?) {
+    AnalysisSectionCard {
+        AnalysisSectionHeader(title = stringResource(R.string.analysis_muscle_balance))
+        if (summary == null || summary.muscleBalance.isEmpty()) {
+            Text(
+                text = stringResource(R.string.analysis_empty_logs),
+                color = SmartTrainnerColors.Muted,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        } else {
+            val maxMuscleBalance = summary.muscleBalance.values.maxOrNull() ?: 1
+            summary.muscleBalance.entries.forEach { entry ->
+                MuscleBalanceRow(
+                    label = entry.key.localizedLabel(),
+                    count = entry.value,
+                    max = maxMuscleBalance
+                )
+            }
+            InsightCard(text = summary.insightText())
+        }
+    }
+}
+
+@Composable
+private fun AnalysisSectionCard(content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, SmartTrainnerColors.Line),
+        colors = CardDefaults.cardColors(containerColor = SmartTrainnerColors.SurfaceRaised)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = content
+        )
+    }
+}
+
+@Composable
+private fun AnalysisSectionHeader(title: String) {
+    Text(
+        text = title,
+        color = SmartTrainnerColors.Ink,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold
+    )
+}
+
+@Composable
 private fun MuscleBalanceRow(
     label: String,
     count: Int,
@@ -272,7 +296,11 @@ private fun MuscleBalanceRow(
 
 @Composable
 private fun InsightCard(text: String) {
-    Surface(shape = RoundedCornerShape(8.dp), color = SmartTrainnerColors.AmberSoft) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = SmartTrainnerColors.AmberSoft
+    ) {
         Text(
             text = text,
             modifier = Modifier.padding(14.dp),

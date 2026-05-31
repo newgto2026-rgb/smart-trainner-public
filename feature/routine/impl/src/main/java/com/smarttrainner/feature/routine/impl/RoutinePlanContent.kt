@@ -40,7 +40,9 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
+import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
+import com.smarttrainner.core.ui.SmartTrainnerMetricCluster
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.planContent(
     state: RoutineUiState,
@@ -237,9 +239,32 @@ internal fun PlanExerciseRow(
                 cleanThumbnailCrop = true,
                 contentDescription = null
             )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(exercise.exercise.localizedName(), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(exercise.localizedTrainingDisplayText(displayLog), color = SmartTrainnerColors.Muted, style = MaterialTheme.typography.bodySmall)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                Text(
+                    text = exercise.exercise.localizedName(),
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                SmartTrainnerMetricCluster(
+                    label = stringResource(
+                        if (displayLog == null) {
+                            R.string.routine_metric_recommended
+                        } else {
+                            R.string.routine_metric_latest
+                        }
+                    ),
+                    metrics = exercise.trainingMetricBadges(displayLog),
+                    maxItemsPerRow = 2,
+                    labelContainerColor = if (displayLog == null) {
+                        SmartTrainnerColors.CoralSoft
+                    } else {
+                        SmartTrainnerColors.SteelSoft
+                    }
+                )
             }
             if (completed) {
                 StatusIcon(completed = true)
@@ -256,6 +281,104 @@ internal fun PlanExerciseRow(
                     Text(stringResource(R.string.routine_record_action), style = MaterialTheme.typography.labelMedium)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun PlannedExercise.trainingMetricBadges(
+    displayLog: WorkoutLog?
+): List<SmartTrainnerBadgeSpec> = displayLog?.recordMetricBadges() ?: buildList {
+    add(
+        SmartTrainnerBadgeSpec(
+            text = stringResource(R.string.routine_set_number, sets),
+            icon = Icons.Default.FitnessCenter,
+            containerColor = SmartTrainnerColors.GreenSoft,
+            contentColor = SmartTrainnerColors.Ink
+        )
+    )
+    val reps = repRange
+    if (reps != null) {
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.routine_actual_reps, "${reps.first}-${reps.last}"),
+                containerColor = SmartTrainnerColors.CoralSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+    } else {
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.routine_actual_duration, (durationMinutes ?: 10).toString()),
+                icon = Icons.Default.Timer,
+                containerColor = SmartTrainnerColors.AmberSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+    }
+    add(
+        SmartTrainnerBadgeSpec(
+            text = stringResource(R.string.routine_actual_rest, restSeconds.toString()),
+            icon = Icons.Default.Timer,
+            containerColor = SmartTrainnerColors.SteelSoft,
+            contentColor = SmartTrainnerColors.Ink
+        )
+    )
+}
+
+@Composable
+private fun WorkoutLog.recordMetricBadges(): List<SmartTrainnerBadgeSpec> {
+    val entries = displaySetEntries()
+    val reps = entries.mapNotNull { it.reps }.toCollapsedText()
+    val weights = entries.mapNotNull { it.weightKg }.map { it.toRecordInput() }.toCollapsedText()
+    val durations = entries.mapNotNull { it.durationMinutes }.toCollapsedText()
+    val rests = entries.mapNotNull { it.restSeconds }.toCollapsedText()
+    return buildList {
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.routine_set_number, entries.size.coerceAtLeast(sets)),
+                icon = Icons.Default.FitnessCenter,
+                containerColor = SmartTrainnerColors.GreenSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+        reps?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.routine_actual_reps, it),
+                    containerColor = SmartTrainnerColors.CoralSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        weights?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.routine_actual_weight, it),
+                    containerColor = SmartTrainnerColors.SteelSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        durations?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.routine_actual_duration, it),
+                    icon = Icons.Default.Timer,
+                    containerColor = SmartTrainnerColors.AmberSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
+        }
+        rests?.let {
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.routine_actual_rest, it),
+                    icon = Icons.Default.Timer,
+                    containerColor = SmartTrainnerColors.SteelSoft,
+                    contentColor = SmartTrainnerColors.Ink
+                )
+            )
         }
     }
 }
