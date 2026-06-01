@@ -29,7 +29,7 @@ Smart Trainner의 루틴 진행은 주차가 아니라 `사이클 + n일차`를 
 ### Android 관점
 - 앱 로컬 DB는 최종 원본이 아니라 캐시와 오프라인 작업 큐여야 한다.
 - 현재 DataStore 중심 진행 상태만으로는 서버 동기화에 약하다.
-- `RoutineCycle`, `WorkoutLog`, `Outbox`, `SyncState`는 Room 모델로 관리하는 편이 안전하다.
+- `RoutineCycle`, `WorkoutLog`, `SyncMutation`, `SyncState`는 Room 모델로 관리하는 편이 안전하다.
 - WorkManager 기반 동기화가 필요하며, 로그인, 앱 실행, 네트워크 복구, 기록 저장, 일차 완료 시 예약되어야 한다.
 - `plannedExerciseId`는 날짜 기반이 아니라 루틴 스냅샷 안에서 안정적인 슬롯 id여야 한다.
 
@@ -53,6 +53,7 @@ Smart Trainner의 루틴 진행은 주차가 아니라 `사이클 + n일차`를 
 - `추가 운동`: 루틴 계획에는 없지만 사용자가 추가로 수행한 운동.
 - `운동 세션`: 사용자가 특정 사이클/일차에서 실제 수행한 기록 묶음.
 - `동기화 검토`: 서버와 디바이스 상태가 달라 사용자에게 변경 요약이나 확인이 필요한 상태.
+- `SyncMutation`: 로컬에서 먼저 저장된 사용자의 변경 요청. 사용자에게는 `동기화 대기 중` 또는 `동기화 중` 상태로만 노출한다.
 
 ## 5. 핵심 원칙
 - 서버가 SSOT다.
@@ -64,6 +65,13 @@ Smart Trainner의 루틴 진행은 주차가 아니라 `사이클 + n일차`를 
 - 생략, 대체, 미완료는 서로 다른 상태로 저장한다.
 - 충돌이 생겼을 때 서버 기준으로 자동 정리하되, 사용자가 기록 손실처럼 느낄 수 있는 경우에는 알림과 변경 내역을 제공한다.
 - 사이클을 판정할 때 단순 `cycleIndex`만 믿지 않고 `routineCycleId`, `templateSnapshot`, `deviceId`, `baseRevision`을 함께 고려한다.
+
+사용자 기준 판단:
+- 사용자가 같은 사이클/일차를 다른 기기에서 다시 입력한 경우, 기본 해석은 `한 운동을 두 번 수행함`이 아니라 `같은 루틴 슬롯을 다른 기기에서 수정함`이다.
+- 사용자가 계획에 없던 운동을 명시적으로 추가한 경우에만 별도 운동으로 보존한다.
+- 사용자가 생략을 선택한 운동은 기록 누락이 아니라 의도적 결정으로 보존한다.
+- 서버 기준으로 기록이 교체되더라도 사용자가 `내 기록이 사라졌다`고 느끼지 않도록 변경 요약을 제공한다.
+- 동기화 알림은 운동 흐름을 막지 않아야 하며, 사용자가 다음 행동을 결정해야 하는 경우에만 검토 화면으로 보낸다.
 
 ## 6. 목표
 - 사용자에게 `N사이클 M일차` 중심 진행 모델을 제공한다.
@@ -110,7 +118,7 @@ Smart Trainner의 루틴 진행은 주차가 아니라 `사이클 + n일차`를 
 - 디바이스 A가 오프라인에서 같은 `3사이클 2일차 벤치프레스`를 다시 기록한다.
 
 정책:
-- 앱은 outbox mutation을 서버에 보낸다.
+- 앱은 `SyncMutation`을 서버에 보낸다.
 - 서버는 `routineCycleId + dayIndex + routineExerciseSlotId`가 같음을 확인한다.
 - 서버는 기존 슬롯 결과를 새 canonical 결과로 교체 또는 갱신한다.
 - 응답은 `replaced` 또는 `updated`를 포함한다.
@@ -140,7 +148,7 @@ Smart Trainner의 루틴 진행은 주차가 아니라 `사이클 + n일차`를 
 ### 8.5 로컬 전용 데이터로 로그인하는 흐름
 1. 사용자가 local-default 상태에서 운동 기록을 쌓는다.
 2. Google 로그인을 한다.
-3. 앱은 로컬 기록을 바로 서버 계정에 덮어쓰지 않고 마이그레이션 후보로 outbox에 넣는다.
+3. 앱은 로컬 기록을 바로 서버 계정에 덮어쓰지 않고 마이그레이션 후보 `SyncMutation`으로 저장한다.
 4. 서버는 현재 계정의 active cycle과 로컬 기록의 template snapshot을 비교한다.
 5. 같은 사이클로 매칭되면 슬롯 단위로 교체 또는 보강한다.
 6. 매칭되지 않으면 서버 canonical state를 우선 표시하고 로컬 기록은 동기화 검토 상태로 보관한다.
@@ -194,7 +202,13 @@ Smart Trainner의 루틴 진행은 주차가 아니라 `사이클 + n일차`를 
 - `performedExerciseId`
 - `entryKind`: `planned`, `substitute`, `additional`
 - `slotStatus`: `completed`, `skipped`, `not_recorded`, `pending`
-- `sets`
+- `sets`: 세트별 상세 기록 리스트
+  - `setIndex`
+  - `reps`
+  - `weightKg`
+  - `durationMinutes`
+  - `restSeconds`
+  - `completed`
 - `memo`
 - `performedAt`
 - `clientUpdatedAt`
@@ -248,16 +262,23 @@ Smart Trainner의 루틴 진행은 주차가 아니라 `사이클 + n일차`를 
 
 1. `pull server state`
    - 서버의 active cycle, active day, revision, cursor를 가져온다.
-2. `compare local outbox`
+2. `compare local SyncMutation queue`
    - 로컬 pending mutation이 서버 state와 같은 사이클인지, 과거/미래 사이클인지 분류한다.
 3. `push mutation batch`
-   - outbox mutation을 순서대로 batch 전송한다.
+   - `SyncMutation`을 순서대로 batch 전송한다.
 4. `receive item-level results`
-   - 각 mutation에 대해 `created`, `updated`, `replaced`, `ignored_stale`, `requires_review`, `conflict`를 받는다.
+   - 각 mutation에 대해 `created`, `updated`, `replaced`, `ignored_stale`, `merge_candidate`, `requires_review`, `conflict`를 받는다.
 5. `pull delta`
    - 서버 cursor 이후 변경분을 가져온다.
 6. `apply canonical state`
-   - Room 캐시, DataStore 화면 상태, outbox 상태를 서버 결과에 맞춘다.
+   - Room 캐시, DataStore 화면 상태, SyncMutation 상태를 서버 결과에 맞춘다.
+
+사용자에게 보이는 결과:
+- `created`, `updated`: 별도 방해 없이 최신 기록으로 반영한다.
+- `replaced`: 홈 배너나 동기화 상태에서 변경 요약을 제공한다.
+- `ignored_stale`: 서버 기록이 최신임을 조용히 반영하되, 사용자가 방금 입력한 내용이면 변경 요약을 제공한다.
+- `merge_candidate`: 사용자가 같은 추가 운동을 한 번 더 한 것인지, 기존 기록에 세트를 더한 것인지 선택할 수 있게 한다.
+- `requires_review`, `conflict`: 운동 중에는 방해하지 않고 홈/프로필에서 `동기화 검토 필요` 상태로 노출한다.
 
 ## 12. API 요구사항
 ### 12.1 Sync State
@@ -318,8 +339,9 @@ POST /api/routine-cycles/{id}/days/{dayIndex}/complete
   - 일차 완료
   - 사용자가 수동 새로고침
 - offline first 저장은 항상 로컬에 먼저 성공해야 한다.
-- 서버와 연결되면 outbox를 push하고 canonical delta를 pull한다.
-- 서버 응답으로 로컬 기록이 교체되면 UI와 Room을 한 트랜잭션으로 갱신한다.
+- 서버와 연결되면 `SyncMutation`을 push하고 canonical delta를 pull한다.
+- 서버 응답으로 로컬 기록이 교체되면 Room DB를 트랜잭션으로 갱신하고, UI는 Room의 Flow 또는 UiState를 관찰해 반응형으로 반영한다.
+- 사용자는 동기화 적용 중 중간 상태가 흔들리는 화면을 보지 않아야 한다.
 - 충돌 또는 검토 상태는 홈 배너와 프로필/동기화 상태에서 접근할 수 있어야 한다.
 
 ## 14. 서버 요구사항
@@ -388,7 +410,7 @@ POST /api/routine-cycles/{id}/days/{dayIndex}/complete
 - `사이클 + n일차` 용어와 화면 표시.
 - 계획 운동의 완료, 생략, 대체, 추가 상태.
 - 서버 SSOT 원칙과 sync state/push/pull API 계약 정의.
-- Room outbox와 WorkManager 동기화 설계.
+- Room `SyncMutation` 큐와 WorkManager 동기화 설계.
 - 같은 사이클/일차/슬롯의 서버 교체 정책.
 - 다른 사이클 충돌의 서버 canonical rebase 정책.
 - 동기화 배너와 변경 요약 UX.
@@ -410,7 +432,7 @@ POST /api/routine-cycles/{id}/days/{dayIndex}/complete
 - 서버는 다른 cycle의 같은 day/slot 기록을 서로 다른 기록으로 보존한다.
 - 서버는 과거 사이클 기록이 들어와도 현재 진행도를 뒤로 돌리지 않는다.
 - 서버는 미래 사이클 기록이 선행 근거 없이 들어오면 자동 전진하지 않는다.
-- 앱은 오프라인 기록을 outbox에 저장하고 네트워크 복구 시 동기화를 예약한다.
+- 앱은 오프라인 기록을 `SyncMutation`으로 저장하고 네트워크 복구 시 동기화를 예약한다.
 - 동일 `clientMutationId` 재전송은 중복 기록을 만들지 않는다.
 - 서버 canonical state 적용 후 앱의 홈, 기록 목록, 동기화 상태가 일관된다.
 - 동기화로 로컬 기록이 교체되면 사용자는 변경 요약을 볼 수 있다.
@@ -445,7 +467,7 @@ POST /api/routine-cycles/{id}/days/{dayIndex}/complete
 - cycle/day/slot canonical key 적용.
 - item-level sync result 테스트 추가.
 
-### Phase 3: Android 로컬 outbox
+### Phase 3: Android 로컬 SyncMutation
 - Room sync 모델 추가.
 - WorkManager 동기화 worker 추가.
 - 로그인/네트워크 복구/기록 저장 트리거 연결.
@@ -467,7 +489,7 @@ POST /api/routine-cycles/{id}/days/{dayIndex}/complete
 - skipped, substitute, additional 상태가 day completion과 progress projection에 올바르게 반영되는지 검증한다.
 
 ### Android
-- 오프라인 저장이 Room과 outbox에 먼저 성공하는지 검증한다.
+- 오프라인 저장이 Room과 `SyncMutation` 큐에 먼저 성공하는지 검증한다.
 - WorkManager가 네트워크 복구 후 pending mutation을 처리하는지 검증한다.
 - 서버 conflict response 수신 시 Room, DataStore, UI state가 한 번에 canonical state로 맞춰지는지 검증한다.
 - 미완료 운동이 있는 일차 완료 UX가 `진행 중 저장`과 `건너뛰고 완료`를 구분하는지 검증한다.
