@@ -385,7 +385,7 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_next_routine_day_1").assertIsDisplayed()
         composeRule.onNodeWithTag("training_next_routine_focus_CHEST").assertIsDisplayed()
         composeRule.onAllNodesWithTag("training_next_routine_time_estimate").assertCountEquals(0)
-        composeRule.onAllNodesWithTag("training_next_routine_badge_duration").assertCountEquals(0)
+        composeRule.onNodeWithTag("training_next_routine_badge_duration").assertIsDisplayed()
         scrollToNodeWithTag("training_complete_routine_day")
         composeRule.onNodeWithTag("training_complete_routine_day").assertIsDisplayed().performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {
@@ -398,7 +398,7 @@ class TrainingUiTest {
             .assert(hasText("레그 프레스", substring = true) or hasText("Leg Press", substring = true))
             .assert(hasText("고블릿 스쿼트", substring = true) or hasText("Goblet Squat", substring = true))
         composeRule.onAllNodesWithTag("training_next_routine_time_estimate").assertCountEquals(0)
-        composeRule.onAllNodesWithTag("training_next_routine_badge_duration").assertCountEquals(0)
+        composeRule.onNodeWithTag("training_next_routine_badge_duration").assertIsDisplayed()
     }
 
     private fun resetTestState() {

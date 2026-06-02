@@ -132,6 +132,7 @@ class RoutineFeatureEntryImpl @Inject constructor(
         if (state.showRoutineSettingsDialog) {
             RoutineSettingsDialog(
                 form = state.routineRecommendationInput,
+                availability = state.routineFilterAvailability,
                 onDaysPerWeekChanged = actions.onDaysPerWeekChanged,
                 onSessionMinutesChanged = actions.onSessionMinutesChanged,
                 onExperienceChanged = actions.onExperienceChanged,

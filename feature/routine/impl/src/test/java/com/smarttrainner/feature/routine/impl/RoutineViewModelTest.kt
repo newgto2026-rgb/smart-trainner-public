@@ -20,6 +20,7 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlanTemplateDay
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineSource
@@ -188,6 +189,37 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun nextRoutineDayUi_usesEstimatedMinutesFromPlannedExercises() {
+        val day = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 24),
+            title = "1일차",
+            focus = "가슴 집중",
+            exercises = listOf(plannedExercise("exercise_1")),
+            dayNumber = 1,
+            primaryFocus = RoutineFocus.CHEST,
+            secondaryFocuses = emptyList(),
+            minRecoveryHours = 24
+        )
+        val template = PlanTemplate(
+            id = "template",
+            name = "Template",
+            level = PlanLevel.INTERMEDIATE,
+            daysPerWeek = 1,
+            description = "",
+            days = listOf(templateDay(0, "가슴 집중", RoutineFocus.CHEST, "exercise_1")),
+            sessionMinutes = 45
+        )
+
+        val uiModel = day.toNextRoutineDayUiModel(
+            template = template,
+            dayIndex = 0,
+            completedIds = emptySet()
+        )
+
+        assertThat(uiModel.sessionMinutes).isEqualTo(8)
+    }
+
+    @Test
     fun nextRoutineDayUi_ignoresEmptyTemplateDays() {
         val day = WorkoutDayPlan(
             date = LocalDate.of(2026, 5, 24),
@@ -300,6 +332,64 @@ class RoutineViewModelTest {
             val started = awaitItem()
             assertThat(started.showRoutineRecommendationsDialog).isFalse()
             assertThat(started.activeRoutineProgress?.templateId).isEqualTo("intermediate-body-part-4day")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun routineRecommendationFiltersNormalizeUnavailableTimeOptions() = runTest {
+        repository.setTemplates(
+            listOf(
+                filterTemplate(
+                    id = "beginner-body-part-5day-45",
+                    daysPerWeek = 5,
+                    sessionMinutes = 45,
+                    structure = RoutineStructure.BODY_PART_SPLIT,
+                    experience = TrainingExperience.BEGINNER
+                ),
+                filterTemplate(
+                    id = "beginner-full-body-5day-45",
+                    daysPerWeek = 5,
+                    sessionMinutes = 45,
+                    structure = RoutineStructure.FULL_BODY,
+                    experience = TrainingExperience.BEGINNER
+                ),
+                filterTemplate(
+                    id = "intermediate-body-part-2day-45",
+                    daysPerWeek = 2,
+                    sessionMinutes = 45,
+                    structure = RoutineStructure.BODY_PART_SPLIT,
+                    experience = TrainingExperience.INTERMEDIATE
+                )
+            )
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            var state = awaitItem()
+            while (state.templates.size != 3) {
+                state = awaitItem()
+            }
+            viewModel.updateRoutineExperience(TrainingExperience.BEGINNER)
+            viewModel.updateRoutineDaysPerWeek(5)
+            viewModel.updateRoutineSessionMinutes(60)
+            viewModel.updateRoutineFeeling(RoutineFeeling.FOCUSED_BODY_PART)
+            advanceUntilIdle()
+
+            state = awaitItem()
+            while (state.routineRecommendationInput.experience != TrainingExperience.BEGINNER ||
+                state.routineRecommendationInput.daysPerWeek != 5
+            ) {
+                state = awaitItem()
+            }
+            assertThat(state.routineRecommendationInput.experience).isEqualTo(TrainingExperience.BEGINNER)
+            assertThat(state.routineRecommendationInput.daysPerWeek).isEqualTo(5)
+            assertThat(state.routineRecommendationInput.sessionMinutes).isEqualTo(45)
+            assertThat(state.routineRecommendationInput.feeling).isEqualTo(RoutineFeeling.FOCUSED_BODY_PART)
+            assertThat(state.routineFilterAvailability.sessionMinutes).containsExactly(45)
+            assertThat(state.routineFilterAvailability.sessionMinutes).doesNotContain(60)
+            assertThat(state.recommendedTemplateId).isEqualTo("beginner-body-part-5day-45")
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -827,7 +917,12 @@ private class FakeTrainingRepository :
     val requestedPlanWeekStartDates = mutableListOf<LocalDate>()
     val requestedLogWeekStartDates = mutableListOf<LocalDate>()
 
+    fun setTemplates(nextTemplates: List<PlanTemplate>) {
+        templates.value = nextTemplates
+    }
+
     fun reset() {
+        templates.value = listOf(template)
         progress.value = RoutineProgress(template.id, 0, null, null)
         logs.value = emptyList()
         latestLogs.value = emptyList()
@@ -985,6 +1080,70 @@ private fun plannedExercise(id: String) = PlannedExercise(
     durationMinutes = null,
     restSeconds = 90,
     note = ""
+)
+
+private fun filterTemplate(
+    id: String,
+    daysPerWeek: Int,
+    sessionMinutes: Int,
+    structure: RoutineStructure,
+    experience: TrainingExperience
+) = PlanTemplate(
+    id = id,
+    name = id,
+    level = when (experience) {
+        TrainingExperience.BEGINNER -> PlanLevel.BEGINNER
+        TrainingExperience.INTERMEDIATE -> PlanLevel.INTERMEDIATE
+        TrainingExperience.ADVANCED -> PlanLevel.ADVANCED
+    },
+    daysPerWeek = daysPerWeek,
+    description = id,
+    days = List(daysPerWeek) { index ->
+        PlanTemplateDay(
+            dayOffset = index,
+            title = "$id ${index + 1}",
+            focus = "test",
+            exercises = listOf(
+                TemplateExercise(
+                    exerciseId = ExerciseId("duration-${id}-${index + 1}"),
+                    sets = 1,
+                    repRange = null,
+                    durationMinutes = sessionMinutes,
+                    restSeconds = 0,
+                    note = ""
+                )
+            ),
+            primaryFocus = if (structure == RoutineStructure.FULL_BODY) {
+                RoutineFocus.FULL_BODY
+            } else {
+                RoutineFocus.CHEST
+            },
+            secondaryFocuses = if (structure == RoutineStructure.BODY_PART_SPLIT) {
+                listOf(RoutineFocus.PUSH)
+            } else {
+                emptyList()
+            }
+        )
+    },
+    structure = structure,
+    recommendedExperience = experience,
+    cycleLength = daysPerWeek,
+    sessionMinutes = sessionMinutes,
+    focusSummary = if (structure == RoutineStructure.FULL_BODY) {
+        listOf(RoutineFocus.FULL_BODY)
+    } else {
+        listOf(
+            RoutineFocus.BACK,
+            RoutineFocus.CHEST,
+            RoutineFocus.LOWER_BODY,
+            RoutineFocus.SHOULDERS,
+            RoutineFocus.ARMS,
+            RoutineFocus.BICEPS,
+            RoutineFocus.TRICEPS,
+            RoutineFocus.PUSH,
+            RoutineFocus.PULL
+        )
+    }
 )
 
 private fun templateDay(

@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlanLevel
 import com.smarttrainner.core.model.PlanTemplate
+import com.smarttrainner.core.model.PlanTemplateDay
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
@@ -11,6 +12,7 @@ import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineRecommendationInput
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.RoutineStructure
+import com.smarttrainner.core.model.TemplateExercise
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WorkoutLog
@@ -84,7 +86,7 @@ class RoutinePolicyUseCasesTest {
             templates = templates
         )
 
-        assertThat(recommendation.primaryTemplateId).isEqualTo("beginner-full-body-3day")
+        assertThat(recommendation.primaryTemplateId).isEqualTo("intermediate-balanced-4day")
     }
 
     @Test
@@ -124,6 +126,139 @@ class RoutinePolicyUseCasesTest {
 
         assertThat(recommendation.primaryTemplateId).isEqualTo("intermediate-body-part-4day-60")
         assertThat(recommendation.alternativeTemplateIds).doesNotContain("custom-lift-party")
+    }
+
+    @Test
+    fun recommendRoutine_excludesTemplatesOverTargetByEstimatedSessionMinutes() {
+        val overBudget = template(
+            id = "over-budget-45-label",
+            daysPerWeek = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = bodyPartFocus,
+            days = listOf(estimatedDurationTemplateDay(minutes = 58))
+        )
+        val withinBudget = template(
+            id = "within-budget-45",
+            daysPerWeek = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = bodyPartFocus,
+            days = listOf(estimatedDurationTemplateDay(minutes = 45))
+        )
+
+        val recommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                daysPerWeek = 4,
+                sessionMinutes = 45,
+                experience = TrainingExperience.INTERMEDIATE,
+                feeling = RoutineFeeling.FOCUSED_BODY_PART
+            ),
+            templates = listOf(overBudget, withinBudget)
+        )
+
+        assertThat(recommendation.primaryTemplateId).isEqualTo("within-budget-45")
+    }
+
+    @Test
+    fun recommendRoutine_usesTenMinuteToleranceForSessionCandidates() {
+        val outsideTolerance = template(
+            id = "outside-tolerance-45",
+            daysPerWeek = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = bodyPartFocus,
+            days = listOf(estimatedDurationTemplateDay(minutes = 56))
+        )
+        val insideTolerance = template(
+            id = "inside-tolerance-45",
+            daysPerWeek = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = bodyPartFocus,
+            days = listOf(estimatedDurationTemplateDay(minutes = 55))
+        )
+
+        val recommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                daysPerWeek = 4,
+                sessionMinutes = 45,
+                experience = TrainingExperience.INTERMEDIATE,
+                feeling = RoutineFeeling.FOCUSED_BODY_PART
+            ),
+            templates = listOf(outsideTolerance, insideTolerance)
+        )
+
+        assertThat(recommendation.primaryTemplateId).isEqualTo("inside-tolerance-45")
+    }
+
+    @Test
+    fun recommendRoutine_keepsRequestedFrequencyWhenExactMatchExceedsTargetMinutes() {
+        val twoDayWithinBudget = template(
+            id = "two-day-within-budget",
+            daysPerWeek = 2,
+            sessionMinutes = 30,
+            structure = RoutineStructure.FULL_BODY,
+            experience = TrainingExperience.BEGINNER,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+        val threeDayOverBudget = template(
+            id = "three-day-over-budget",
+            daysPerWeek = 3,
+            sessionMinutes = 45,
+            structure = RoutineStructure.FULL_BODY,
+            experience = TrainingExperience.BEGINNER,
+            focusSummary = listOf(RoutineFocus.FULL_BODY),
+            days = listOf(estimatedTemplateDay(exerciseCount = 4))
+        )
+
+        val recommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                daysPerWeek = 3,
+                sessionMinutes = 45,
+                experience = TrainingExperience.BEGINNER,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            ),
+            templates = listOf(twoDayWithinBudget, threeDayOverBudget)
+        )
+
+        assertThat(recommendation.primaryTemplateId).isEqualTo("three-day-over-budget")
+    }
+
+    @Test
+    fun recommendRoutine_appRecommendedPrefersRequestedFrequencyBeforeBroaderFallback() {
+        val threeDayFullBody = template(
+            id = "exact-three-day-full-body",
+            daysPerWeek = 3,
+            sessionMinutes = 45,
+            structure = RoutineStructure.FULL_BODY,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+        val fourDayBalanced = template(
+            id = "broader-four-day-balanced",
+            daysPerWeek = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BALANCED_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.UPPER_BODY, RoutineFocus.LOWER_BODY)
+        )
+
+        val recommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                daysPerWeek = 3,
+                sessionMinutes = 45,
+                experience = TrainingExperience.INTERMEDIATE,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            ),
+            templates = listOf(threeDayFullBody, fourDayBalanced)
+        )
+
+        assertThat(recommendation.primaryTemplateId).isEqualTo("exact-three-day-full-body")
     }
 
     @Test
@@ -248,19 +383,59 @@ class RoutinePolicyUseCasesTest {
         sessionMinutes: Int,
         structure: RoutineStructure,
         experience: TrainingExperience,
-        focusSummary: List<RoutineFocus>
+        focusSummary: List<RoutineFocus>,
+        days: List<PlanTemplateDay> = emptyList()
     ) = PlanTemplate(
         id = id,
         name = id,
-        level = if (experience == TrainingExperience.BEGINNER) PlanLevel.BEGINNER else PlanLevel.INTERMEDIATE,
+        level = experience.toPlanLevel(),
         daysPerWeek = daysPerWeek,
         description = id,
-        days = emptyList(),
+        days = days.ifEmpty { listOf(estimatedDurationTemplateDay(minutes = sessionMinutes)) },
         structure = structure,
         recommendedExperience = experience,
         cycleLength = daysPerWeek,
         sessionMinutes = sessionMinutes,
         focusSummary = focusSummary
+    )
+
+    private fun TrainingExperience.toPlanLevel(): PlanLevel = when (this) {
+        TrainingExperience.BEGINNER -> PlanLevel.BEGINNER
+        TrainingExperience.INTERMEDIATE -> PlanLevel.INTERMEDIATE
+        TrainingExperience.ADVANCED -> PlanLevel.ADVANCED
+    }
+
+    private fun estimatedDurationTemplateDay(minutes: Int) = PlanTemplateDay(
+        dayOffset = 0,
+        title = "Test day",
+        focus = "Test",
+        exercises = listOf(
+            TemplateExercise(
+                exerciseId = ExerciseId("duration-exercise-$minutes"),
+                sets = 1,
+                repRange = null,
+                durationMinutes = minutes,
+                restSeconds = 0,
+                note = ""
+            )
+        )
+    )
+
+    private fun estimatedTemplateDay(exerciseCount: Int) = PlanTemplateDay(
+        dayOffset = 0,
+        title = "Test day",
+        focus = "Test",
+        exercises = List(exerciseCount) { index ->
+            TemplateExercise(
+                exerciseId = ExerciseId("exercise-$index"),
+                sets = 4,
+                repRange = 10..12,
+                durationMinutes = null,
+                restSeconds = 120,
+                note = "",
+                repDurationSeconds = 10
+            )
+        }
     )
 
     private fun completedLog(

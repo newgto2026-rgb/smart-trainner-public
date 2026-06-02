@@ -251,20 +251,17 @@ internal fun NextRoutineDayCard(
 
 @Composable
 internal fun RoutineDayBadgeRow(routineDay: NextRoutineDayUiModel) {
-    val isCustomRoutine = routineDay.routineTemplate?.source == RoutineSource.CUSTOM
     SmartTrainnerBadgeRow(
         badges = buildList {
-            if (!isCustomRoutine) {
-                add(
-                    SmartTrainnerBadgeSpec(
-                        text = stringResource(R.string.routine_routine_badge_duration, routineDay.sessionMinutes),
-                        icon = Icons.Default.Timer,
-                        containerColor = SmartTrainnerColors.CoralSoft,
-                        contentColor = SmartTrainnerColors.Ink,
-                        testTag = "training_next_routine_badge_duration"
-                    )
+            add(
+                SmartTrainnerBadgeSpec(
+                    text = stringResource(R.string.routine_routine_badge_duration, routineDay.sessionMinutes),
+                    icon = Icons.Default.Timer,
+                    containerColor = SmartTrainnerColors.CoralSoft,
+                    contentColor = SmartTrainnerColors.Ink,
+                    testTag = "training_next_routine_badge_duration"
                 )
-            }
+            )
             add(
                 SmartTrainnerBadgeSpec(
                     text = stringResource(R.string.routine_routine_badge_exercises, routineDay.totalExerciseCount),

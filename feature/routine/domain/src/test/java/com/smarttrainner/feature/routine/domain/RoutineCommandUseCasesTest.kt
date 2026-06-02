@@ -213,7 +213,7 @@ class RoutineCommandUseCasesTest {
     ) = PlanTemplate(
         id = id,
         name = id,
-        level = if (experience == TrainingExperience.BEGINNER) PlanLevel.BEGINNER else PlanLevel.INTERMEDIATE,
+        level = experience.toPlanLevel(),
         daysPerWeek = daysPerWeek,
         description = id,
         days = emptyList(),
@@ -223,6 +223,12 @@ class RoutineCommandUseCasesTest {
         sessionMinutes = sessionMinutes,
         focusSummary = focusSummary
     )
+
+    private fun TrainingExperience.toPlanLevel(): PlanLevel = when (this) {
+        TrainingExperience.BEGINNER -> PlanLevel.BEGINNER
+        TrainingExperience.INTERMEDIATE -> PlanLevel.INTERMEDIATE
+        TrainingExperience.ADVANCED -> PlanLevel.ADVANCED
+    }
 
     private fun customRoutine(
         exercises: List<CustomRoutineExerciseInput>

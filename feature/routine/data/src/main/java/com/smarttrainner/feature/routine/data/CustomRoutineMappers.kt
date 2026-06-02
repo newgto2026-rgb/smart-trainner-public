@@ -9,6 +9,8 @@ import com.smarttrainner.core.database.CustomRoutineWithDays
 import com.smarttrainner.core.model.CustomRoutineDayInput
 import com.smarttrainner.core.model.CustomRoutineExerciseInput
 import com.smarttrainner.core.model.CustomRoutineInput
+import com.smarttrainner.core.model.DEFAULT_REP_DURATION_SECONDS
+import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlanLevel
 import com.smarttrainner.core.model.PlanTemplate
@@ -18,6 +20,7 @@ import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TemplateExercise
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.estimateExerciseSeconds
 
 fun CustomRoutineInput.toEntity(
     routineId: String,
@@ -84,8 +87,9 @@ fun CustomRoutineExerciseInput.toEntity(
     note = note
 )
 
-fun CustomRoutineWithDays.toPlanTemplate(): PlanTemplate {
+fun CustomRoutineWithDays.toPlanTemplate(exercises: List<Exercise> = emptyList()): PlanTemplate {
     val orderedDays = days.sortedBy { it.day.dayIndex }
+    val repDurationSecondsByExerciseId = exercises.associate { it.id.value to it.defaultRepDurationSeconds }
     val focusSummary = orderedDays
         .flatMap { day -> listOfNotNull(day.day.primaryFocus.toCustomRoutineFocus()) + day.day.secondaryFocuses.toRoutineFocuses() }
         .distinct()
@@ -95,17 +99,21 @@ fun CustomRoutineWithDays.toPlanTemplate(): PlanTemplate {
         level = PlanLevel.INTERMEDIATE,
         daysPerWeek = orderedDays.size,
         description = routine.description,
-        days = orderedDays.map { it.toPlanTemplateDay() },
+        days = orderedDays.map { it.toPlanTemplateDay(repDurationSecondsByExerciseId) },
         structure = RoutineStructure.BALANCED_SPLIT,
         recommendedExperience = TrainingExperience.INTERMEDIATE,
         cycleLength = orderedDays.size,
-        sessionMinutes = orderedDays.maxOfOrNull { day -> day.exercises.estimateSessionMinutes() } ?: 45,
+        sessionMinutes = orderedDays.maxOfOrNull { day ->
+            day.exercises.estimateSessionMinutes(repDurationSecondsByExerciseId)
+        } ?: 45,
         focusSummary = focusSummary,
         source = RoutineSource.CUSTOM
     )
 }
 
-private fun CustomRoutineDayWithExercises.toPlanTemplateDay(): PlanTemplateDay = PlanTemplateDay(
+private fun CustomRoutineDayWithExercises.toPlanTemplateDay(
+    repDurationSecondsByExerciseId: Map<String, Int>
+): PlanTemplateDay = PlanTemplateDay(
     dayOffset = day.dayIndex,
     title = day.title,
     focus = day.customRoutineFocusText(),
@@ -124,7 +132,8 @@ private fun CustomRoutineDayWithExercises.toPlanTemplateDay(): PlanTemplateDay =
                 },
                 durationMinutes = it.durationMinutes,
                 restSeconds = it.restSeconds,
-                note = it.note
+                note = it.note,
+                repDurationSeconds = repDurationSecondsByExerciseId[it.exerciseId] ?: DEFAULT_REP_DURATION_SECONDS
             )
         },
     dayNumber = day.dayIndex + 1,
@@ -133,13 +142,26 @@ private fun CustomRoutineDayWithExercises.toPlanTemplateDay(): PlanTemplateDay =
     minRecoveryHours = day.minRecoveryHours
 )
 
-private fun List<CustomRoutineExerciseEntity>.estimateSessionMinutes(): Int {
-    val workingMinutes = sumOf { exercise ->
-        exercise.durationMinutes ?: (exercise.sets * 3)
-    }
-    val restMinutes = sumOf { it.restSeconds * it.sets } / 60
-    return (workingMinutes + restMinutes).coerceAtLeast(15)
+private fun List<CustomRoutineExerciseEntity>.estimateSessionMinutes(
+    repDurationSecondsByExerciseId: Map<String, Int>
+): Int = sumOf { exercise ->
+    estimateExerciseSeconds(
+        sets = exercise.sets,
+        repRange = exercise.repRange(),
+        durationMinutes = exercise.durationMinutes,
+        restSeconds = exercise.restSeconds,
+        repDurationSeconds = repDurationSecondsByExerciseId[exercise.exerciseId] ?: DEFAULT_REP_DURATION_SECONDS
+    )
+}.roundUpToMinutes().coerceAtLeast(15)
+
+private fun CustomRoutineExerciseEntity.repRange(): IntRange? {
+    val start = repRangeStart
+    val end = repRangeEnd
+    return if (start != null && end != null) start..end else null
 }
+
+private fun Int.roundUpToMinutes(): Int =
+    if (this <= 0) 0 else (this + 59) / 60
 
 private fun CustomRoutineDayEntity.customRoutineFocusText(): String =
     if (primaryFocus.toCustomRoutineFocus() == null && focus == primaryFocus) "" else focus

@@ -1,5 +1,6 @@
 <resources>
     <string name="routine_actual_duration">%1$s분</string>
+    <string name="routine_estimated_duration">예상 %1$d분</string>
     <string name="routine_actual_reps">반복 %1$s회</string>
     <string name="routine_actual_rest">휴식 %1$s초</string>
     <string name="routine_actual_weight">kg %1$s</string>
@@ -76,13 +77,15 @@
     <string name="routine_error_complete_day">오늘 루틴 완료 처리에 실패했습니다.</string>
     <string name="routine_experience_beginner">거의 처음</string>
     <string name="routine_experience_intermediate">꾸준히 해봄</string>
-    <string name="routine_feeling_app_recommended">앱이 추천해줘</string>
-    <string name="routine_feeling_balanced_full_body">매번 전신을 골고루</string>
-    <string name="routine_feeling_focused_body_part">오늘의 부위를 집중</string>
+    <string name="routine_experience_advanced">고급</string>
+    <string name="routine_feeling_app_recommended">맞춤 추천</string>
+    <string name="routine_feeling_balanced_full_body">전신형</string>
+    <string name="routine_feeling_focused_body_part">부위 집중</string>
     <string name="routine_find_recommended_routine">추천으로 찾기</string>
     <string name="routine_incomplete">예정</string>
     <string name="routine_instruction">운동 방법</string>
     <string name="routine_latest_record">최근 기록: %1$s</string>
+    <string name="routine_level_advanced">고급 단계</string>
     <string name="routine_level_beginner">초보 단계</string>
     <string name="routine_level_intermediate">초중급 단계</string>
     <string name="routine_level_intro">입문</string>
@@ -123,7 +126,7 @@
     <string name="routine_routine_days_question">일주일 운동 가능 횟수</string>
     <string name="routine_routine_experience_question">운동 경험</string>
     <string name="routine_routine_examples">오늘 운동 계획</string>
-    <string name="routine_routine_feeling_question">원하는 운동 느낌</string>
+    <string name="routine_routine_feeling_question">루틴 방향</string>
     <string name="routine_routine_flow">진행: %1$s</string>
     <string name="routine_routine_flow_label">진행</string>
     <string name="routine_routine_flow_separator"> → </string>

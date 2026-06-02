@@ -33,7 +33,7 @@ class DefaultRoutinePlanRepository @Inject constructor(
     private fun observeCustomRoutines(): Flow<List<PlanTemplate>> =
         activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
             customRoutineDao.observeForSession(sessionId)
-                .map { routines -> routines.map { it.toPlanTemplate() } }
+                .map { routines -> routines.map { it.toPlanTemplate(seedStore.exercises) } }
         }
 
     override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = runCatching {
@@ -56,7 +56,7 @@ class DefaultRoutinePlanRepository @Inject constructor(
             ),
             days = input.toDayWrites(routineId)
         )
-        requireNotNull(customRoutineDao.getById(sessionId, routineId)).toPlanTemplate()
+        requireNotNull(customRoutineDao.getById(sessionId, routineId)).toPlanTemplate(seedStore.exercises)
     }
 
     override suspend fun deleteCustomRoutine(templateId: String): Result<Unit> = runCatching {

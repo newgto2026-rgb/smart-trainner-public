@@ -29,7 +29,10 @@ class DefaultRoutineProgressRepository @Inject constructor(
                 preferences.activeRoutineProgress(sessionId),
                 customRoutineDao.observeForSession(sessionId)
             ) { preference, customRoutines ->
-                val template = seedStore.templateById(preference.templateId, customRoutines.map { it.toPlanTemplate() })
+                val template = seedStore.templateById(
+                    preference.templateId,
+                    customRoutines.map { it.toPlanTemplate(seedStore.exercises) }
+                )
                 val startedAt = preference.startedAt.toInstantOrNull()
                 RoutineProgress(
                     templateId = template.id,

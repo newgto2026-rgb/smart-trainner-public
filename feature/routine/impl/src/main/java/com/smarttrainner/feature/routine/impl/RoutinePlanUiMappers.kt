@@ -4,6 +4,7 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.core.model.estimatedSessionMinutes
 
 internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel(
     template: PlanTemplate?,
@@ -20,7 +21,7 @@ internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel
         secondaryFocuses = secondaryFocuses,
         dayNumber = dayNumber,
         focus = focus,
-        sessionMinutes = template?.sessionMinutes ?: 45,
+        sessionMinutes = estimatedSessionMinutes.takeIf { it > 0 } ?: template?.sessionMinutes ?: 45,
         previewExercises = exercises,
         startExercise = exercises.firstOrNull { it.id !in completedIds } ?: exercises.firstOrNull(),
         nextPrimaryFocus = nextDay?.primaryFocus,

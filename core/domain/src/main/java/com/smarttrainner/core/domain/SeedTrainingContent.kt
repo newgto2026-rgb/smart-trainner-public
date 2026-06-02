@@ -12,8 +12,14 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TemplateExercise
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.estimateExerciseSeconds
 
 object SeedTrainingContent {
+    private val FAST_CONDITIONING_EXERCISE_IDS = setOf(
+        "two_hand_kettlebell_swing",
+        "medicine_ball_slam"
+    )
+
     val exercises: List<Exercise> = listOf(
         exercise("bodyweight_squat", "맨몸 스쿼트", MuscleGroup.LOWER_BODY, EquipmentType.BODYWEIGHT, DifficultyLevel.BEGINNER, "bodyweight_squat", "장비 없이 스쿼트 정렬과 하체 기본 힘을 익히는 대표 운동입니다.", listOf("발 위치: 발을 어깨너비 정도로 두고 발바닥 전체가 바닥에 닿게 섭니다.", "코어 정렬: 갈비뼈가 들리지 않게 복부를 조이고 무릎과 발끝 방향을 맞춥니다.", "앉기: 엉덩이를 뒤로 보내며 통제 가능한 깊이까지 내려갑니다.", "발바닥으로 상승: 뒤꿈치가 뜨지 않게 바닥을 밀어 가슴과 골반이 함께 올라오게 합니다."), listOf("허리가 말리면 깊이를 줄이세요.", "무릎이 안쪽으로 모이지 않게 하세요.", "반동으로 빠르게 튕기지 마세요."), 3, 10..15, null, 90),
         exercise("leg_press", "레그 프레스", MuscleGroup.LOWER_BODY, EquipmentType.MACHINE, DifficultyLevel.BEGINNER, "leg_press", "허리 부담을 줄이고 하체 전체를 익히기 좋은 머신 운동입니다.", listOf("패드 밀착: 등과 엉덩이를 등받이에 붙이고 발바닥 전체가 플랫폼에 닿게 합니다.", "발 정렬: 무릎이 발끝 방향을 따라가도록 두고 복부에 힘을 줍니다.", "밀고 복귀: 무릎을 잠그지 않고 밀었다가 허리와 엉덩이가 뜨지 않게 천천히 돌아옵니다."), listOf("허리나 엉덩이가 뜨면 범위를 줄이세요.", "무릎이 안쪽으로 모이지 않게 하세요.", "플랫폼을 튕기지 말고 통제해서 복귀하세요."), 3, 10..12, null, 90),
@@ -52,8 +58,8 @@ object SeedTrainingContent {
         exercise("bird_dog", "버드독", MuscleGroup.CORE, EquipmentType.BODYWEIGHT, DifficultyLevel.BEGINNER, "bird_dog", "등과 골반 안정성을 함께 기르는 코어 운동입니다.", listOf("네발기기: 손은 어깨 아래, 무릎은 골반 아래에 두고 목부터 골반까지 길게 정렬합니다.", "한쪽 뻗기: 한쪽 팔과 반대쪽 다리를 길게 뻗고 골반이 돌아가거나 허리가 꺾이지 않게 버팁니다.", "복귀 후 반대쪽: 천천히 네발기기 자세로 돌아온 뒤 반대쪽 팔과 다리도 같은 방식으로 반복합니다."), listOf("허리를 꺾어 다리를 높이지 마세요.", "천천히 균형을 잡으세요."), 2, 8..10, null, 60),
         exercise("pallof_press", "팔로프 프레스", MuscleGroup.CORE, EquipmentType.CABLE, DifficultyLevel.BEGINNER, "pallof_press", "몸통 회전을 버티는 안정성 운동입니다.", listOf("케이블 옆으로 서기: 케이블을 가슴 높이에 맞추고 옆으로 서서 손잡이를 양손으로 잡습니다.", "가슴 앞 세팅: 손잡이를 가슴 중앙에 두고 갈비뼈와 골반이 케이블 쪽으로 돌아가지 않게 고정합니다.", "앞으로 밀기: 손을 가슴 앞에서 곧게 밀어내고 케이블이 몸통을 돌리려는 힘을 복부로 버팁니다.", "회전 버티며 복귀: 같은 자세를 유지하며 손을 가슴으로 되돌리고, 세트를 마치면 반대 방향으로 서서 반복합니다."), listOf("허리만 비틀어 버티지 마세요.", "가벼운 중량으로 정면 유지에 집중하세요."), 3, 10..12, null, 60),
         exercise("cable_woodchop", "케이블 우드찹", MuscleGroup.CORE, EquipmentType.CABLE, DifficultyLevel.INTERMEDIATE, "cable_woodchop", "코어와 몸통 회전을 통제하며 쓰는 운동입니다.", listOf("상단 풀리 시작: 케이블을 높은 위치에 두고 손잡이를 어깨 위쪽에서 잡아 몸통을 길게 세웁니다.", "대각선 당기기: 팔만 휘두르지 말고 가슴과 골반을 함께 돌리며 손잡이를 대각선 아래로 당깁니다.", "무릎 바깥 마무리: 손잡이를 반대쪽 무릎 바깥 방향까지 내리고 복부에 힘을 유지합니다.", "통제 복귀: 케이블이 끌고 가게 두지 말고 같은 대각선 경로로 천천히 돌아온 뒤 반대쪽도 반복합니다."), listOf("허리만 급하게 비틀지 마세요.", "통증이 있으면 팔로프 프레스로 대체하세요."), 2, 10..12, null, 60),
-        exercise("treadmill_walk", "트레드밀 걷기", MuscleGroup.CARDIO, EquipmentType.CARDIO_MACHINE, DifficultyLevel.BEGINNER, "treadmill_walk", "운동 전 몸을 데우고 지속성을 만들기 좋은 유산소입니다.", listOf("낮은 속도 시작: 벨트 중앙에 서서 손잡이를 가볍게 잡고 낮은 속도부터 걷기 시작합니다.", "자연스럽게 걷기: 시선은 앞을 보고 발은 벨트 중앙에 놓으며 팔과 어깨에 힘을 빼고 걷습니다.", "1분 쿨다운: 마지막 1분은 속도를 낮춰 호흡을 안정시키고 벨트가 멈춘 뒤 내려옵니다."), listOf("어지러움이나 흉통이 있으면 즉시 멈추세요.", "처음에는 경사를 낮게 두세요."), 1, null, 10, 30),
-        exercise("indoor_bike", "실내 자전거", MuscleGroup.CARDIO, EquipmentType.CARDIO_MACHINE, DifficultyLevel.BEGINNER, "indoor_bike", "무릎 부담을 낮추며 심박을 올리는 유산소입니다.", listOf("탑승 세팅: 안장에 앉아 양발을 페달에 올리고 무릎이 과하게 접히지 않는지 확인합니다.", "부드럽게 페달링: 상체는 편하게 세우고 페달을 끊기지 않게 일정한 리듬으로 밟습니다.", "강도 유지: 숨이 차지만 대화가 가능한 정도로 저항을 맞추고 목과 허리에 힘이 들어가지 않게 유지합니다."), listOf("무릎이 많이 접히면 안장을 높이세요.", "처음부터 강한 저항을 걸지 마세요."), 1, null, 10, 30),
+        exercise("treadmill_walk", "트레드밀 걷기", MuscleGroup.CARDIO, EquipmentType.CARDIO_MACHINE, DifficultyLevel.BEGINNER, "treadmill_walk", "운동 전 몸을 데우고 지속성을 만들기 좋은 유산소입니다.", listOf("낮은 속도 시작: 벨트 중앙에 서서 손잡이를 가볍게 잡고 낮은 속도부터 걷기 시작합니다.", "자연스럽게 걷기: 시선은 앞을 보고 발은 벨트 중앙에 놓으며 팔과 어깨에 힘을 빼고 걷습니다.", "1분 쿨다운: 마지막 1분은 속도를 낮춰 호흡을 안정시키고 벨트가 멈춘 뒤 내려옵니다."), listOf("어지러움이나 흉통이 있으면 즉시 멈추세요.", "처음에는 경사를 낮게 두세요."), 1, null, 5, 30),
+        exercise("indoor_bike", "실내 자전거", MuscleGroup.CARDIO, EquipmentType.CARDIO_MACHINE, DifficultyLevel.BEGINNER, "indoor_bike", "무릎 부담을 낮추며 심박을 올리는 유산소입니다.", listOf("탑승 세팅: 안장에 앉아 양발을 페달에 올리고 무릎이 과하게 접히지 않는지 확인합니다.", "부드럽게 페달링: 상체는 편하게 세우고 페달을 끊기지 않게 일정한 리듬으로 밟습니다.", "강도 유지: 숨이 차지만 대화가 가능한 정도로 저항을 맞추고 목과 허리에 힘이 들어가지 않게 유지합니다."), listOf("무릎이 많이 접히면 안장을 높이세요.", "처음부터 강한 저항을 걸지 마세요."), 1, null, 5, 30),
         exercise("hack_squat", "핵 스쿼트", MuscleGroup.LOWER_BODY, EquipmentType.MACHINE, DifficultyLevel.INTERMEDIATE, "hack_squat", "상체를 지지한 상태로 스쿼트 패턴과 허벅지 자극을 늘리는 머신 운동입니다.", listOf("패드 밀착: 등과 어깨를 패드에 붙이고 양손으로 손잡이를 잡은 뒤 발판에 발을 고정합니다.", "발 위치: 발바닥 전체를 누르고 무릎이 발끝 방향을 따라가도록 시작 자세를 만듭니다.", "내려가기: 패드에서 등이 뜨지 않게 하며 레일을 따라 천천히 내려갑니다.", "잠그지 않고 밀기: 발판을 밀어 올라오되 무릎을 세게 잠그지 않고 같은 레일 경로를 유지합니다."), listOf("무릎이 안쪽으로 모이지 않게 하세요.", "허리가 뜨면 깊이를 줄이세요.", "발판에서 뒤꿈치가 뜨면 발 위치를 조정하세요."), 3, 8..12, null, 120),
         exercise("smith_machine_squat", "스미스 머신 스쿼트", MuscleGroup.LOWER_BODY, EquipmentType.MACHINE, DifficultyLevel.INTERMEDIATE, "smith_machine_squat", "고정 궤도로 스쿼트 볼륨을 조금 더 쌓기 좋은 운동입니다.", listOf("바 위치: 스미스 바를 목이 아닌 어깨 뒤쪽에 두고 양손으로 좌우 균형 있게 잡습니다.", "발 위치: 양발을 어깨너비로 두고 뒤꿈치가 뜨지 않는 위치에서 몸통을 고정합니다.", "내려가기: 바가 수직 레일을 따라 내려가게 하며 엉덩이와 무릎을 함께 굽힙니다.", "발바닥으로 밀기: 발바닥 전체로 밀어 같은 수직 레일을 따라 바를 올립니다."), listOf("고정 궤도에 몸을 억지로 맞추지 마세요.", "허리나 무릎 통증이 있으면 머신 프레스로 대체하세요.", "바가 목을 누르면 위치를 다시 잡으세요."), 3, 8..12, null, 120),
         exercise("barbell_back_squat", "바벨 백 스쿼트", MuscleGroup.LOWER_BODY, EquipmentType.BARBELL, DifficultyLevel.INTERMEDIATE, "barbell_back_squat", "랙과 안전바를 사용해 하체 힘과 전신 브레이싱을 함께 훈련하는 기본 바벨 운동입니다.", listOf("랙 높이와 바 위치: 바를 윗가슴 높이 랙에 두고 목이 아닌 등 위쪽에 얹습니다.", "언랙과 브레이싱: 양손을 고르게 잡고 복부에 힘을 준 뒤 두 걸음만 뒤로 나옵니다.", "발과 시선 정렬: 발은 어깨너비로 두고 발끝과 무릎 방향을 맞춥니다.", "통제 하강: 바가 중족부 위에 머물도록 엉덩이와 무릎을 함께 접습니다.", "바닥 밀며 기립: 허리가 말리기 전 범위에서 멈추고 반동 없이 일어섭니다."), listOf("빈 바나 아주 가벼운 중량으로 시작하세요.", "랙의 안전바 또는 스팟터 암을 반드시 맞추세요.", "허리 말림이나 날카로운 무릎·고관절·허리 통증이 있으면 중단하세요."), 3, 5..8, null, 150),
@@ -123,7 +129,11 @@ object SeedTrainingContent {
         exercise("medicine_ball_slam", "메디신볼 슬램", MuscleGroup.FULL_BODY, EquipmentType.BODYWEIGHT, DifficultyLevel.INTERMEDIATE, "medicine_ball_slam", "전신 파워와 컨디셔닝을 짧게 넣는 운동입니다.", listOf("가슴 앞 준비: 발을 어깨너비로 두고 메디신볼을 가슴 앞에서 안정적으로 잡습니다.", "머리 위로 올리기: 갈비뼈가 과하게 들리지 않게 복부를 고정하고 공을 머리 위로 올립니다.", "바닥으로 슬램: 엉덩이와 무릎을 접으며 공을 발 앞 바닥으로 강하게 내립니다.", "낮은 자세 마무리: 공이 바닥에 닿은 뒤 등 중립을 유지하며 다음 반복을 준비합니다."), listOf("허리를 둥글게 말아 줍지 마세요.", "주변 공간을 반드시 확인하세요."), 3, 8..10, null, 60)
     )
 
-    val templates: List<PlanTemplate> = listOf(
+    val templates: List<PlanTemplate> by lazy {
+        curatedTemplates + generatedCoverageTemplates
+    }
+
+    private val curatedTemplates: List<PlanTemplate> = listOf(
         PlanTemplate(
             id = "beginner-full-body-2day",
             name = "초보자 전신 2일 루틴",
@@ -245,12 +255,10 @@ object SeedTrainingContent {
                     "seated_cable_row",
                     "dumbbell_lateral_raise",
                     "triceps_pushdown",
-                    "dumbbell_curl",
                     secondaryFocuses = listOf(
                         RoutineFocus.BACK,
                         RoutineFocus.SHOULDERS,
                         RoutineFocus.ARMS,
-                        RoutineFocus.BICEPS,
                         RoutineFocus.TRICEPS
                     )
                 ),
@@ -278,13 +286,11 @@ object SeedTrainingContent {
                     "rear_delt_machine",
                     "cable_fly",
                     "cable_curl",
-                    "overhead_triceps_extension",
                     secondaryFocuses = listOf(
                         RoutineFocus.CHEST,
                         RoutineFocus.SHOULDERS,
                         RoutineFocus.ARMS,
-                        RoutineFocus.BICEPS,
-                        RoutineFocus.TRICEPS
+                        RoutineFocus.BICEPS
                     )
                 ),
                 day(
@@ -400,6 +406,7 @@ object SeedTrainingContent {
                     "chest_supported_row",
                     "assisted_pullup",
                     "straight_arm_pulldown",
+                    "cable_curl",
                     secondaryFocuses = listOf(RoutineFocus.PULL),
                     minRecoveryHours = 36
                 ),
@@ -494,6 +501,7 @@ object SeedTrainingContent {
                     "cable_fly",
                     "assisted_dip",
                     "pushup",
+                    "triceps_pushdown",
                     secondaryFocuses = listOf(RoutineFocus.PUSH),
                     minRecoveryHours = 36
                 ),
@@ -517,12 +525,14 @@ object SeedTrainingContent {
                     "측면·후면 어깨와 이두·삼두",
                     RoutineFocus.SHOULDERS,
                     "machine_shoulder_press",
+                    "dumbbell_shoulder_press",
                     "dumbbell_lateral_raise",
                     "rear_delt_machine",
                     "face_pull",
                     "dumbbell_curl",
+                    "hammer_curl",
                     "triceps_pushdown",
-                    "overhead_triceps_extension",
+                    "rope_overhead_triceps",
                     secondaryFocuses = listOf(RoutineFocus.ARMS, RoutineFocus.BICEPS, RoutineFocus.TRICEPS),
                     minRecoveryHours = 36
                 )
@@ -561,6 +571,7 @@ object SeedTrainingContent {
                     "assisted_dip",
                     "pec_deck_fly",
                     "pushup",
+                    "triceps_pushdown",
                     secondaryFocuses = listOf(RoutineFocus.PUSH),
                     minRecoveryHours = 36
                 ),
@@ -573,8 +584,10 @@ object SeedTrainingContent {
                     "barbell_bent_over_row",
                     "seated_cable_row",
                     "machine_row",
+                    "chest_supported_row",
                     "assisted_pullup",
                     "straight_arm_pulldown",
+                    "cable_curl",
                     secondaryFocuses = listOf(RoutineFocus.PULL),
                     minRecoveryHours = 36
                 ),
@@ -589,6 +602,7 @@ object SeedTrainingContent {
                     "hack_squat",
                     "leg_extension",
                     "leg_curl",
+                    "calf_raise",
                     minRecoveryHours = 48
                 ),
                 day(
@@ -598,10 +612,12 @@ object SeedTrainingContent {
                     RoutineFocus.SHOULDERS,
                     "machine_shoulder_press",
                     "dumbbell_shoulder_press",
+                    "arnold_press",
                     "dumbbell_lateral_raise",
                     "cable_lateral_raise",
                     "rear_delt_machine",
                     "face_pull",
+                    "half_kneeling_kettlebell_press",
                     minRecoveryHours = 36
                 ),
                 day(
@@ -612,9 +628,13 @@ object SeedTrainingContent {
                     "dumbbell_curl",
                     "preacher_curl_machine",
                     "hammer_curl",
+                    "cable_curl",
+                    "reverse_curl",
                     "triceps_pushdown",
                     "rope_overhead_triceps",
+                    "close_grip_pushup",
                     "rowing_machine",
+                    "stair_climber",
                     secondaryFocuses = listOf(
                         RoutineFocus.BICEPS,
                         RoutineFocus.TRICEPS,
@@ -640,6 +660,959 @@ object SeedTrainingContent {
             )
         )
     )
+
+    private val generatedCoverageTemplates: List<PlanTemplate> by lazy {
+        TrainingExperience.entries.flatMap { experience ->
+            SUPPORTED_DAYS_PER_WEEK.flatMap { daysPerWeek ->
+                allowedSessionMinutes(
+                    experience = experience,
+                    daysPerWeek = daysPerWeek
+                ).flatMap { sessionMinutes ->
+                    listOf(
+                        generatedTemplate(
+                            experience = experience,
+                            structure = RoutineStructure.FULL_BODY,
+                            daysPerWeek = daysPerWeek,
+                            sessionMinutes = sessionMinutes
+                        ),
+                        generatedTemplate(
+                            experience = experience,
+                            structure = RoutineStructure.BODY_PART_SPLIT,
+                            daysPerWeek = daysPerWeek,
+                            sessionMinutes = sessionMinutes
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun allowedSessionMinutes(
+        experience: TrainingExperience,
+        daysPerWeek: Int
+    ): List<Int> = when (experience) {
+        TrainingExperience.BEGINNER -> when (daysPerWeek) {
+            2, 3 -> listOf(30, 45, 60)
+            else -> listOf(30, 45)
+        }
+        TrainingExperience.INTERMEDIATE -> when (daysPerWeek) {
+            2 -> listOf(45, 60)
+            3, 4 -> listOf(30, 45, 60)
+            else -> listOf(30, 45, 60)
+        }
+        TrainingExperience.ADVANCED -> when (daysPerWeek) {
+            2 -> listOf(45, 60)
+            else -> listOf(45, 60)
+        }
+    }
+
+    private fun generatedTemplate(
+        experience: TrainingExperience,
+        structure: RoutineStructure,
+        daysPerWeek: Int,
+        sessionMinutes: Int
+    ): PlanTemplate {
+        val structureLabel = when (structure) {
+            RoutineStructure.FULL_BODY -> "전신"
+            RoutineStructure.BALANCED_SPLIT -> "균형"
+            RoutineStructure.BODY_PART_SPLIT -> "부위 집중"
+        }
+        val id = listOf(
+            experience.slug,
+            structure.slug,
+            "${daysPerWeek}day",
+            "${sessionMinutes}m"
+        ).joinToString("-")
+        return PlanTemplate(
+            id = id,
+            name = "${experience.label} $structureLabel ${daysPerWeek}일 ${sessionMinutes}분 루틴",
+            level = experience.planLevel,
+            daysPerWeek = daysPerWeek,
+            description = "${experience.label} 사용자가 주 ${daysPerWeek}회, 회당 ${sessionMinutes}분 안에서 수행하도록 구성한 $structureLabel 루틴입니다.",
+            days = generatedDays(
+                experience = experience,
+                structure = structure,
+                daysPerWeek = daysPerWeek,
+                sessionMinutes = sessionMinutes
+            ),
+            structure = structure,
+            recommendedExperience = experience,
+            cycleLength = daysPerWeek,
+            sessionMinutes = sessionMinutes,
+            focusSummary = if (structure == RoutineStructure.FULL_BODY) {
+                listOf(RoutineFocus.FULL_BODY)
+            } else {
+                BODY_PART_FOCUS_SUMMARY
+            }
+        )
+    }
+
+    private fun generatedDays(
+        experience: TrainingExperience,
+        structure: RoutineStructure,
+        daysPerWeek: Int,
+        sessionMinutes: Int
+    ): List<PlanTemplateDay> {
+        val seeds = when (structure) {
+            RoutineStructure.FULL_BODY -> fullBodyDaySeeds(experience)
+            RoutineStructure.BALANCED_SPLIT -> fullBodyDaySeeds(experience)
+            RoutineStructure.BODY_PART_SPLIT -> bodyPartDaySeeds(experience, daysPerWeek)
+        }
+        return seeds.take(daysPerWeek).mapIndexed { index, seed ->
+            timedDay(
+                dayOffset = index,
+                seed = seed,
+                sessionMinutes = sessionMinutes
+            )
+        }
+    }
+
+    private fun timedDay(
+        dayOffset: Int,
+        seed: RoutineDaySeed,
+        sessionMinutes: Int
+    ): PlanTemplateDay = day(
+        dayOffset = dayOffset,
+        title = seed.title,
+        focus = seed.focus,
+        primaryFocus = seed.primaryFocus,
+        exerciseIds = selectExerciseIdsForTarget(
+            exerciseIds = seed.exerciseIds,
+            sessionMinutes = sessionMinutes
+        ).toTypedArray(),
+        secondaryFocuses = seed.secondaryFocuses,
+        minRecoveryHours = seed.minRecoveryHours
+    )
+
+    private fun selectExerciseIdsForTarget(
+        exerciseIds: List<String>,
+        sessionMinutes: Int
+    ): List<String> {
+        val selected = mutableListOf<String>()
+        val targetSeconds = sessionMinutes * SECONDS_PER_MINUTE
+        var totalSeconds = 0
+
+        exerciseIds.distinct().forEach { exerciseId ->
+            val exerciseSeconds = exerciseEstimateSeconds(exerciseId)
+            if (totalSeconds + exerciseSeconds <= targetSeconds) {
+                selected += exerciseId
+                totalSeconds += exerciseSeconds
+            }
+        }
+
+        return selected.ifEmpty { exerciseIds.take(1) }
+    }
+
+    private fun exerciseEstimateSeconds(exerciseId: String): Int {
+        val exercise = exercises.first { it.id.value == exerciseId }
+        return estimateExerciseSeconds(
+            sets = exercise.defaultSets,
+            repRange = exercise.defaultRepRange,
+            durationMinutes = exercise.defaultDurationMinutes,
+            restSeconds = exercise.restSeconds,
+            repDurationSeconds = exercise.defaultRepDurationSeconds
+        )
+    }
+
+    private fun fullBodyDaySeeds(experience: TrainingExperience): List<RoutineDaySeed> = when (experience) {
+        TrainingExperience.BEGINNER -> listOf(
+            RoutineDaySeed(
+                title = "전신 A",
+                focus = "하체+밀기+당기기",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "treadmill_walk",
+                    "goblet_squat",
+                    "machine_chest_press",
+                    "lat_pulldown",
+                    "leg_curl",
+                    "dumbbell_lateral_raise",
+                    "plank",
+                    "farmer_carry",
+                    "triceps_pushdown"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 B",
+                focus = "후면과 자세",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "indoor_bike",
+                    "leg_press",
+                    "seated_cable_row",
+                    "pushup",
+                    "glute_bridge",
+                    "machine_shoulder_press",
+                    "dead_bug",
+                    "dumbbell_curl",
+                    "calf_raise"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 C",
+                focus = "스쿼트와 등",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "treadmill_walk",
+                    "box_squat",
+                    "chest_supported_row",
+                    "dumbbell_floor_press",
+                    "hip_abduction_machine",
+                    "face_pull",
+                    "pallof_press",
+                    "kettlebell_farmer_carry"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 D",
+                focus = "기초 분할 적응",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "indoor_bike",
+                    "kettlebell_deadlift",
+                    "incline_machine_press",
+                    "machine_row",
+                    "leg_extension",
+                    "pec_deck_fly",
+                    "bird_dog",
+                    "cable_curl"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 E",
+                focus = "가벼운 보강",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "treadmill_walk",
+                    "bodyweight_squat",
+                    "kettlebell_floor_press",
+                    "straight_arm_pulldown",
+                    "hip_adduction_machine",
+                    "rear_delt_machine",
+                    "side_plank",
+                    "hammer_curl"
+                )
+            )
+        )
+        TrainingExperience.INTERMEDIATE -> listOf(
+            RoutineDaySeed(
+                title = "전신 A",
+                focus = "복합 패턴",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "rowing_machine",
+                    "leg_press",
+                    "dumbbell_bench_press",
+                    "lat_pulldown",
+                    "romanian_deadlift",
+                    "machine_shoulder_press",
+                    "pallof_press",
+                    "triceps_pushdown",
+                    "cable_curl"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 B",
+                focus = "상하체 균형",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "treadmill_walk",
+                    "hack_squat",
+                    "seated_cable_row",
+                    "incline_dumbbell_press",
+                    "hip_thrust",
+                    "rear_delt_machine",
+                    "cable_crunch",
+                    "farmer_carry"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 C",
+                focus = "당기기와 힙힌지",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "indoor_bike",
+                    "goblet_squat",
+                    "assisted_pullup",
+                    "cable_chest_press",
+                    "barbell_romanian_deadlift",
+                    "dumbbell_lateral_raise",
+                    "hanging_knee_raise",
+                    "rope_overhead_triceps"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 D",
+                focus = "상체 보강",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "rowing_machine",
+                    "smith_machine_squat",
+                    "chest_supported_row",
+                    "dip",
+                    "leg_curl",
+                    "face_pull",
+                    "side_plank",
+                    "reverse_curl"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 E",
+                focus = "컨디셔닝",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "stair_climber",
+                    "kettlebell_goblet_squat",
+                    "barbell_bent_over_row",
+                    "pushup",
+                    "calf_raise",
+                    "landmine_press",
+                    "cable_woodchop",
+                    "medicine_ball_slam"
+                )
+            )
+        )
+        TrainingExperience.ADVANCED -> listOf(
+            RoutineDaySeed(
+                title = "전신 A",
+                focus = "힘 우선",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "barbell_back_squat",
+                    "machine_chest_press",
+                    "lat_pulldown",
+                    "plank",
+                    "barbell_bench_press",
+                    "barbell_bent_over_row",
+                    "barbell_romanian_deadlift",
+                    "barbell_overhead_press",
+                    "hanging_knee_raise"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 B",
+                focus = "후면 사슬",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "conventional_deadlift",
+                    "incline_machine_press",
+                    "seated_cable_row",
+                    "side_plank",
+                    "hack_squat",
+                    "assisted_pullup",
+                    "dumbbell_shoulder_press",
+                    "farmer_carry"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 C",
+                focus = "볼륨 균형",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "rowing_machine",
+                    "smith_machine_squat",
+                    "dumbbell_bench_press",
+                    "t_bar_row",
+                    "hip_thrust",
+                    "landmine_press",
+                    "cable_crunch",
+                    "sled_push"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 D",
+                focus = "단측 안정",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "bulgarian_split_squat",
+                    "kettlebell_floor_press",
+                    "one_arm_dumbbell_row",
+                    "pallof_press",
+                    "barbell_romanian_deadlift",
+                    "face_pull",
+                    "rope_overhead_triceps",
+                    "hammer_curl"
+                )
+            ),
+            RoutineDaySeed(
+                title = "전신 E",
+                focus = "파워와 회복",
+                primaryFocus = RoutineFocus.FULL_BODY,
+                exerciseIds = listOf(
+                    "two_hand_kettlebell_swing",
+                    "goblet_squat",
+                    "pullup",
+                    "cable_chest_press",
+                    "rear_delt_machine",
+                    "mountain_climber",
+                    "battle_rope",
+                    "reverse_curl"
+                )
+            )
+        )
+    }
+
+    private fun bodyPartDaySeeds(
+        experience: TrainingExperience,
+        daysPerWeek: Int
+    ): List<RoutineDaySeed> {
+        val library = bodyPartLibrary(experience)
+        return when (daysPerWeek) {
+            2 -> listOf(library.upper, library.lower)
+            3 -> listOf(library.push, library.pull, library.lower)
+            4 -> listOf(library.back, library.chest, library.lower, library.shouldersArms)
+            else -> listOf(library.chest, library.back, library.lower, library.shoulders, library.arms)
+        }
+    }
+
+    private fun bodyPartLibrary(experience: TrainingExperience): BodyPartDayLibrary = when (experience) {
+        TrainingExperience.BEGINNER -> BodyPartDayLibrary(
+            upper = RoutineDaySeed(
+                title = "상체 집중",
+                focus = "밀기와 당기기",
+                primaryFocus = RoutineFocus.UPPER_BODY,
+                exerciseIds = listOf(
+                    "machine_chest_press",
+                    "lat_pulldown",
+                    "machine_shoulder_press",
+                    "seated_cable_row",
+                    "pushup",
+                    "face_pull",
+                    "dumbbell_curl",
+                    "triceps_pushdown"
+                ),
+                minRecoveryHours = 36
+            ),
+            push = RoutineDaySeed(
+                title = "가슴+삼두 집중",
+                focus = "쉬운 밀기",
+                primaryFocus = RoutineFocus.CHEST,
+                exerciseIds = listOf(
+                    "machine_chest_press",
+                    "incline_machine_press",
+                    "triceps_pushdown",
+                    "pec_deck_fly",
+                    "pushup",
+                    "dumbbell_floor_press",
+                    "close_grip_pushup",
+                    "overhead_triceps_extension"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.TRICEPS, RoutineFocus.PUSH),
+                minRecoveryHours = 36
+            ),
+            pull = RoutineDaySeed(
+                title = "등+이두 집중",
+                focus = "쉬운 당기기",
+                primaryFocus = RoutineFocus.BACK,
+                exerciseIds = listOf(
+                    "lat_pulldown",
+                    "seated_cable_row",
+                    "dumbbell_curl",
+                    "machine_row",
+                    "chest_supported_row",
+                    "straight_arm_pulldown",
+                    "hammer_curl",
+                    "preacher_curl_machine"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.BICEPS, RoutineFocus.PULL),
+                minRecoveryHours = 36
+            ),
+            chest = RoutineDaySeed(
+                title = "가슴 집중",
+                focus = "프레스와 플라이",
+                primaryFocus = RoutineFocus.CHEST,
+                exerciseIds = listOf(
+                    "machine_chest_press",
+                    "incline_machine_press",
+                    "pec_deck_fly",
+                    "cable_fly",
+                    "pushup",
+                    "dumbbell_floor_press",
+                    "cable_chest_press"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.PUSH),
+                minRecoveryHours = 36
+            ),
+            back = RoutineDaySeed(
+                title = "등 집중",
+                focus = "수직·수평 당기기",
+                primaryFocus = RoutineFocus.BACK,
+                exerciseIds = listOf(
+                    "lat_pulldown",
+                    "seated_cable_row",
+                    "machine_row",
+                    "chest_supported_row",
+                    "straight_arm_pulldown",
+                    "dumbbell_shrug",
+                    "cable_pullover"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.PULL),
+                minRecoveryHours = 36
+            ),
+            lower = RoutineDaySeed(
+                title = "하체+코어 집중",
+                focus = "프레스와 안정성",
+                primaryFocus = RoutineFocus.LOWER_BODY,
+                exerciseIds = listOf(
+                    "leg_press",
+                    "goblet_squat",
+                    "plank",
+                    "leg_curl",
+                    "leg_extension",
+                    "glute_bridge",
+                    "calf_raise",
+                    "dead_bug",
+                    "pallof_press"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.CORE),
+                minRecoveryHours = 48
+            ),
+            shoulders = RoutineDaySeed(
+                title = "어깨 집중",
+                focus = "프레스와 측후면",
+                primaryFocus = RoutineFocus.SHOULDERS,
+                exerciseIds = listOf(
+                    "machine_shoulder_press",
+                    "dumbbell_lateral_raise",
+                    "rear_delt_machine",
+                    "face_pull",
+                    "front_raise",
+                    "prone_y_raise",
+                    "kettlebell_halo"
+                ),
+                minRecoveryHours = 36
+            ),
+            shouldersArms = RoutineDaySeed(
+                title = "어깨+팔 집중",
+                focus = "측후면과 팔",
+                primaryFocus = RoutineFocus.SHOULDERS,
+                exerciseIds = listOf(
+                    "machine_shoulder_press",
+                    "dumbbell_lateral_raise",
+                    "dumbbell_curl",
+                    "triceps_pushdown",
+                    "front_raise",
+                    "rear_delt_machine",
+                    "face_pull",
+                    "hammer_curl",
+                    "overhead_triceps_extension"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.BICEPS, RoutineFocus.TRICEPS),
+                minRecoveryHours = 36
+            ),
+            arms = RoutineDaySeed(
+                title = "팔+유산소 집중",
+                focus = "팔 보조와 심폐",
+                primaryFocus = RoutineFocus.ARMS,
+                exerciseIds = listOf(
+                    "dumbbell_curl",
+                    "triceps_pushdown",
+                    "rowing_machine",
+                    "hammer_curl",
+                    "preacher_curl_machine",
+                    "overhead_triceps_extension",
+                    "close_grip_pushup"
+                ),
+                secondaryFocuses = listOf(
+                    RoutineFocus.BICEPS,
+                    RoutineFocus.TRICEPS,
+                    RoutineFocus.CARDIO_CONDITIONING
+                ),
+                minRecoveryHours = 24
+            )
+        )
+        TrainingExperience.INTERMEDIATE -> BodyPartDayLibrary(
+            upper = RoutineDaySeed(
+                title = "상체 집중",
+                focus = "프레스와 로우",
+                primaryFocus = RoutineFocus.UPPER_BODY,
+                exerciseIds = listOf(
+                    "dumbbell_bench_press",
+                    "lat_pulldown",
+                    "machine_shoulder_press",
+                    "seated_cable_row",
+                    "incline_dumbbell_press",
+                    "assisted_pullup",
+                    "rear_delt_machine",
+                    "triceps_pushdown",
+                    "cable_curl"
+                ),
+                minRecoveryHours = 36
+            ),
+            push = RoutineDaySeed(
+                title = "가슴+삼두 집중",
+                focus = "프레스 중심",
+                primaryFocus = RoutineFocus.CHEST,
+                exerciseIds = listOf(
+                    "machine_chest_press",
+                    "dumbbell_bench_press",
+                    "triceps_pushdown",
+                    "incline_machine_press",
+                    "incline_dumbbell_press",
+                    "pec_deck_fly",
+                    "cable_fly",
+                    "rope_overhead_triceps"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.TRICEPS, RoutineFocus.PUSH),
+                minRecoveryHours = 36
+            ),
+            pull = RoutineDaySeed(
+                title = "등+이두 집중",
+                focus = "등 두께와 광배",
+                primaryFocus = RoutineFocus.BACK,
+                exerciseIds = listOf(
+                    "lat_pulldown",
+                    "seated_cable_row",
+                    "cable_curl",
+                    "machine_row",
+                    "chest_supported_row",
+                    "assisted_pullup",
+                    "straight_arm_pulldown",
+                    "hammer_curl"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.BICEPS, RoutineFocus.PULL),
+                minRecoveryHours = 36
+            ),
+            chest = RoutineDaySeed(
+                title = "가슴 집중",
+                focus = "프레스와 플라이",
+                primaryFocus = RoutineFocus.CHEST,
+                exerciseIds = listOf(
+                    "machine_chest_press",
+                    "dumbbell_bench_press",
+                    "incline_machine_press",
+                    "incline_dumbbell_press",
+                    "pec_deck_fly",
+                    "cable_fly",
+                    "assisted_dip",
+                    "triceps_pushdown"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.PUSH),
+                minRecoveryHours = 36
+            ),
+            back = RoutineDaySeed(
+                title = "등 집중",
+                focus = "수직·수평 당기기",
+                primaryFocus = RoutineFocus.BACK,
+                exerciseIds = listOf(
+                    "lat_pulldown",
+                    "barbell_bent_over_row",
+                    "seated_cable_row",
+                    "machine_row",
+                    "chest_supported_row",
+                    "assisted_pullup",
+                    "straight_arm_pulldown",
+                    "cable_curl"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.PULL),
+                minRecoveryHours = 36
+            ),
+            lower = RoutineDaySeed(
+                title = "하체+코어 집중",
+                focus = "스쿼트와 힙힌지",
+                primaryFocus = RoutineFocus.LOWER_BODY,
+                exerciseIds = listOf(
+                    "leg_press",
+                    "romanian_deadlift",
+                    "hack_squat",
+                    "pallof_press",
+                    "leg_extension",
+                    "leg_curl",
+                    "calf_raise",
+                    "hip_thrust",
+                    "cable_crunch"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.CORE),
+                minRecoveryHours = 48
+            ),
+            shoulders = RoutineDaySeed(
+                title = "어깨 집중",
+                focus = "프레스와 측후면",
+                primaryFocus = RoutineFocus.SHOULDERS,
+                exerciseIds = listOf(
+                    "machine_shoulder_press",
+                    "dumbbell_shoulder_press",
+                    "dumbbell_lateral_raise",
+                    "cable_lateral_raise",
+                    "rear_delt_machine",
+                    "face_pull",
+                    "arnold_press",
+                    "half_kneeling_kettlebell_press"
+                ),
+                minRecoveryHours = 36
+            ),
+            shouldersArms = RoutineDaySeed(
+                title = "어깨+팔 집중",
+                focus = "어깨와 팔 보조",
+                primaryFocus = RoutineFocus.SHOULDERS,
+                exerciseIds = listOf(
+                    "machine_shoulder_press",
+                    "dumbbell_lateral_raise",
+                    "dumbbell_curl",
+                    "triceps_pushdown",
+                    "dumbbell_shoulder_press",
+                    "rear_delt_machine",
+                    "face_pull",
+                    "hammer_curl",
+                    "rope_overhead_triceps"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.BICEPS, RoutineFocus.TRICEPS),
+                minRecoveryHours = 36
+            ),
+            arms = RoutineDaySeed(
+                title = "팔+유산소 집중",
+                focus = "이두·삼두와 심폐",
+                primaryFocus = RoutineFocus.ARMS,
+                exerciseIds = listOf(
+                    "dumbbell_curl",
+                    "triceps_pushdown",
+                    "rowing_machine",
+                    "preacher_curl_machine",
+                    "hammer_curl",
+                    "cable_curl",
+                    "rope_overhead_triceps",
+                    "close_grip_pushup",
+                    "stair_climber"
+                ),
+                secondaryFocuses = listOf(
+                    RoutineFocus.BICEPS,
+                    RoutineFocus.TRICEPS,
+                    RoutineFocus.CARDIO_CONDITIONING
+                ),
+                minRecoveryHours = 24
+            )
+        )
+        TrainingExperience.ADVANCED -> BodyPartDayLibrary(
+            upper = RoutineDaySeed(
+                title = "상체 집중",
+                focus = "고효율 상체",
+                primaryFocus = RoutineFocus.UPPER_BODY,
+                exerciseIds = listOf(
+                    "barbell_bench_press",
+                    "barbell_bent_over_row",
+                    "barbell_overhead_press",
+                    "assisted_pullup",
+                    "incline_dumbbell_press",
+                    "t_bar_row",
+                    "rear_delt_machine",
+                    "triceps_pushdown",
+                    "cable_curl"
+                ),
+                minRecoveryHours = 36
+            ),
+            push = RoutineDaySeed(
+                title = "가슴+삼두 집중",
+                focus = "고볼륨 밀기",
+                primaryFocus = RoutineFocus.CHEST,
+                exerciseIds = listOf(
+                    "barbell_bench_press",
+                    "incline_dumbbell_press",
+                    "triceps_pushdown",
+                    "dumbbell_bench_press",
+                    "assisted_dip",
+                    "cable_fly",
+                    "pec_deck_fly",
+                    "rope_overhead_triceps",
+                    "close_grip_pushup"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.TRICEPS, RoutineFocus.PUSH),
+                minRecoveryHours = 36
+            ),
+            pull = RoutineDaySeed(
+                title = "등+이두 집중",
+                focus = "고볼륨 당기기",
+                primaryFocus = RoutineFocus.BACK,
+                exerciseIds = listOf(
+                    "barbell_bent_over_row",
+                    "lat_pulldown",
+                    "cable_curl",
+                    "t_bar_row",
+                    "assisted_pullup",
+                    "seated_cable_row",
+                    "straight_arm_pulldown",
+                    "hammer_curl",
+                    "reverse_curl"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.BICEPS, RoutineFocus.PULL),
+                minRecoveryHours = 36
+            ),
+            chest = RoutineDaySeed(
+                title = "가슴+삼두 집중",
+                focus = "프레스 강도",
+                primaryFocus = RoutineFocus.CHEST,
+                exerciseIds = listOf(
+                    "barbell_bench_press",
+                    "incline_dumbbell_press",
+                    "triceps_pushdown",
+                    "dumbbell_bench_press",
+                    "assisted_dip",
+                    "cable_fly",
+                    "pec_deck_fly",
+                    "pushup",
+                    "rope_overhead_triceps"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.TRICEPS, RoutineFocus.PUSH),
+                minRecoveryHours = 36
+            ),
+            back = RoutineDaySeed(
+                title = "등+이두 집중",
+                focus = "수직·수평 고볼륨",
+                primaryFocus = RoutineFocus.BACK,
+                exerciseIds = listOf(
+                    "barbell_bent_over_row",
+                    "lat_pulldown",
+                    "cable_curl",
+                    "t_bar_row",
+                    "assisted_pullup",
+                    "seated_cable_row",
+                    "machine_row",
+                    "straight_arm_pulldown",
+                    "reverse_curl"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.BICEPS, RoutineFocus.PULL),
+                minRecoveryHours = 36
+            ),
+            lower = RoutineDaySeed(
+                title = "하체+코어 집중",
+                focus = "스쿼트와 후면",
+                primaryFocus = RoutineFocus.LOWER_BODY,
+                exerciseIds = listOf(
+                    "barbell_back_squat",
+                    "barbell_romanian_deadlift",
+                    "leg_press",
+                    "hanging_knee_raise",
+                    "hack_squat",
+                    "hip_thrust",
+                    "leg_extension",
+                    "leg_curl",
+                    "calf_raise"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.CORE),
+                minRecoveryHours = 48
+            ),
+            shoulders = RoutineDaySeed(
+                title = "어깨 집중",
+                focus = "프레스와 측후면",
+                primaryFocus = RoutineFocus.SHOULDERS,
+                exerciseIds = listOf(
+                    "barbell_overhead_press",
+                    "dumbbell_shoulder_press",
+                    "arnold_press",
+                    "dumbbell_lateral_raise",
+                    "cable_lateral_raise",
+                    "rear_delt_machine",
+                    "face_pull",
+                    "half_kneeling_kettlebell_press",
+                    "landmine_press"
+                ),
+                minRecoveryHours = 36
+            ),
+            shouldersArms = RoutineDaySeed(
+                title = "어깨+팔 집중",
+                focus = "어깨와 팔 고볼륨",
+                primaryFocus = RoutineFocus.SHOULDERS,
+                exerciseIds = listOf(
+                    "barbell_overhead_press",
+                    "dumbbell_shoulder_press",
+                    "dumbbell_lateral_raise",
+                    "dumbbell_curl",
+                    "triceps_pushdown",
+                    "rear_delt_machine",
+                    "face_pull",
+                    "cable_curl",
+                    "rope_overhead_triceps"
+                ),
+                secondaryFocuses = listOf(RoutineFocus.BICEPS, RoutineFocus.TRICEPS),
+                minRecoveryHours = 36
+            ),
+            arms = RoutineDaySeed(
+                title = "팔+유산소 집중",
+                focus = "팔 볼륨과 컨디셔닝",
+                primaryFocus = RoutineFocus.ARMS,
+                exerciseIds = listOf(
+                    "cable_curl",
+                    "triceps_pushdown",
+                    "rowing_machine",
+                    "preacher_curl_machine",
+                    "hammer_curl",
+                    "reverse_curl",
+                    "rope_overhead_triceps",
+                    "close_grip_pushup",
+                    "stair_climber"
+                ),
+                secondaryFocuses = listOf(
+                    RoutineFocus.BICEPS,
+                    RoutineFocus.TRICEPS,
+                    RoutineFocus.CARDIO_CONDITIONING
+                ),
+                minRecoveryHours = 24
+            )
+        )
+    }
+
+    private data class RoutineDaySeed(
+        val title: String,
+        val focus: String,
+        val primaryFocus: RoutineFocus,
+        val exerciseIds: List<String>,
+        val secondaryFocuses: List<RoutineFocus> = emptyList(),
+        val minRecoveryHours: Int = 24
+    )
+
+    private data class BodyPartDayLibrary(
+        val upper: RoutineDaySeed,
+        val push: RoutineDaySeed,
+        val pull: RoutineDaySeed,
+        val chest: RoutineDaySeed,
+        val back: RoutineDaySeed,
+        val lower: RoutineDaySeed,
+        val shoulders: RoutineDaySeed,
+        val shouldersArms: RoutineDaySeed,
+        val arms: RoutineDaySeed
+    )
+
+    private val TrainingExperience.slug: String
+        get() = when (this) {
+            TrainingExperience.BEGINNER -> "beginner"
+            TrainingExperience.INTERMEDIATE -> "intermediate"
+            TrainingExperience.ADVANCED -> "advanced"
+        }
+
+    private val TrainingExperience.label: String
+        get() = when (this) {
+            TrainingExperience.BEGINNER -> "초보"
+            TrainingExperience.INTERMEDIATE -> "중급"
+            TrainingExperience.ADVANCED -> "고급"
+        }
+
+    private val TrainingExperience.planLevel: PlanLevel
+        get() = when (this) {
+            TrainingExperience.BEGINNER -> PlanLevel.BEGINNER
+            TrainingExperience.INTERMEDIATE -> PlanLevel.INTERMEDIATE
+            TrainingExperience.ADVANCED -> PlanLevel.ADVANCED
+        }
+
+    private val RoutineStructure.slug: String
+        get() = when (this) {
+            RoutineStructure.FULL_BODY -> "full-body"
+            RoutineStructure.BALANCED_SPLIT -> "balanced"
+            RoutineStructure.BODY_PART_SPLIT -> "body-part"
+        }
+
+    private val BODY_PART_FOCUS_SUMMARY = listOf(
+        RoutineFocus.BACK,
+        RoutineFocus.CHEST,
+        RoutineFocus.LOWER_BODY,
+        RoutineFocus.SHOULDERS,
+        RoutineFocus.ARMS,
+        RoutineFocus.BICEPS,
+        RoutineFocus.TRICEPS,
+        RoutineFocus.PUSH,
+        RoutineFocus.PULL
+    )
+
+    private val SUPPORTED_DAYS_PER_WEEK = 2..5
+    private const val SECONDS_PER_MINUTE = 60
 
     private fun exercise(
         id: String,
@@ -668,8 +1641,33 @@ object SeedTrainingContent {
         defaultSets = defaultSets,
         defaultRepRange = defaultRepRange,
         defaultDurationMinutes = defaultDurationMinutes,
-        restSeconds = restSeconds
+        restSeconds = restSeconds,
+        defaultRepDurationSeconds = defaultRepDurationSeconds(
+            id = id,
+            muscleGroup = muscleGroup,
+            equipment = equipment,
+            difficulty = difficulty
+        )
     )
+
+    private fun defaultRepDurationSeconds(
+        id: String,
+        muscleGroup: MuscleGroup,
+        equipment: EquipmentType,
+        difficulty: DifficultyLevel
+    ): Int = when {
+        id in FAST_CONDITIONING_EXERCISE_IDS -> 3
+        id.contains("lunge") ||
+            id.contains("split_squat") ||
+            id.contains("step_up") ||
+            id.contains("one_arm") ||
+            id.contains("single") ||
+            id.contains("half_kneeling") -> 8
+        muscleGroup == MuscleGroup.CORE -> 4
+        equipment == EquipmentType.MACHINE || equipment == EquipmentType.CABLE -> 5
+        difficulty == DifficultyLevel.INTERMEDIATE -> 5
+        else -> 4
+    }
 
     private fun day(
         dayOffset: Int,
@@ -695,7 +1693,8 @@ object SeedTrainingContent {
                     "자세가 안정되면 다음 주에 1-2회만 늘려보세요."
                 } else {
                     "RPE 7-8 안에서 자세가 무너지지 않는 선까지만 진행하세요."
-                }
+                },
+                repDurationSeconds = exercise.defaultRepDurationSeconds
             )
         },
         dayNumber = dayOffset + 1,
@@ -703,4 +1702,5 @@ object SeedTrainingContent {
         secondaryFocuses = secondaryFocuses,
         minRecoveryHours = minRecoveryHours
     )
+
 }
