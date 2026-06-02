@@ -18,6 +18,12 @@
     <string name="profile_local_account">로컬 계정</string>
     <string name="profile_linked_account">연동 계정</string>
     <string name="profile_link_google">Google 연동</string>
+    <string name="profile_theme_title">테마</string>
+    <string name="profile_theme_red">레드</string>
+    <string name="profile_theme_blue">블루</string>
+    <string name="profile_theme_green">그린</string>
+    <string name="profile_theme_black">블랙</string>
+    <string name="profile_theme_close">닫기</string>
     <string name="profile_logout">로그아웃</string>
     <string name="app_destination_home">홈</string>
     <string name="app_destination_routine">루틴</string>

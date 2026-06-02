@@ -74,7 +74,7 @@ fun SmartTrainnerScreenScaffold(
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing),
             contentPadding = PaddingValues(start = 18.dp, top = 14.dp, end = 18.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item { SmartTrainnerScreenHeader(chrome = chrome) }
             content()
@@ -94,8 +94,8 @@ private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
         Column(
             modifier = Modifier
                 .background(SmartTrainnerGradients.brandLight(), RoundedCornerShape(8.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -283,7 +283,7 @@ fun SmartTrainnerMetricTile(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
-        color = SmartTrainnerColors.SurfaceRaised.copy(alpha = 0.84f),
+        color = SmartTrainnerColors.SurfaceRaised,
         border = BorderStroke(1.dp, SmartTrainnerColors.Line)
     ) {
         Column(modifier = Modifier.padding(10.dp)) {
@@ -301,8 +301,8 @@ fun SmartTrainnerMetricTile(
 data class SmartTrainnerBadgeSpec(
     val text: String,
     val icon: ImageVector? = null,
-    val containerColor: Color = SmartTrainnerColors.SteelSoft,
-    val contentColor: Color = SmartTrainnerColors.Ink,
+    val containerColor: Color? = null,
+    val contentColor: Color? = null,
     val borderColor: Color? = null,
     val testTag: String? = null
 )
@@ -318,12 +318,12 @@ fun SmartTrainnerBadge(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(6.dp),
         color = containerColor,
         border = borderColor?.let { BorderStroke(1.dp, it) }
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -366,8 +366,8 @@ fun SmartTrainnerBadgeRow(
                         SmartTrainnerBadge(
                             text = badge.text,
                             icon = badge.icon,
-                            containerColor = badge.containerColor,
-                            contentColor = badge.contentColor,
+                            containerColor = badge.containerColor ?: SmartTrainnerColors.SteelSoft,
+                            contentColor = badge.contentColor ?: SmartTrainnerColors.Ink,
                             borderColor = badge.borderColor,
                             modifier = badge.testTag?.let { Modifier.testTag(it) } ?: Modifier
                         )
@@ -386,7 +386,7 @@ fun SmartTrainnerMetricCluster(
     modifier: Modifier = Modifier,
     labelContainerColor: Color = SmartTrainnerColors.CoralSoft,
     labelContentColor: Color = SmartTrainnerColors.Ink,
-    metricAlpha: Float = 0.56f
+    metricAlpha: Float = 0.78f
 ) {
     BoxWithConstraints(modifier = modifier) {
         val rowLimit = if (maxWidth < 220.dp) {
@@ -408,11 +408,13 @@ fun SmartTrainnerMetricCluster(
                         val alpha = if (isFirstToken) 1f else metricAlpha
                         val weight = if (isFirstToken) FontWeight.Bold else FontWeight.SemiBold
                         val horizontalPadding = if (isFirstToken) 7.dp else 6.dp
+                        val containerColor = metric.containerColor ?: SmartTrainnerColors.SteelSoft
+                        val contentColor = metric.contentColor ?: SmartTrainnerColors.Ink
                         SmartTrainnerMetricToken(
                             text = metric.text,
                             icon = metric.icon,
-                            containerColor = metric.containerColor.copy(alpha = alpha),
-                            contentColor = metric.contentColor,
+                            containerColor = containerColor.copy(alpha = alpha),
+                            contentColor = contentColor,
                             borderColor = metric.borderColor,
                             fontWeight = weight,
                             horizontalPadding = horizontalPadding,

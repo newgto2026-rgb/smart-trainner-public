@@ -7,38 +7,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 
 @Composable
-fun SmartTrainnerBrandSymbolImage(
-    modifier: Modifier = Modifier,
-    contentDescription: String? = null
-) {
-    Image(
-        painter = painterResource(R.drawable.brand_ai_runner_symbol),
-        contentDescription = contentDescription,
-        contentScale = ContentScale.Fit,
-        modifier = modifier
-    )
-}
-
-@Composable
 fun SmartTrainnerBrandWordmarkImage(
     modifier: Modifier = Modifier,
     contentDescription: String? = null
 ) {
     Image(
         painter = painterResource(R.drawable.brand_ai_runner_wordmark),
-        contentDescription = contentDescription,
-        contentScale = ContentScale.Fit,
-        modifier = modifier
-    )
-}
-
-@Composable
-fun SmartTrainnerBrandLockupImage(
-    modifier: Modifier = Modifier,
-    contentDescription: String? = null
-) {
-    Image(
-        painter = painterResource(R.drawable.brand_ai_runner_lockup),
         contentDescription = contentDescription,
         contentScale = ContentScale.Fit,
         modifier = modifier

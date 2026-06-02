@@ -121,7 +121,6 @@
     <string name="routine_routine_days_question">Weekly availability</string>
     <string name="routine_routine_badge_duration">About %1$d min</string>
     <string name="routine_routine_badge_exercises">Moves: %1$d</string>
-    <string name="routine_routine_badge_recovery">Recovery: %1$d h</string>
     <string name="routine_routine_completed_progress">Routine progress: %1$d/%2$d</string>
     <string name="routine_routine_day_subtitle">Day %1$d · %2$s · about %3$d min</string>
     <string name="routine_routine_experience_question">Experience</string>

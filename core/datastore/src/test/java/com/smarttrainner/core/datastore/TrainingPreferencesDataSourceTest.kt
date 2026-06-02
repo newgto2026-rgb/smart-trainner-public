@@ -163,4 +163,13 @@ class TrainingPreferencesDataSourceTest {
 
         assertThat(dataSource.activeSession.first()).isNull()
     }
+
+    @Test
+    fun selectedThemeTone_defaultsToBlueAndPersistsSelection() = runTest {
+        assertThat(dataSource.selectedThemeTone.first()).isEqualTo("blue")
+
+        dataSource.setSelectedThemeTone("black")
+
+        assertThat(dataSource.selectedThemeTone.first()).isEqualTo("black")
+    }
 }
