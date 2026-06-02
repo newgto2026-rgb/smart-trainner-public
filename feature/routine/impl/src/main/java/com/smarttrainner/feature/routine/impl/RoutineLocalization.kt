@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.domain.ExercisePrescription
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
@@ -76,6 +77,16 @@ internal fun Exercise.localizedTargetText(): String {
         )
     } else {
         stringResource(R.string.routine_target_duration, defaultSets, defaultDurationMinutes ?: 10)
+    }
+}
+
+@Composable
+internal fun ExercisePrescription.localizedTargetText(): String {
+    val reps = repRange
+    return if (reps != null) {
+        stringResource(R.string.routine_target_reps, sets, reps.first, reps.last)
+    } else {
+        stringResource(R.string.routine_target_duration, sets, durationMinutes ?: 10)
     }
 }
 

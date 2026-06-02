@@ -1,5 +1,6 @@
 package com.smarttrainner.feature.routine.impl
 
+import com.smarttrainner.core.domain.ExercisePrescription
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
@@ -29,7 +30,30 @@ internal data class RoutineRecommendationFormState(
     val sessionMinutes: Int = 60,
     val experience: TrainingExperience = TrainingExperience.INTERMEDIATE,
     val feeling: RoutineFeeling = RoutineFeeling.APP_RECOMMENDED
-)
+) {
+    companion object {
+        fun defaultFor(experience: TrainingExperience): RoutineRecommendationFormState = when (experience) {
+            TrainingExperience.BEGINNER -> RoutineRecommendationFormState(
+                daysPerWeek = 3,
+                sessionMinutes = 45,
+                experience = experience,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            )
+            TrainingExperience.INTERMEDIATE -> RoutineRecommendationFormState(
+                daysPerWeek = 4,
+                sessionMinutes = 60,
+                experience = experience,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            )
+            TrainingExperience.ADVANCED -> RoutineRecommendationFormState(
+                daysPerWeek = 5,
+                sessionMinutes = 60,
+                experience = experience,
+                feeling = RoutineFeeling.FOCUSED_BODY_PART
+            )
+        }
+    }
+}
 
 internal data class CustomRoutineBuilderState(
     val visible: Boolean = false,
@@ -118,8 +142,11 @@ internal data class RoutineUiState(
     val nextRoutineDay: WorkoutDayPlan? = null,
     val nextRoutineDayUi: NextRoutineDayUiModel? = null,
     val latestRoutineDayCompletion: LatestRoutineDayCompletionUiModel? = null,
-    val routineRecommendationInput: RoutineRecommendationFormState = RoutineRecommendationFormState(),
+    val profileExperience: TrainingExperience = TrainingExperience.BEGINNER,
+    val routineRecommendationInput: RoutineRecommendationFormState =
+        RoutineRecommendationFormState.defaultFor(TrainingExperience.BEGINNER),
     val routineFilterAvailability: RoutineRecommendationFilterAvailability = RoutineRecommendationFilterAvailability(),
+    val exercisePrescriptions: Map<ExerciseId, ExercisePrescription> = emptyMap(),
     val recommendedTemplateId: String? = null,
     val alternativeTemplateIds: List<String> = emptyList(),
     val routinePreviewTemplateId: String? = null,

@@ -18,6 +18,10 @@
     <string name="profile_local_account">Local account</string>
     <string name="profile_linked_account">Linked account</string>
     <string name="profile_link_google">Link Google</string>
+    <string name="profile_training_level_title">Training level</string>
+    <string name="profile_training_level_beginner">Beginner</string>
+    <string name="profile_training_level_intermediate">Intermediate</string>
+    <string name="profile_training_level_advanced">Advanced</string>
     <string name="profile_theme_title">Theme</string>
     <string name="profile_theme_red">Red</string>
     <string name="profile_theme_blue">Blue</string>

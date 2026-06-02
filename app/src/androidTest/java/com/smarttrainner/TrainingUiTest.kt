@@ -27,6 +27,7 @@ import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
@@ -225,6 +226,8 @@ class TrainingUiTest {
     @Test
     fun focusedRoutineSelectionAndCompletionAdvancesNextDay() {
         continueFromLoginIfNeeded()
+        (sessionRepository as InMemorySessionRepository)
+            .setTrainingExperienceForTest(TrainingExperience.ADVANCED)
         composeRule.onNodeWithTag("training_tab_plan").performClick()
         composeRule.onAllNodesWithTag("training_template_card_intermediate-body-part-4day-60")
             .assertCountEquals(0)
@@ -244,8 +247,8 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_routine_settings_dialog").assertIsDisplayed()
         composeRule.onNodeWithTag("training_show_recommendations").assertIsDisplayed().performClick()
         composeRule.onNodeWithTag("training_routine_recommendations_dialog").assertIsDisplayed()
-        scrollToNodeWithTag("training_routine_preview_intermediate-body-part-4day-60")
-        composeRule.onNodeWithTag("training_routine_preview_intermediate-body-part-4day-60").assertIsDisplayed()
+        scrollToNodeWithTag("training_routine_preview_advanced-body-part-5day-60m")
+        composeRule.onNodeWithTag("training_routine_preview_advanced-body-part-5day-60m").assertIsDisplayed()
         composeRule.onNodeWithTag("training_start_preview_routine").assertIsDisplayed().performClick()
 
         waitForNodeWithTag("training_tab_home")

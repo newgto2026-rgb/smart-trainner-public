@@ -19,6 +19,7 @@ import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TemplateExercise
+import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WeeklyPlan
@@ -43,12 +44,20 @@ import kotlinx.coroutines.flow.map
 
 internal class InMemorySessionRepository : SessionRepository {
     private val activeSession = MutableStateFlow<UserSession?>(null)
+    private val trainingExperience = MutableStateFlow(TrainingExperience.BEGINNER)
 
     fun reset() {
         activeSession.value = null
+        trainingExperience.value = TrainingExperience.BEGINNER
+    }
+
+    fun setTrainingExperienceForTest(experience: TrainingExperience) {
+        trainingExperience.value = experience
     }
 
     override fun observeActiveSession(): Flow<UserSession?> = activeSession
+
+    override fun observeTrainingExperience(): Flow<TrainingExperience> = trainingExperience
 
     override suspend fun startDefaultSession(): Result<UserSession> {
         val session = UserSession(
@@ -77,6 +86,11 @@ internal class InMemorySessionRepository : SessionRepository {
         )
         activeSession.value = session
         return Result.success(session)
+    }
+
+    override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> {
+        trainingExperience.value = experience
+        return Result.success(Unit)
     }
 
     override suspend fun logout(): Result<Unit> {

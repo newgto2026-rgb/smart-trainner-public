@@ -18,6 +18,10 @@
     <string name="profile_local_account">로컬 계정</string>
     <string name="profile_linked_account">연동 계정</string>
     <string name="profile_link_google">Google 연동</string>
+    <string name="profile_training_level_title">운동 수준</string>
+    <string name="profile_training_level_beginner">초보</string>
+    <string name="profile_training_level_intermediate">중급</string>
+    <string name="profile_training_level_advanced">고급</string>
     <string name="profile_theme_title">테마</string>
     <string name="profile_theme_red">레드</string>
     <string name="profile_theme_blue">블루</string>

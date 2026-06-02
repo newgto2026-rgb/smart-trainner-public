@@ -79,8 +79,8 @@
     <string name="routine_edit_custom_routine">수정</string>
     <string name="routine_empty_plan">이번 주 운동이 없습니다. 입문 루틴을 선택해 시작해보세요.</string>
     <string name="routine_error_complete_day">오늘 루틴 완료 처리에 실패했습니다.</string>
-    <string name="routine_experience_beginner">거의 처음</string>
-    <string name="routine_experience_intermediate">꾸준히 해봄</string>
+    <string name="routine_experience_beginner">초보</string>
+    <string name="routine_experience_intermediate">중급</string>
     <string name="routine_experience_advanced">고급</string>
     <string name="routine_feeling_app_recommended">맞춤 추천</string>
     <string name="routine_feeling_balanced_full_body">전신형</string>

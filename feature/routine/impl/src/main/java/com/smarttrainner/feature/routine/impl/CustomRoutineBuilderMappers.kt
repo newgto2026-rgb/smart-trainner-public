@@ -1,8 +1,10 @@
 package com.smarttrainner.feature.routine.impl
 
+import com.smarttrainner.core.domain.ExercisePrescription
 import com.smarttrainner.core.model.CustomRoutineDayInput
 import com.smarttrainner.core.model.CustomRoutineExerciseInput
 import com.smarttrainner.core.model.CustomRoutineInput
+import com.smarttrainner.core.model.Exercise
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -14,14 +16,16 @@ internal fun defaultBuilderDay(): CustomRoutineDayFormState = CustomRoutineDayFo
     exercises = emptyList()
 )
 
-internal fun com.smarttrainner.core.model.Exercise.toCustomRoutineExerciseForm(): CustomRoutineExerciseFormState =
+internal fun Exercise.toCustomRoutineExerciseForm(
+    prescription: ExercisePrescription
+): CustomRoutineExerciseFormState =
     CustomRoutineExerciseFormState(
         exercise = this,
-        sets = defaultSets,
-        repRangeStart = defaultRepRange?.first,
-        repRangeEnd = defaultRepRange?.last,
-        durationMinutes = defaultDurationMinutes,
-        restSeconds = restSeconds
+        sets = prescription.sets,
+        repRangeStart = prescription.repRange?.first,
+        repRangeEnd = prescription.repRange?.last,
+        durationMinutes = prescription.durationMinutes,
+        restSeconds = prescription.restSeconds
     )
 
 internal fun MutableStateFlow<CustomRoutineBuilderState>.updateSelectedDay(

@@ -190,6 +190,7 @@ class RoutineFeatureEntryImpl @Inject constructor(
             RoutineExercisePickerDialog(
                 picker = picker,
                 exercises = state.exercises,
+                exercisePrescriptions = state.exercisePrescriptions,
                 onExerciseSelected = actions.onRoutineExercisePicked,
                 onExerciseDetailRequested = actions.onExerciseMethodSelected,
                 onDismissRequest = actions.onDismissRoutineExercisePicker
@@ -206,6 +207,7 @@ class RoutineFeatureEntryImpl @Inject constructor(
             CustomRoutineBuilderSheet(
                 builder = state.customRoutineBuilder,
                 exercises = state.exercises,
+                exercisePrescriptions = state.exercisePrescriptions,
                 onNameChanged = actions.onCustomRoutineNameChanged,
                 onDaySelected = actions.onCustomRoutineDaySelected,
                 onDayFocusChanged = actions.onCustomRoutineDayFocusChanged,
