@@ -30,6 +30,13 @@ enum class SmartTrainnerThemeTone(val storageValue: String) {
     }
 }
 
+fun SmartTrainnerThemeTone.swatchColor(): Color = when (this) {
+    SmartTrainnerThemeTone.Red -> Color(0xFFC34D5D)
+    SmartTrainnerThemeTone.Blue -> Color(0xFF1187C8)
+    SmartTrainnerThemeTone.Green -> Color(0xFF2F6F5E)
+    SmartTrainnerThemeTone.Black -> Color(0xFF111827)
+}
+
 @Immutable
 data class SmartTrainnerPalette(
     val ink: Color,

@@ -67,6 +67,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
+import com.smarttrainner.core.designsystem.swatchColor
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.ui.LocalSmartTrainnerHeaderAction
 import com.smarttrainner.app.training.TrainingExercisesRoute
@@ -324,14 +325,13 @@ private fun ThemeSettingsEntry(
     onClick: () -> Unit
 ) {
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         color = SmartTrainnerColors.Surface,
         border = BorderStroke(1.dp, SmartTrainnerColors.Line),
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
             .testTag("profile_theme_entry")
     ) {
         Row(
@@ -405,14 +405,13 @@ private fun ThemeToneOption(
     onClick: () -> Unit
 ) {
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         color = if (selected) SmartTrainnerColors.CoralSoft else SmartTrainnerColors.Surface,
         border = BorderStroke(1.dp, if (selected) SmartTrainnerColors.Coral else SmartTrainnerColors.Line),
         modifier = Modifier
             .fillMaxWidth()
             .height(44.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
             .testTag("profile_theme_${themeTone.storageValue}")
     ) {
         Row(
@@ -445,13 +444,6 @@ private fun ThemeToneOption(
             }
         }
     }
-}
-
-private fun SmartTrainnerThemeTone.swatchColor(): Color = when (this) {
-    SmartTrainnerThemeTone.Red -> Color(0xFFC34D5D)
-    SmartTrainnerThemeTone.Blue -> Color(0xFF1187C8)
-    SmartTrainnerThemeTone.Green -> Color(0xFF2F6F5E)
-    SmartTrainnerThemeTone.Black -> Color(0xFF111827)
 }
 
 private fun SmartTrainnerThemeTone.labelResId(): Int = when (this) {
