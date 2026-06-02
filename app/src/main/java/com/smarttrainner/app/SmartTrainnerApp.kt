@@ -119,9 +119,11 @@ fun SmartTrainnerApp(
             routineFeatureEntry = routineFeatureEntry,
             workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
             activeSession = requireNotNull(state.activeSession),
+            trainingExperience = state.trainingExperience,
             googleSignInInProgress = state.googleSignInInProgress,
             selectedThemeTone = selectedThemeTone,
             onThemeToneSelected = onThemeToneSelected,
+            onTrainingExperienceSelected = viewModel::updateTrainingExperience,
             onLinkGoogle = { requestGoogleSignIn(requireNotNull(state.activeSession).nickname) },
             onLogout = viewModel::logout
         )

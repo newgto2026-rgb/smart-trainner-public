@@ -5,7 +5,10 @@ import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
+import com.smarttrainner.core.domain.RecommendExercisePrescriptionUseCase
+import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.DifficultyLevel
@@ -82,10 +85,12 @@ class RoutineViewModelTest {
     private val fixedInstant = Instant.parse("2026-05-24T12:00:00Z")
     private val fixedClock = Clock.fixed(fixedInstant, ZoneOffset.UTC)
     private val repository = FakeTrainingRepository()
+    private val sessionRepository = FakeSessionRepository()
 
     @Before
     fun setUp() {
         repository.reset()
+        sessionRepository.reset()
     }
 
     @Test
@@ -465,6 +470,37 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun routineRecommendationDefaultsFollowProfileExperience() = runTest {
+        repository.setTemplates(
+            listOf(
+                filterTemplate(
+                    id = "advanced-body-part-5day-60",
+                    daysPerWeek = 5,
+                    sessionMinutes = 60,
+                    structure = RoutineStructure.BODY_PART_SPLIT,
+                    experience = TrainingExperience.ADVANCED
+                )
+            )
+        )
+        sessionRepository.setExperience(TrainingExperience.ADVANCED)
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            var state = awaitItem()
+            while (state.profileExperience != TrainingExperience.ADVANCED) {
+                state = awaitItem()
+            }
+
+            assertThat(state.routineRecommendationInput.experience).isEqualTo(TrainingExperience.ADVANCED)
+            assertThat(state.routineRecommendationInput.daysPerWeek).isEqualTo(5)
+            assertThat(state.routineRecommendationInput.sessionMinutes).isEqualTo(60)
+            assertThat(state.routineRecommendationInput.feeling).isEqualTo(RoutineFeeling.FOCUSED_BODY_PART)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun routineLibraryClosesWhenStartingTemplateOrOpeningRecommendationSettings() = runTest {
         val viewModel = viewModel()
 
@@ -599,6 +635,27 @@ class RoutineViewModelTest {
                 viewModel.uiState.value.customRoutineBuilder.days.first().exercises
                     .map { it.exercise.id.value }
             ).containsExactly("back_pull")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun addExerciseToCustomRoutine_usesProfileExerciseRecommendation() = runTest {
+        sessionRepository.setExperience(TrainingExperience.ADVANCED)
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            awaitItem()
+
+            viewModel.showCreateCustomRoutine()
+            viewModel.addExerciseToCustomRoutine(ExerciseId("chest_press"))
+            advanceUntilIdle()
+
+            val exercise = viewModel.uiState.value.customRoutineBuilder.days.first().exercises.single()
+            assertThat(exercise.sets).isEqualTo(4)
+            assertThat(exercise.repRangeStart).isEqualTo(6)
+            assertThat(exercise.repRangeEnd).isEqualTo(10)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -869,8 +926,10 @@ class RoutineViewModelTest {
         observePlanTemplates = ObservePlanTemplatesUseCase(repository),
         observeCurrentWeeklyPlan = ObserveCurrentWeeklyPlanUseCase(repository),
         observeRoutineProgress = ObserveRoutineProgressUseCase(repository),
+        observeTrainingExperience = ObserveTrainingExperienceUseCase(sessionRepository),
         observeWorkoutLogs = ObserveWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
+        recommendExercisePrescription = RecommendExercisePrescriptionUseCase(),
         recommendRoutine = RecommendRoutineUseCase(),
         resolveRoutineCycleCompletion = ResolveRoutineCycleCompletionUseCase(),
         startRoutine = StartRoutineUseCase(repository),
@@ -907,6 +966,45 @@ class MainDispatcherRule(
     override fun finished(description: Description) {
         Dispatchers.resetMain()
     }
+}
+
+private class FakeSessionRepository : SessionRepository {
+    private val trainingExperience = MutableStateFlow(TrainingExperience.BEGINNER)
+
+    fun reset() {
+        trainingExperience.value = TrainingExperience.BEGINNER
+    }
+
+    fun setExperience(experience: TrainingExperience) {
+        trainingExperience.value = experience
+    }
+
+    override fun observeActiveSession(): Flow<com.smarttrainner.core.model.UserSession?> =
+        MutableStateFlow(null)
+
+    override fun observeTrainingExperience(): Flow<TrainingExperience> = trainingExperience
+
+    override suspend fun startDefaultSession(): Result<com.smarttrainner.core.model.UserSession> =
+        Result.failure(IllegalStateException("Not used"))
+
+    override suspend fun checkNicknameAvailability(
+        nickname: String
+    ): Result<com.smarttrainner.core.model.NicknameAvailability> =
+        Result.failure(IllegalStateException("Not used"))
+
+    override suspend fun signInWithGoogle(
+        idToken: String,
+        nickname: String
+    ): Result<com.smarttrainner.core.model.UserSession> =
+        Result.failure(IllegalStateException("Not used"))
+
+    override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> {
+        trainingExperience.value = experience
+        return Result.success(Unit)
+    }
+
+    override suspend fun logout(): Result<Unit> =
+        Result.failure(IllegalStateException("Not used"))
 }
 
 private class FakeTrainingRepository :

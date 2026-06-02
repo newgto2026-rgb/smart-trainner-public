@@ -5,8 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.domain.CheckNicknameAvailabilityUseCase
 import com.smarttrainner.core.domain.LogoutUseCase
 import com.smarttrainner.core.domain.ObserveActiveSessionUseCase
+import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
+import com.smarttrainner.core.domain.SetTrainingExperienceUseCase
 import com.smarttrainner.core.domain.SignInWithGoogleUseCase
 import com.smarttrainner.core.domain.StartDefaultSessionUseCase
+import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -29,6 +32,7 @@ enum class NicknameCheckStatus {
 
 data class SmartTrainnerAppUiState(
     val activeSession: UserSession? = null,
+    val trainingExperience: TrainingExperience = TrainingExperience.BEGINNER,
     val isLoading: Boolean = true,
     val loginFailed: Boolean = false,
     val googleSignInCancelled: Boolean = false,
@@ -41,18 +45,25 @@ data class SmartTrainnerAppUiState(
 @HiltViewModel
 class SmartTrainnerAppViewModel @Inject constructor(
     observeActiveSession: ObserveActiveSessionUseCase,
+    observeTrainingExperience: ObserveTrainingExperienceUseCase,
     private val startDefaultSession: StartDefaultSessionUseCase,
     private val checkNicknameAvailability: CheckNicknameAvailabilityUseCase,
     private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
+    private val setTrainingExperienceUseCase: SetTrainingExperienceUseCase,
     private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
     private val loginState = MutableStateFlow(SmartTrainnerAppUiState(isLoading = false))
 
     val uiState: StateFlow<SmartTrainnerAppUiState> = combine(
         observeActiveSession(),
+        observeTrainingExperience(),
         loginState
-    ) { session, login ->
-        login.copy(activeSession = session, isLoading = false)
+    ) { session, trainingExperience, login ->
+        login.copy(
+            activeSession = session,
+            trainingExperience = trainingExperience,
+            isLoading = false
+        )
     }
         .stateIn(
             scope = viewModelScope,
@@ -176,6 +187,12 @@ class SmartTrainnerAppViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun updateTrainingExperience(experience: TrainingExperience) {
+        viewModelScope.launch {
+            setTrainingExperienceUseCase(experience)
         }
     }
 

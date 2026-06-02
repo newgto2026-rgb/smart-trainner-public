@@ -68,6 +68,7 @@ import androidx.navigation.compose.rememberNavController
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import com.smarttrainner.core.designsystem.swatchColor
+import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.ui.LocalSmartTrainnerHeaderAction
 import com.smarttrainner.app.training.TrainingExercisesRoute
@@ -87,9 +88,11 @@ fun SmartTrainnerMainScreen(
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     activeSession: UserSession,
+    trainingExperience: TrainingExperience,
     googleSignInInProgress: Boolean,
     selectedThemeTone: SmartTrainnerThemeTone,
     onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
+    onTrainingExperienceSelected: (TrainingExperience) -> Unit,
     onLinkGoogle: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -166,10 +169,12 @@ fun SmartTrainnerMainScreen(
         if (profileOpen) {
             ProfileDrawer(
                 session = activeSession,
+                trainingExperience = trainingExperience,
                 googleSignInInProgress = googleSignInInProgress,
                 selectedThemeTone = selectedThemeTone,
                 onDismiss = { profileOpen = false },
                 onThemeToneSelected = onThemeToneSelected,
+                onTrainingExperienceSelected = onTrainingExperienceSelected,
                 onLinkGoogle = onLinkGoogle,
                 onLogout = {
                     profileOpen = false
@@ -207,15 +212,18 @@ private fun ProfileButton(
 @Composable
 private fun ProfileDrawer(
     session: UserSession,
+    trainingExperience: TrainingExperience,
     googleSignInInProgress: Boolean,
     selectedThemeTone: SmartTrainnerThemeTone,
     onDismiss: () -> Unit,
     onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
+    onTrainingExperienceSelected: (TrainingExperience) -> Unit,
     onLinkGoogle: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var themeSettingsOpen by rememberSaveable { mutableStateOf(false) }
+    var trainingLevelSettingsOpen by rememberSaveable { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -273,6 +281,10 @@ private fun ProfileDrawer(
                         style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
                     )
                 }
+                TrainingLevelSettingsEntry(
+                    trainingExperience = trainingExperience,
+                    onClick = { trainingLevelSettingsOpen = true }
+                )
                 ThemeSettingsEntry(
                     selectedThemeTone = selectedThemeTone,
                     onClick = { themeSettingsOpen = true }
@@ -316,6 +328,58 @@ private fun ProfileDrawer(
                 }
             )
         }
+        if (trainingLevelSettingsOpen) {
+            TrainingLevelSettingsDialog(
+                trainingExperience = trainingExperience,
+                onDismiss = { trainingLevelSettingsOpen = false },
+                onTrainingExperienceSelected = { experience ->
+                    onTrainingExperienceSelected(experience)
+                    trainingLevelSettingsOpen = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun TrainingLevelSettingsEntry(
+    trainingExperience: TrainingExperience,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        color = SmartTrainnerColors.Surface,
+        border = BorderStroke(1.dp, SmartTrainnerColors.Line),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .testTag("profile_training_level_entry")
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.FitnessCenter,
+                contentDescription = null,
+                tint = SmartTrainnerColors.Coral,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = stringResource(R.string.profile_training_level_title),
+                color = SmartTrainnerColors.Ink,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = stringResource(trainingExperience.profileLabelResId()),
+                color = SmartTrainnerColors.Muted,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
 
@@ -357,6 +421,85 @@ private fun ThemeSettingsEntry(
                 color = SmartTrainnerColors.Muted,
                 style = MaterialTheme.typography.bodySmall
             )
+        }
+    }
+}
+
+@Composable
+private fun TrainingLevelSettingsDialog(
+    trainingExperience: TrainingExperience,
+    onDismiss: () -> Unit,
+    onTrainingExperienceSelected: (TrainingExperience) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(8.dp),
+        containerColor = SmartTrainnerColors.SurfaceRaised,
+        title = {
+            Text(
+                text = stringResource(R.string.profile_training_level_title),
+                color = SmartTrainnerColors.Ink,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TrainingExperience.entries.forEach { experience ->
+                    TrainingExperienceOption(
+                        experience = experience,
+                        selected = trainingExperience == experience,
+                        onClick = { onTrainingExperienceSelected(experience) }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.profile_theme_close))
+            }
+        }
+    )
+}
+
+@Composable
+private fun TrainingExperienceOption(
+    experience: TrainingExperience,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) SmartTrainnerColors.CoralSoft else SmartTrainnerColors.Surface,
+        border = BorderStroke(1.dp, if (selected) SmartTrainnerColors.Coral else SmartTrainnerColors.Line),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .testTag("profile_training_level_${experience.name.lowercase()}")
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = stringResource(experience.profileLabelResId()),
+                color = SmartTrainnerColors.Ink,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                modifier = Modifier.weight(1f)
+            )
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = SmartTrainnerColors.Coral,
+                    modifier = Modifier.size(18.dp)
+                )
+            } else {
+                Spacer(Modifier.size(18.dp))
+            }
         }
     }
 }
@@ -451,6 +594,12 @@ private fun SmartTrainnerThemeTone.labelResId(): Int = when (this) {
     SmartTrainnerThemeTone.Blue -> R.string.profile_theme_blue
     SmartTrainnerThemeTone.Green -> R.string.profile_theme_green
     SmartTrainnerThemeTone.Black -> R.string.profile_theme_black
+}
+
+private fun TrainingExperience.profileLabelResId(): Int = when (this) {
+    TrainingExperience.BEGINNER -> R.string.profile_training_level_beginner
+    TrainingExperience.INTERMEDIATE -> R.string.profile_training_level_intermediate
+    TrainingExperience.ADVANCED -> R.string.profile_training_level_advanced
 }
 
 private fun UserSession.profileInitial(): String =

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.model.RoutineProgressPreference
+import com.smarttrainner.core.model.TrainingExperience
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -171,5 +172,17 @@ class TrainingPreferencesDataSourceTest {
         dataSource.setSelectedThemeTone("black")
 
         assertThat(dataSource.selectedThemeTone.first()).isEqualTo("black")
+    }
+
+    @Test
+    fun trainingExperience_defaultsToBeginnerAndPersistsPerSession() = runTest {
+        assertThat(dataSource.activeTrainingExperience.first()).isEqualTo(TrainingExperience.BEGINNER)
+        assertThat(dataSource.trainingExperience("session-a").first()).isEqualTo(TrainingExperience.BEGINNER)
+
+        dataSource.setTrainingExperience("session-a", TrainingExperience.ADVANCED)
+        dataSource.setTrainingExperience("session-b", TrainingExperience.INTERMEDIATE)
+
+        assertThat(dataSource.trainingExperience("session-a").first()).isEqualTo(TrainingExperience.ADVANCED)
+        assertThat(dataSource.trainingExperience("session-b").first()).isEqualTo(TrainingExperience.INTERMEDIATE)
     }
 }

@@ -1,9 +1,11 @@
 package com.smarttrainner.core.data
 
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
+import com.smarttrainner.core.datastore.DEFAULT_USER_SESSION_ID
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.model.AuthProvider
 import com.smarttrainner.core.model.NicknameAvailability
+import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.network.CreateSessionRequest
@@ -22,6 +24,9 @@ class DefaultSessionRepository @Inject constructor(
     private val sessionNetworkApi: SessionNetworkApi
 ) : SessionRepository {
     override fun observeActiveSession(): Flow<UserSession?> = preferences.activeSession
+
+    override fun observeTrainingExperience(): Flow<TrainingExperience> =
+        preferences.activeTrainingExperience
 
     override suspend fun startDefaultSession(): Result<UserSession> = runCatching {
         val localSession = preferences.startDefaultSession()
@@ -59,6 +64,11 @@ class DefaultSessionRepository @Inject constructor(
         ).data.toUserSession()
         preferences.setActiveSession(remoteSession)
         remoteSession
+    }
+
+    override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> = runCatching {
+        val sessionId = preferences.activeSessionId.first() ?: DEFAULT_USER_SESSION_ID
+        preferences.setTrainingExperience(sessionId, experience)
     }
 
     override suspend fun logout(): Result<Unit> = runCatching {

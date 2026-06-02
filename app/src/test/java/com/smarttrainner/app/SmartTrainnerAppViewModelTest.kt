@@ -5,11 +5,14 @@ import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.CheckNicknameAvailabilityUseCase
 import com.smarttrainner.core.domain.LogoutUseCase
 import com.smarttrainner.core.domain.ObserveActiveSessionUseCase
+import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
 import com.smarttrainner.core.domain.SessionRepository
+import com.smarttrainner.core.domain.SetTrainingExperienceUseCase
 import com.smarttrainner.core.domain.SignInWithGoogleUseCase
 import com.smarttrainner.core.domain.StartDefaultSessionUseCase
 import com.smarttrainner.core.model.AuthProvider
 import com.smarttrainner.core.model.NicknameAvailability
+import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import kotlinx.coroutines.Dispatchers
@@ -89,23 +92,43 @@ class SmartTrainnerAppViewModelTest {
         }
     }
 
+    @Test
+    fun updateTrainingExperience_savesProfileExperience() = runTest {
+        val repository = FakeSessionRepository()
+        val viewModel = viewModel(repository)
+
+        viewModel.uiState.test {
+            awaitItem()
+            viewModel.updateTrainingExperience(TrainingExperience.ADVANCED)
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.trainingExperience).isEqualTo(TrainingExperience.ADVANCED)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun viewModel(repository: SessionRepository) = SmartTrainnerAppViewModel(
         observeActiveSession = ObserveActiveSessionUseCase(repository),
+        observeTrainingExperience = ObserveTrainingExperienceUseCase(repository),
         startDefaultSession = StartDefaultSessionUseCase(repository),
         checkNicknameAvailability = CheckNicknameAvailabilityUseCase(repository),
         signInWithGoogleUseCase = SignInWithGoogleUseCase(repository),
+        setTrainingExperienceUseCase = SetTrainingExperienceUseCase(repository),
         logoutUseCase = LogoutUseCase(repository)
     )
 }
 
 private class FakeSessionRepository : SessionRepository {
     private val activeSession = MutableStateFlow<UserSession?>(null)
+    private val trainingExperience = MutableStateFlow(TrainingExperience.BEGINNER)
     var lastGoogleIdToken: String? = null
         private set
     var lastGoogleNickname: String? = null
         private set
 
     override fun observeActiveSession(): Flow<UserSession?> = activeSession
+
+    override fun observeTrainingExperience(): Flow<TrainingExperience> = trainingExperience
 
     override suspend fun startDefaultSession(): Result<UserSession> {
         val session = UserSession(
@@ -136,6 +159,11 @@ private class FakeSessionRepository : SessionRepository {
         )
         activeSession.value = session
         return Result.success(session)
+    }
+
+    override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> {
+        trainingExperience.value = experience
+        return Result.success(Unit)
     }
 
     override suspend fun logout(): Result<Unit> {

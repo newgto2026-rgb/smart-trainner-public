@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
+import com.smarttrainner.core.domain.RecommendExercisePrescriptionUseCase
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
@@ -56,8 +58,10 @@ class RoutineViewModel @Inject constructor(
     observePlanTemplates: ObservePlanTemplatesUseCase,
     observeCurrentWeeklyPlan: ObserveCurrentWeeklyPlanUseCase,
     observeRoutineProgress: ObserveRoutineProgressUseCase,
+    observeTrainingExperience: ObserveTrainingExperienceUseCase,
     observeWorkoutLogs: ObserveWorkoutLogsUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
+    private val recommendExercisePrescription: RecommendExercisePrescriptionUseCase,
     private val recommendRoutine: RecommendRoutineUseCase,
     private val resolveRoutineCycleCompletion: ResolveRoutineCycleCompletionUseCase,
     private val startRoutine: StartRoutineUseCase,
@@ -71,7 +75,9 @@ class RoutineViewModel @Inject constructor(
         .onStart { refreshWeekStartIfNeeded() }
         .distinctUntilChanged()
 
-    private val recommendationForm = MutableStateFlow(RoutineRecommendationFormState())
+    private val recommendationForm = MutableStateFlow(
+        RoutineRecommendationFormState.defaultFor(TrainingExperience.BEGINNER)
+    )
     private val routinePreviewTemplateId = MutableStateFlow<String?>(null)
     private val showRoutineLibraryDialog = MutableStateFlow(false)
     private val showRoutineSettingsDialog = MutableStateFlow(false)
@@ -151,15 +157,17 @@ class RoutineViewModel @Inject constructor(
         observePlanTemplates(),
         routinePlanState,
         logState,
-        observeExercises()
-    ) { templates, routinePlan, logState, exercises ->
+        observeExercises(),
+        observeTrainingExperience()
+    ) { templates, routinePlan, logState, exercises, profileExperience ->
         RoutineDataState(
             templates = templates,
             plan = routinePlan.plan,
             routineProgress = routinePlan.routineProgress,
             logs = logState.weeklyLogs,
             latestLogs = logState.latestLogs,
-            exercises = exercises
+            exercises = exercises,
+            profileExperience = profileExperience
         )
     }
 
@@ -183,6 +191,9 @@ class RoutineViewModel @Inject constructor(
         )
         val normalizedRecommendationForm = control.recommendationForm.normalizedFor(data.templates)
         val routineFilterAvailability = normalizedRecommendationForm.availableFilterOptions(data.templates)
+        val exercisePrescriptions = data.exercises.associate { exercise ->
+            exercise.id to recommendExercisePrescription(exercise, data.profileExperience)
+        }
         val latestCompletion = data.routineProgress.lastCompletedDayIndex
             ?.let { data.plan.days.getOrNull(it) }
             ?.let { completedDay ->
@@ -210,8 +221,10 @@ class RoutineViewModel @Inject constructor(
             nextRoutineDay = nextRoutineDay,
             nextRoutineDayUi = nextDayUi,
             latestRoutineDayCompletion = latestCompletion,
+            profileExperience = data.profileExperience,
             routineRecommendationInput = normalizedRecommendationForm,
             routineFilterAvailability = routineFilterAvailability,
+            exercisePrescriptions = exercisePrescriptions,
             recommendedTemplateId = recommendation.primaryTemplateId,
             alternativeTemplateIds = recommendation.alternativeTemplateIds,
             routinePreviewTemplateId = previewTemplateId,
@@ -233,6 +246,16 @@ class RoutineViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = RoutineUiState()
     )
+
+    init {
+        viewModelScope.launch {
+            observeTrainingExperience()
+                .distinctUntilChanged()
+                .collect { experience ->
+                    recommendationForm.value = RoutineRecommendationFormState.defaultFor(experience)
+                }
+        }
+    }
 
     fun selectTemplate(templateId: String) {
         viewModelScope.launch {
@@ -479,15 +502,18 @@ class RoutineViewModel @Inject constructor(
     }
 
     fun addExerciseToCustomRoutine(exerciseId: ExerciseId) {
-        val exercise = uiState.value.exercises.firstOrNull { it.id == exerciseId } ?: return
+        val state = uiState.value
+        val exercise = state.exercises.firstOrNull { it.id == exerciseId } ?: return
         val builder = customRoutineBuilder.value
         val selectedDay = builder.days.getOrNull(builder.selectedDayIndex)
         if (exercise.muscleGroup !in allowedCustomRoutineMuscleGroups(selectedDay?.focus)) return
+        val prescription = state.exercisePrescriptions[exerciseId]
+            ?: recommendExercisePrescription(exercise, state.profileExperience)
         customRoutineBuilder.updateSelectedDay { day ->
             if (day.exercises.any { it.exercise.id == exerciseId }) {
                 day
             } else {
-                day.copy(exercises = day.exercises + exercise.toCustomRoutineExerciseForm())
+                day.copy(exercises = day.exercises + exercise.toCustomRoutineExerciseForm(prescription))
             }
         }
     }
@@ -655,6 +681,8 @@ class RoutineViewModel @Inject constructor(
             }
             RoutineExercisePickerMode.ADD -> {
                 val routineDay = state.nextRoutineDayUi ?: return null
+                val prescription = state.exercisePrescriptions[exercise.id]
+                    ?: recommendExercisePrescription(exercise, state.profileExperience)
                 PlannedExercise(
                     id = PlannedExerciseId(
                         routineAdditionalExerciseIdPrefix(
@@ -665,10 +693,10 @@ class RoutineViewModel @Inject constructor(
                         ) + "${clock.instant().toEpochMilli()}|${exercise.id.value}"
                     ),
                     exercise = exercise,
-                    sets = exercise.defaultSets,
-                    repRange = exercise.defaultRepRange,
-                    durationMinutes = exercise.defaultDurationMinutes,
-                    restSeconds = exercise.restSeconds,
+                    sets = prescription.sets,
+                    repRange = prescription.repRange,
+                    durationMinutes = prescription.durationMinutes,
+                    restSeconds = prescription.restSeconds,
                     note = ""
                 )
             }
@@ -743,7 +771,8 @@ class RoutineViewModel @Inject constructor(
         val routineProgress: RoutineProgress,
         val logs: List<WorkoutLog>,
         val latestLogs: List<WorkoutLog>,
-        val exercises: List<com.smarttrainner.core.model.Exercise>
+        val exercises: List<com.smarttrainner.core.model.Exercise>,
+        val profileExperience: TrainingExperience
     )
 
     private data class RoutineLogState(

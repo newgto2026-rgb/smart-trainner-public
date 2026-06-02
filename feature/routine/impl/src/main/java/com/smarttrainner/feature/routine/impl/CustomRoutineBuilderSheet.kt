@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.domain.ExercisePrescription
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
@@ -69,6 +70,7 @@ import com.smarttrainner.core.ui.SmartTrainnerExercisePickerCard
 internal fun CustomRoutineBuilderSheet(
     builder: CustomRoutineBuilderState,
     exercises: List<Exercise>,
+    exercisePrescriptions: Map<ExerciseId, ExercisePrescription>,
     onNameChanged: (String) -> Unit,
     onDaySelected: (Int) -> Unit,
     onDayFocusChanged: (RoutineFocus?) -> Unit,
@@ -179,6 +181,7 @@ internal fun CustomRoutineBuilderSheet(
                     }
                     ExercisePicker(
                         exercises = exercises,
+                        exercisePrescriptions = exercisePrescriptions,
                         selectedFocus = selectedDay?.focus,
                         selectedExerciseIds = selectedDay
                             ?.exercises
@@ -315,7 +318,7 @@ private fun CustomDayEditor(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(item.exercise.name, fontWeight = FontWeight.Bold)
+                        Text(item.exercise.localizedName(), fontWeight = FontWeight.Bold)
                         Text(
                             text = item.targetText(),
                             color = SmartTrainnerColors.Muted,
@@ -505,6 +508,7 @@ private fun focusSelectedTestTag(focus: RoutineFocus?): String =
 @Composable
 private fun ExercisePicker(
     exercises: List<Exercise>,
+    exercisePrescriptions: Map<ExerciseId, ExercisePrescription>,
     selectedFocus: RoutineFocus?,
     selectedExerciseIds: Set<ExerciseId>,
     expandedGroups: Set<MuscleGroup>,
@@ -569,8 +573,9 @@ private fun ExercisePicker(
                 if (expanded) {
                     groupExercises.forEach { exercise ->
                         SmartTrainnerExercisePickerCard(
-                            title = exercise.name,
-                            subtitle = exercise.targetText,
+                            title = exercise.localizedName(),
+                            subtitle = exercisePrescriptions[exercise.id]?.localizedTargetText()
+                                ?: exercise.localizedTargetText(),
                             leadingIcon = Icons.Default.Add,
                             secondaryActionLabel = stringResource(R.string.routine_instruction),
                             secondaryActionIcon = Icons.Default.Info,
@@ -599,11 +604,12 @@ private fun CustomRoutineFormError.localizedMessage(): String = stringResource(
     }
 )
 
+@Composable
 private fun CustomRoutineExerciseFormState.targetText(): String =
     if (repRangeStart != null && repRangeEnd != null) {
-        "${sets}세트 x ${repRangeStart}-${repRangeEnd}회"
+        stringResource(R.string.routine_target_reps, sets, repRangeStart, repRangeEnd)
     } else {
-        "${sets}세트 x ${durationMinutes ?: 10}분"
+        stringResource(R.string.routine_target_duration, sets, durationMinutes ?: 10)
     }
 
 private data class CustomRoutineFocusGroup(

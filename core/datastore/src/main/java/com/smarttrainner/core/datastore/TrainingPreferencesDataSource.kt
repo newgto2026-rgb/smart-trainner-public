@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.smarttrainner.core.model.AuthProvider
 import com.smarttrainner.core.model.RoutineProgressPreference
+import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -49,9 +50,19 @@ class TrainingPreferencesDataSource @Inject constructor(
         preferences[SELECTED_THEME_TONE] ?: DEFAULT_THEME_TONE
     }
 
+    val activeTrainingExperience: Flow<TrainingExperience> = context.trainingDataStore.data.map { preferences ->
+        val sessionId = preferences[ACTIVE_SESSION_ID] ?: DEFAULT_USER_SESSION_ID
+        preferences[trainingExperienceKey(sessionId)].toTrainingExperience()
+    }
+
     fun selectedTemplateId(sessionId: String): Flow<String> = context.trainingDataStore.data.map { preferences ->
         preferences[selectedTemplateIdKey(sessionId)] ?: DEFAULT_TEMPLATE_ID
     }
+
+    fun trainingExperience(sessionId: String): Flow<TrainingExperience> =
+        context.trainingDataStore.data.map { preferences ->
+            preferences[trainingExperienceKey(sessionId)].toTrainingExperience()
+        }
 
     fun activeRoutineProgress(sessionId: String): Flow<RoutineProgressPreference> =
         context.trainingDataStore.data.map { preferences ->
@@ -73,6 +84,12 @@ class TrainingPreferencesDataSource @Inject constructor(
     suspend fun setSelectedTemplateId(sessionId: String, templateId: String) {
         context.trainingDataStore.edit { preferences ->
             preferences[selectedTemplateIdKey(sessionId)] = templateId
+        }
+    }
+
+    suspend fun setTrainingExperience(sessionId: String, experience: TrainingExperience) {
+        context.trainingDataStore.edit { preferences ->
+            preferences[trainingExperienceKey(sessionId)] = experience.name
         }
     }
 
@@ -230,6 +247,9 @@ class TrainingPreferencesDataSource @Inject constructor(
         fun selectedTemplateIdKey(sessionId: String) =
             stringPreferencesKey("selected_template_id_$sessionId")
 
+        fun trainingExperienceKey(sessionId: String) =
+            stringPreferencesKey("training_experience_$sessionId")
+
         fun activeRoutineTemplateIdKey(sessionId: String) =
             stringPreferencesKey("active_routine_template_id_$sessionId")
 
@@ -276,3 +296,7 @@ class TrainingPreferencesDataSource @Inject constructor(
             stringPreferencesKey("session_linked_at_$sessionId")
     }
 }
+
+internal fun String?.toTrainingExperience(): TrainingExperience =
+    this?.let { runCatching { TrainingExperience.valueOf(it) }.getOrNull() }
+        ?: TrainingExperience.BEGINNER

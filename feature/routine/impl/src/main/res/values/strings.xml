@@ -79,8 +79,8 @@
     <string name="routine_edit_custom_routine">Edit</string>
     <string name="routine_empty_plan">No workouts are planned this week. Choose a starter routine to begin.</string>
     <string name="routine_error_complete_day">Could not complete this routine day.</string>
-    <string name="routine_experience_beginner">Almost new</string>
-    <string name="routine_experience_intermediate">Consistent</string>
+    <string name="routine_experience_beginner">Beginner</string>
+    <string name="routine_experience_intermediate">Intermediate</string>
     <string name="routine_experience_advanced">Advanced</string>
     <string name="routine_feeling_app_recommended">Suggested</string>
     <string name="routine_feeling_balanced_full_body">Full-body plan</string>

@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.domain.ExercisePrescription
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
@@ -551,6 +552,7 @@ internal fun RoutineCancelLatestDayDialog(
 internal fun RoutineExercisePickerDialog(
     picker: RoutineExercisePickerState,
     exercises: List<Exercise>,
+    exercisePrescriptions: Map<ExerciseId, ExercisePrescription>,
     onExerciseSelected: (ExerciseId) -> Unit,
     onExerciseDetailRequested: (ExerciseId) -> Unit,
     onDismissRequest: () -> Unit
@@ -632,7 +634,8 @@ internal fun RoutineExercisePickerDialog(
                         groupExercises.forEach { exercise ->
                             SmartTrainnerExercisePickerCard(
                                 title = exercise.localizedName(),
-                                subtitle = exercise.targetText,
+                                subtitle = exercisePrescriptions[exercise.id]?.localizedTargetText()
+                                    ?: exercise.localizedTargetText(),
                                 leadingIcon = if (picker.mode == RoutineExercisePickerMode.SUBSTITUTE) {
                                     Icons.Default.SwapHoriz
                                 } else {
