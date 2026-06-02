@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -159,7 +160,7 @@ internal fun RoutineFilterChip(
             containerColor = SmartTrainnerColors.SurfaceRaised,
             labelColor = SmartTrainnerColors.Muted,
             selectedContainerColor = SmartTrainnerColors.CoralSoft,
-            selectedLabelColor = SmartTrainnerColors.Ink
+            selectedLabelColor = SmartTrainnerColors.Coral
         )
     )
 }
@@ -186,7 +187,7 @@ internal fun RoutineLibraryDialog(
                 .testTag("training_routine_library_dialog"),
             shape = RoundedCornerShape(8.dp),
             color = SmartTrainnerColors.Surface,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier.padding(18.dp),
@@ -309,7 +310,7 @@ internal fun RoutineSettingsDialog(
                 .testTag("training_routine_settings_dialog"),
             shape = RoundedCornerShape(8.dp),
             color = SmartTrainnerColors.Surface,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier
@@ -384,7 +385,7 @@ internal fun RoutineCompleteDayConfirmationDialog(
                 .testTag("training_complete_day_confirmation_dialog"),
             shape = RoundedCornerShape(8.dp),
             color = SmartTrainnerColors.Surface,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier.padding(18.dp),
@@ -464,7 +465,7 @@ internal fun RoutineCancelLatestDayDialog(
                 .testTag("training_cancel_latest_day_dialog"),
             shape = RoundedCornerShape(8.dp),
             color = SmartTrainnerColors.Surface,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier.padding(18.dp),
@@ -499,7 +500,11 @@ internal fun RoutineCancelLatestDayDialog(
                         modifier = Modifier
                             .weight(1f)
                             .testTag("training_confirm_cancel_latest_day"),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = SmartTrainnerColors.Danger,
+                            contentColor = SmartTrainnerColors.SurfaceRaised
+                        )
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(8.dp))
@@ -532,7 +537,7 @@ internal fun RoutineExercisePickerDialog(
                 .testTag("training_routine_exercise_picker_dialog"),
             shape = RoundedCornerShape(8.dp),
             color = SmartTrainnerColors.Surface,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier.padding(18.dp),
@@ -648,7 +653,7 @@ internal fun RoutineRecommendationsDialog(
                 .testTag("training_routine_recommendations_dialog"),
             shape = RoundedCornerShape(8.dp),
             color = SmartTrainnerColors.Surface,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier
@@ -840,7 +845,7 @@ internal fun PlanTemplateCard(
             color = if (selected) SmartTrainnerColors.Coral else SmartTrainnerColors.Line
         ),
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) SmartTrainnerColors.CoralSoft else SmartTrainnerColors.SurfaceRaised
+            containerColor = SmartTrainnerColors.SurfaceRaised
         )
     ) {
         Column(
@@ -864,7 +869,7 @@ internal fun PlanTemplateCard(
                         text = stringResource(R.string.routine_selected),
                         icon = Icons.Default.CheckCircle,
                         containerColor = SmartTrainnerColors.GreenSoft,
-                        contentColor = SmartTrainnerColors.Ink
+                        contentColor = SmartTrainnerColors.Green
                     )
                 }
                 if (highlightLabel != null) {
@@ -926,7 +931,7 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
             SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.routine_minutes_option, template.sessionMinutes),
                 icon = Icons.Default.Timer,
-                containerColor = SmartTrainnerColors.CoralSoft,
+                containerColor = SmartTrainnerColors.AmberSoft,
                 contentColor = SmartTrainnerColors.Ink
             )
         )
@@ -949,7 +954,7 @@ internal fun RoutineSourceChip(source: RoutineSource, testTag: String = source.r
             }
         ),
         icon = if (source == RoutineSource.CUSTOM) Icons.Default.Edit else Icons.Default.FitnessCenter,
-        containerColor = if (source == RoutineSource.CUSTOM) SmartTrainnerColors.GreenSoft else SmartTrainnerColors.CoralSoft,
+        containerColor = if (source == RoutineSource.CUSTOM) SmartTrainnerColors.GreenSoft else SmartTrainnerColors.SteelSoft,
         contentColor = SmartTrainnerColors.Ink
     )
 }

@@ -44,6 +44,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -56,6 +57,7 @@ import com.smarttrainner.core.designsystem.SmartTrainnerBrandSplashImage
 import com.smarttrainner.core.designsystem.SmartTrainnerBrandWordmarkImage
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
+import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
@@ -71,11 +73,13 @@ fun SmartTrainnerApp(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
+    selectedThemeTone: SmartTrainnerThemeTone,
+    onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
     viewModel: SmartTrainnerAppViewModel = hiltViewModel()
 ) {
     var showSplash by rememberSaveable { mutableStateOf(true) }
     LaunchedEffect(Unit) {
-        delay(1_650)
+        delay(1_350)
         showSplash = false
     }
     if (showSplash) {
@@ -116,6 +120,8 @@ fun SmartTrainnerApp(
             workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
             activeSession = requireNotNull(state.activeSession),
             googleSignInInProgress = state.googleSignInInProgress,
+            selectedThemeTone = selectedThemeTone,
+            onThemeToneSelected = onThemeToneSelected,
             onLinkGoogle = { requestGoogleSignIn(requireNotNull(state.activeSession).nickname) },
             onLogout = viewModel::logout
         )
@@ -129,19 +135,19 @@ private fun BrandSplashScreen() {
         started = true
     }
     val splashScale by animateFloatAsState(
-        targetValue = if (started) 1f else 0.88f,
-        animationSpec = tween(durationMillis = 780, easing = FastOutSlowInEasing),
+        targetValue = if (started) 1f else 0.98f,
+        animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
         label = "brandSplashScale"
     )
     val splashAlpha by animateFloatAsState(
-        targetValue = if (started) 1f else 0f,
-        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+        targetValue = if (started) 1f else 0.95f,
+        animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing),
         label = "brandSplashAlpha"
     )
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SmartTrainnerColors.Paper)
+            .background(SplashBackgroundColor)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(horizontal = 28.dp, vertical = 34.dp)
             .testTag("brand_splash"),
@@ -160,6 +166,8 @@ private fun BrandSplashScreen() {
         )
     }
 }
+
+private val SplashBackgroundColor = Color(0xFFF6FAFC)
 
 @Composable
 private fun LoadingScreen() {

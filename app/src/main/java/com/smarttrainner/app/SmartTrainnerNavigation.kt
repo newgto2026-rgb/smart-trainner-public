@@ -1,15 +1,21 @@
 package com.smarttrainner.app
 
 import com.smarttrainner.R
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -23,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
@@ -56,6 +63,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.ui.LocalSmartTrainnerHeaderAction
 import com.smarttrainner.app.training.TrainingExercisesRoute
@@ -76,6 +84,8 @@ fun SmartTrainnerMainScreen(
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     activeSession: UserSession,
     googleSignInInProgress: Boolean,
+    selectedThemeTone: SmartTrainnerThemeTone,
+    onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
     onLinkGoogle: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -96,6 +106,7 @@ fun SmartTrainnerMainScreen(
         ) {
             Scaffold(
                 containerColor = Color.Transparent,
+                contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
                 bottomBar = {
                     SmartTrainnerBottomBar(
                         destinations = destinations,
@@ -152,7 +163,9 @@ fun SmartTrainnerMainScreen(
             ProfileDrawer(
                 session = activeSession,
                 googleSignInInProgress = googleSignInInProgress,
+                selectedThemeTone = selectedThemeTone,
                 onDismiss = { profileOpen = false },
+                onThemeToneSelected = onThemeToneSelected,
                 onLinkGoogle = onLinkGoogle,
                 onLogout = {
                     profileOpen = false
@@ -191,7 +204,9 @@ private fun ProfileButton(
 private fun ProfileDrawer(
     session: UserSession,
     googleSignInInProgress: Boolean,
+    selectedThemeTone: SmartTrainnerThemeTone,
     onDismiss: () -> Unit,
+    onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
     onLinkGoogle: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
@@ -218,6 +233,7 @@ private fun ProfileDrawer(
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .verticalScroll(rememberScrollState())
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -251,6 +267,20 @@ private fun ProfileDrawer(
                         style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
                     )
                 }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = stringResource(R.string.profile_theme_title),
+                        color = SmartTrainnerColors.Ink,
+                        style = androidx.compose.material3.MaterialTheme.typography.titleSmall
+                    )
+                    SmartTrainnerThemeTone.entries.forEach { themeTone ->
+                        ThemeToneOption(
+                            themeTone = themeTone,
+                            selected = selectedThemeTone == themeTone,
+                            onClick = { onThemeToneSelected(themeTone) }
+                        )
+                    }
+                }
                 if (!session.isLinked) {
                     OutlinedButton(
                         onClick = onLinkGoogle,
@@ -281,6 +311,69 @@ private fun ProfileDrawer(
             }
         }
     }
+}
+
+@Composable
+private fun ThemeToneOption(
+    themeTone: SmartTrainnerThemeTone,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) SmartTrainnerColors.CoralSoft else SmartTrainnerColors.Surface,
+        border = BorderStroke(1.dp, if (selected) SmartTrainnerColors.Coral else SmartTrainnerColors.Line),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .testTag("profile_theme_${themeTone.storageValue}")
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = themeTone.swatchColor(),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.75f)),
+                modifier = Modifier.size(18.dp)
+            ) {}
+            Text(
+                text = stringResource(themeTone.labelResId()),
+                color = SmartTrainnerColors.Ink,
+                style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                modifier = Modifier.weight(1f)
+            )
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = SmartTrainnerColors.Coral,
+                    modifier = Modifier.size(18.dp)
+                )
+            } else {
+                Spacer(Modifier.size(18.dp))
+            }
+        }
+    }
+}
+
+private fun SmartTrainnerThemeTone.swatchColor(): Color = when (this) {
+    SmartTrainnerThemeTone.Red -> Color(0xFFC34D5D)
+    SmartTrainnerThemeTone.Blue -> Color(0xFF1187C8)
+    SmartTrainnerThemeTone.Green -> Color(0xFF2F6F5E)
+    SmartTrainnerThemeTone.Black -> Color(0xFF111827)
+}
+
+private fun SmartTrainnerThemeTone.labelResId(): Int = when (this) {
+    SmartTrainnerThemeTone.Red -> R.string.profile_theme_red
+    SmartTrainnerThemeTone.Blue -> R.string.profile_theme_blue
+    SmartTrainnerThemeTone.Green -> R.string.profile_theme_green
+    SmartTrainnerThemeTone.Black -> R.string.profile_theme_black
 }
 
 private fun UserSession.profileInitial(): String =

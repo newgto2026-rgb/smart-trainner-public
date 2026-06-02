@@ -147,8 +147,8 @@ internal fun NextRoutineDayCard(
                         stringResource(R.string.routine_today_focus_title, focus.localizedTodayFocusLabel())
                     } ?: fallbackDayTitle,
                     modifier = Modifier.testTag("training_next_routine_day_${routineDay.dayNumber}"),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
                     color = SmartTrainnerColors.Ink
                 )
                 if (shouldShowCustomDayLabel) {

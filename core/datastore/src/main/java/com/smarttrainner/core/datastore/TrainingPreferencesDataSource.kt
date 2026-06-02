@@ -45,6 +45,10 @@ class TrainingPreferencesDataSource @Inject constructor(
         )
     }
 
+    val selectedThemeTone: Flow<String> = context.trainingDataStore.data.map { preferences ->
+        preferences[SELECTED_THEME_TONE] ?: DEFAULT_THEME_TONE
+    }
+
     fun selectedTemplateId(sessionId: String): Flow<String> = context.trainingDataStore.data.map { preferences ->
         preferences[selectedTemplateIdKey(sessionId)] ?: DEFAULT_TEMPLATE_ID
     }
@@ -209,11 +213,19 @@ class TrainingPreferencesDataSource @Inject constructor(
         }
     }
 
+    suspend fun setSelectedThemeTone(themeTone: String) {
+        context.trainingDataStore.edit { preferences ->
+            preferences[SELECTED_THEME_TONE] = themeTone
+        }
+    }
+
     private companion object {
         const val DEFAULT_TEMPLATE_ID = "beginner-full-body-3day"
+        const val DEFAULT_THEME_TONE = "blue"
         const val DEFAULT_DISPLAY_NAME = "Local Athlete"
         const val DEFAULT_NICKNAME = "local-athlete"
         val ACTIVE_SESSION_ID = stringPreferencesKey("active_session_id")
+        val SELECTED_THEME_TONE = stringPreferencesKey("selected_theme_tone")
 
         fun selectedTemplateIdKey(sessionId: String) =
             stringPreferencesKey("selected_template_id_$sessionId")
