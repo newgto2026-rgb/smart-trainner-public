@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,7 +33,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -63,6 +63,7 @@ import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.RoutineFocus
+import com.smarttrainner.core.ui.SmartTrainnerExercisePickerCard
 
 @Composable
 internal fun CustomRoutineBuilderSheet(
@@ -356,10 +357,11 @@ private fun CustomDayFocusSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedLabel = selectedFocus?.localizedOptionLabel()
-        ?: stringResource(R.string.routine_custom_focus_none)
+        ?: stringResource(R.string.routine_muscle_full_body)
+    val selectedGroupLabel = selectedFocus.focusGroupLabel()
     val selectedTag = focusSelectedTestTag(selectedFocus)
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val options = listOf<RoutineFocus?>(null) + customRoutineFocusOptions()
+        val groups = customRoutineFocusGroups()
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -384,6 +386,12 @@ private fun CustomDayFocusSelector(
                         color = SmartTrainnerColors.Muted
                     )
                     Text(
+                        text = selectedGroupLabel,
+                        color = SmartTrainnerColors.Green,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
                         text = selectedLabel,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
@@ -397,37 +405,83 @@ private fun CustomDayFocusSelector(
                 )
             }
         }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .width(maxWidth)
-                .testTag("training_custom_focus_menu")
-        ) {
-            options.forEach { focus ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = focus?.localizedOptionLabel()
-                                ?: stringResource(R.string.routine_custom_focus_none)
+        if (expanded) {
+            DropdownMenu(
+                expanded = true,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier
+                    .heightIn(max = 430.dp)
+                    .width(maxWidth)
+                    .testTag("training_custom_focus_menu")
+            ) {
+                groups.forEach { group ->
+                    Text(
+                        text = stringResource(group.titleRes),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = SmartTrainnerColors.Muted,
+                        modifier = Modifier.padding(start = 14.dp, top = 10.dp, end = 14.dp, bottom = 4.dp)
+                    )
+                    group.options.forEach { focus ->
+                        FocusOptionRow(
+                            focus = focus,
+                            caption = stringResource(group.captionRes),
+                            selected = focus == selectedFocus,
+                            onClick = {
+                                onFocusChanged(focus)
+                                expanded = false
+                            }
                         )
-                    },
-                    leadingIcon = if (focus == selectedFocus) {
-                        {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = stringResource(R.string.routine_selected),
-                                tint = SmartTrainnerColors.Green
-                            )
-                        }
-                    } else {
-                        null
-                    },
-                    onClick = {
-                        onFocusChanged(focus)
-                        expanded = false
-                    },
-                    modifier = Modifier.testTag(focusOptionTestTag(focus))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FocusOptionRow(
+    focus: RoutineFocus?,
+    caption: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 3.dp)
+            .testTag(focusOptionTestTag(focus)),
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) SmartTrainnerColors.GreenSoft else SmartTrainnerColors.Surface,
+        border = BorderStroke(1.dp, if (selected) SmartTrainnerColors.Green else SmartTrainnerColors.Line)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = focus?.localizedOptionLabel() ?: stringResource(R.string.routine_muscle_full_body),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = SmartTrainnerColors.Ink
+                )
+                Text(
+                    text = caption,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SmartTrainnerColors.Muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = stringResource(R.string.routine_selected),
+                    tint = SmartTrainnerColors.Green,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -514,50 +568,19 @@ private fun ExercisePicker(
                 }
                 if (expanded) {
                     groupExercises.forEach { exercise ->
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onAddExercise(exercise.id) }
-                                .testTag("training_custom_add_exercise_${exercise.id.value}"),
-                            shape = RoundedCornerShape(8.dp),
-                            color = SmartTrainnerColors.Surface,
-                            border = BorderStroke(1.dp, SmartTrainnerColors.Line)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(exercise.name, fontWeight = FontWeight.Bold)
-                                    Text(
-                                        text = exercise.targetText,
-                                        color = SmartTrainnerColors.Muted,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                                OutlinedButton(
-                                    onClick = { onExerciseDetailRequested(exercise.id) },
-                                    modifier = Modifier.testTag("training_custom_view_exercise_${exercise.id.value}"),
-                                    shape = RoundedCornerShape(8.dp),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.Info,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(Modifier.size(4.dp))
-                                    Text(
-                                        text = stringResource(R.string.routine_instruction),
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-                            }
-                        }
+                        SmartTrainnerExercisePickerCard(
+                            title = exercise.name,
+                            subtitle = exercise.targetText,
+                            leadingIcon = Icons.Default.Add,
+                            secondaryActionLabel = stringResource(R.string.routine_instruction),
+                            secondaryActionIcon = Icons.Default.Info,
+                            onClick = { onAddExercise(exercise.id) },
+                            onSecondaryActionClick = { onExerciseDetailRequested(exercise.id) },
+                            clickModifier = Modifier.testTag("training_custom_add_exercise_${exercise.id.value}"),
+                            secondaryActionModifier = Modifier.testTag(
+                                "training_custom_view_exercise_${exercise.id.value}"
+                            )
+                        )
                     }
                 }
             }
@@ -583,20 +606,54 @@ private fun CustomRoutineExerciseFormState.targetText(): String =
         "${sets}세트 x ${durationMinutes ?: 10}분"
     }
 
-private fun customRoutineFocusOptions(): List<RoutineFocus> = listOf(
+private data class CustomRoutineFocusGroup(
+    val titleRes: Int,
+    val captionRes: Int,
+    val options: List<RoutineFocus?>
+)
+
+private val compoundCustomRoutineFocuses = setOf(
     RoutineFocus.UPPER_BODY,
     RoutineFocus.PUSH,
     RoutineFocus.PULL,
-    RoutineFocus.CHEST,
-    RoutineFocus.BACK,
-    RoutineFocus.LOWER_BODY,
-    RoutineFocus.SHOULDERS,
-    RoutineFocus.ARMS,
-    RoutineFocus.BICEPS,
-    RoutineFocus.TRICEPS,
-    RoutineFocus.FOREARMS,
-    RoutineFocus.CORE,
-    RoutineFocus.CARDIO_CONDITIONING
+    RoutineFocus.ARMS
+)
+
+private fun customRoutineFocusGroups(): List<CustomRoutineFocusGroup> = listOf(
+    CustomRoutineFocusGroup(
+        titleRes = R.string.routine_muscle_full_body,
+        captionRes = R.string.routine_custom_focus_caption_full_body,
+        options = listOf(null)
+    ),
+    CustomRoutineFocusGroup(
+        titleRes = R.string.routine_custom_focus_group_single,
+        captionRes = R.string.routine_custom_focus_caption_single,
+        options = listOf(
+            RoutineFocus.CHEST,
+            RoutineFocus.BACK,
+            RoutineFocus.LOWER_BODY,
+            RoutineFocus.SHOULDERS,
+            RoutineFocus.BICEPS,
+            RoutineFocus.TRICEPS,
+            RoutineFocus.FOREARMS,
+            RoutineFocus.CORE,
+            RoutineFocus.CARDIO_CONDITIONING
+        )
+    ),
+    CustomRoutineFocusGroup(
+        titleRes = R.string.routine_custom_focus_group_compound,
+        captionRes = R.string.routine_custom_focus_caption_compound,
+        options = compoundCustomRoutineFocuses.toList()
+    )
+)
+
+@Composable
+private fun RoutineFocus?.focusGroupLabel(): String = stringResource(
+    when {
+        this == null -> R.string.routine_muscle_full_body
+        this in compoundCustomRoutineFocuses -> R.string.routine_custom_focus_group_compound
+        else -> R.string.routine_custom_focus_group_single
+    }
 )
 
 @Composable

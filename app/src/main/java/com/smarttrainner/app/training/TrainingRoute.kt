@@ -33,10 +33,38 @@ internal fun TrainingRoute(
         onExerciseMethodSelected = viewModel::showExerciseMethod,
         onRecordSelected = viewModel::selectPlannedExercise,
         onRecordSaved = { planned ->
-            viewModel.handleRecordSaved(
-                nextPlannedExercise = routineRouteState.nextPlannedExerciseAfterSaved(planned)
+            val skippedIds = state.skippedPlannedExerciseIds
+            val nextPlannedExercise = routineRouteState.nextPlannedExerciseAfterSaved(
+                plannedExercise = planned,
+                skippedPlannedExerciseIds = skippedIds
             )
+            viewModel.handleRecordSaved(
+                nextPlannedExercise = nextPlannedExercise
+            )
+            if (
+                state.recordingFlow == RecordingFlow.CONTINUOUS &&
+                nextPlannedExercise == null &&
+                !planned.id.value.startsWith("routine-added|")
+            ) {
+                routineRouteState.requestCompleteRoutineDay(
+                    skippedPlannedExerciseIds = skippedIds,
+                    justRecordedPlannedExerciseIds = setOf(planned.id)
+                )
+            }
         },
+        onSkipExercise = { planned ->
+            val skippedIds = state.skippedPlannedExerciseIds + planned.id
+            val nextPlannedExercise = routineRouteState.nextPlannedExerciseAfterSkipped(
+                plannedExercise = planned,
+                skippedPlannedExerciseIds = skippedIds
+            )
+            viewModel.skipCurrentExercise(nextPlannedExercise)
+            if (state.recordingFlow == RecordingFlow.CONTINUOUS && nextPlannedExercise == null) {
+                routineRouteState.requestCompleteRoutineDay(skippedPlannedExerciseIds = skippedIds)
+            }
+        },
+        onSubstituteExerciseRequested = routineRouteState::requestSubstituteExercise,
+        onAddExerciseRequested = { planned -> routineRouteState.requestAdditionalExercise(planned) },
         onExerciseDetailDismiss = viewModel::dismissExerciseDetail,
         onRecordDialogDismiss = viewModel::dismissRecordDialog,
         routineDialogs = routineDialogs,
@@ -70,6 +98,9 @@ private fun TrainingScreen(
     onExerciseMethodSelected: (ExerciseId) -> Unit,
     onRecordSelected: (PlannedExercise) -> Unit,
     onRecordSaved: (PlannedExercise) -> Unit,
+    onSkipExercise: (PlannedExercise) -> Unit,
+    onSubstituteExerciseRequested: (PlannedExercise) -> Unit,
+    onAddExerciseRequested: (PlannedExercise) -> Unit,
     onExerciseDetailDismiss: () -> Unit,
     onRecordDialogDismiss: () -> Unit,
     routineDialogs: @Composable () -> Unit,
@@ -78,9 +109,19 @@ private fun TrainingScreen(
     val selectedExerciseId = state.selectedExerciseId
     val recordingPlannedExercise = state.recordingPlannedExercise
     if (recordingPlannedExercise != null && selectedExerciseId == null) {
+        val hasNextPlannedExercise = state.recordingFlow == RecordingFlow.CONTINUOUS &&
+            routineRouteState.nextPlannedExerciseAfterSaved(
+                plannedExercise = recordingPlannedExercise,
+                skippedPlannedExerciseIds = state.skippedPlannedExerciseIds
+            ) != null
         workoutRecordingFeatureEntry.DialogRoute(
             plannedExercise = recordingPlannedExercise,
+            showRoutineSessionActions = state.recordingFlow == RecordingFlow.CONTINUOUS,
+            hasNextPlannedExercise = hasNextPlannedExercise,
             onRecordSaved = onRecordSaved,
+            onSkipExercise = onSkipExercise,
+            onSubstituteExerciseRequested = onSubstituteExerciseRequested,
+            onAddExerciseRequested = onAddExerciseRequested,
             onExerciseMethodSelected = onExerciseMethodSelected,
             onDismiss = onRecordDialogDismiss
         )

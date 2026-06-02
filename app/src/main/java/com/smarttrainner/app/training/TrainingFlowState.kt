@@ -2,16 +2,21 @@ package com.smarttrainner.app.training
 
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
+import com.smarttrainner.core.model.PlannedExerciseId
 
 internal data class TrainingFlowState(
     val recordingPlannedExercise: PlannedExercise? = null,
     val selectedExerciseId: ExerciseId? = null,
-    val recordingFlow: RecordingFlow = RecordingFlow.SINGLE
+    val recordingFlow: RecordingFlow = RecordingFlow.SINGLE,
+    val skippedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
+    val pausedPlannedExercise: PlannedExercise? = null
 ) {
     val uiState: TrainingUiState
         get() = TrainingUiState(
             recordingPlannedExercise = recordingPlannedExercise,
-            selectedExerciseId = selectedExerciseId
+            selectedExerciseId = selectedExerciseId,
+            recordingFlow = recordingFlow,
+            skippedPlannedExerciseIds = skippedPlannedExerciseIds
         )
 
     fun showExerciseDetail(exerciseId: ExerciseId): TrainingFlowState =
@@ -31,30 +36,84 @@ internal data class TrainingFlowState(
         copy(
             recordingFlow = RecordingFlow.CONTINUOUS,
             recordingPlannedExercise = exercise,
-            selectedExerciseId = null
+            selectedExerciseId = null,
+            skippedPlannedExerciseIds = emptySet(),
+            pausedPlannedExercise = null
         )
 
     fun dismissRecordDialog(): TrainingFlowState =
         copy(
             recordingPlannedExercise = null,
-            recordingFlow = RecordingFlow.SINGLE
+            recordingFlow = RecordingFlow.SINGLE,
+            skippedPlannedExerciseIds = emptySet(),
+            pausedPlannedExercise = null
         )
 
     fun recordSaved(nextPlannedExercise: PlannedExercise?): TrainingFlowState {
+        val paused = pausedPlannedExercise
+        if (paused != null) {
+            return copy(
+                recordingPlannedExercise = paused,
+                pausedPlannedExercise = null
+            )
+        }
         val nextPlanned = if (recordingFlow == RecordingFlow.CONTINUOUS) nextPlannedExercise else null
         return if (nextPlanned != null) {
             copy(recordingPlannedExercise = nextPlanned)
         } else {
             copy(
                 recordingPlannedExercise = null,
-                recordingFlow = RecordingFlow.SINGLE
+                recordingFlow = RecordingFlow.SINGLE,
+                pausedPlannedExercise = null
             )
         }
     }
 
+    fun skipCurrentExercise(nextPlannedExercise: PlannedExercise?): TrainingFlowState {
+        val current = recordingPlannedExercise ?: return this
+        val paused = pausedPlannedExercise
+        if (paused != null) {
+            return copy(
+                recordingPlannedExercise = paused,
+                pausedPlannedExercise = null,
+                selectedExerciseId = null
+            )
+        }
+        return if (nextPlannedExercise != null) {
+            copy(
+                recordingPlannedExercise = nextPlannedExercise,
+                skippedPlannedExerciseIds = skippedPlannedExerciseIds + current.id,
+                selectedExerciseId = null
+            )
+        } else {
+            copy(
+                recordingPlannedExercise = null,
+                recordingFlow = RecordingFlow.SINGLE,
+                skippedPlannedExerciseIds = skippedPlannedExerciseIds + current.id,
+                pausedPlannedExercise = null,
+                selectedExerciseId = null
+            )
+        }
+    }
+
+    fun replaceRecordingExercise(exercise: PlannedExercise): TrainingFlowState =
+        copy(
+            recordingPlannedExercise = exercise,
+            selectedExerciseId = null
+        )
+
+    fun recordAdditionalExercise(exercise: PlannedExercise): TrainingFlowState =
+        copy(
+            recordingPlannedExercise = exercise,
+            pausedPlannedExercise = recordingPlannedExercise,
+            selectedExerciseId = null
+        )
+
     fun clearRecordingFlow(): TrainingFlowState =
         copy(
             recordingPlannedExercise = null,
-            recordingFlow = RecordingFlow.SINGLE
+            recordingFlow = RecordingFlow.SINGLE,
+            skippedPlannedExerciseIds = emptySet(),
+            pausedPlannedExercise = null
         )
 }

@@ -64,6 +64,14 @@ internal fun LazyListScope.homeSummaryContent(
             )
         }
     }
+    state.latestRoutineDayCompletion?.let { completion ->
+        item {
+            LatestRoutineDayCompletionCard(
+                completion = completion,
+                onCancelLatestRoutineDay = actions.onRequestCancelLatestRoutineDay
+            )
+        }
+    }
     if (state.completeDayError) {
         item {
             Text(
@@ -124,6 +132,16 @@ internal fun NextRoutineDayCard(
                     .hasMeaningfulPlanDayTitle(routineDay.dayNumber)
                 val shouldShowCustomDayLabel = isCustomRoutine &&
                     (routineDay.primaryFocus != null || hasCustomDayTitle)
+                Text(
+                    text = stringResource(
+                        R.string.routine_cycle_day_title,
+                        routineDay.cycleNumber,
+                        routineDay.dayNumber
+                    ),
+                    color = SmartTrainnerColors.Coral,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
                 Text(
                     text = routineDay.primaryFocus?.let { focus ->
                         stringResource(R.string.routine_today_focus_title, focus.localizedTodayFocusLabel())
@@ -244,6 +262,53 @@ internal fun NextRoutineDayCard(
                     color = SmartTrainnerColors.Muted,
                     style = MaterialTheme.typography.bodySmall
                 )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun LatestRoutineDayCompletionCard(
+    completion: LatestRoutineDayCompletionUiModel,
+    onCancelLatestRoutineDay: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("training_latest_routine_day_completion_card"),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, SmartTrainnerColors.Line),
+        colors = CardDefaults.cardColors(containerColor = SmartTrainnerColors.SurfaceRaised)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = stringResource(
+                    R.string.routine_latest_completed_day_title,
+                    completion.cycleNumber,
+                    completion.dayNumber
+                ),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = SmartTrainnerColors.Ink
+            )
+            Text(
+                text = stringResource(R.string.routine_latest_completed_day_body),
+                color = SmartTrainnerColors.Muted,
+                style = MaterialTheme.typography.bodySmall
+            )
+            OutlinedButton(
+                onClick = onCancelLatestRoutineDay,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("training_cancel_latest_routine_day"),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(R.string.routine_cancel_latest_day_action))
             }
         }
     }

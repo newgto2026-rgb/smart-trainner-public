@@ -7,10 +7,14 @@ import com.smarttrainner.core.model.CustomRoutineExerciseInput
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.PlanLevel
 import com.smarttrainner.core.model.PlanTemplate
+import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.WorkoutDayPlan
 import java.time.Instant
+import java.time.LocalDate
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -102,6 +106,41 @@ class RoutineCommandUseCasesTest {
 
         assertThat(repository.nextDayIndex).isEqualTo(2)
         assertThat(repository.newCycleStartedAt).isNull()
+    }
+
+    @Test
+    fun cancelLatestRoutineDayCompletion_restoresLatestDayAndUsesRoutineDayScope() = runTest {
+        val repository = CapturingRoutineProgressRepository()
+        val cancelLatest = CancelLatestRoutineDayCompletionUseCase(repository)
+        val progress = RoutineProgress(
+            templateId = "intermediate-body-part-4day",
+            dayIndex = 2,
+            lastCompletedDayIndex = 1,
+            lastCompletedAt = Instant.parse("2026-05-24T12:00:00Z"),
+            cycleNumber = 1,
+            lastCompletedCycleNumber = 1,
+            lastCompletedPreviousCycleStartedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-05-20T00:00:00Z")
+        )
+        val completedDay = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 20),
+            title = "Day 2",
+            focus = "Back",
+            exercises = emptyList(),
+            dayNumber = 2
+        )
+
+        cancelLatest(
+            template = templates.first { it.id == "intermediate-body-part-4day" },
+            progress = progress,
+            completedDay = completedDay
+        )
+
+        assertThat(repository.restoredDayIndex).isEqualTo(1)
+        assertThat(repository.restoredCycleNumber).isEqualTo(1)
+        assertThat(repository.additionalExerciseIdPrefix)
+            .isEqualTo("routine-added|intermediate-body-part-4day|cycle1|day2|")
     }
 
     private val templates = listOf(
@@ -255,6 +294,9 @@ class RoutineCommandUseCasesTest {
 private class CapturingRoutineProgressRepository : RoutineProgressCommandRepository {
     var nextDayIndex: Int? = null
     var newCycleStartedAt: Instant? = null
+    var restoredDayIndex: Int? = null
+    var restoredCycleNumber: Int? = null
+    var additionalExerciseIdPrefix: String? = null
 
     override suspend fun startRoutine(templateId: String): Result<Unit> = error("Not used")
 
@@ -266,6 +308,19 @@ private class CapturingRoutineProgressRepository : RoutineProgressCommandReposit
     ): Result<Unit> {
         this.nextDayIndex = nextDayIndex
         this.newCycleStartedAt = newCycleStartedAt
+        return Result.success(Unit)
+    }
+
+    override suspend fun cancelLatestRoutineDayCompletion(
+        restoredDayIndex: Int,
+        restoredCycleNumber: Int,
+        restoredCycleStartedAt: Instant?,
+        plannedExerciseIds: Set<PlannedExerciseId>,
+        additionalExerciseIdPrefix: String
+    ): Result<Unit> {
+        this.restoredDayIndex = restoredDayIndex
+        this.restoredCycleNumber = restoredCycleNumber
+        this.additionalExerciseIdPrefix = additionalExerciseIdPrefix
         return Result.success(Unit)
     }
 }

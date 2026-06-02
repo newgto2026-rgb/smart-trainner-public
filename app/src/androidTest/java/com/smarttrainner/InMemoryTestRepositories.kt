@@ -9,6 +9,7 @@ import com.smarttrainner.core.model.AuthProvider
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.NicknameAvailability
 import com.smarttrainner.core.model.PlanId
 import com.smarttrainner.core.model.PlanLevel
 import com.smarttrainner.core.model.PlanTemplate
@@ -53,12 +54,34 @@ internal class InMemorySessionRepository : SessionRepository {
         val session = UserSession(
             id = UserSessionId(TEST_SESSION_ID),
             displayName = "Test Athlete",
+            nickname = "test-athlete",
             email = null,
             provider = AuthProvider.LOCAL,
             linkedAt = null
         )
         activeSession.value = session
         return Result.success(session)
+    }
+
+    override suspend fun checkNicknameAvailability(nickname: String): Result<NicknameAvailability> =
+        Result.success(NicknameAvailability(nickname = nickname.trim(), available = true))
+
+    override suspend fun signInWithGoogle(idToken: String, nickname: String): Result<UserSession> {
+        val session = UserSession(
+            id = UserSessionId("google-test-athlete"),
+            displayName = "Google Test Athlete",
+            nickname = nickname.trim(),
+            email = "test@example.com",
+            provider = AuthProvider.GOOGLE,
+            linkedAt = "2026-06-02T00:00:00Z"
+        )
+        activeSession.value = session
+        return Result.success(session)
+    }
+
+    override suspend fun logout(): Result<Unit> {
+        activeSession.value = null
+        return Result.success(Unit)
     }
 
 }
@@ -162,16 +185,42 @@ internal class InMemoryTrainingRepository :
         newCycleStartedAt: Instant?
     ): Result<Unit> = runCatching {
         val current = progress.value
+        val startsNewCycle = newCycleStartedAt != null
         progress.value = current.copy(
             dayIndex = nextDayIndex,
+            cycleNumber = if (startsNewCycle) current.cycleNumber + 1 else current.cycleNumber,
             lastCompletedDayIndex = completedDayIndex,
             lastCompletedAt = completedAt,
+            lastCompletedCycleNumber = current.cycleNumber,
+            lastCompletedPreviousCycleStartedAt = current.cycleStartedAt,
             cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt
         )
     }
 
+    override suspend fun cancelLatestRoutineDayCompletion(
+        restoredDayIndex: Int,
+        restoredCycleNumber: Int,
+        restoredCycleStartedAt: Instant?,
+        plannedExerciseIds: Set<PlannedExerciseId>,
+        additionalExerciseIdPrefix: String
+    ): Result<Unit> = runCatching {
+        logs.value = logs.value.filterNot { log ->
+            log.plannedExerciseId in plannedExerciseIds ||
+                log.plannedExerciseId.value.startsWith(additionalExerciseIdPrefix)
+        }
+        progress.value = progress.value.copy(
+            dayIndex = restoredDayIndex,
+            cycleNumber = restoredCycleNumber,
+            cycleStartedAt = restoredCycleStartedAt ?: progress.value.cycleStartedAt,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            lastCompletedCycleNumber = null,
+            lastCompletedPreviousCycleStartedAt = null
+        )
+    }
+
     override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = runCatching {
-        logs.value = logs.value + WorkoutLog(
+        val nextLog = WorkoutLog(
             id = WorkoutLogId(logs.value.size.toLong() + 1),
             sessionId = UserSessionId(TEST_SESSION_ID),
             plannedExerciseId = input.plannedExerciseId,
@@ -185,6 +234,7 @@ internal class InMemoryTrainingRepository :
             completed = input.completed,
             setEntries = input.setEntries
         )
+        logs.value = logs.value.filterNot { it.plannedExerciseId == input.plannedExerciseId } + nextLog
     }
 
     private fun CustomRoutineInput.toPlanTemplate(): PlanTemplate {

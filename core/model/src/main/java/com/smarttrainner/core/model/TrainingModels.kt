@@ -27,6 +27,7 @@ enum class AuthProvider {
 data class UserSession(
     val id: UserSessionId,
     val displayName: String,
+    val nickname: String = displayName,
     val email: String?,
     val provider: AuthProvider,
     val linkedAt: String?
@@ -34,6 +35,11 @@ data class UserSession(
     val isLinked: Boolean
         get() = provider != AuthProvider.LOCAL
 }
+
+data class NicknameAvailability(
+    val nickname: String,
+    val available: Boolean
+)
 
 enum class MuscleGroup(val displayName: String) {
     LOWER_BODY("하체"),
@@ -230,10 +236,13 @@ data class RoutineRecommendation(
 data class RoutineProgressPreference(
     val templateId: String,
     val dayIndex: Int,
+    val cycleNumber: Int,
     val startedAt: String?,
     val cycleStartedAt: String?,
     val lastCompletedDayIndex: Int?,
-    val lastCompletedAt: String?
+    val lastCompletedAt: String?,
+    val lastCompletedCycleNumber: Int?,
+    val lastCompletedPreviousCycleStartedAt: String?
 )
 
 data class RoutineProgress(
@@ -241,6 +250,9 @@ data class RoutineProgress(
     val dayIndex: Int,
     val lastCompletedDayIndex: Int?,
     val lastCompletedAt: Instant?,
+    val cycleNumber: Int = 1,
+    val lastCompletedCycleNumber: Int? = null,
+    val lastCompletedPreviousCycleStartedAt: Instant? = null,
     val startedAt: Instant? = null,
     val cycleStartedAt: Instant? = startedAt
 )
