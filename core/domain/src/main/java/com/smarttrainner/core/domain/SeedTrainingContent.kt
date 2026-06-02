@@ -129,6 +129,10 @@ object SeedTrainingContent {
         exercise("medicine_ball_slam", "메디신볼 슬램", MuscleGroup.FULL_BODY, EquipmentType.BODYWEIGHT, DifficultyLevel.INTERMEDIATE, "medicine_ball_slam", "전신 파워와 컨디셔닝을 짧게 넣는 운동입니다.", listOf("가슴 앞 준비: 발을 어깨너비로 두고 메디신볼을 가슴 앞에서 안정적으로 잡습니다.", "머리 위로 올리기: 갈비뼈가 과하게 들리지 않게 복부를 고정하고 공을 머리 위로 올립니다.", "바닥으로 슬램: 엉덩이와 무릎을 접으며 공을 발 앞 바닥으로 강하게 내립니다.", "낮은 자세 마무리: 공이 바닥에 닿은 뒤 등 중립을 유지하며 다음 반복을 준비합니다."), listOf("허리를 둥글게 말아 줍지 마세요.", "주변 공간을 반드시 확인하세요."), 3, 8..10, null, 60)
     )
 
+    private val exercisesById: Map<String, Exercise> by lazy {
+        exercises.associateBy { it.id.value }
+    }
+
     val templates: List<PlanTemplate> by lazy {
         curatedTemplates + generatedCoverageTemplates
     }
@@ -804,7 +808,7 @@ object SeedTrainingContent {
     }
 
     private fun exerciseEstimateSeconds(exerciseId: String): Int {
-        val exercise = exercises.first { it.id.value == exerciseId }
+        val exercise = exerciseById(exerciseId)
         return estimateExerciseSeconds(
             sets = exercise.defaultSets,
             repRange = exercise.defaultRepRange,
@@ -1650,6 +1654,9 @@ object SeedTrainingContent {
         )
     )
 
+    private fun exerciseById(exerciseId: String): Exercise =
+        exercisesById[exerciseId] ?: throw NoSuchElementException("Exercise $exerciseId not found")
+
     private fun defaultRepDurationSeconds(
         id: String,
         muscleGroup: MuscleGroup,
@@ -1682,7 +1689,7 @@ object SeedTrainingContent {
         title = title,
         focus = focus,
         exercises = exerciseIds.mapIndexed { index, id ->
-            val exercise = exercises.first { it.id.value == id }
+            val exercise = exerciseById(id)
             TemplateExercise(
                 exerciseId = exercise.id,
                 sets = if (index == 0 && exercise.muscleGroup == MuscleGroup.CARDIO) 1 else exercise.defaultSets,
