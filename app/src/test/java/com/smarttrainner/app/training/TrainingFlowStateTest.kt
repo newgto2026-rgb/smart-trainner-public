@@ -46,6 +46,49 @@ class TrainingFlowStateTest {
         assertThat(state.recordingFlow).isEqualTo(RecordingFlow.SINGLE)
         assertThat(state.recordingPlannedExercise).isNull()
     }
+
+    @Test
+    fun skipCurrentExercise_continuousFlowAdvancesAndKeepsSkippedCandidate() {
+        val first = plannedExercise("back_pull")
+        val second = plannedExercise("back_row")
+
+        val state = TrainingFlowState()
+            .startContinuousRecording(first)
+            .skipCurrentExercise(second)
+
+        assertThat(state.recordingFlow).isEqualTo(RecordingFlow.CONTINUOUS)
+        assertThat(state.recordingPlannedExercise).isEqualTo(second)
+        assertThat(state.skippedPlannedExerciseIds).containsExactly(first.id)
+    }
+
+    @Test
+    fun recordAdditionalExercise_resumesPausedRoutineExerciseAfterSave() {
+        val current = plannedExercise("back_pull")
+        val added = plannedExercise("extra_curl")
+
+        val state = TrainingFlowState()
+            .startContinuousRecording(current)
+            .recordAdditionalExercise(added)
+            .recordSaved(nextPlannedExercise = null)
+
+        assertThat(state.recordingFlow).isEqualTo(RecordingFlow.CONTINUOUS)
+        assertThat(state.recordingPlannedExercise).isEqualTo(current)
+    }
+
+    @Test
+    fun skipCurrentExercise_onAdditionalExerciseResumesPausedRoutineExercise() {
+        val current = plannedExercise("back_pull")
+        val added = plannedExercise("extra_curl")
+
+        val state = TrainingFlowState()
+            .startContinuousRecording(current)
+            .recordAdditionalExercise(added)
+            .skipCurrentExercise(nextPlannedExercise = null)
+
+        assertThat(state.recordingFlow).isEqualTo(RecordingFlow.CONTINUOUS)
+        assertThat(state.recordingPlannedExercise).isEqualTo(current)
+        assertThat(state.skippedPlannedExerciseIds).isEmpty()
+    }
 }
 
 private fun plannedExercise(id: String) = PlannedExercise(

@@ -117,6 +117,8 @@ private fun rememberRoutineRouteState(
         onWorkoutStarted = viewModel::startContinuousRecording,
         onRoutineDayCompleted = viewModel::clearRecordingFlow,
         onExerciseMethodSelected = viewModel::showExerciseMethod,
-        onRecordSelected = viewModel::selectPlannedExercise
+        onRecordSelected = viewModel::selectPlannedExercise,
+        onSubstituteExerciseSelected = viewModel::replaceRecordingExercise,
+        onAdditionalExerciseSelected = viewModel::recordAdditionalExercise
     )
 )

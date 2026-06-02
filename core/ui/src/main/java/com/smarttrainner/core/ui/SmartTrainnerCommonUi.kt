@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
@@ -25,10 +27,12 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +55,8 @@ data class SmartTrainnerScreenChrome(
     val title: String,
     val subtitle: String
 )
+
+val LocalSmartTrainnerHeaderAction = compositionLocalOf<(@Composable () -> Unit)?> { null }
 
 @Composable
 fun SmartTrainnerScreenScaffold(
@@ -78,6 +84,7 @@ fun SmartTrainnerScreenScaffold(
 
 @Composable
 private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
+    val headerAction = LocalSmartTrainnerHeaderAction.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -90,21 +97,31 @@ private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = chrome.title,
-                    modifier = Modifier.testTag("training_app_title"),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Black,
-                    color = SmartTrainnerColors.Ink
-                )
-                Text(
-                    text = chrome.subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SmartTrainnerColors.Muted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = chrome.title,
+                        modifier = Modifier.testTag("training_app_title"),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = SmartTrainnerColors.Ink
+                    )
+                    Text(
+                        text = chrome.subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SmartTrainnerColors.Muted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                headerAction?.invoke()
             }
         }
     }
@@ -136,6 +153,80 @@ fun SmartTrainnerEmptyState(
         contentAlignment = Alignment.Center
     ) {
         Text(text = text, color = SmartTrainnerColors.Muted)
+    }
+}
+
+@Composable
+fun SmartTrainnerExercisePickerCard(
+    title: String,
+    subtitle: String,
+    leadingIcon: ImageVector,
+    secondaryActionLabel: String,
+    secondaryActionIcon: ImageVector,
+    onClick: () -> Unit,
+    onSecondaryActionClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    clickModifier: Modifier = Modifier,
+    secondaryActionModifier: Modifier = Modifier,
+    leadingIconTint: Color = SmartTrainnerColors.Coral
+) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Surface(
+            onClick = onClick,
+            modifier = clickModifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            color = SmartTrainnerColors.Surface,
+            border = BorderStroke(1.dp, SmartTrainnerColors.Line)
+        ) {
+            Row(
+                modifier = Modifier
+                    .heightIn(min = 56.dp)
+                    .padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = leadingIconTint
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = subtitle,
+                        color = SmartTrainnerColors.Muted,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                OutlinedButton(
+                    onClick = onSecondaryActionClick,
+                    modifier = secondaryActionModifier,
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = secondaryActionIcon,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.size(4.dp))
+                    Text(
+                        text = secondaryActionLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }
 

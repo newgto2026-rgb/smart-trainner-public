@@ -7,7 +7,8 @@
     <string name="workout_duration">운동 시간(분)</string>
     <string name="workout_rest_seconds">휴식(초)</string>
     <string name="workout_memo">메모</string>
-    <string name="workout_save_record">완료 기록</string>
+    <string name="workout_complete_record">완료</string>
+    <string name="workout_complete_and_next">완료 및 다음</string>
     <string name="workout_set_number">%1$d세트</string>
     <string name="workout_error_select">기록할 운동을 먼저 선택하세요.</string>
     <string name="workout_error_sets">세트는 1 이상 12 이하로 기록하세요.</string>
@@ -20,7 +21,10 @@
     <string name="workout_saved">기록이 저장되었습니다.</string>
     <string name="workout_close_record">기록 창 닫기</string>
     <string name="workout_record_dialog_title">%1$s 기록</string>
-    <string name="workout_show_exercise_method">운동 방법 보기</string>
+    <string name="workout_add_extra_exercise_short">추가</string>
+    <string name="workout_skip_now_short">넘기기</string>
+    <string name="workout_show_exercise_method_short">방법</string>
+    <string name="workout_substitute_exercise_short">대체</string>
     <string name="workout_actual_reps">반복 %1$s회</string>
     <string name="workout_actual_weight">kg %1$s</string>
     <string name="workout_actual_duration">%1$s분</string>

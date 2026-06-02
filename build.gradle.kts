@@ -81,6 +81,7 @@ val checkModuleBoundaries by tasks.registering {
         val allowedFeatureDataCoreInfrastructureDependencies = setOf(
             ":feature:routine:data" to ":core:database",
             ":feature:routine:data" to ":core:datastore",
+            ":feature:routine:data" to ":core:network",
             ":feature:workout:data" to ":core:database",
             ":feature:workout:data" to ":core:datastore"
         )
@@ -224,6 +225,7 @@ val checkModuleBoundaries by tasks.registering {
             "CoreRepositoryBindingsModule.kt",
             "PlatformDatabaseModule.kt"
         )
+        val appDiCoreNetworkFiles = setOf("PlatformNetworkModule.kt")
         val appDiFeatureImplementationFiles = setOf("FeatureEntryBindingsModule.kt")
         val appDiFeatureDataFiles = setOf(
             "AnalysisDataRepositoryBindingsModule.kt",
@@ -268,8 +270,10 @@ val checkModuleBoundaries by tasks.registering {
                         }
                     }
                     if (coreNetworkReferencePattern.containsMatchIn(line)) {
-                        violations +=
-                            "${sourceFile.relativeTo(projectDir)}:${index + 1}: core network references are not allowed in :app until a real data repository consumer is introduced and the app network provider is explicitly reapproved."
+                        if (!isAppDiSource || sourceFileName !in appDiCoreNetworkFiles) {
+                            violations +=
+                                "${sourceFile.relativeTo(projectDir)}:${index + 1}: core network references in :app are allowed only in the approved app-owned network provider module."
+                        }
                     }
                     if (coreImplementationReferencePattern.containsMatchIn(line)) {
                         if (!isAppDiSource) {

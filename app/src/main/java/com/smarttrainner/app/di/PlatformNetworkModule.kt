@@ -1,0 +1,56 @@
+package com.smarttrainner.app.di
+
+import com.smarttrainner.core.network.RoutineProgressNetworkApi
+import com.smarttrainner.core.network.SessionNetworkApi
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
+
+@Module
+@InstallIn(SingletonComponent::class)
+object PlatformNetworkModule {
+    @Provides
+    @Singleton
+    @OptIn(ExperimentalSerializationApi::class)
+    fun provideNetworkJson(): Json = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = false
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder().build()
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(
+        json: Json,
+        client: OkHttpClient
+    ): Retrofit {
+        val configuredBaseUrl = com.smarttrainner.core.network.BuildConfig.SMART_TRAINNER_SERVER_BASE_URL
+        val baseUrl = if (configuredBaseUrl.endsWith('/')) configuredBaseUrl else "$configuredBaseUrl/"
+        return Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(client)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRoutineProgressNetworkApi(retrofit: Retrofit): RoutineProgressNetworkApi =
+        retrofit.create(RoutineProgressNetworkApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideSessionNetworkApi(retrofit: Retrofit): SessionNetworkApi =
+        retrofit.create(SessionNetworkApi::class.java)
+}

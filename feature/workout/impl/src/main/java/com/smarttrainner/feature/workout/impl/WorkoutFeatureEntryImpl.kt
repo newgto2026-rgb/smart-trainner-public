@@ -18,7 +18,12 @@ class WorkoutFeatureEntryImpl @Inject constructor(
     @Composable
     override fun DialogRoute(
         plannedExercise: PlannedExercise?,
+        showRoutineSessionActions: Boolean,
+        hasNextPlannedExercise: Boolean,
         onRecordSaved: (PlannedExercise) -> Unit,
+        onSkipExercise: (PlannedExercise) -> Unit,
+        onSubstituteExerciseRequested: (PlannedExercise) -> Unit,
+        onAddExerciseRequested: (PlannedExercise) -> Unit,
         onExerciseMethodSelected: (ExerciseId) -> Unit,
         onDismiss: () -> Unit
     ) {
@@ -33,7 +38,10 @@ class WorkoutFeatureEntryImpl @Inject constructor(
         }
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         WorkoutRecordDialog(
-            state = state,
+            state = state.copy(
+                showRoutineSessionActions = showRoutineSessionActions,
+                hasNextPlannedExercise = hasNextPlannedExercise
+            ),
             actions = WorkoutRecordingActions(
                 onSetRepsChanged = viewModel::updateSetReps,
                 onSetWeightChanged = viewModel::updateSetWeight,
@@ -43,6 +51,15 @@ class WorkoutFeatureEntryImpl @Inject constructor(
                 onRemoveSet = viewModel::removeSetEntry,
                 onMemoChanged = viewModel::updateMemo,
                 onSaveRecord = { viewModel.saveRecord(onRecordSaved) },
+                onSkipExercise = {
+                    state.recordingPlannedExercise?.let(onSkipExercise)
+                },
+                onSubstituteExerciseRequested = {
+                    state.recordingPlannedExercise?.let(onSubstituteExerciseRequested)
+                },
+                onAddExerciseRequested = {
+                    state.recordingPlannedExercise?.let(onAddExerciseRequested)
+                },
                 onExerciseMethodSelected = {
                     state.recordingPlannedExercise
                         ?.exercise

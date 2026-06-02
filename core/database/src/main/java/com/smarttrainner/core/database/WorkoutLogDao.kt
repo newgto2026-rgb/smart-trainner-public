@@ -60,4 +60,43 @@ interface WorkoutLogDao {
         val workoutLogId = upsert(log)
         insertSetLogs(setLogs.map { it.copy(workoutLogId = workoutLogId) })
     }
+
+    @Query(
+        """
+        SELECT id FROM workout_logs
+        WHERE sessionId = :sessionId
+        AND (
+            plannedExerciseId IN (:plannedExerciseIds)
+            OR plannedExerciseId LIKE :additionalExerciseIdPrefixPattern
+        )
+        """
+    )
+    suspend fun routineDayWorkoutLogIds(
+        sessionId: String,
+        plannedExerciseIds: List<String>,
+        additionalExerciseIdPrefixPattern: String
+    ): List<Long>
+
+    @Query("DELETE FROM workout_set_logs WHERE workoutLogId IN (:workoutLogIds)")
+    suspend fun deleteSetLogsByWorkoutLogIds(workoutLogIds: List<Long>)
+
+    @Query("DELETE FROM workout_logs WHERE id IN (:workoutLogIds)")
+    suspend fun deleteWorkoutLogsByIds(workoutLogIds: List<Long>)
+
+    @Transaction
+    suspend fun deleteRoutineDayLogs(
+        sessionId: String,
+        plannedExerciseIds: List<String>,
+        additionalExerciseIdPrefixPattern: String
+    ) {
+        val workoutLogIds = routineDayWorkoutLogIds(
+            sessionId = sessionId,
+            plannedExerciseIds = plannedExerciseIds,
+            additionalExerciseIdPrefixPattern = additionalExerciseIdPrefixPattern
+        )
+        if (workoutLogIds.isNotEmpty()) {
+            deleteSetLogsByWorkoutLogIds(workoutLogIds)
+            deleteWorkoutLogsByIds(workoutLogIds)
+        }
+    }
 }

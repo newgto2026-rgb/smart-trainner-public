@@ -28,6 +28,8 @@ internal data class RecordSetFormState(
 
 internal data class WorkoutRecordingUiState(
     val recordingPlannedExercise: PlannedExercise? = null,
+    val showRoutineSessionActions: Boolean = false,
+    val hasNextPlannedExercise: Boolean = false,
     val weeklyLogs: List<WorkoutLog> = emptyList(),
     val latestWorkoutLogs: List<WorkoutLog> = emptyList(),
     val recordForm: RecordFormState = RecordFormState(),
@@ -44,6 +46,9 @@ internal data class WorkoutRecordingActions(
     val onRemoveSet: (Int) -> Unit = {},
     val onMemoChanged: (String) -> Unit = {},
     val onSaveRecord: () -> Unit = {},
+    val onSkipExercise: () -> Unit = {},
+    val onSubstituteExerciseRequested: () -> Unit = {},
+    val onAddExerciseRequested: () -> Unit = {},
     val onExerciseMethodSelected: () -> Unit = {},
     val onDismiss: () -> Unit = {}
 )
