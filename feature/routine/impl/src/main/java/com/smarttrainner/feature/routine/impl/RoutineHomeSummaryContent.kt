@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
@@ -337,15 +336,6 @@ internal fun RoutineDayBadgeRow(routineDay: NextRoutineDayUiModel) {
                     containerColor = SmartTrainnerColors.GreenSoft,
                     contentColor = SmartTrainnerColors.Ink,
                     testTag = "training_next_routine_badge_exercises"
-                )
-            )
-            add(
-                SmartTrainnerBadgeSpec(
-                    text = stringResource(R.string.routine_routine_badge_recovery, routineDay.minRecoveryHours),
-                    icon = Icons.Default.DateRange,
-                    containerColor = SmartTrainnerColors.AmberSoft,
-                    contentColor = SmartTrainnerColors.Ink,
-                    testTag = "training_next_routine_badge_recovery"
                 )
             )
         },

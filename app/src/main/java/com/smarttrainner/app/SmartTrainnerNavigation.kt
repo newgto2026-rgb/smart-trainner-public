@@ -33,8 +33,10 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -42,6 +44,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -211,6 +214,8 @@ private fun ProfileDrawer(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var themeSettingsOpen by rememberSaveable { mutableStateOf(false) }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -267,20 +272,10 @@ private fun ProfileDrawer(
                         style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
                     )
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = stringResource(R.string.profile_theme_title),
-                        color = SmartTrainnerColors.Ink,
-                        style = androidx.compose.material3.MaterialTheme.typography.titleSmall
-                    )
-                    SmartTrainnerThemeTone.entries.forEach { themeTone ->
-                        ThemeToneOption(
-                            themeTone = themeTone,
-                            selected = selectedThemeTone == themeTone,
-                            onClick = { onThemeToneSelected(themeTone) }
-                        )
-                    }
-                }
+                ThemeSettingsEntry(
+                    selectedThemeTone = selectedThemeTone,
+                    onClick = { themeSettingsOpen = true }
+                )
                 if (!session.isLinked) {
                     OutlinedButton(
                         onClick = onLinkGoogle,
@@ -310,7 +305,97 @@ private fun ProfileDrawer(
                 }
             }
         }
+        if (themeSettingsOpen) {
+            ThemeSettingsDialog(
+                selectedThemeTone = selectedThemeTone,
+                onDismiss = { themeSettingsOpen = false },
+                onThemeToneSelected = { themeTone ->
+                    onThemeToneSelected(themeTone)
+                    themeSettingsOpen = false
+                }
+            )
+        }
     }
+}
+
+@Composable
+private fun ThemeSettingsEntry(
+    selectedThemeTone: SmartTrainnerThemeTone,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = SmartTrainnerColors.Surface,
+        border = BorderStroke(1.dp, SmartTrainnerColors.Line),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .testTag("profile_theme_entry")
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = selectedThemeTone.swatchColor(),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.75f)),
+                modifier = Modifier.size(18.dp)
+            ) {}
+            Text(
+                text = stringResource(R.string.profile_theme_title),
+                color = SmartTrainnerColors.Ink,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = stringResource(selectedThemeTone.labelResId()),
+                color = SmartTrainnerColors.Muted,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThemeSettingsDialog(
+    selectedThemeTone: SmartTrainnerThemeTone,
+    onDismiss: () -> Unit,
+    onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(8.dp),
+        containerColor = SmartTrainnerColors.SurfaceRaised,
+        title = {
+            Text(
+                text = stringResource(R.string.profile_theme_title),
+                color = SmartTrainnerColors.Ink,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SmartTrainnerThemeTone.entries.forEach { themeTone ->
+                    ThemeToneOption(
+                        themeTone = themeTone,
+                        selected = selectedThemeTone == themeTone,
+                        onClick = { onThemeToneSelected(themeTone) }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.profile_theme_close))
+            }
+        }
+    )
 }
 
 @Composable

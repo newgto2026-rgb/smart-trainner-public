@@ -1,5 +1,6 @@
 package com.smarttrainner.feature.workout.impl
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +29,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -349,10 +350,15 @@ private fun CompactActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextButton(
+    OutlinedButton(
         onClick = onClick,
         modifier = modifier.heightIn(min = 36.dp),
         shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, SmartTrainnerColors.Coral.copy(alpha = 0.55f)),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = SmartTrainnerColors.Surface,
+            contentColor = SmartTrainnerColors.Coral
+        ),
         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
     ) {
         Text(
