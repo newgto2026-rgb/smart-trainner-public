@@ -28,7 +28,7 @@ internal data class RoutineRecommendationFormState(
     val daysPerWeek: Int = 4,
     val sessionMinutes: Int = 60,
     val experience: TrainingExperience = TrainingExperience.INTERMEDIATE,
-    val feeling: RoutineFeeling = RoutineFeeling.FOCUSED_BODY_PART
+    val feeling: RoutineFeeling = RoutineFeeling.APP_RECOMMENDED
 )
 
 internal data class CustomRoutineBuilderState(
@@ -119,6 +119,7 @@ internal data class RoutineUiState(
     val nextRoutineDayUi: NextRoutineDayUiModel? = null,
     val latestRoutineDayCompletion: LatestRoutineDayCompletionUiModel? = null,
     val routineRecommendationInput: RoutineRecommendationFormState = RoutineRecommendationFormState(),
+    val routineFilterAvailability: RoutineRecommendationFilterAvailability = RoutineRecommendationFilterAvailability(),
     val recommendedTemplateId: String? = null,
     val alternativeTemplateIds: List<String> = emptyList(),
     val routinePreviewTemplateId: String? = null,

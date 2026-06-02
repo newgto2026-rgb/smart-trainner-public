@@ -28,7 +28,7 @@ class DefaultWeeklyPlanRepository @Inject constructor(
                 preferences.selectedTemplateId(sessionId),
                 customRoutineDao.observeForSession(sessionId)
             ) { templateId, customRoutines ->
-                val customTemplates = customRoutines.map { it.toPlanTemplate() }
+                val customTemplates = customRoutines.map { it.toPlanTemplate(seedStore.exercises) }
                 seedStore.buildWeeklyPlan(
                     template = seedStore.templateById(templateId, customTemplates),
                     weekStartDate = weekStartDate

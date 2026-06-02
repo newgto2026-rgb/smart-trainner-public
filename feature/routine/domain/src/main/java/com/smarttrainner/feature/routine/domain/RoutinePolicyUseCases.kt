@@ -12,6 +12,7 @@ import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.core.model.estimatedSessionMinutes
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -25,34 +26,22 @@ class RecommendRoutineUseCase @Inject constructor() {
     ): RoutineRecommendation {
         val systemTemplates = templates.filter { it.source == RoutineSource.SYSTEM }
         require(systemTemplates.isNotEmpty()) { "At least one system routine template is required." }
-        val eligible = systemTemplates.filter { template ->
-            template.daysPerWeek <= input.daysPerWeek &&
-                template.sessionMinutes <= input.sessionMinutes &&
-                isExperienceEligible(input.experience, template)
-        }.ifEmpty { systemTemplates.filter { isExperienceEligible(input.experience, it) } }
+        val experienceEligible = systemTemplates.filter { isExperienceEligible(input.experience, it) }
             .ifEmpty { systemTemplates }
+        val frequencyCandidates = experienceEligible.preferRequestedFrequency(input)
+        val sessionCandidates = frequencyCandidates.filter { it.isWithinSessionTolerance(input.sessionMinutes) }
+        val primaryCandidates = sessionCandidates.ifEmpty { frequencyCandidates }
 
-        val primary = when {
-            input.experience == TrainingExperience.BEGINNER && input.daysPerWeek <= 2 -> {
-                eligible.bestFullBody(daysPerWeek = 2)
-            }
-            input.experience == TrainingExperience.BEGINNER -> {
-                eligible.bestFullBody(daysPerWeek = input.daysPerWeek.coerceAtMost(3))
-            }
-            input.feeling == RoutineFeeling.FOCUSED_BODY_PART && input.daysPerWeek >= 4 -> {
-                eligible.bestBodyPart(input) ?: eligible.bestBalanced(input)
-            }
-            input.feeling == RoutineFeeling.BALANCED_FULL_BODY -> {
-                eligible.bestFullBody(daysPerWeek = input.daysPerWeek.coerceAtMost(3))
-                    ?: eligible.bestBalanced(input)
-            }
-            input.daysPerWeek >= 4 -> {
-                eligible.bestBodyPart(input) ?: eligible.bestBalanced(input)
-            }
-            else -> eligible.bestBalanced(input) ?: eligible.bestFullBody(daysPerWeek = input.daysPerWeek)
-        } ?: eligible.first()
+        val primary = selectPrimary(
+            input = input,
+            primaryCandidates = primaryCandidates,
+            fallbackCandidates = experienceEligible
+        ) ?: primaryCandidates.first()
 
-        val alternatives = eligible
+        val alternativeCandidates = (primaryCandidates + frequencyCandidates + experienceEligible)
+            .distinctBy { it.id }
+
+        val alternatives = alternativeCandidates
             .filterNot { it.id == primary.id }
             .sortedWith(routineAlternativeComparator(input, primary))
             .take(2)
@@ -69,21 +58,79 @@ class RecommendRoutineUseCase @Inject constructor() {
         )
     }
 
+    private fun selectPrimary(
+        input: RoutineRecommendationInput,
+        primaryCandidates: List<PlanTemplate>,
+        fallbackCandidates: List<PlanTemplate>
+    ): PlanTemplate? = when {
+        input.feeling == RoutineFeeling.FOCUSED_BODY_PART -> {
+            primaryCandidates.bestBodyPart(input)
+                ?: primaryCandidates.bestBalanced(input)
+                ?: primaryCandidates.bestFullBody(input)
+                ?: fallbackCandidates.bestBodyPart(input)
+                ?: fallbackCandidates.bestBalanced(input)
+                ?: fallbackCandidates.bestFullBody(input)
+        }
+        input.feeling == RoutineFeeling.BALANCED_FULL_BODY -> {
+            primaryCandidates.bestFullBody(input)
+                ?: fallbackCandidates.bestFullBody(input)
+                ?: primaryCandidates.bestBalanced(input)
+                ?: fallbackCandidates.bestBalanced(input)
+        }
+        input.experience == TrainingExperience.BEGINNER -> {
+            primaryCandidates.bestFullBody(input)
+                ?: primaryCandidates.bestBalanced(input)
+                ?: primaryCandidates.bestBodyPart(input)
+                ?: fallbackCandidates.bestFullBody(input)
+                ?: fallbackCandidates.bestBalanced(input)
+                ?: fallbackCandidates.bestBodyPart(input)
+        }
+        input.daysPerWeek >= 4 -> {
+            primaryCandidates.bestBodyPart(input)
+                ?: primaryCandidates.bestBalanced(input)
+                ?: fallbackCandidates.bestBodyPart(input)
+                ?: fallbackCandidates.bestBalanced(input)
+        }
+        else -> {
+            primaryCandidates.bestBalanced(input)
+                ?: primaryCandidates.bestFullBody(input)
+                ?: fallbackCandidates.bestBalanced(input)
+                ?: fallbackCandidates.bestFullBody(input)
+        }
+    }
+
     private fun isExperienceEligible(
         experience: TrainingExperience,
         template: PlanTemplate
     ): Boolean = when (experience) {
         TrainingExperience.BEGINNER -> {
-            template.recommendedExperience == TrainingExperience.BEGINNER &&
-                !(template.structure == RoutineStructure.BODY_PART_SPLIT && template.daysPerWeek >= 5)
+            template.recommendedExperience == TrainingExperience.BEGINNER
         }
-        TrainingExperience.INTERMEDIATE -> true
+        TrainingExperience.INTERMEDIATE -> {
+            template.recommendedExperience == TrainingExperience.INTERMEDIATE
+        }
+        TrainingExperience.ADVANCED -> {
+            template.recommendedExperience == TrainingExperience.ADVANCED
+        }
     }
 
-    private fun List<PlanTemplate>.bestFullBody(daysPerWeek: Int): PlanTemplate? =
+    private fun List<PlanTemplate>.preferRequestedFrequency(
+        input: RoutineRecommendationInput
+    ): List<PlanTemplate> {
+        val exactFrequency = filter { it.daysPerWeek == input.daysPerWeek }
+        if (exactFrequency.isNotEmpty()) {
+            return exactFrequency
+        }
+        return filter { it.daysPerWeek <= input.daysPerWeek }.ifEmpty { this }
+    }
+
+    private fun PlanTemplate.isWithinSessionTolerance(sessionMinutes: Int): Boolean =
+        this.sessionMinutes == sessionMinutes &&
+            kotlin.math.abs(estimatedSessionMinutes - sessionMinutes) <= SESSION_TOLERANCE_MINUTES
+
+    private fun List<PlanTemplate>.bestFullBody(input: RoutineRecommendationInput): PlanTemplate? =
         filter { it.structure == RoutineStructure.FULL_BODY }
-            .minWithOrNull(compareBy<PlanTemplate> { kotlin.math.abs(it.daysPerWeek - daysPerWeek) }
-                .thenBy { it.daysPerWeek })
+            .minWithOrNull(templateFitComparator(input))
 
     private fun List<PlanTemplate>.bestBalanced(input: RoutineRecommendationInput): PlanTemplate? =
         filter { it.structure == RoutineStructure.BALANCED_SPLIT }
@@ -98,9 +145,9 @@ class RecommendRoutineUseCase @Inject constructor() {
         compareBy<PlanTemplate> {
             kotlin.math.abs(it.daysPerWeek - input.daysPerWeek)
         }.thenBy {
-            kotlin.math.abs(it.sessionMinutes - input.sessionMinutes)
+            kotlin.math.abs(it.estimatedSessionMinutes - input.sessionMinutes)
         }.thenByDescending {
-            it.sessionMinutes
+            it.estimatedSessionMinutes
         }
 
     private fun routineAlternativeComparator(
@@ -111,10 +158,14 @@ class RecommendRoutineUseCase @Inject constructor() {
     }.thenBy {
         kotlin.math.abs(it.daysPerWeek - input.daysPerWeek)
     }.thenByDescending {
-        it.sessionMinutes <= input.sessionMinutes
+        it.isWithinSessionTolerance(input.sessionMinutes)
+    }.thenBy {
+        kotlin.math.abs(it.estimatedSessionMinutes - input.sessionMinutes)
     }
 
     private companion object {
+        private const val SESSION_TOLERANCE_MINUTES = 10
+
         val BODY_PART_BASE_FOCUS = listOf(
             RoutineFocus.BACK,
             RoutineFocus.CHEST,

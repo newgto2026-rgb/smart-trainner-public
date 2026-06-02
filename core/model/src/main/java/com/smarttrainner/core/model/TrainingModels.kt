@@ -75,7 +75,8 @@ enum class DifficultyLevel(val displayName: String) {
 enum class PlanLevel(val displayName: String) {
     INTRO("입문"),
     BEGINNER("초보"),
-    INTERMEDIATE("초중급")
+    INTERMEDIATE("초중급"),
+    ADVANCED("고급")
 }
 
 enum class RoutineStructure {
@@ -108,7 +109,8 @@ enum class RoutineFocus {
 
 enum class TrainingExperience {
     BEGINNER,
-    INTERMEDIATE
+    INTERMEDIATE,
+    ADVANCED
 }
 
 enum class RoutineFeeling {
@@ -130,7 +132,8 @@ data class Exercise(
     val defaultSets: Int,
     val defaultRepRange: IntRange?,
     val defaultDurationMinutes: Int?,
-    val restSeconds: Int
+    val restSeconds: Int,
+    val defaultRepDurationSeconds: Int = DEFAULT_REP_DURATION_SECONDS
 ) {
     val targetText: String
         get() = if (defaultRepRange != null) {
@@ -172,8 +175,24 @@ data class TemplateExercise(
     val repRange: IntRange?,
     val durationMinutes: Int?,
     val restSeconds: Int,
-    val note: String
+    val note: String,
+    val repDurationSeconds: Int = DEFAULT_REP_DURATION_SECONDS
 )
+
+val TemplateExercise.estimatedTotalSeconds: Int
+    get() = estimateExerciseSeconds(
+        sets = sets,
+        repRange = repRange,
+        durationMinutes = durationMinutes,
+        restSeconds = restSeconds,
+        repDurationSeconds = repDurationSeconds
+    )
+
+val PlanTemplateDay.estimatedSessionMinutes: Int
+    get() = exercises.sumOf { it.estimatedTotalSeconds }.roundUpToMinutes()
+
+val PlanTemplate.estimatedSessionMinutes: Int
+    get() = days.maxOfOrNull { it.estimatedSessionMinutes } ?: sessionMinutes
 
 data class CustomRoutineInput(
     val id: String? = null,
@@ -278,7 +297,29 @@ data class PlannedExercise(
         } else {
             "${sets}세트 x ${durationMinutes ?: 10}분"
         }
+
+    val estimatedActiveSecondsPerSet: Int
+        get() = durationMinutes?.let { it * SECONDS_PER_MINUTE }
+            ?: ((repRange?.last ?: 0) * exercise.defaultRepDurationSeconds)
+
+    val estimatedSecondsPerSet: Int
+        get() = estimatedActiveSecondsPerSet + restSeconds
+
+    val estimatedTotalSeconds: Int
+        get() = estimateExerciseSeconds(
+            sets = sets,
+            repRange = repRange,
+            durationMinutes = durationMinutes,
+            restSeconds = restSeconds,
+            repDurationSeconds = exercise.defaultRepDurationSeconds
+        )
+
+    val estimatedMinutes: Int
+        get() = estimatedTotalSeconds.roundUpToMinutes()
 }
+
+val WorkoutDayPlan.estimatedSessionMinutes: Int
+    get() = exercises.sumOf { it.estimatedTotalSeconds }.roundUpToMinutes()
 
 data class WorkoutLog(
     val id: WorkoutLogId,
@@ -342,3 +383,22 @@ data class WeeklySummary(
     val completionRate: Int
         get() = if (plannedExerciseCount == 0) 0 else completedExerciseCount * 100 / plannedExerciseCount
 }
+
+fun estimateExerciseSeconds(
+    sets: Int,
+    repRange: IntRange?,
+    durationMinutes: Int?,
+    restSeconds: Int,
+    repDurationSeconds: Int = DEFAULT_REP_DURATION_SECONDS
+): Int {
+    val activeSecondsPerSet = durationMinutes?.let { it * SECONDS_PER_MINUTE }
+        ?: ((repRange?.last ?: 0) * repDurationSeconds)
+    return sets * (activeSecondsPerSet + restSeconds)
+}
+
+const val DEFAULT_REP_DURATION_SECONDS = 5
+
+private const val SECONDS_PER_MINUTE = 60
+
+private fun Int.roundUpToMinutes(): Int =
+    if (this <= 0) 0 else (this + SECONDS_PER_MINUTE - 1) / SECONDS_PER_MINUTE

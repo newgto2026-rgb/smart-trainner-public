@@ -181,6 +181,8 @@ class RoutineViewModel @Inject constructor(
             cycleNumber = data.routineProgress.cycleNumber,
             completedIds = completedIds
         )
+        val normalizedRecommendationForm = control.recommendationForm.normalizedFor(data.templates)
+        val routineFilterAvailability = normalizedRecommendationForm.availableFilterOptions(data.templates)
         val latestCompletion = data.routineProgress.lastCompletedDayIndex
             ?.let { data.plan.days.getOrNull(it) }
             ?.let { completedDay ->
@@ -194,7 +196,7 @@ class RoutineViewModel @Inject constructor(
                 )
             }
         val recommendation = recommendRoutine(
-            input = control.recommendationForm.toInput(),
+            input = normalizedRecommendationForm.toInput(),
             templates = data.templates
         )
         val previewTemplateId = control.routineDialogState.previewTemplateId
@@ -208,7 +210,8 @@ class RoutineViewModel @Inject constructor(
             nextRoutineDay = nextRoutineDay,
             nextRoutineDayUi = nextDayUi,
             latestRoutineDayCompletion = latestCompletion,
-            routineRecommendationInput = control.recommendationForm,
+            routineRecommendationInput = normalizedRecommendationForm,
+            routineFilterAvailability = routineFilterAvailability,
             recommendedTemplateId = recommendation.primaryTemplateId,
             alternativeTemplateIds = recommendation.alternativeTemplateIds,
             routinePreviewTemplateId = previewTemplateId,
@@ -545,19 +548,19 @@ class RoutineViewModel @Inject constructor(
     }
 
     fun updateRoutineDaysPerWeek(daysPerWeek: Int) {
-        recommendationForm.update { it.copy(daysPerWeek = daysPerWeek) }
+        updateRecommendationForm { it.copy(daysPerWeek = daysPerWeek) }
     }
 
     fun updateRoutineSessionMinutes(sessionMinutes: Int) {
-        recommendationForm.update { it.copy(sessionMinutes = sessionMinutes) }
+        updateRecommendationForm { it.copy(sessionMinutes = sessionMinutes) }
     }
 
     fun updateRoutineExperience(experience: TrainingExperience) {
-        recommendationForm.update { it.copy(experience = experience) }
+        updateRecommendationForm { it.copy(experience = experience) }
     }
 
     fun updateRoutineFeeling(feeling: RoutineFeeling) {
-        recommendationForm.update { it.copy(feeling = feeling) }
+        updateRecommendationForm { it.copy(feeling = feeling) }
     }
 
     fun requestCompleteCurrentRoutineDay(
@@ -721,6 +724,13 @@ class RoutineViewModel @Inject constructor(
             .atZone(clock.zone)
             .toInstant()
         return Duration.between(clock.instant(), nextWeekStart).toMillis().coerceAtLeast(1L)
+    }
+
+    private fun updateRecommendationForm(
+        transform: (RoutineRecommendationFormState) -> RoutineRecommendationFormState
+    ) {
+        val templates = uiState.value.templates
+        recommendationForm.update { transform(it).normalizedFor(templates) }
     }
 
     private fun activeTemplate(state: RoutineUiState): PlanTemplate? =

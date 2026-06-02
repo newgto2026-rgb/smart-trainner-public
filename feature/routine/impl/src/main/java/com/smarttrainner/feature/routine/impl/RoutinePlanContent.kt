@@ -324,6 +324,16 @@ private fun PlannedExercise.trainingMetricBadges(
             contentColor = SmartTrainnerColors.Ink
         )
     )
+    if (estimatedMinutes > 0) {
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.routine_estimated_duration, estimatedMinutes),
+                icon = Icons.Default.Timer,
+                containerColor = SmartTrainnerColors.AmberSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+    }
 }
 
 @Composable

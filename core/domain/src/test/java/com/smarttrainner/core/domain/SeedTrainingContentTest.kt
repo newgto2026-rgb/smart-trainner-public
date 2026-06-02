@@ -1,12 +1,16 @@
 package com.smarttrainner.core.domain
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.MuscleGroup
+import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlanTemplateDay
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.estimatedSessionMinutes
+import com.smarttrainner.core.model.estimatedTotalSeconds
 import org.junit.Test
 
 class SeedTrainingContentTest {
@@ -36,6 +40,35 @@ class SeedTrainingContentTest {
         SeedTrainingContent.exercises.forEach { exercise ->
             assertThat(exercise.imageKey).isEqualTo(exercise.id.value)
         }
+    }
+
+    @Test
+    fun exerciseCatalogStoresRepDurationForRoutineTimeEstimates() {
+        val exercisesById = SeedTrainingContent.exercises.associateBy { it.id }
+
+        SeedTrainingContent.exercises
+            .filter { it.defaultRepRange != null }
+            .forEach { exercise ->
+                assertThat(exercise.defaultRepDurationSeconds).isAtLeast(3)
+                assertThat(exercise.defaultRepDurationSeconds).isAtMost(8)
+            }
+
+        SeedTrainingContent.templates.forEach { template ->
+            template.days.forEach { day ->
+                day.exercises.forEach { templateExercise ->
+                    val exercise = requireNotNull(exercisesById[templateExercise.exerciseId])
+                    assertThat(templateExercise.repDurationSeconds).isEqualTo(exercise.defaultRepDurationSeconds)
+                }
+            }
+        }
+
+        val legPress = exercisesById.getValue(com.smarttrainner.core.model.ExerciseId("leg_press"))
+        val templateExercise = SeedTrainingContent.templates
+            .flatMap { it.days }
+            .flatMap { it.exercises }
+            .first { it.exerciseId == legPress.id }
+
+        assertThat(templateExercise.estimatedTotalSeconds).isEqualTo(450)
     }
 
     @Test
@@ -188,8 +221,38 @@ class SeedTrainingContentTest {
         assertThat(fortyFive.sessionMinutes).isEqualTo(45)
         assertThat(sixty.sessionMinutes).isEqualTo(60)
         assertThat(thirty.days.map { it.exercises.size }.toSet()).containsExactly(4)
-        assertThat(fortyFive.days.map { it.exercises.size }.toSet()).containsExactly(6)
-        assertThat(sixty.days.map { it.exercises.size }.toSet()).containsExactly(7)
+        assertThat(fortyFive.days.minOf { it.exercises.size }).isAtLeast(6)
+        assertThat(fortyFive.days.maxOf { it.exercises.size }).isAtMost(7)
+        assertThat(sixty.days.minOf { it.exercises.size }).isAtLeast(7)
+    }
+
+    @Test
+    fun routineTemplatesStayWithinRecommendedSessionTolerance() {
+        val templatesOutsideTolerance = SeedTrainingContent.templates.filterNot {
+            it.isWithinSessionTolerance()
+        }
+
+        assertThat(
+            templatesOutsideTolerance.map {
+                "${it.id}: ${it.estimatedSessionMinutes}/${it.sessionMinutes}"
+            }
+        ).isEmpty()
+    }
+
+    @Test
+    fun generatedRoutineCatalogCoversSafeDynamicRecommendationOptions() {
+        val templates = SeedTrainingContent.templates
+
+        assertThat(templates.hasOption(TrainingExperience.BEGINNER, daysPerWeek = 5, sessionMinutes = 45))
+            .isTrue()
+        assertThat(templates.hasOption(TrainingExperience.BEGINNER, daysPerWeek = 5, sessionMinutes = 60))
+            .isFalse()
+        assertThat(templates.hasOption(TrainingExperience.INTERMEDIATE, daysPerWeek = 2, sessionMinutes = 30))
+            .isFalse()
+        assertThat(templates.hasOption(TrainingExperience.INTERMEDIATE, daysPerWeek = 2, sessionMinutes = 45))
+            .isTrue()
+        assertThat(templates.hasOption(TrainingExperience.ADVANCED, daysPerWeek = 5, sessionMinutes = 60))
+            .isTrue()
     }
 
     @Test
@@ -255,9 +318,22 @@ class SeedTrainingContentTest {
                 assertThat(groups).containsNoneIn(MuscleGroup.entries.filterNot { it in allowedGroups })
                 if (day.isCombinedFocusDay()) {
                     day.secondaryFocuses.forEach { focus ->
-                        assertThat(groups.count { it in focus.allowedMuscleGroups() }).isAtLeast(1)
+                        assertWithMessage("${template.id} ${day.title} missing $focus")
+                            .that(groups.count { it in focus.allowedMuscleGroups() })
+                            .isAtLeast(1)
                     }
-                    assertThat(primaryCount.toDouble() / groups.size).isAtLeast(0.50)
+                    assertWithMessage("${template.id} ${day.title} primary ratio")
+                        .that(primaryCount.toDouble() / groups.size)
+                        .isAtLeast(0.50)
+                } else if (day.secondaryFocuses.isNotEmpty()) {
+                    day.secondaryFocuses.forEach { focus ->
+                        assertWithMessage("${template.id} ${day.title} missing $focus")
+                            .that(groups.count { it in focus.allowedMuscleGroups() })
+                            .isAtLeast(1)
+                    }
+                    assertWithMessage("${template.id} ${day.title} primary ratio")
+                        .that(primaryCount.toDouble() / groups.size)
+                        .isAtLeast(0.50)
                 } else {
                     assertThat(primaryCount).isEqualTo(groups.size)
                 }
@@ -277,15 +353,38 @@ class SeedTrainingContentTest {
     }
 
     @Test
-    fun beginnerTemplatesDoNotIncludeHighFrequencyBodyPartSplit() {
-        val riskyBeginnerTemplates = SeedTrainingContent.templates.filter {
+    fun beginnerHighFrequencyBodyPartSplitsStayInSafeTimeOptions() {
+        val beginnerHighFrequencyBodyPartTemplates = SeedTrainingContent.templates.filter {
             it.recommendedExperience == TrainingExperience.BEGINNER &&
                 it.structure == RoutineStructure.BODY_PART_SPLIT &&
                 it.daysPerWeek >= 5
         }
 
-        assertThat(riskyBeginnerTemplates).isEmpty()
+        assertThat(beginnerHighFrequencyBodyPartTemplates).isNotEmpty()
+        assertThat(beginnerHighFrequencyBodyPartTemplates.map { it.sessionMinutes }.toSet())
+            .containsExactly(30, 45)
+        beginnerHighFrequencyBodyPartTemplates.forEach { template ->
+            assertThat(template.isWithinSessionTolerance()).isTrue()
+            template.days.forEach { day ->
+                assertThat(day.exercises.size).isAtLeast(3)
+                assertThat(day.minRecoveryHours).isAtLeast(24)
+            }
+        }
     }
+
+    private fun List<PlanTemplate>.hasOption(
+        experience: TrainingExperience,
+        daysPerWeek: Int,
+        sessionMinutes: Int
+    ): Boolean = any {
+        it.recommendedExperience == experience &&
+            it.daysPerWeek == daysPerWeek &&
+            it.sessionMinutes == sessionMinutes &&
+            it.isWithinSessionTolerance()
+    }
+
+    private fun PlanTemplate.isWithinSessionTolerance(): Boolean =
+        kotlin.math.abs(estimatedSessionMinutes - sessionMinutes) <= SESSION_TOLERANCE_MINUTES
 
     private fun PlanTemplateDay.isCombinedFocusDay(): Boolean = title.contains("+")
 
@@ -324,4 +423,8 @@ class SeedTrainingContentTest {
 
     private fun RoutineFocus.isMovementDirectionFocus(): Boolean =
         this == RoutineFocus.PUSH || this == RoutineFocus.PULL
+
+    private companion object {
+        const val SESSION_TOLERANCE_MINUTES = 10
+    }
 }

@@ -7,6 +7,11 @@ import com.smarttrainner.core.database.CustomRoutineEntity
 import com.smarttrainner.core.database.CustomRoutineExerciseEntity
 import com.smarttrainner.core.database.CustomRoutineWithDays
 import com.smarttrainner.core.model.CustomRoutineDayInput
+import com.smarttrainner.core.model.DifficultyLevel
+import com.smarttrainner.core.model.EquipmentType
+import com.smarttrainner.core.model.Exercise
+import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.RoutineFocus
 import org.junit.Test
 
@@ -53,9 +58,26 @@ class CustomRoutineMappersTest {
         assertThat(entity.title).isEmpty()
     }
 
+    @Test
+    fun customRoutineSessionMinutesUsesRepDurationAndRestFormula() {
+        val template = customRoutine(
+            primaryFocus = "BACK",
+            focus = "BACK",
+            sets = 5,
+            restSeconds = 180
+        ).toPlanTemplate(
+            exercises = listOf(exercise("back_pull", repDurationSeconds = 6))
+        )
+
+        assertThat(template.days.single().exercises.single().repDurationSeconds).isEqualTo(6)
+        assertThat(template.sessionMinutes).isEqualTo(21)
+    }
+
     private fun customRoutine(
         primaryFocus: String,
-        focus: String
+        focus: String,
+        sets: Int = 3,
+        restSeconds: Int = 90
     ) = CustomRoutineWithDays(
         routine = CustomRoutineEntity(
             id = "custom-1",
@@ -83,15 +105,32 @@ class CustomRoutineMappersTest {
                         dayId = "custom-1-day-1",
                         slotIndex = 0,
                         exerciseId = "back_pull",
-                        sets = 3,
+                        sets = sets,
                         repRangeStart = 8,
                         repRangeEnd = 12,
                         durationMinutes = null,
-                        restSeconds = 90,
+                        restSeconds = restSeconds,
                         note = ""
                     )
                 )
             )
         )
+    )
+
+    private fun exercise(id: String, repDurationSeconds: Int) = Exercise(
+        id = ExerciseId(id),
+        name = id,
+        muscleGroup = MuscleGroup.BACK,
+        equipment = EquipmentType.MACHINE,
+        difficulty = DifficultyLevel.INTERMEDIATE,
+        imageKey = id,
+        summary = "",
+        instructions = emptyList(),
+        safetyCues = emptyList(),
+        defaultSets = 3,
+        defaultRepRange = 8..12,
+        defaultDurationMinutes = null,
+        restSeconds = 90,
+        defaultRepDurationSeconds = repDurationSeconds
     )
 }

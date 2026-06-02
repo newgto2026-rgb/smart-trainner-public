@@ -1,5 +1,6 @@
 <resources>
     <string name="routine_actual_duration">%1$s min</string>
+    <string name="routine_estimated_duration">Est. %1$d min</string>
     <string name="routine_actual_reps">Reps %1$s</string>
     <string name="routine_actual_rest">Rest %1$s s</string>
     <string name="routine_actual_weight">%1$s kg</string>
@@ -80,13 +81,15 @@
     <string name="routine_error_complete_day">Could not complete this routine day.</string>
     <string name="routine_experience_beginner">Almost new</string>
     <string name="routine_experience_intermediate">Consistent</string>
-    <string name="routine_feeling_app_recommended">Let app choose</string>
-    <string name="routine_feeling_balanced_full_body">Full-body balance</string>
-    <string name="routine_feeling_focused_body_part">Focused body part</string>
+    <string name="routine_experience_advanced">Advanced</string>
+    <string name="routine_feeling_app_recommended">Suggested</string>
+    <string name="routine_feeling_balanced_full_body">Full-body plan</string>
+    <string name="routine_feeling_focused_body_part">Body-part focus</string>
     <string name="routine_find_recommended_routine">Find recommended routine</string>
     <string name="routine_incomplete">Planned</string>
     <string name="routine_instruction">How to Move</string>
     <string name="routine_latest_record">Latest: %1$s</string>
+    <string name="routine_level_advanced">Advanced level</string>
     <string name="routine_level_beginner">Beginner level</string>
     <string name="routine_level_intermediate">Intermediate level</string>
     <string name="routine_level_intro">Intro</string>
@@ -125,7 +128,7 @@
     <string name="routine_routine_day_subtitle">Day %1$d · %2$s · about %3$d min</string>
     <string name="routine_routine_experience_question">Experience</string>
     <string name="routine_routine_examples">Today workout plan</string>
-    <string name="routine_routine_feeling_question">Workout feel</string>
+    <string name="routine_routine_feeling_question">Routine direction</string>
     <string name="routine_routine_flow">Cycle: %1$s</string>
     <string name="routine_routine_flow_label">Cycle</string>
     <string name="routine_routine_flow_separator"> -&gt; </string>

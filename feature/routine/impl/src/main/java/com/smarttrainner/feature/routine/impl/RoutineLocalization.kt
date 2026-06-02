@@ -323,6 +323,7 @@ internal fun TrainingExperience.localizedLabel(): String = stringResource(
     when (this) {
         TrainingExperience.BEGINNER -> R.string.routine_experience_beginner
         TrainingExperience.INTERMEDIATE -> R.string.routine_experience_intermediate
+        TrainingExperience.ADVANCED -> R.string.routine_experience_advanced
     }
 )
 
@@ -461,6 +462,7 @@ internal fun PlanLevel.localizedLabel(): String = stringResource(
         PlanLevel.INTRO -> R.string.routine_level_intro
         PlanLevel.BEGINNER -> R.string.routine_level_beginner
         PlanLevel.INTERMEDIATE -> R.string.routine_level_intermediate
+        PlanLevel.ADVANCED -> R.string.routine_level_advanced
     }
 )
 

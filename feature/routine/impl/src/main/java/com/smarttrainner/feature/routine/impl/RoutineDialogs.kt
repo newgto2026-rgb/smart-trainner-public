@@ -65,6 +65,7 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.estimatedSessionMinutes
 import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
@@ -75,6 +76,7 @@ import com.smarttrainner.core.ui.SmartTrainnerProgressBar
 @Composable
 internal fun RoutineRecommendationControls(
     form: RoutineRecommendationFormState,
+    availability: RoutineRecommendationFilterAvailability,
     onDaysPerWeekChanged: (Int) -> Unit,
     onSessionMinutesChanged: (Int) -> Unit,
     onExperienceChanged: (TrainingExperience) -> Unit,
@@ -84,7 +86,11 @@ internal fun RoutineRecommendationControls(
         RoutineOptionRow(
             label = stringResource(R.string.routine_routine_days_question),
             options = listOf(2, 3, 4, 5).map {
-                it to stringResource(R.string.routine_days_per_week_option, it)
+                RoutineFilterOption(
+                    value = it,
+                    label = stringResource(R.string.routine_days_per_week_option, it),
+                    enabled = it in availability.daysPerWeek
+                )
             },
             selected = form.daysPerWeek,
             onSelected = onDaysPerWeekChanged
@@ -92,20 +98,40 @@ internal fun RoutineRecommendationControls(
         RoutineOptionRow(
             label = stringResource(R.string.routine_routine_minutes_question),
             options = listOf(30, 45, 60).map {
-                it to stringResource(R.string.routine_minutes_option, it)
+                RoutineFilterOption(
+                    value = it,
+                    label = stringResource(R.string.routine_minutes_option, it),
+                    enabled = it in availability.sessionMinutes
+                )
             },
             selected = form.sessionMinutes,
             onSelected = onSessionMinutesChanged
         )
         RoutineOptionRow(
             label = stringResource(R.string.routine_routine_experience_question),
-            options = TrainingExperience.entries.map { it to it.localizedLabel() },
+            options = TrainingExperience.entries.map {
+                RoutineFilterOption(
+                    value = it,
+                    label = it.localizedLabel(),
+                    enabled = it in availability.experiences
+                )
+            },
             selected = form.experience,
             onSelected = onExperienceChanged
         )
         RoutineOptionRow(
             label = stringResource(R.string.routine_routine_feeling_question),
-            options = RoutineFeeling.entries.map { it to it.localizedLabel() },
+            options = listOf(
+                RoutineFeeling.APP_RECOMMENDED,
+                RoutineFeeling.BALANCED_FULL_BODY,
+                RoutineFeeling.FOCUSED_BODY_PART
+            ).map {
+                RoutineFilterOption(
+                    value = it,
+                    label = it.localizedLabel(),
+                    enabled = it in availability.feelings
+                )
+            },
             selected = form.feeling,
             onSelected = onFeelingChanged
         )
@@ -115,7 +141,7 @@ internal fun RoutineRecommendationControls(
 @Composable
 internal fun <T> RoutineOptionRow(
     label: String,
-    options: List<Pair<T, String>>,
+    options: List<RoutineFilterOption<T>>,
     selected: T,
     onSelected: (T) -> Unit
 ) {
@@ -127,11 +153,12 @@ internal fun <T> RoutineOptionRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    rowOptions.forEach { (option, optionLabel) ->
+                    rowOptions.forEach { option ->
                         RoutineFilterChip(
-                            selected = option == selected,
-                            label = optionLabel,
-                            onClick = { onSelected(option) },
+                            selected = option.value == selected,
+                            label = option.label,
+                            enabled = option.enabled,
+                            onClick = { onSelected(option.value) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -148,12 +175,14 @@ internal fun <T> RoutineOptionRow(
 internal fun RoutineFilterChip(
     selected: Boolean,
     label: String,
+    enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     FilterChip(
         selected = selected,
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier,
         label = { Text(label) },
         colors = FilterChipDefaults.filterChipColors(
@@ -291,6 +320,7 @@ internal fun RoutineLibraryDialog(
 @Composable
 internal fun RoutineSettingsDialog(
     form: RoutineRecommendationFormState,
+    availability: RoutineRecommendationFilterAvailability,
     onDaysPerWeekChanged: (Int) -> Unit,
     onSessionMinutesChanged: (Int) -> Unit,
     onExperienceChanged: (TrainingExperience) -> Unit,
@@ -334,6 +364,7 @@ internal fun RoutineSettingsDialog(
                     )
                     RoutineRecommendationControls(
                         form = form,
+                        availability = availability,
                         onDaysPerWeekChanged = onDaysPerWeekChanged,
                         onSessionMinutesChanged = onSessionMinutesChanged,
                         onExperienceChanged = onExperienceChanged,
@@ -906,6 +937,12 @@ internal fun PlanTemplateCard(
 
 @Composable
 internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
+    val durationBadge = SmartTrainnerBadgeSpec(
+        text = stringResource(R.string.routine_minutes_option, template.estimatedSessionMinutes),
+        icon = Icons.Default.Timer,
+        containerColor = SmartTrainnerColors.AmberSoft,
+        contentColor = SmartTrainnerColors.Ink
+    )
     val badges = if (template.source == RoutineSource.CUSTOM) {
         listOf(
             SmartTrainnerBadgeSpec(
@@ -913,7 +950,8 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
                 icon = Icons.Default.DateRange,
                 containerColor = SmartTrainnerColors.GreenSoft,
                 contentColor = SmartTrainnerColors.Ink
-            )
+            ),
+            durationBadge
         )
     } else {
         listOf(
@@ -928,12 +966,7 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
                 containerColor = SmartTrainnerColors.GreenSoft,
                 contentColor = SmartTrainnerColors.Ink
             ),
-            SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.routine_minutes_option, template.sessionMinutes),
-                icon = Icons.Default.Timer,
-                containerColor = SmartTrainnerColors.AmberSoft,
-                contentColor = SmartTrainnerColors.Ink
-            )
+            durationBadge
         )
     }
     SmartTrainnerBadgeRow(
