@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
@@ -25,10 +27,12 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,6 +56,8 @@ data class SmartTrainnerScreenChrome(
     val subtitle: String
 )
 
+val LocalSmartTrainnerHeaderAction = compositionLocalOf<(@Composable () -> Unit)?> { null }
+
 @Composable
 fun SmartTrainnerScreenScaffold(
     chrome: SmartTrainnerScreenChrome,
@@ -68,7 +74,7 @@ fun SmartTrainnerScreenScaffold(
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing),
             contentPadding = PaddingValues(start = 18.dp, top = 14.dp, end = 18.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item { SmartTrainnerScreenHeader(chrome = chrome) }
             content()
@@ -78,6 +84,7 @@ fun SmartTrainnerScreenScaffold(
 
 @Composable
 private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
+    val headerAction = LocalSmartTrainnerHeaderAction.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -87,24 +94,34 @@ private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
         Column(
             modifier = Modifier
                 .background(SmartTrainnerGradients.brandLight(), RoundedCornerShape(8.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = chrome.title,
-                    modifier = Modifier.testTag("training_app_title"),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Black,
-                    color = SmartTrainnerColors.Ink
-                )
-                Text(
-                    text = chrome.subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SmartTrainnerColors.Muted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = chrome.title,
+                        modifier = Modifier.testTag("training_app_title"),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = SmartTrainnerColors.Ink
+                    )
+                    Text(
+                        text = chrome.subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SmartTrainnerColors.Muted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                headerAction?.invoke()
             }
         }
     }
@@ -136,6 +153,80 @@ fun SmartTrainnerEmptyState(
         contentAlignment = Alignment.Center
     ) {
         Text(text = text, color = SmartTrainnerColors.Muted)
+    }
+}
+
+@Composable
+fun SmartTrainnerExercisePickerCard(
+    title: String,
+    subtitle: String,
+    leadingIcon: ImageVector,
+    secondaryActionLabel: String,
+    secondaryActionIcon: ImageVector,
+    onClick: () -> Unit,
+    onSecondaryActionClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    clickModifier: Modifier = Modifier,
+    secondaryActionModifier: Modifier = Modifier,
+    leadingIconTint: Color = SmartTrainnerColors.Coral
+) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Surface(
+            onClick = onClick,
+            modifier = clickModifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            color = SmartTrainnerColors.Surface,
+            border = BorderStroke(1.dp, SmartTrainnerColors.Line)
+        ) {
+            Row(
+                modifier = Modifier
+                    .heightIn(min = 56.dp)
+                    .padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = leadingIconTint
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = subtitle,
+                        color = SmartTrainnerColors.Muted,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                OutlinedButton(
+                    onClick = onSecondaryActionClick,
+                    modifier = secondaryActionModifier,
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = secondaryActionIcon,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.size(4.dp))
+                    Text(
+                        text = secondaryActionLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -192,7 +283,7 @@ fun SmartTrainnerMetricTile(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
-        color = SmartTrainnerColors.SurfaceRaised.copy(alpha = 0.84f),
+        color = SmartTrainnerColors.SurfaceRaised,
         border = BorderStroke(1.dp, SmartTrainnerColors.Line)
     ) {
         Column(modifier = Modifier.padding(10.dp)) {
@@ -210,8 +301,8 @@ fun SmartTrainnerMetricTile(
 data class SmartTrainnerBadgeSpec(
     val text: String,
     val icon: ImageVector? = null,
-    val containerColor: Color = SmartTrainnerColors.SteelSoft,
-    val contentColor: Color = SmartTrainnerColors.Ink,
+    val containerColor: Color? = null,
+    val contentColor: Color? = null,
     val borderColor: Color? = null,
     val testTag: String? = null
 )
@@ -227,12 +318,12 @@ fun SmartTrainnerBadge(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(6.dp),
         color = containerColor,
         border = borderColor?.let { BorderStroke(1.dp, it) }
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -275,8 +366,8 @@ fun SmartTrainnerBadgeRow(
                         SmartTrainnerBadge(
                             text = badge.text,
                             icon = badge.icon,
-                            containerColor = badge.containerColor,
-                            contentColor = badge.contentColor,
+                            containerColor = badge.containerColor ?: SmartTrainnerColors.SteelSoft,
+                            contentColor = badge.contentColor ?: SmartTrainnerColors.Ink,
                             borderColor = badge.borderColor,
                             modifier = badge.testTag?.let { Modifier.testTag(it) } ?: Modifier
                         )
@@ -295,7 +386,7 @@ fun SmartTrainnerMetricCluster(
     modifier: Modifier = Modifier,
     labelContainerColor: Color = SmartTrainnerColors.CoralSoft,
     labelContentColor: Color = SmartTrainnerColors.Ink,
-    metricAlpha: Float = 0.56f
+    metricAlpha: Float = 0.78f
 ) {
     BoxWithConstraints(modifier = modifier) {
         val rowLimit = if (maxWidth < 220.dp) {
@@ -317,11 +408,13 @@ fun SmartTrainnerMetricCluster(
                         val alpha = if (isFirstToken) 1f else metricAlpha
                         val weight = if (isFirstToken) FontWeight.Bold else FontWeight.SemiBold
                         val horizontalPadding = if (isFirstToken) 7.dp else 6.dp
+                        val containerColor = metric.containerColor ?: SmartTrainnerColors.SteelSoft
+                        val contentColor = metric.contentColor ?: SmartTrainnerColors.Ink
                         SmartTrainnerMetricToken(
                             text = metric.text,
                             icon = metric.icon,
-                            containerColor = metric.containerColor.copy(alpha = alpha),
-                            contentColor = metric.contentColor,
+                            containerColor = containerColor.copy(alpha = alpha),
+                            contentColor = contentColor,
                             borderColor = metric.borderColor,
                             fontWeight = weight,
                             horizontalPadding = horizontalPadding,

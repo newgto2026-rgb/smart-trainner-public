@@ -3,6 +3,8 @@ package com.smarttrainner.feature.routine.domain
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlanTemplate
+import com.smarttrainner.core.model.RoutineProgress
+import com.smarttrainner.core.model.WorkoutDayPlan
 import java.time.Instant
 import javax.inject.Inject
 
@@ -118,3 +120,39 @@ class CompleteRoutineDayUseCase @Inject constructor(
         )
     }
 }
+
+class CancelLatestRoutineDayCompletionUseCase @Inject constructor(
+    private val repository: RoutineProgressCommandRepository
+) {
+    suspend operator fun invoke(
+        template: PlanTemplate,
+        progress: RoutineProgress,
+        completedDay: WorkoutDayPlan
+    ): Result<Unit> {
+        val completedDayIndex = progress.lastCompletedDayIndex
+            ?: return Result.failure(IllegalStateException("No completed routine day can be canceled."))
+        val completedCycleNumber = progress.lastCompletedCycleNumber
+            ?: progress.cycleNumber
+        val expectedDayNumber = completedDayIndex + 1
+        require(completedDay.dayNumber == expectedDayNumber) {
+            "Completed routine day does not match the latest completion."
+        }
+        return repository.cancelLatestRoutineDayCompletion(
+            restoredDayIndex = completedDayIndex,
+            restoredCycleNumber = completedCycleNumber,
+            restoredCycleStartedAt = progress.lastCompletedPreviousCycleStartedAt ?: progress.cycleStartedAt,
+            plannedExerciseIds = completedDay.exercises.map { it.id }.toSet(),
+            additionalExerciseIdPrefix = routineAdditionalExerciseIdPrefix(
+                templateId = template.id,
+                cycleNumber = completedCycleNumber,
+                dayNumber = completedDay.dayNumber
+            )
+        )
+    }
+}
+
+fun routineAdditionalExerciseIdPrefix(
+    templateId: String,
+    cycleNumber: Int,
+    dayNumber: Int
+): String = "routine-added|$templateId|cycle$cycleNumber|day$dayNumber|"

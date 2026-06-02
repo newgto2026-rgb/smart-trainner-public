@@ -254,8 +254,7 @@ class TrainingUiTest {
             composeRule.onAllNodesWithTag("training_next_routine_day_1").fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.onNodeWithTag("training_next_routine_day_1").assertIsDisplayed()
-        scrollToNodeWithTag("training_complete_routine_day")
-        composeRule.onNodeWithTag("training_complete_routine_day").assertIsDisplayed().performClick()
+        completeRoutineDayWithConfirmation()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_next_routine_day_2").fetchSemanticsNodes().isNotEmpty()
         }
@@ -386,8 +385,7 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_next_routine_focus_CHEST").assertIsDisplayed()
         composeRule.onAllNodesWithTag("training_next_routine_time_estimate").assertCountEquals(0)
         composeRule.onNodeWithTag("training_next_routine_badge_duration").assertIsDisplayed()
-        scrollToNodeWithTag("training_complete_routine_day")
-        composeRule.onNodeWithTag("training_complete_routine_day").assertIsDisplayed().performClick()
+        completeRoutineDayWithConfirmation()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_next_routine_day_2").fetchSemanticsNodes().isNotEmpty()
         }
@@ -432,6 +430,18 @@ class TrainingUiTest {
         composeRule.onNodeWithTag(optionTag).performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_custom_focus_menu").fetchSemanticsNodes().isEmpty()
+        }
+    }
+
+    private fun completeRoutineDayWithConfirmation() {
+        scrollToNodeWithTag("training_complete_routine_day")
+        composeRule.onNodeWithTag("training_complete_routine_day").assertIsDisplayed().performClick()
+        waitForNodeWithTag("training_complete_day_confirmation_dialog")
+        composeRule.onNodeWithTag("training_confirm_complete_routine_day").assertIsDisplayed().performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithTag("training_complete_day_confirmation_dialog")
+                .fetchSemanticsNodes()
+                .isEmpty()
         }
     }
 

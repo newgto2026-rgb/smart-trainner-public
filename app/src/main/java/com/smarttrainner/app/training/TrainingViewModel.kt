@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.update
 class TrainingViewModel @Inject constructor() : ViewModel() {
     private val flowState = MutableStateFlow(TrainingFlowState())
 
-    val uiState = flowState.map { it.uiState }.stateIn(
+    internal val uiState = flowState.map { it.uiState }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TrainingUiState()
@@ -48,6 +48,18 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
 
     fun handleRecordSaved(nextPlannedExercise: PlannedExercise?) {
         flowState.update { it.recordSaved(nextPlannedExercise) }
+    }
+
+    fun skipCurrentExercise(nextPlannedExercise: PlannedExercise?) {
+        flowState.update { it.skipCurrentExercise(nextPlannedExercise) }
+    }
+
+    fun replaceRecordingExercise(exercise: PlannedExercise) {
+        flowState.update { it.replaceRecordingExercise(exercise) }
+    }
+
+    fun recordAdditionalExercise(exercise: PlannedExercise) {
+        flowState.update { it.recordAdditionalExercise(exercise) }
     }
 
     fun clearRecordingFlow() {

@@ -9,6 +9,7 @@ import com.smarttrainner.core.model.estimatedSessionMinutes
 internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel(
     template: PlanTemplate?,
     dayIndex: Int,
+    cycleNumber: Int,
     completedIds: Set<PlannedExerciseId>
 ): NextRoutineDayUiModel {
     val nextDay = template?.days?.takeIf { it.isNotEmpty() }?.let { days ->
@@ -19,6 +20,7 @@ internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel
         routineTemplate = template,
         primaryFocus = primaryFocus,
         secondaryFocuses = secondaryFocuses,
+        cycleNumber = cycleNumber,
         dayNumber = dayNumber,
         focus = focus,
         sessionMinutes = estimatedSessionMinutes.takeIf { it > 0 } ?: template?.sessionMinutes ?: 45,

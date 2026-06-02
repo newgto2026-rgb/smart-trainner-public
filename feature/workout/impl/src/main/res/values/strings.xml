@@ -7,7 +7,8 @@
     <string name="workout_duration">Minutes</string>
     <string name="workout_rest_seconds">Rest (s)</string>
     <string name="workout_memo">Memo</string>
-    <string name="workout_save_record">Save Workout</string>
+    <string name="workout_complete_record">Complete</string>
+    <string name="workout_complete_and_next">Complete &amp; Next</string>
     <string name="workout_set_number">Set %1$d</string>
     <string name="workout_error_select">Choose an exercise to record first.</string>
     <string name="workout_error_sets">Record between 1 and 12 sets.</string>
@@ -20,7 +21,10 @@
     <string name="workout_saved">Workout saved.</string>
     <string name="workout_close_record">Close workout log</string>
     <string name="workout_record_dialog_title">Log %1$s</string>
-    <string name="workout_show_exercise_method">View Exercise Method</string>
+    <string name="workout_add_extra_exercise_short">Add</string>
+    <string name="workout_skip_now_short">Skip</string>
+    <string name="workout_show_exercise_method_short">Method</string>
+    <string name="workout_substitute_exercise_short">Swap</string>
     <string name="workout_actual_reps">Reps %1$s</string>
     <string name="workout_actual_weight">%1$s kg</string>
     <string name="workout_actual_duration">%1$s min</string>

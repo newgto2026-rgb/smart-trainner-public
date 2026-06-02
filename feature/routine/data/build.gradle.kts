@@ -28,9 +28,11 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:database"))
     implementation(project(":core:datastore"))
+    implementation(project(":core:network"))
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.javax.inject)
+    implementation(libs.retrofit)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     testImplementation(libs.junit)

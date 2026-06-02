@@ -63,6 +63,7 @@ internal data class NextRoutineDayUiModel(
     val routineTemplate: PlanTemplate?,
     val primaryFocus: RoutineFocus?,
     val secondaryFocuses: List<RoutineFocus>,
+    val cycleNumber: Int,
     val dayNumber: Int,
     val focus: String,
     val sessionMinutes: Int,
@@ -74,6 +75,40 @@ internal data class NextRoutineDayUiModel(
     val minRecoveryHours: Int
 )
 
+internal data class LatestRoutineDayCompletionUiModel(
+    val day: WorkoutDayPlan,
+    val routineTemplate: PlanTemplate?,
+    val cycleNumber: Int,
+    val dayNumber: Int,
+    val completedAtText: String?
+)
+
+internal enum class RoutineCompletionConfirmReason {
+    MANUAL,
+    SESSION_ENDED_WITH_SKIPS
+}
+
+internal data class RoutineCompletionConfirmState(
+    val reason: RoutineCompletionConfirmReason,
+    val skippedExerciseIds: Set<PlannedExerciseId>,
+    val unrecordedExercises: List<PlannedExercise>
+)
+
+internal enum class RoutineExercisePickerMode {
+    SUBSTITUTE,
+    ADD
+}
+
+internal data class RoutineExercisePickerState(
+    val mode: RoutineExercisePickerMode,
+    val anchorExercise: PlannedExercise?
+)
+
+internal data class RoutineExercisePickResult(
+    val mode: RoutineExercisePickerMode,
+    val plannedExercise: PlannedExercise
+)
+
 internal data class RoutineUiState(
     val templates: List<PlanTemplate> = emptyList(),
     val selectedTemplateId: String = "",
@@ -82,6 +117,7 @@ internal data class RoutineUiState(
     val activeRoutineProgress: RoutineProgress? = null,
     val nextRoutineDay: WorkoutDayPlan? = null,
     val nextRoutineDayUi: NextRoutineDayUiModel? = null,
+    val latestRoutineDayCompletion: LatestRoutineDayCompletionUiModel? = null,
     val routineRecommendationInput: RoutineRecommendationFormState = RoutineRecommendationFormState(),
     val routineFilterAvailability: RoutineRecommendationFilterAvailability = RoutineRecommendationFilterAvailability(),
     val recommendedTemplateId: String? = null,
@@ -90,6 +126,9 @@ internal data class RoutineUiState(
     val showRoutineLibraryDialog: Boolean = false,
     val showRoutineSettingsDialog: Boolean = false,
     val showRoutineRecommendationsDialog: Boolean = false,
+    val routineCompletionConfirm: RoutineCompletionConfirmState? = null,
+    val routineExercisePicker: RoutineExercisePickerState? = null,
+    val showCancelLatestRoutineDayDialog: Boolean = false,
     val customRoutineBuilder: CustomRoutineBuilderState = CustomRoutineBuilderState(),
     val exercises: List<Exercise> = emptyList(),
     val logs: List<WorkoutLog> = emptyList(),
@@ -133,7 +172,19 @@ internal data class RoutineActions(
     val onCustomRoutineExerciseMovedDown: (Int) -> Unit = {},
     val onCustomRoutineSaved: (Boolean) -> Unit = {},
     val onCustomRoutineBuilderDismiss: () -> Unit = {},
+    val onRequestCompleteRoutineDay: (Set<PlannedExerciseId>, Set<PlannedExerciseId>) -> Unit = { _, _ -> },
+    val onConfirmCompleteRoutineDay: () -> Unit = {},
+    val onDismissCompleteRoutineDay: () -> Unit = {},
+    val onRequestCancelLatestRoutineDay: () -> Unit = {},
+    val onConfirmCancelLatestRoutineDay: () -> Unit = {},
+    val onDismissCancelLatestRoutineDay: () -> Unit = {},
+    val onRequestSubstituteExercise: (PlannedExercise) -> Unit = {},
+    val onRequestAdditionalExercise: (PlannedExercise?) -> Unit = {},
+    val onRoutineExercisePicked: (ExerciseId) -> Unit = {},
+    val onDismissRoutineExercisePicker: () -> Unit = {},
     val onWorkoutStarted: (PlannedExercise) -> Unit = {},
+    val onSubstituteExerciseSelected: (PlannedExercise) -> Unit = {},
+    val onAdditionalExerciseSelected: (PlannedExercise) -> Unit = {},
     val onCompleteRoutineDay: () -> Unit = {},
     val onExerciseMethodSelected: (ExerciseId) -> Unit = {},
     val onRecordSelected: (PlannedExercise) -> Unit = {}

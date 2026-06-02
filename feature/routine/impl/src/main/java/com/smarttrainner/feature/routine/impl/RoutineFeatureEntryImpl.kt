@@ -8,6 +8,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
+import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
@@ -57,8 +58,36 @@ class RoutineFeatureEntryImpl @Inject constructor(
                 onCustomRoutineExerciseMovedDown = viewModel::moveCustomRoutineExerciseDown,
                 onCustomRoutineSaved = viewModel::saveCustomRoutine,
                 onCustomRoutineBuilderDismiss = viewModel::dismissCustomRoutineBuilder,
+                onRequestCompleteRoutineDay = viewModel::requestCompleteCurrentRoutineDay,
+                onConfirmCompleteRoutineDay = {
+                    viewModel.confirmCompleteCurrentRoutineDay(callbacks.onRoutineDayCompleted)
+                },
+                onDismissCompleteRoutineDay = viewModel::dismissCompleteRoutineDayConfirmation,
+                onRequestCancelLatestRoutineDay = viewModel::requestCancelLatestRoutineDay,
+                onConfirmCancelLatestRoutineDay = {
+                    viewModel.confirmCancelLatestRoutineDay(callbacks.onRoutineDayCompleted)
+                },
+                onDismissCancelLatestRoutineDay = viewModel::dismissCancelLatestRoutineDay,
+                onRequestSubstituteExercise = viewModel::requestSubstituteExercise,
+                onRequestAdditionalExercise = viewModel::requestAdditionalExercise,
+                onRoutineExercisePicked = { exerciseId ->
+                    val result = viewModel.selectRoutineSessionExercise(exerciseId)
+                    if (result != null) {
+                        when (result.mode) {
+                            RoutineExercisePickerMode.SUBSTITUTE -> {
+                                callbacks.onSubstituteExerciseSelected(result.plannedExercise)
+                            }
+                            RoutineExercisePickerMode.ADD -> {
+                                callbacks.onAdditionalExerciseSelected(result.plannedExercise)
+                            }
+                        }
+                    }
+                },
+                onDismissRoutineExercisePicker = viewModel::dismissRoutineExercisePicker,
                 onWorkoutStarted = callbacks.onWorkoutStarted,
-                onCompleteRoutineDay = { viewModel.completeCurrentRoutineDay(callbacks.onRoutineDayCompleted) },
+                onSubstituteExerciseSelected = callbacks.onSubstituteExerciseSelected,
+                onAdditionalExerciseSelected = callbacks.onAdditionalExerciseSelected,
+                onCompleteRoutineDay = { viewModel.requestCompleteCurrentRoutineDay(emptySet(), emptySet()) },
                 onExerciseMethodSelected = callbacks.onExerciseMethodSelected,
                 onRecordSelected = callbacks.onRecordSelected
             )
@@ -149,6 +178,30 @@ class RoutineFeatureEntryImpl @Inject constructor(
                 onDismissRequest = actions.onRecommendationsDismiss
             )
         }
+        state.routineCompletionConfirm?.let { confirmation ->
+            RoutineCompleteDayConfirmationDialog(
+                confirmation = confirmation,
+                routineDay = state.nextRoutineDayUi,
+                onConfirm = actions.onConfirmCompleteRoutineDay,
+                onDismissRequest = actions.onDismissCompleteRoutineDay
+            )
+        }
+        state.routineExercisePicker?.let { picker ->
+            RoutineExercisePickerDialog(
+                picker = picker,
+                exercises = state.exercises,
+                onExerciseSelected = actions.onRoutineExercisePicked,
+                onExerciseDetailRequested = actions.onExerciseMethodSelected,
+                onDismissRequest = actions.onDismissRoutineExercisePicker
+            )
+        }
+        if (state.showCancelLatestRoutineDayDialog && state.latestRoutineDayCompletion != null) {
+            RoutineCancelLatestDayDialog(
+                completion = state.latestRoutineDayCompletion,
+                onConfirm = actions.onConfirmCancelLatestRoutineDay,
+                onDismissRequest = actions.onDismissCancelLatestRoutineDay
+            )
+        }
         if (state.customRoutineBuilder.visible) {
             CustomRoutineBuilderSheet(
                 builder = state.customRoutineBuilder,
@@ -178,8 +231,30 @@ internal class DefaultRoutineRouteState(
     val actions: RoutineActions,
     override val currentRoutineName: String
 ) : RoutineRouteState {
-    override fun nextPlannedExerciseAfterSaved(plannedExercise: PlannedExercise): PlannedExercise? =
-        state.nextPlannedExerciseAfterSaved(plannedExercise)
+    override fun nextPlannedExerciseAfterSaved(
+        plannedExercise: PlannedExercise,
+        skippedPlannedExerciseIds: Set<PlannedExerciseId>
+    ): PlannedExercise? = state.nextPlannedExerciseAfterSaved(plannedExercise, skippedPlannedExerciseIds)
+
+    override fun nextPlannedExerciseAfterSkipped(
+        plannedExercise: PlannedExercise,
+        skippedPlannedExerciseIds: Set<PlannedExerciseId>
+    ): PlannedExercise? = state.nextPlannedExerciseAfterSkipped(plannedExercise, skippedPlannedExerciseIds)
+
+    override fun requestCompleteRoutineDay(
+        skippedPlannedExerciseIds: Set<PlannedExerciseId>,
+        justRecordedPlannedExerciseIds: Set<PlannedExerciseId>
+    ) {
+        actions.onRequestCompleteRoutineDay(skippedPlannedExerciseIds, justRecordedPlannedExerciseIds)
+    }
+
+    override fun requestSubstituteExercise(plannedExercise: PlannedExercise) {
+        actions.onRequestSubstituteExercise(plannedExercise)
+    }
+
+    override fun requestAdditionalExercise(anchorExercise: PlannedExercise?) {
+        actions.onRequestAdditionalExercise(anchorExercise)
+    }
 
     override fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =
         state.recordablePlannedExerciseFor(exerciseId)

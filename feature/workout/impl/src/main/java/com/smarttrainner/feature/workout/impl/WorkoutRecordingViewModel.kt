@@ -99,7 +99,7 @@ class WorkoutRecordingViewModel @Inject constructor(
             }
             return
         }
-        if (current?.id == plannedExercise.id) return
+        if (current?.id == plannedExercise.id && current.exercise.id == plannedExercise.exercise.id) return
         recordingPlannedExercise.value = plannedExercise
         formError.value = null
         recordSaved.value = false

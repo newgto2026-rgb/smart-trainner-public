@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
@@ -61,6 +60,14 @@ internal fun LazyListScope.homeSummaryContent(
                 routineDay = nextRoutineDay,
                 onRecordSelected = actions.onWorkoutStarted,
                 onCompleteRoutineDay = actions.onCompleteRoutineDay
+            )
+        }
+    }
+    state.latestRoutineDayCompletion?.let { completion ->
+        item {
+            LatestRoutineDayCompletionCard(
+                completion = completion,
+                onCancelLatestRoutineDay = actions.onRequestCancelLatestRoutineDay
             )
         }
     }
@@ -125,12 +132,22 @@ internal fun NextRoutineDayCard(
                 val shouldShowCustomDayLabel = isCustomRoutine &&
                     (routineDay.primaryFocus != null || hasCustomDayTitle)
                 Text(
+                    text = stringResource(
+                        R.string.routine_cycle_day_title,
+                        routineDay.cycleNumber,
+                        routineDay.dayNumber
+                    ),
+                    color = SmartTrainnerColors.Coral,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
                     text = routineDay.primaryFocus?.let { focus ->
                         stringResource(R.string.routine_today_focus_title, focus.localizedTodayFocusLabel())
                     } ?: fallbackDayTitle,
                     modifier = Modifier.testTag("training_next_routine_day_${routineDay.dayNumber}"),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
                     color = SmartTrainnerColors.Ink
                 )
                 if (shouldShowCustomDayLabel) {
@@ -250,6 +267,53 @@ internal fun NextRoutineDayCard(
 }
 
 @Composable
+internal fun LatestRoutineDayCompletionCard(
+    completion: LatestRoutineDayCompletionUiModel,
+    onCancelLatestRoutineDay: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("training_latest_routine_day_completion_card"),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, SmartTrainnerColors.Line),
+        colors = CardDefaults.cardColors(containerColor = SmartTrainnerColors.SurfaceRaised)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = stringResource(
+                    R.string.routine_latest_completed_day_title,
+                    completion.cycleNumber,
+                    completion.dayNumber
+                ),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = SmartTrainnerColors.Ink
+            )
+            Text(
+                text = stringResource(R.string.routine_latest_completed_day_body),
+                color = SmartTrainnerColors.Muted,
+                style = MaterialTheme.typography.bodySmall
+            )
+            OutlinedButton(
+                onClick = onCancelLatestRoutineDay,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("training_cancel_latest_routine_day"),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(R.string.routine_cancel_latest_day_action))
+            }
+        }
+    }
+}
+
+@Composable
 internal fun RoutineDayBadgeRow(routineDay: NextRoutineDayUiModel) {
     SmartTrainnerBadgeRow(
         badges = buildList {
@@ -269,15 +333,6 @@ internal fun RoutineDayBadgeRow(routineDay: NextRoutineDayUiModel) {
                     containerColor = SmartTrainnerColors.GreenSoft,
                     contentColor = SmartTrainnerColors.Ink,
                     testTag = "training_next_routine_badge_exercises"
-                )
-            )
-            add(
-                SmartTrainnerBadgeSpec(
-                    text = stringResource(R.string.routine_routine_badge_recovery, routineDay.minRecoveryHours),
-                    icon = Icons.Default.DateRange,
-                    containerColor = SmartTrainnerColors.AmberSoft,
-                    contentColor = SmartTrainnerColors.Ink,
-                    testTag = "training_next_routine_badge_recovery"
                 )
             )
         },

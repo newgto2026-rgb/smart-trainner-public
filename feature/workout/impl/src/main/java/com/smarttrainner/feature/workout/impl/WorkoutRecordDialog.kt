@@ -1,10 +1,12 @@
 package com.smarttrainner.feature.workout.impl
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -161,17 +164,10 @@ private fun RecordForm(
                 )
             }
         }
-        OutlinedButton(
-            onClick = actions.onExerciseMethodSelected,
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("training_show_exercise_method")
-        ) {
-            Icon(Icons.Default.FitnessCenter, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.size(8.dp))
-            Text(stringResource(R.string.workout_show_exercise_method))
-        }
+        RoutineQuickActions(
+            showRoutineSessionActions = state.showRoutineSessionActions,
+            actions = actions
+        )
         state.formError?.let { error ->
             Text(
                 text = error.message(),
@@ -275,7 +271,15 @@ private fun RecordForm(
                 .testTag("training_save_record"),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Text(stringResource(R.string.workout_save_record))
+            Text(
+                stringResource(
+                    if (state.hasNextPlannedExercise) {
+                        R.string.workout_complete_and_next
+                    } else {
+                        R.string.workout_complete_record
+                    }
+                )
+            )
         }
         if (state.recordSaved) {
             Text(
@@ -293,6 +297,76 @@ private fun RecordForm(
             modifier = Modifier.fillMaxWidth(),
             minLines = 1,
             shape = RoundedCornerShape(8.dp)
+        )
+    }
+}
+
+@Composable
+private fun RoutineQuickActions(
+    showRoutineSessionActions: Boolean,
+    actions: WorkoutRecordingActions
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CompactActionButton(
+            label = stringResource(R.string.workout_show_exercise_method_short),
+            onClick = actions.onExerciseMethodSelected,
+            modifier = Modifier
+                .weight(1f)
+                .testTag("training_show_exercise_method")
+        )
+        if (showRoutineSessionActions) {
+            CompactActionButton(
+                label = stringResource(R.string.workout_skip_now_short),
+                onClick = actions.onSkipExercise,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("training_skip_routine_exercise")
+            )
+            CompactActionButton(
+                label = stringResource(R.string.workout_substitute_exercise_short),
+                onClick = actions.onSubstituteExerciseRequested,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("training_substitute_routine_exercise")
+            )
+            CompactActionButton(
+                label = stringResource(R.string.workout_add_extra_exercise_short),
+                onClick = actions.onAddExerciseRequested,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("training_add_routine_exercise")
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompactActionButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 36.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, SmartTrainnerColors.Coral.copy(alpha = 0.55f)),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = SmartTrainnerColors.Surface,
+            contentColor = SmartTrainnerColors.Coral
+        ),
+        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+    ) {
+        Text(
+            text = label,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold
         )
     }
 }

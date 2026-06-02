@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,18 +15,23 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -37,6 +43,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -48,7 +58,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.Exercise
+import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
+import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
@@ -57,6 +70,7 @@ import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
+import com.smarttrainner.core.ui.SmartTrainnerExercisePickerCard
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
 
 @Composable
@@ -175,7 +189,7 @@ internal fun RoutineFilterChip(
             containerColor = SmartTrainnerColors.SurfaceRaised,
             labelColor = SmartTrainnerColors.Muted,
             selectedContainerColor = SmartTrainnerColors.CoralSoft,
-            selectedLabelColor = SmartTrainnerColors.Ink
+            selectedLabelColor = SmartTrainnerColors.Coral
         )
     )
 }
@@ -202,7 +216,7 @@ internal fun RoutineLibraryDialog(
                 .testTag("training_routine_library_dialog"),
             shape = RoundedCornerShape(8.dp),
             color = SmartTrainnerColors.Surface,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier.padding(18.dp),
@@ -326,7 +340,7 @@ internal fun RoutineSettingsDialog(
                 .testTag("training_routine_settings_dialog"),
             shape = RoundedCornerShape(8.dp),
             color = SmartTrainnerColors.Surface,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier
@@ -384,6 +398,267 @@ internal fun RoutineSettingsDialog(
 }
 
 @Composable
+internal fun RoutineCompleteDayConfirmationDialog(
+    confirmation: RoutineCompletionConfirmState,
+    routineDay: NextRoutineDayUiModel?,
+    onConfirm: () -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+                .heightIn(max = 520.dp)
+                .testTag("training_complete_day_confirmation_dialog"),
+            shape = RoundedCornerShape(8.dp),
+            color = SmartTrainnerColors.Surface,
+            shadowElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                DialogHeader(
+                    title = stringResource(R.string.routine_complete_day_confirm_title),
+                    onDismissRequest = onDismissRequest
+                )
+                Text(
+                    text = stringResource(
+                        R.string.routine_complete_day_confirm_body,
+                        confirmation.unrecordedExercises.size,
+                        routineDay?.cycleNumber ?: 1,
+                        routineDay?.dayNumber ?: 1
+                    ),
+                    color = SmartTrainnerColors.Muted,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    confirmation.unrecordedExercises.forEach { exercise ->
+                        Text(
+                            text = exercise.exercise.localizedName(),
+                            color = SmartTrainnerColors.Ink,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.testTag("training_unrecorded_exercise_${exercise.exercise.id.value}")
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismissRequest,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(stringResource(R.string.routine_complete_day_confirm_return))
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("training_confirm_complete_routine_day"),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text(stringResource(R.string.routine_complete_day_confirm_action))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun RoutineCancelLatestDayDialog(
+    completion: LatestRoutineDayCompletionUiModel,
+    onConfirm: () -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+                .testTag("training_cancel_latest_day_dialog"),
+            shape = RoundedCornerShape(8.dp),
+            color = SmartTrainnerColors.Surface,
+            shadowElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                DialogHeader(
+                    title = stringResource(R.string.routine_cancel_latest_day_title),
+                    onDismissRequest = onDismissRequest
+                )
+                Text(
+                    text = stringResource(
+                        R.string.routine_cancel_latest_day_body,
+                        completion.cycleNumber,
+                        completion.dayNumber
+                    ),
+                    color = SmartTrainnerColors.Muted,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismissRequest,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(stringResource(R.string.routine_keep_day_completion))
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("training_confirm_cancel_latest_day"),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = SmartTrainnerColors.Danger,
+                            contentColor = SmartTrainnerColors.SurfaceRaised
+                        )
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text(stringResource(R.string.routine_delete_and_cancel_day))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun RoutineExercisePickerDialog(
+    picker: RoutineExercisePickerState,
+    exercises: List<Exercise>,
+    onExerciseSelected: (ExerciseId) -> Unit,
+    onExerciseDetailRequested: (ExerciseId) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    var expandedGroups by remember(picker.mode) { mutableStateOf(emptySet<MuscleGroup>()) }
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+                .heightIn(max = 640.dp)
+                .testTag("training_routine_exercise_picker_dialog"),
+            shape = RoundedCornerShape(8.dp),
+            color = SmartTrainnerColors.Surface,
+            shadowElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                DialogHeader(
+                    title = stringResource(
+                        if (picker.mode == RoutineExercisePickerMode.SUBSTITUTE) {
+                            R.string.routine_substitute_exercise_title
+                        } else {
+                            R.string.routine_add_exercise_title
+                        }
+                    ),
+                    onDismissRequest = onDismissRequest
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MuscleGroup.entries.forEach { group ->
+                        val groupExercises = exercises.filter { it.muscleGroup == group }
+                        if (groupExercises.isEmpty()) return@forEach
+                        val expanded = group in expandedGroups
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    expandedGroups = if (expanded) {
+                                        expandedGroups - group
+                                    } else {
+                                        expandedGroups + group
+                                    }
+                                }
+                                .testTag("training_pick_routine_exercise_group_${group.name}"),
+                            shape = RoundedCornerShape(8.dp),
+                            color = SmartTrainnerColors.SurfaceRaised,
+                            border = BorderStroke(1.dp, SmartTrainnerColors.Line)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (expanded) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = SmartTrainnerColors.Coral
+                                )
+                                Text(
+                                    text = "${group.localizedLabel()} (${groupExercises.size})",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        if (!expanded) return@forEach
+                        groupExercises.forEach { exercise ->
+                            SmartTrainnerExercisePickerCard(
+                                title = exercise.localizedName(),
+                                subtitle = exercise.targetText,
+                                leadingIcon = if (picker.mode == RoutineExercisePickerMode.SUBSTITUTE) {
+                                    Icons.Default.SwapHoriz
+                                } else {
+                                    Icons.Default.Add
+                                },
+                                secondaryActionLabel = stringResource(R.string.routine_instruction),
+                                secondaryActionIcon = Icons.Default.Info,
+                                onClick = { onExerciseSelected(exercise.id) },
+                                onSecondaryActionClick = { onExerciseDetailRequested(exercise.id) },
+                                modifier = Modifier.testTag(
+                                    "training_pick_routine_exercise_card_${exercise.id.value}"
+                                ),
+                                clickModifier = Modifier.testTag("training_pick_routine_exercise_${exercise.id.value}"),
+                                secondaryActionModifier = Modifier.testTag(
+                                    "training_pick_routine_exercise_method_${exercise.id.value}"
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 internal fun RoutineRecommendationsDialog(
     state: RoutineUiState,
     onTemplatePreviewSelected: (String) -> Unit,
@@ -409,7 +684,7 @@ internal fun RoutineRecommendationsDialog(
                 .testTag("training_routine_recommendations_dialog"),
             shape = RoundedCornerShape(8.dp),
             color = SmartTrainnerColors.Surface,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier
@@ -601,7 +876,7 @@ internal fun PlanTemplateCard(
             color = if (selected) SmartTrainnerColors.Coral else SmartTrainnerColors.Line
         ),
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) SmartTrainnerColors.CoralSoft else SmartTrainnerColors.SurfaceRaised
+            containerColor = SmartTrainnerColors.SurfaceRaised
         )
     ) {
         Column(
@@ -625,7 +900,7 @@ internal fun PlanTemplateCard(
                         text = stringResource(R.string.routine_selected),
                         icon = Icons.Default.CheckCircle,
                         containerColor = SmartTrainnerColors.GreenSoft,
-                        contentColor = SmartTrainnerColors.Ink
+                        contentColor = SmartTrainnerColors.Green
                     )
                 }
                 if (highlightLabel != null) {
@@ -665,7 +940,7 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
     val durationBadge = SmartTrainnerBadgeSpec(
         text = stringResource(R.string.routine_minutes_option, template.estimatedSessionMinutes),
         icon = Icons.Default.Timer,
-        containerColor = SmartTrainnerColors.CoralSoft,
+        containerColor = SmartTrainnerColors.AmberSoft,
         contentColor = SmartTrainnerColors.Ink
     )
     val badges = if (template.source == RoutineSource.CUSTOM) {
@@ -712,7 +987,7 @@ internal fun RoutineSourceChip(source: RoutineSource, testTag: String = source.r
             }
         ),
         icon = if (source == RoutineSource.CUSTOM) Icons.Default.Edit else Icons.Default.FitnessCenter,
-        containerColor = if (source == RoutineSource.CUSTOM) SmartTrainnerColors.GreenSoft else SmartTrainnerColors.CoralSoft,
+        containerColor = if (source == RoutineSource.CUSTOM) SmartTrainnerColors.GreenSoft else SmartTrainnerColors.SteelSoft,
         contentColor = SmartTrainnerColors.Ink
     )
 }
