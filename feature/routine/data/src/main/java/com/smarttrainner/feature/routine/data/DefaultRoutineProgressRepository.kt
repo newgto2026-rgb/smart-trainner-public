@@ -13,6 +13,7 @@ import com.smarttrainner.core.network.RoutineProgressCompleteDayRequest
 import com.smarttrainner.core.network.RoutineProgressDto
 import com.smarttrainner.core.network.RoutineProgressNetworkApi
 import com.smarttrainner.core.network.RoutineProgressStartRequest
+import com.smarttrainner.core.network.RoutineProgressSwitchTemplateRequest
 import com.smarttrainner.core.network.RoutineProgressSyncRequest
 import com.smarttrainner.core.network.RoutineProgressSyncStatus
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
@@ -88,6 +89,26 @@ class DefaultRoutineProgressRepository @Inject constructor(
         }
     }
 
+    override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> = runCatching {
+        val sessionId = activeSessionResolver.sessionId()
+        val template = templateFor(sessionId, templateId)
+        val localProgress = preferences.activeRoutineProgress(sessionId).first()
+        val switchedProgress = localProgress.copy(
+            templateId = templateId,
+            dayIndex = localProgress.dayIndex.coerceIn(0, (template.cycleLength - 1).coerceAtLeast(0))
+        )
+        preferences.setRoutineProgress(sessionId, switchedProgress)
+        pushServerProgress(sessionId) {
+            routineProgressNetworkApi.switchRoutineTemplate(
+                sessionId = sessionId,
+                request = RoutineProgressSwitchTemplateRequest(
+                    templateId = templateId,
+                    dayIndex = switchedProgress.dayIndex
+                )
+            ).data
+        }
+    }
+
     override suspend fun markRoutineDayCompleted(
         completedDayIndex: Int,
         nextDayIndex: Int,
@@ -158,6 +179,12 @@ class DefaultRoutineProgressRepository @Inject constructor(
 
     private suspend fun templateExists(sessionId: String, templateId: String): Boolean =
         seedStore.hasTemplate(templateId) || customRoutineDao.getById(sessionId, templateId) != null
+
+    private suspend fun templateFor(sessionId: String, templateId: String) =
+        seedStore.templateById(
+            templateId,
+            customRoutineDao.observeForSession(sessionId).first().map { it.toPlanTemplate(seedStore.exercises) }
+        )
 
     private suspend fun pushServerProgress(
         sessionId: String,

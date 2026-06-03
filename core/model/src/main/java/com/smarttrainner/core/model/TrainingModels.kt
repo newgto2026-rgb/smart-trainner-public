@@ -123,6 +123,7 @@ data class Exercise(
     val id: ExerciseId,
     val name: String,
     val muscleGroup: MuscleGroup,
+    val muscleGroups: List<MuscleGroup> = listOf(muscleGroup),
     val equipment: EquipmentType,
     val difficulty: DifficultyLevel,
     val imageKey: String,
@@ -137,11 +138,21 @@ data class Exercise(
 ) {
     val targetText: String
         get() = if (defaultRepRange != null) {
-            "${defaultSets}세트 x ${defaultRepRange.first}-${defaultRepRange.last}회"
+            if (defaultRepRange.first == defaultRepRange.last) {
+                "${defaultSets}세트 x ${defaultRepRange.first}회"
+            } else {
+                "${defaultSets}세트 x ${defaultRepRange.first}-${defaultRepRange.last}회"
+            }
         } else {
             "${defaultSets}세트 x ${defaultDurationMinutes ?: 10}분"
-        }
+    }
 }
+
+fun Exercise.targetsMuscleGroup(group: MuscleGroup): Boolean =
+    group in muscleGroups
+
+fun Exercise.targetsAnyMuscleGroup(groups: Collection<MuscleGroup>): Boolean =
+    muscleGroups.any { it in groups }
 
 data class PlanTemplate(
     val id: String,

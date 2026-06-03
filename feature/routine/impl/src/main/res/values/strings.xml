@@ -168,6 +168,7 @@
     <string name="routine_start_record">Start Workout</string>
     <string name="routine_start_routine">Start this routine</string>
     <string name="routine_target_duration">Sets: %1$d · Min: %2$d</string>
+    <string name="routine_target_reps_single">Sets: %1$d · Reps: %2$d</string>
     <string name="routine_target_reps">Sets: %1$d · Reps: %2$d-%3$d</string>
     <string name="routine_template_beginner_full_body_2day_description">A conservative A/B full-body routine that keeps progress independent from weekdays.</string>
     <string name="routine_template_beginner_full_body_2day_name">Beginner 2-Day Full Body</string>

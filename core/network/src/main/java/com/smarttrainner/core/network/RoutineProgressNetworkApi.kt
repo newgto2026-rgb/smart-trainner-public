@@ -18,6 +18,12 @@ interface RoutineProgressNetworkApi {
         @Body request: RoutineProgressStartRequest
     ): RoutineProgressRequiredResponse
 
+    @POST("api/routine-progress/switch-template")
+    suspend fun switchRoutineTemplate(
+        @Header("x-smart-trainner-session-id") sessionId: String,
+        @Body request: RoutineProgressSwitchTemplateRequest
+    ): RoutineProgressRequiredResponse
+
     @POST("api/routine-progress/complete-day")
     suspend fun completeRoutineDay(
         @Header("x-smart-trainner-session-id") sessionId: String,
@@ -108,6 +114,12 @@ data class RoutineProgressStartRequest(
     val templateId: String,
     val startedAt: String? = null,
     val cycleStartedAt: String? = null
+)
+
+@Serializable
+data class RoutineProgressSwitchTemplateRequest(
+    val templateId: String,
+    val dayIndex: Int
 )
 
 @Serializable

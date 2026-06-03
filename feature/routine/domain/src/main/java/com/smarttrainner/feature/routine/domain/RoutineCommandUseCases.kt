@@ -93,6 +93,12 @@ class StartRoutineUseCase @Inject constructor(
     suspend operator fun invoke(templateId: String) = repository.startRoutine(templateId)
 }
 
+class SwitchRoutineTemplateUseCase @Inject constructor(
+    private val repository: RoutineProgressCommandRepository
+) {
+    suspend operator fun invoke(templateId: String) = repository.switchRoutineTemplate(templateId)
+}
+
 class AdvanceRoutineDayUseCase @Inject constructor() {
     operator fun invoke(completedDayIndex: Int, cycleLength: Int): Int {
         require(cycleLength > 0) { "Cycle length must be positive." }

@@ -244,13 +244,16 @@ private fun ExerciseImageViewerDialog(
 
 @Composable
 private fun ExerciseMetaChips(exercise: Exercise) {
+    val labels = exercise.muscleGroups.map { it.localizedLabel() } +
+        exercise.equipment.localizedLabel() +
+        exercise.difficulty.localizedLabel()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ExerciseMetaChip(label = exercise.muscleGroup.localizedLabel())
-            ExerciseMetaChip(label = exercise.equipment.localizedLabel())
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ExerciseMetaChip(label = exercise.difficulty.localizedLabel())
+        labels.chunked(3).forEach { rowLabels ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                rowLabels.forEach { label ->
+                    ExerciseMetaChip(label = label)
+                }
+            }
         }
     }
 }

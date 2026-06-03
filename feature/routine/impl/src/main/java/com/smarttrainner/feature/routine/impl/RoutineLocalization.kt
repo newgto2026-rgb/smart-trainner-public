@@ -69,12 +69,7 @@ internal fun Exercise.localizedName(): String =
 internal fun Exercise.localizedTargetText(): String {
     val reps = defaultRepRange
     return if (reps != null) {
-        stringResource(
-            R.string.routine_target_reps,
-            defaultSets,
-            reps.first,
-            reps.last
-        )
+        localizedRepTargetText(defaultSets, reps)
     } else {
         stringResource(R.string.routine_target_duration, defaultSets, defaultDurationMinutes ?: 10)
     }
@@ -84,7 +79,7 @@ internal fun Exercise.localizedTargetText(): String {
 internal fun ExercisePrescription.localizedTargetText(): String {
     val reps = repRange
     return if (reps != null) {
-        stringResource(R.string.routine_target_reps, sets, reps.first, reps.last)
+        localizedRepTargetText(sets, reps)
     } else {
         stringResource(R.string.routine_target_duration, sets, durationMinutes ?: 10)
     }
@@ -100,11 +95,19 @@ internal fun Exercise.localizedTrainingDisplayText(latestLog: WorkoutLog?): Stri
 internal fun PlannedExercise.localizedTargetText(): String {
     val reps = repRange
     return if (reps != null) {
-        stringResource(R.string.routine_target_reps, sets, reps.first, reps.last)
+        localizedRepTargetText(sets, reps)
     } else {
         stringResource(R.string.routine_target_duration, sets, durationMinutes ?: 10)
     }
 }
+
+@Composable
+private fun localizedRepTargetText(sets: Int, reps: IntRange): String =
+    if (reps.first == reps.last) {
+        stringResource(R.string.routine_target_reps_single, sets, reps.first)
+    } else {
+        stringResource(R.string.routine_target_reps, sets, reps.first, reps.last)
+    }
 
 @Composable
 internal fun PlannedExercise.localizedTrainingDisplayText(latestLog: WorkoutLog?): String =

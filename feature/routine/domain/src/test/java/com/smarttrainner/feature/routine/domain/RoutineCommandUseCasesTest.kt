@@ -306,6 +306,8 @@ private class CapturingRoutineProgressRepository : RoutineProgressCommandReposit
 
     override suspend fun startRoutine(templateId: String): Result<Unit> = error("Not used")
 
+    override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> = error("Not used")
+
     override suspend fun markRoutineDayCompleted(
         completedDayIndex: Int,
         nextDayIndex: Int,

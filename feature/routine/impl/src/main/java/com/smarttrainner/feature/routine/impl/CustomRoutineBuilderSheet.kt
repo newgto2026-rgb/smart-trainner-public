@@ -64,6 +64,8 @@ import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.RoutineFocus
+import com.smarttrainner.core.model.targetsAnyMuscleGroup
+import com.smarttrainner.core.model.targetsMuscleGroup
 import com.smarttrainner.core.ui.SmartTrainnerExercisePickerCard
 
 @Composable
@@ -518,7 +520,7 @@ private fun ExercisePicker(
 ) {
     val allowedGroups = allowedCustomRoutineMuscleGroups(selectedFocus)
     val availableExercises = exercises
-        .filter { it.muscleGroup in allowedGroups }
+        .filter { it.targetsAnyMuscleGroup(allowedGroups) }
         .filterNot { it.id in selectedExerciseIds }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -541,7 +543,7 @@ private fun ExercisePicker(
             )
         }
         MuscleGroup.entries.filter { it in allowedGroups }.forEach { group ->
-            val groupExercises = availableExercises.filter { it.muscleGroup == group }
+            val groupExercises = availableExercises.filter { it.targetsMuscleGroup(group) }
             if (groupExercises.isNotEmpty()) {
                 val expanded = group in expandedGroups
                 Surface(
@@ -607,7 +609,11 @@ private fun CustomRoutineFormError.localizedMessage(): String = stringResource(
 @Composable
 private fun CustomRoutineExerciseFormState.targetText(): String =
     if (repRangeStart != null && repRangeEnd != null) {
-        stringResource(R.string.routine_target_reps, sets, repRangeStart, repRangeEnd)
+        if (repRangeStart == repRangeEnd) {
+            stringResource(R.string.routine_target_reps_single, sets, repRangeStart)
+        } else {
+            stringResource(R.string.routine_target_reps, sets, repRangeStart, repRangeEnd)
+        }
     } else {
         stringResource(R.string.routine_target_duration, sets, durationMinutes ?: 10)
     }

@@ -8,5 +8,6 @@ internal data class TrainingUiState(
     val recordingPlannedExercise: PlannedExercise? = null,
     val selectedExerciseId: ExerciseId? = null,
     val recordingFlow: RecordingFlow = RecordingFlow.SINGLE,
-    val skippedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet()
+    val skippedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
+    val recordedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet()
 )

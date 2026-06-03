@@ -35,16 +35,19 @@ class TrainingFlowStateTest {
 
         assertThat(state.recordingFlow).isEqualTo(RecordingFlow.CONTINUOUS)
         assertThat(state.recordingPlannedExercise).isEqualTo(second)
+        assertThat(state.recordedPlannedExerciseIds).containsExactly(first.id)
     }
 
     @Test
     fun recordSaved_continuousFlowEndsWhenNextExerciseIsMissing() {
+        val first = plannedExercise("back_pull")
         val state = TrainingFlowState()
-            .startContinuousRecording(plannedExercise("back_pull"))
+            .startContinuousRecording(first)
             .recordSaved(nextPlannedExercise = null)
 
         assertThat(state.recordingFlow).isEqualTo(RecordingFlow.SINGLE)
         assertThat(state.recordingPlannedExercise).isNull()
+        assertThat(state.recordedPlannedExerciseIds).isEmpty()
     }
 
     @Test

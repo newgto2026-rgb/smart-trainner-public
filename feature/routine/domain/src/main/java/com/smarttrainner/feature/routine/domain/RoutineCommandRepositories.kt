@@ -13,6 +13,7 @@ interface RoutinePlanCommandRepository {
 
 interface RoutineProgressCommandRepository {
     suspend fun startRoutine(templateId: String): Result<Unit>
+    suspend fun switchRoutineTemplate(templateId: String): Result<Unit>
     suspend fun markRoutineDayCompleted(
         completedDayIndex: Int,
         nextDayIndex: Int,
