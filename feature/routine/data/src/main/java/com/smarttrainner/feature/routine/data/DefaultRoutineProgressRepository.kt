@@ -303,12 +303,16 @@ class DefaultRoutineProgressRepository @Inject constructor(
         sessionId: String,
         templateId: String?
     ): List<RoutineCycleCompletion> =
-        runCatching {
+        try {
             routineProgressNetworkApi.getRoutineCycleCompletions(
                 sessionId = sessionId,
                 templateId = templateId
             ).data.mapNotNull { it.toModel() }
-        }.getOrDefault(emptyList())
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            emptyList()
+        }
 
     private fun RoutineProgressDto.toPreference(): RoutineProgressPreference =
         RoutineProgressPreference(
