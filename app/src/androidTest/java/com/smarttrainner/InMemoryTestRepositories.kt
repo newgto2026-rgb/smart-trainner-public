@@ -28,6 +28,7 @@ import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
+import com.smarttrainner.core.model.completedCycleDurationDays as calculateCompletedCycleDurationDays
 import com.smarttrainner.feature.analysis.domain.WeeklySummaryCalculator
 import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
@@ -211,7 +212,8 @@ internal class InMemoryTrainingRepository :
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedPreviousCycleStartedAt = null,
+            lastCompletedCycleDurationDays = null
         )
     }
 
@@ -246,7 +248,12 @@ internal class InMemoryTrainingRepository :
             lastCompletedAt = completedAt,
             lastCompletedCycleNumber = current.cycleNumber,
             lastCompletedPreviousCycleStartedAt = current.cycleStartedAt,
-            cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt
+            cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt,
+            lastCompletedCycleDurationDays = if (startsNewCycle) {
+                calculateCompletedCycleDurationDays(current.cycleStartedAt, completedAt)
+            } else {
+                null
+            }
         )
     }
 
@@ -269,7 +276,8 @@ internal class InMemoryTrainingRepository :
             lastCompletedDayIndex = remainingLatestCompletion?.dayIndex,
             lastCompletedAt = remainingLatestCompletion?.completedAt,
             lastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
-            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt
+            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt,
+            lastCompletedCycleDurationDays = remainingLatestCompletion?.cycleDurationDays
         )
     }
 

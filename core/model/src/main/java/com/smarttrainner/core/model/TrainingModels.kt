@@ -1,5 +1,6 @@
 package com.smarttrainner.core.model
 
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -330,7 +331,8 @@ data class RoutineProgressPreference(
     val lastCompletedDayIndex: Int?,
     val lastCompletedAt: String?,
     val lastCompletedCycleNumber: Int?,
-    val lastCompletedPreviousCycleStartedAt: String?
+    val lastCompletedPreviousCycleStartedAt: String?,
+    val lastCompletedCycleDurationDays: Int? = null
 )
 
 data class RoutineProgress(
@@ -342,8 +344,33 @@ data class RoutineProgress(
     val lastCompletedCycleNumber: Int? = null,
     val lastCompletedPreviousCycleStartedAt: Instant? = null,
     val startedAt: Instant? = null,
-    val cycleStartedAt: Instant? = startedAt
+    val cycleStartedAt: Instant? = startedAt,
+    val lastCompletedCycleDurationDays: Int? = null
 )
+
+data class RoutineCycleCompletion(
+    val id: String,
+    val templateId: String,
+    val cycleNumber: Int,
+    val startedAt: Instant,
+    val completedAt: Instant,
+    val durationDays: Int,
+    val completedDayIndex: Int,
+    val createdAt: Instant? = null,
+    val updatedAt: Instant? = null
+)
+
+fun completedCycleDurationDays(cycleStartedAt: Instant?, completedAt: Instant?): Int? {
+    val start = cycleStartedAt ?: return null
+    val end = completedAt ?: return null
+    val elapsedMillis = Duration.between(start, end).toMillis()
+    if (elapsedMillis < 0) return null
+    return ((elapsedMillis + MILLIS_PER_DAY - 1) / MILLIS_PER_DAY)
+        .toInt()
+        .coerceAtLeast(1)
+}
+
+private const val MILLIS_PER_DAY = 86_400_000L
 
 data class RoutineReadiness(
     val ready: Boolean,

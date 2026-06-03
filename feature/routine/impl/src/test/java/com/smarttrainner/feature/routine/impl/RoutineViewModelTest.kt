@@ -39,6 +39,7 @@ import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.model.completedCycleDurationDays as calculateCompletedCycleDurationDays
 import com.smarttrainner.feature.routine.domain.AdvanceRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CompleteRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CancelLatestRoutineDayCompletionUseCase
@@ -1462,7 +1463,8 @@ private class FakeTrainingRepository :
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedPreviousCycleStartedAt = null,
+            lastCompletedCycleDurationDays = null
         )
         return Result.success(Unit)
     }
@@ -1529,7 +1531,12 @@ private class FakeTrainingRepository :
             lastCompletedCycleNumber = current.cycleNumber,
             lastCompletedPreviousCycleStartedAt = current.cycleStartedAt,
             startedAt = current.startedAt,
-            cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt
+            cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt,
+            lastCompletedCycleDurationDays = if (startsNewCycle) {
+                calculateCompletedCycleDurationDays(current.cycleStartedAt, completedAt)
+            } else {
+                null
+            }
         )
         return Result.success(Unit)
     }
@@ -1553,7 +1560,8 @@ private class FakeTrainingRepository :
             lastCompletedDayIndex = remainingLatestCompletion?.dayIndex,
             lastCompletedAt = remainingLatestCompletion?.completedAt,
             lastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
-            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt
+            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt,
+            lastCompletedCycleDurationDays = remainingLatestCompletion?.cycleDurationDays
         )
         return Result.success(Unit)
     }

@@ -10,8 +10,10 @@ import com.smarttrainner.core.model.RoutineProgressPreference
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
+import com.smarttrainner.core.model.completedCycleDurationDays as calculateCompletedCycleDurationDays
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Clock
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -77,7 +79,8 @@ class TrainingPreferencesDataSource @Inject constructor(
                 lastCompletedDayIndex = preferences[lastCompletedRoutineDayKey(sessionId)],
                 lastCompletedAt = preferences[lastCompletedAtKey(sessionId)],
                 lastCompletedCycleNumber = preferences[lastCompletedRoutineCycleKey(sessionId)],
-                lastCompletedPreviousCycleStartedAt = preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)]
+                lastCompletedPreviousCycleStartedAt = preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)],
+                lastCompletedCycleDurationDays = preferences[lastCompletedCycleDurationDaysKey(sessionId)]
             )
         }
 
@@ -105,6 +108,7 @@ class TrainingPreferencesDataSource @Inject constructor(
             preferences.remove(lastCompletedAtKey(sessionId))
             preferences.remove(lastCompletedRoutineCycleKey(sessionId))
             preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
+            preferences.remove(lastCompletedCycleDurationDaysKey(sessionId))
         }
     }
 
@@ -124,6 +128,11 @@ class TrainingPreferencesDataSource @Inject constructor(
         context.trainingDataStore.edit { preferences ->
             val currentCycleNumber = preferences[activeRoutineCycleNumberKey(sessionId)] ?: 1
             val currentCycleStartedAt = preferences[activeRoutineCycleStartedAtKey(sessionId)]
+            val cycleDurationDays = if (newCycleStartedAt != null) {
+                completedCycleDurationDays(currentCycleStartedAt, completedAt)
+            } else {
+                null
+            }
             preferences[lastCompletedRoutineDayKey(sessionId)] = completedDayIndex
             preferences[lastCompletedAtKey(sessionId)] = completedAt
             preferences[lastCompletedRoutineCycleKey(sessionId)] = currentCycleNumber
@@ -131,6 +140,11 @@ class TrainingPreferencesDataSource @Inject constructor(
                 preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)] = currentCycleStartedAt
             } else {
                 preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
+            }
+            if (cycleDurationDays != null) {
+                preferences[lastCompletedCycleDurationDaysKey(sessionId)] = cycleDurationDays
+            } else {
+                preferences.remove(lastCompletedCycleDurationDaysKey(sessionId))
             }
             preferences[activeRoutineDayIndexKey(sessionId)] = nextDayIndex
             if (newCycleStartedAt != null) {
@@ -148,7 +162,8 @@ class TrainingPreferencesDataSource @Inject constructor(
         remainingLastCompletedDayIndex: Int? = null,
         remainingLastCompletedAt: String? = null,
         remainingLastCompletedCycleNumber: Int? = null,
-        remainingLastCompletedPreviousCycleStartedAt: String? = null
+        remainingLastCompletedPreviousCycleStartedAt: String? = null,
+        remainingLastCompletedCycleDurationDays: Int? = null
     ) {
         context.trainingDataStore.edit { preferences ->
             preferences[activeRoutineDayIndexKey(sessionId)] = restoredDayIndex
@@ -179,6 +194,11 @@ class TrainingPreferencesDataSource @Inject constructor(
             } else {
                 preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
             }
+            if (remainingLastCompletedCycleDurationDays != null) {
+                preferences[lastCompletedCycleDurationDaysKey(sessionId)] = remainingLastCompletedCycleDurationDays
+            } else {
+                preferences.remove(lastCompletedCycleDurationDaysKey(sessionId))
+            }
         }
     }
 
@@ -204,6 +224,9 @@ class TrainingPreferencesDataSource @Inject constructor(
             progress.lastCompletedPreviousCycleStartedAt?.let {
                 preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)] = it
             } ?: preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
+            progress.lastCompletedCycleDurationDays?.let {
+                preferences[lastCompletedCycleDurationDaysKey(sessionId)] = it
+            } ?: preferences.remove(lastCompletedCycleDurationDaysKey(sessionId))
         }
     }
 
@@ -298,6 +321,9 @@ class TrainingPreferencesDataSource @Inject constructor(
         fun lastCompletedPreviousCycleStartedAtKey(sessionId: String) =
             stringPreferencesKey("last_completed_previous_cycle_started_at_$sessionId")
 
+        fun lastCompletedCycleDurationDaysKey(sessionId: String) =
+            intPreferencesKey("last_completed_cycle_duration_days_$sessionId")
+
         fun sessionDisplayNameKey(sessionId: String) =
             stringPreferencesKey("session_display_name_$sessionId")
 
@@ -321,3 +347,12 @@ class TrainingPreferencesDataSource @Inject constructor(
 internal fun String?.toTrainingExperience(): TrainingExperience =
     this?.let { runCatching { TrainingExperience.valueOf(it) }.getOrNull() }
         ?: TrainingExperience.BEGINNER
+
+internal fun completedCycleDurationDays(cycleStartedAt: String?, completedAt: String): Int? =
+    calculateCompletedCycleDurationDays(
+        cycleStartedAt = cycleStartedAt.toInstantOrNull(),
+        completedAt = completedAt.toInstantOrNull()
+    )
+
+private fun String?.toInstantOrNull(): Instant? =
+    this?.let { raw -> runCatching { Instant.parse(raw) }.getOrNull() }

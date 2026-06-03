@@ -9,7 +9,8 @@ data class RoutineCompletionSnapshot(
     val dayIndex: Int,
     val completedAt: Instant?,
     val cycleNumber: Int,
-    val previousCycleStartedAt: Instant?
+    val previousCycleStartedAt: Instant?,
+    val cycleDurationDays: Int? = null
 )
 
 interface RoutinePlanCommandRepository {

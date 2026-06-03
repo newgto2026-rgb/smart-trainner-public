@@ -7,9 +7,12 @@ import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.domain.TrainingSeedStore
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.RoutineCycleCompletion
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineProgressPreference
+import com.smarttrainner.core.model.completedCycleDurationDays as calculateCompletedCycleDurationDays
 import com.smarttrainner.core.network.RoutineProgressCancelLatestRequest
+import com.smarttrainner.core.network.RoutineCycleCompletionDto
 import com.smarttrainner.core.network.RoutineProgressCompleteDayRequest
 import com.smarttrainner.core.network.RoutineProgressDto
 import com.smarttrainner.core.network.RoutineProgressNetworkApi
@@ -27,8 +30,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
@@ -66,10 +72,31 @@ class DefaultRoutineProgressRepository @Inject constructor(
                         lastCompletedCycleNumber = preference.lastCompletedCycleNumber,
                         lastCompletedPreviousCycleStartedAt = preference.lastCompletedPreviousCycleStartedAt.toInstantOrNull(),
                         startedAt = startedAt,
-                        cycleStartedAt = preference.cycleStartedAt.toInstantOrNull() ?: startedAt
+                        cycleStartedAt = preference.cycleStartedAt.toInstantOrNull() ?: startedAt,
+                        lastCompletedCycleDurationDays = preference.lastCompletedCycleDurationDays
                     )
                 }.collect { send(it) }
             }
+        }
+
+    override fun observeRoutineCycleCompletions(
+        templateId: String?
+    ): Flow<List<RoutineCycleCompletion>> =
+        activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
+            preferences.activeRoutineProgress(sessionId)
+                .map {
+                    RoutineCycleCompletionRefreshKey(
+                        cycleNumber = it.cycleNumber,
+                        lastCompletedAt = it.lastCompletedAt,
+                        lastCompletedCycleDurationDays = it.lastCompletedCycleDurationDays
+                    )
+                }
+                .distinctUntilChanged()
+                .flatMapLatest {
+                    flow {
+                        emit(fetchRoutineCycleCompletions(sessionId, templateId))
+                    }
+                }
         }
 
     override suspend fun startRoutine(templateId: String): Result<Unit> = runCatching {
@@ -100,7 +127,8 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedPreviousCycleStartedAt = null,
+            lastCompletedCycleDurationDays = null
         )
         preferences.setRoutineProgress(sessionId, switchedProgress)
         val serverProgress = pushServerProgress(sessionId, writeToPreferences = false) {
@@ -120,7 +148,8 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedPreviousCycleStartedAt = null,
+            lastCompletedCycleDurationDays = null
         ) ?: switchedProgress
         preferences.setRoutineProgress(sessionId, syncedProgress)
         Unit
@@ -134,6 +163,14 @@ class DefaultRoutineProgressRepository @Inject constructor(
     ): Result<Unit> = runCatching {
         val sessionId = activeSessionResolver.sessionId()
         val localProgress = preferences.activeRoutineProgress(sessionId).first()
+        val cycleDurationDays = if (newCycleStartedAt != null) {
+            calculateCompletedCycleDurationDays(
+                cycleStartedAt = localProgress.cycleStartedAt.toInstantOrNull(),
+                completedAt = completedAt
+            )
+        } else {
+            null
+        }
         preferences.markRoutineDayCompleted(
             sessionId = sessionId,
             completedDayIndex = completedDayIndex,
@@ -149,9 +186,18 @@ class DefaultRoutineProgressRepository @Inject constructor(
                     completedDayIndex = completedDayIndex,
                     nextDayIndex = nextDayIndex,
                     completedAt = completedAt.toString(),
-                    newCycleStartedAt = newCycleStartedAt?.toString()
+                    newCycleStartedAt = newCycleStartedAt?.toString(),
+                    completedCycleDurationDays = cycleDurationDays
                 )
-            ).data
+            ).data.let { serverProgress ->
+                serverProgress.copy(
+                    lastCompletedCycleDurationDays = if (newCycleStartedAt != null) {
+                        cycleDurationDays ?: serverProgress.lastCompletedCycleDurationDays
+                    } else {
+                        null
+                    }
+                )
+            }
         }
     }
 
@@ -178,6 +224,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
                     remainingLastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
                     remainingLastCompletedPreviousCycleStartedAt =
                         remainingLatestCompletion?.previousCycleStartedAt?.toString(),
+                    remainingLastCompletedCycleDurationDays = remainingLatestCompletion?.cycleDurationDays,
                     plannedExerciseIds = plannedExerciseIds.map { it.value },
                     additionalExerciseIdPrefix = additionalExerciseIdPrefix
                 )
@@ -204,7 +251,8 @@ class DefaultRoutineProgressRepository @Inject constructor(
                 lastCompletedAt = remainingLatestCompletion?.completedAt?.toString(),
                 lastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
                 lastCompletedPreviousCycleStartedAt =
-                    remainingLatestCompletion?.previousCycleStartedAt?.toString()
+                    remainingLatestCompletion?.previousCycleStartedAt?.toString(),
+                lastCompletedCycleDurationDays = remainingLatestCompletion?.cycleDurationDays
             )
         )
     }
@@ -251,6 +299,17 @@ class DefaultRoutineProgressRepository @Inject constructor(
         }
     }
 
+    private suspend fun fetchRoutineCycleCompletions(
+        sessionId: String,
+        templateId: String?
+    ): List<RoutineCycleCompletion> =
+        runCatching {
+            routineProgressNetworkApi.getRoutineCycleCompletions(
+                sessionId = sessionId,
+                templateId = templateId
+            ).data.mapNotNull { it.toModel() }
+        }.getOrDefault(emptyList())
+
     private fun RoutineProgressDto.toPreference(): RoutineProgressPreference =
         RoutineProgressPreference(
             templateId = templateId,
@@ -261,8 +320,25 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = lastCompletedDayIndex,
             lastCompletedAt = lastCompletedAt,
             lastCompletedCycleNumber = lastCompletedCycleNumber,
-            lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt
+            lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt,
+            lastCompletedCycleDurationDays = lastCompletedCycleDurationDays
         )
+
+    private fun RoutineCycleCompletionDto.toModel(): RoutineCycleCompletion? {
+        val parsedStartedAt = startedAt.toInstantOrNull() ?: return null
+        val parsedCompletedAt = completedAt.toInstantOrNull() ?: return null
+        return RoutineCycleCompletion(
+            id = id,
+            templateId = templateId,
+            cycleNumber = cycleNumber,
+            startedAt = parsedStartedAt,
+            completedAt = parsedCompletedAt,
+            durationDays = durationDays,
+            completedDayIndex = completedDayIndex,
+            createdAt = createdAt.toInstantOrNull(),
+            updatedAt = updatedAt.toInstantOrNull()
+        )
+    }
 
     private fun RoutineProgressPreference.toSyncRequest(): RoutineProgressSyncRequest =
         RoutineProgressSyncRequest(
@@ -274,9 +350,16 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = lastCompletedDayIndex,
             lastCompletedAt = lastCompletedAt,
             lastCompletedCycleNumber = lastCompletedCycleNumber,
-            lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt
+            lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt,
+            lastCompletedCycleDurationDays = lastCompletedCycleDurationDays
         )
 
     private fun String?.toInstantOrNull(): Instant? =
         this?.let { raw -> runCatching { Instant.parse(raw) }.getOrNull() }
 }
+
+private data class RoutineCycleCompletionRefreshKey(
+    val cycleNumber: Int,
+    val lastCompletedAt: String?,
+    val lastCompletedCycleDurationDays: Int?
+)
