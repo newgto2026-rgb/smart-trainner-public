@@ -2,6 +2,7 @@ package com.smarttrainner.app.di
 
 import com.smarttrainner.core.network.RoutineProgressNetworkApi
 import com.smarttrainner.core.network.SessionNetworkApi
+import com.smarttrainner.core.network.WorkoutLogNetworkApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,4 +54,9 @@ object PlatformNetworkModule {
     @Singleton
     fun provideSessionNetworkApi(retrofit: Retrofit): SessionNetworkApi =
         retrofit.create(SessionNetworkApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideWorkoutLogNetworkApi(retrofit: Retrofit): WorkoutLogNetworkApi =
+        retrofit.create(WorkoutLogNetworkApi::class.java)
 }

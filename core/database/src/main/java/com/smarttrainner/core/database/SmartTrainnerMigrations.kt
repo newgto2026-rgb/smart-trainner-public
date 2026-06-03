@@ -125,5 +125,40 @@ object SmartTrainnerMigrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+    private val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE `workout_logs` ADD COLUMN `clientLogId` TEXT NOT NULL DEFAULT ''"
+            )
+            db.execSQL(
+                "UPDATE `workout_logs` SET `clientLogId` = 'legacy-' || `id` WHERE `clientLogId` = ''"
+            )
+            db.execSQL("DROP INDEX IF EXISTS `index_workout_logs_sessionId_plannedExerciseId`")
+            db.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS `index_workout_logs_sessionId_clientLogId` " +
+                    "ON `workout_logs` (`sessionId`, `clientLogId`)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_workout_logs_sessionId_plannedExerciseId` " +
+                    "ON `workout_logs` (`sessionId`, `plannedExerciseId`)"
+            )
+            db.execSQL("DROP INDEX IF EXISTS `index_workout_logs_performedDate`")
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_workout_logs_sessionId_performedDate` " +
+                    "ON `workout_logs` (`sessionId`, `performedDate`)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_workout_logs_sessionId_exerciseId_performedAt` " +
+                    "ON `workout_logs` (`sessionId`, `exerciseId`, `performedAt`)"
+            )
+        }
+    }
+
+    val ALL = arrayOf(
+        MIGRATION_1_2,
+        MIGRATION_2_3,
+        MIGRATION_3_4,
+        MIGRATION_4_5,
+        MIGRATION_5_6
+    )
 }

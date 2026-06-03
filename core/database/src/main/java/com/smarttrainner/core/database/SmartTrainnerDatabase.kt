@@ -11,7 +11,7 @@ import androidx.room.RoomDatabase
         CustomRoutineDayEntity::class,
         CustomRoutineExerciseEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class SmartTrainnerDatabase : RoomDatabase() {

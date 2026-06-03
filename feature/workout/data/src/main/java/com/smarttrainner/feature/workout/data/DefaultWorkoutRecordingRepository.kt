@@ -12,15 +12,22 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.network.WorkoutLogNetworkApi
+import com.smarttrainner.core.network.WorkoutLogRequest
+import com.smarttrainner.core.network.WorkoutSetLogRequest
 import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
+import java.security.MessageDigest
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class DefaultWorkoutRecordingRepository @Inject constructor(
     private val workoutLogDao: WorkoutLogDao,
-    private val activeSessionResolver: ActiveSessionResolver
+    private val activeSessionResolver: ActiveSessionResolver,
+    private val workoutLogNetworkApi: WorkoutLogNetworkApi
 ) : WorkoutRecordingRepository {
     override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
         workoutLogDao.latestByExercise(
@@ -63,16 +70,23 @@ class DefaultWorkoutRecordingRepository @Inject constructor(
                 "Rest must be between 0 and 600 seconds."
             }
         }
+        val sessionId = activeSessionResolver.sessionId()
+        val normalizedInput = input.copy(sets = setEntries.size, setEntries = setEntries)
+        val clientLogId = normalizedInput.clientLogId(sessionId)
+        workoutLogNetworkApi.createWorkoutLog(
+            sessionId = sessionId,
+            request = normalizedInput.toNetworkRequest(clientLogId)
+        )
         workoutLogDao.upsertWithSets(
-            input.copy(sets = setEntries.size, setEntries = setEntries)
-                .toEntity(activeSessionResolver.sessionId()),
+            normalizedInput.toEntity(sessionId = sessionId, clientLogId = clientLogId),
             setEntries.toEntities()
         )
     }
 }
 
-internal fun WorkoutLogInput.toEntity(sessionId: String): WorkoutLogEntity = WorkoutLogEntity(
+internal fun WorkoutLogInput.toEntity(sessionId: String, clientLogId: String): WorkoutLogEntity = WorkoutLogEntity(
     sessionId = sessionId,
+    clientLogId = clientLogId,
     plannedExerciseId = plannedExerciseId.value,
     exerciseId = exerciseId.value,
     performedDate = performedAt.toLocalDate().toString(),
@@ -84,6 +98,36 @@ internal fun WorkoutLogInput.toEntity(sessionId: String): WorkoutLogEntity = Wor
     memo = memo,
     completed = completed
 )
+
+internal fun WorkoutLogInput.toNetworkRequest(clientLogId: String): WorkoutLogRequest =
+    WorkoutLogRequest(
+        id = clientLogId,
+        date = performedAt.atZone(ZoneId.systemDefault())
+            .toOffsetDateTime()
+            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+        exerciseId = exerciseId.value,
+        plannedExerciseId = plannedExerciseId.value,
+        notes = memo.takeIf { it.isNotBlank() },
+        sets = setEntries.map {
+            WorkoutSetLogRequest(
+                setIndex = it.order,
+                reps = it.reps,
+                weightKg = it.weightKg,
+                durationMinutes = it.durationMinutes,
+                restSeconds = it.restSeconds,
+                completed = completed
+            )
+        }
+    )
+
+internal fun WorkoutLogInput.clientLogId(sessionId: String): String {
+    val input = listOf(sessionId, plannedExerciseId.value, exerciseId.value, performedAt.toString())
+        .joinToString(separator = "|")
+    val digest = MessageDigest.getInstance("SHA-256")
+        .digest(input.toByteArray(Charsets.UTF_8))
+        .joinToString(separator = "") { "%02x".format(it) }
+    return "android-$digest"
+}
 
 internal fun List<WorkoutSetLog>.toEntities(workoutLogId: Long = 0): List<WorkoutSetLogEntity> = map {
     WorkoutSetLogEntity(
