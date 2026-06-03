@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -26,12 +25,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -64,10 +64,12 @@ internal fun AnalysisContent(state: AnalysisUiState) {
 private fun RecentRecordsCard(
     records: List<RecentWorkoutLogUiModel>
 ) {
-    var visibleRecordLimit by remember(records) { mutableStateOf(RECENT_RECORD_PREVIEW_LIMIT) }
+    val resources = LocalResources.current
+    var visibleRecordLimit by remember(records) { mutableIntStateOf(RECENT_RECORD_PREVIEW_LIMIT) }
     val visibleRecords = records.take(visibleRecordLimit)
     val canShowMore = visibleRecordLimit < records.size
     val canCollapse = visibleRecordLimit > RECENT_RECORD_PREVIEW_LIMIT
+    val showMoreCount = (records.size - visibleRecordLimit).coerceAtMost(RECENT_RECORD_INCREMENT)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -87,16 +89,9 @@ private fun RecentRecordsCard(
             ) {
                 Text(
                     text = stringResource(R.string.analysis_recent_records),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
-                )
-                SmartTrainnerBadge(
-                    text = stringResource(R.string.analysis_recent_records_count, records.size),
-                    icon = Icons.Default.DateRange,
-                    containerColor = SmartTrainnerColors.CoralSoft,
-                    contentColor = SmartTrainnerColors.Ink,
-                    modifier = Modifier.testTag("training_recent_records_count")
                 )
             }
             visibleRecords.forEach { record ->
@@ -121,7 +116,13 @@ private fun RecentRecordsCard(
                                 contentDescription = null
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text(text = stringResource(R.string.analysis_recent_records_show_more))
+                            Text(
+                                text = resources.getQuantityString(
+                                    R.plurals.analysis_recent_records_show_more,
+                                    showMoreCount,
+                                    showMoreCount
+                                )
+                            )
                         }
                     }
                     if (canCollapse) {

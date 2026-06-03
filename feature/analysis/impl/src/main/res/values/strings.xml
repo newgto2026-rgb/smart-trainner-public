@@ -3,8 +3,10 @@
     <string name="analysis_route_subtitle">Cycle progress, balance, and recent records</string>
     <string name="analysis_cycle_summary">Summary: Cycle %1$d</string>
     <string name="analysis_recent_records">Recent records</string>
-    <string name="analysis_recent_records_count">All %1$d</string>
-    <string name="analysis_recent_records_show_more">Show 10 more</string>
+    <plurals name="analysis_recent_records_show_more">
+        <item quantity="one">Show %1$d more</item>
+        <item quantity="other">Show %1$d more</item>
+    </plurals>
     <string name="analysis_recent_records_collapse">Collapse</string>
     <string name="analysis_recent_record_date">%1$d/%2$d</string>
     <string name="analysis_record_metric_sets">Sets: %1$d</string>
