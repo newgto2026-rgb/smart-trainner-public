@@ -143,6 +143,41 @@ class RoutineCommandUseCasesTest {
             .isEqualTo("routine-added|intermediate-body-part-4day|cycle1|day2|")
     }
 
+    @Test
+    fun cancelLatestRoutineDayCompletion_keepsPreviousSameCycleDayCancelable() = runTest {
+        val repository = CapturingRoutineProgressRepository()
+        val cancelLatest = CancelLatestRoutineDayCompletionUseCase(repository)
+        val cycleStartedAt = Instant.parse("2026-05-20T00:00:00Z")
+        val progress = RoutineProgress(
+            templateId = "intermediate-body-part-4day",
+            dayIndex = 3,
+            lastCompletedDayIndex = 2,
+            lastCompletedAt = Instant.parse("2026-05-24T12:00:00Z"),
+            cycleNumber = 1,
+            lastCompletedCycleNumber = 1,
+            lastCompletedPreviousCycleStartedAt = cycleStartedAt,
+            startedAt = cycleStartedAt,
+            cycleStartedAt = cycleStartedAt
+        )
+        val completedDay = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 22),
+            title = "Day 3",
+            focus = "Shoulders",
+            exercises = emptyList(),
+            dayNumber = 3
+        )
+
+        cancelLatest(
+            template = templates.first { it.id == "intermediate-body-part-4day" },
+            progress = progress,
+            completedDay = completedDay
+        )
+
+        assertThat(repository.remainingLatestCompletion?.dayIndex).isEqualTo(1)
+        assertThat(repository.remainingLatestCompletion?.cycleNumber).isEqualTo(1)
+        assertThat(repository.remainingLatestCompletion?.previousCycleStartedAt).isEqualTo(cycleStartedAt)
+    }
+
     private val templates = listOf(
         template(
             id = "beginner-full-body-2day",
@@ -302,6 +337,7 @@ private class CapturingRoutineProgressRepository : RoutineProgressCommandReposit
     var newCycleStartedAt: Instant? = null
     var restoredDayIndex: Int? = null
     var restoredCycleNumber: Int? = null
+    var remainingLatestCompletion: RoutineCompletionSnapshot? = null
     var additionalExerciseIdPrefix: String? = null
 
     override suspend fun startRoutine(templateId: String): Result<Unit> = error("Not used")
@@ -323,11 +359,13 @@ private class CapturingRoutineProgressRepository : RoutineProgressCommandReposit
         restoredDayIndex: Int,
         restoredCycleNumber: Int,
         restoredCycleStartedAt: Instant?,
+        remainingLatestCompletion: RoutineCompletionSnapshot?,
         plannedExerciseIds: Set<PlannedExerciseId>,
         additionalExerciseIdPrefix: String
     ): Result<Unit> {
         this.restoredDayIndex = restoredDayIndex
         this.restoredCycleNumber = restoredCycleNumber
+        this.remainingLatestCompletion = remainingLatestCompletion
         this.additionalExerciseIdPrefix = additionalExerciseIdPrefix
         return Result.success(Unit)
     }

@@ -144,7 +144,11 @@ class TrainingPreferencesDataSource @Inject constructor(
         sessionId: String,
         restoredDayIndex: Int,
         restoredCycleNumber: Int,
-        restoredCycleStartedAt: String?
+        restoredCycleStartedAt: String?,
+        remainingLastCompletedDayIndex: Int? = null,
+        remainingLastCompletedAt: String? = null,
+        remainingLastCompletedCycleNumber: Int? = null,
+        remainingLastCompletedPreviousCycleStartedAt: String? = null
     ) {
         context.trainingDataStore.edit { preferences ->
             preferences[activeRoutineDayIndexKey(sessionId)] = restoredDayIndex
@@ -154,10 +158,27 @@ class TrainingPreferencesDataSource @Inject constructor(
             } else {
                 preferences.remove(activeRoutineCycleStartedAtKey(sessionId))
             }
-            preferences.remove(lastCompletedRoutineDayKey(sessionId))
-            preferences.remove(lastCompletedAtKey(sessionId))
-            preferences.remove(lastCompletedRoutineCycleKey(sessionId))
-            preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
+            if (remainingLastCompletedDayIndex != null) {
+                preferences[lastCompletedRoutineDayKey(sessionId)] = remainingLastCompletedDayIndex
+            } else {
+                preferences.remove(lastCompletedRoutineDayKey(sessionId))
+            }
+            if (remainingLastCompletedAt != null) {
+                preferences[lastCompletedAtKey(sessionId)] = remainingLastCompletedAt
+            } else {
+                preferences.remove(lastCompletedAtKey(sessionId))
+            }
+            if (remainingLastCompletedCycleNumber != null) {
+                preferences[lastCompletedRoutineCycleKey(sessionId)] = remainingLastCompletedCycleNumber
+            } else {
+                preferences.remove(lastCompletedRoutineCycleKey(sessionId))
+            }
+            if (remainingLastCompletedPreviousCycleStartedAt != null) {
+                preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)] =
+                    remainingLastCompletedPreviousCycleStartedAt
+            } else {
+                preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
+            }
         }
     }
 

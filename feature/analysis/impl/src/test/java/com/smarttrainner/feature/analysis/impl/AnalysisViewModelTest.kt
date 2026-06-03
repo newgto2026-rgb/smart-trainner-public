@@ -4,7 +4,9 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
-import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
+import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.DifficultyLevel
@@ -20,7 +22,7 @@ import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
-import com.smarttrainner.feature.analysis.domain.ObserveWeeklySummaryUseCase
+import com.smarttrainner.feature.analysis.domain.ObserveCycleSummaryUseCase
 import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import java.time.Clock
 import java.time.Instant
@@ -59,7 +61,7 @@ class AnalysisViewModelTest {
     }
 
     @Test
-    fun uiState_exposesLatestThreeRecentLogs() = runTest {
+    fun uiState_exposesAllRecentLogsSortedByLatest() = runTest {
         val oldest = workoutLog(
             id = 1,
             exerciseId = "chest_press",
@@ -80,7 +82,7 @@ class AnalysisViewModelTest {
             exerciseId = "shoulder_raise",
             performedAt = LocalDateTime.of(2026, 5, 22, 9, 0)
         )
-        repository.latestLogs.value = listOf(oldest, secondLatest, latest, thirdLatest)
+        repository.logs.value = listOf(oldest, secondLatest, latest, thirdLatest)
         val viewModel = viewModel()
 
         viewModel.uiState.test {
@@ -91,14 +93,16 @@ class AnalysisViewModelTest {
                 .containsExactly(
                     latest.performedAt,
                     secondLatest.performedAt,
-                    thirdLatest.performedAt
+                    thirdLatest.performedAt,
+                    oldest.performedAt
                 )
                 .inOrder()
             assertThat(state.recentLogs.map { it.exercise?.id })
                 .containsExactly(
                     latest.exerciseId,
                     secondLatest.exerciseId,
-                    thirdLatest.exerciseId
+                    thirdLatest.exerciseId,
+                    oldest.exerciseId
                 )
                 .inOrder()
             cancelAndIgnoreRemainingEvents()
@@ -106,7 +110,8 @@ class AnalysisViewModelTest {
     }
 
     @Test
-    fun uiState_requestsWeeklySummaryForCurrentWeek() = runTest {
+    fun uiState_requestsCycleSummaryForCurrentCycle() = runTest {
+        repository.progress.value = repository.progress.value.copy(cycleNumber = 4)
         val viewModel = viewModel()
 
         viewModel.uiState.test {
@@ -115,6 +120,8 @@ class AnalysisViewModelTest {
 
             assertThat(repository.requestedWeekStartDates).containsExactly(LocalDate.of(2026, 5, 18))
             assertThat(state.summary?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+            assertThat(repository.requestedCycleNumbers).containsExactly(4)
+            assertThat(state.cycleNumber).isEqualTo(4)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -144,9 +151,10 @@ class AnalysisViewModelTest {
     }
 
     private fun viewModel(clock: Clock = fixedClock) = AnalysisViewModel(
-        observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
-        observeWeeklySummary = ObserveWeeklySummaryUseCase(repository),
+        observeAllWorkoutLogs = ObserveAllWorkoutLogsUseCase(repository),
+        observeCycleSummary = ObserveCycleSummaryUseCase(repository),
         observeExercises = ObserveExercisesUseCase(repository),
+        observeRoutineProgress = ObserveRoutineProgressUseCase(repository),
         clock = clock
     )
 }
@@ -181,10 +189,23 @@ class MainDispatcherRule(
 
 private class FakeAnalysisRepository :
     ExerciseRepository,
+    RoutineProgressRepository,
     WeeklySummaryRepository,
     WorkoutLogRepository {
-    val latestLogs = MutableStateFlow<List<WorkoutLog>>(emptyList())
+    val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
+    val progress = MutableStateFlow(
+        RoutineProgress(
+            templateId = "beginner",
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            cycleNumber = 1,
+            startedAt = Instant.parse("2026-05-18T00:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-05-18T00:00:00Z")
+        )
+    )
     val requestedWeekStartDates = mutableListOf<LocalDate>()
+    val requestedCycleNumbers = mutableListOf<Int>()
 
     private val exercises = MutableStateFlow(
         listOf(
@@ -197,19 +218,36 @@ private class FakeAnalysisRepository :
     private val summary = MutableStateFlow(summary(LocalDate.of(2026, 5, 18)))
 
     fun reset() {
-        latestLogs.value = emptyList()
+        logs.value = emptyList()
+        progress.value = progress.value.copy(cycleNumber = 1)
         requestedWeekStartDates.clear()
+        requestedCycleNumbers.clear()
         summary.value = summary(LocalDate.of(2026, 5, 18))
     }
 
     override fun observeExercises(): Flow<List<Exercise>> = exercises
 
-    override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
+    override fun observeRoutineProgress(): Flow<RoutineProgress> = progress
+
+    override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
+
+    override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
     override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = unused()
 
     override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> {
         requestedWeekStartDates += weekStartDate
+        summary.value = summary(weekStartDate)
+        return summary
+    }
+
+    override fun observeCycleSummary(
+        weekStartDate: LocalDate,
+        progress: RoutineProgress,
+        zone: ZoneId
+    ): Flow<WeeklySummary> {
+        requestedWeekStartDates += weekStartDate
+        requestedCycleNumbers += progress.cycleNumber
         summary.value = summary(weekStartDate)
         return summary
     }

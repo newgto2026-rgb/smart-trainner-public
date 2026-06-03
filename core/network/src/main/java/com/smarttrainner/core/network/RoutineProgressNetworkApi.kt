@@ -137,6 +137,10 @@ data class RoutineProgressCancelLatestRequest(
     val restoredDayIndex: Int,
     val restoredCycleNumber: Int,
     val restoredCycleStartedAt: String? = null,
+    val remainingLastCompletedDayIndex: Int? = null,
+    val remainingLastCompletedAt: String? = null,
+    val remainingLastCompletedCycleNumber: Int? = null,
+    val remainingLastCompletedPreviousCycleStartedAt: String? = null,
     val plannedExerciseIds: List<String>,
     val additionalExerciseIdPrefix: String
 )

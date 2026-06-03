@@ -141,7 +141,6 @@
     <string name="routine_routine_badge_duration">약 %1$d분</string>
     <string name="routine_routine_badge_exercises">운동 %1$d개</string>
     <string name="routine_routine_completed_progress">루틴 진행: %2$d개 중 %1$d개 기록</string>
-    <string name="routine_routine_day_subtitle">%1$d일차 · %2$s · 약 %3$d분</string>
     <string name="routine_routine_days_question">일주일 운동 가능 횟수</string>
     <string name="routine_routine_experience_question">운동 경험</string>
     <string name="routine_routine_examples">오늘 운동 계획</string>

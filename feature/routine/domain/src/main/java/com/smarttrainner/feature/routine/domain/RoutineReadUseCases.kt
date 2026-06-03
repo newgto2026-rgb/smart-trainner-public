@@ -15,9 +15,3 @@ class ObservePlanTemplatesUseCase @Inject constructor(
 ) {
     operator fun invoke() = repository.observePlanTemplates()
 }
-
-class ObserveRoutineProgressUseCase @Inject constructor(
-    private val repository: RoutineProgressRepository
-) {
-    operator fun invoke() = repository.observeRoutineProgress()
-}

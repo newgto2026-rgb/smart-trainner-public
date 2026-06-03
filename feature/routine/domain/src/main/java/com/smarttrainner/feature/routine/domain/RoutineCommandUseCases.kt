@@ -143,10 +143,22 @@ class CancelLatestRoutineDayCompletionUseCase @Inject constructor(
         require(completedDay.dayNumber == expectedDayNumber) {
             "Completed routine day does not match the latest completion."
         }
+        val restoredCycleStartedAt = progress.lastCompletedPreviousCycleStartedAt ?: progress.cycleStartedAt
+        val remainingLatestCompletion = (completedDayIndex - 1)
+            .takeIf { it >= 0 }
+            ?.let { previousDayIndex ->
+                RoutineCompletionSnapshot(
+                    dayIndex = previousDayIndex,
+                    completedAt = null,
+                    cycleNumber = completedCycleNumber,
+                    previousCycleStartedAt = restoredCycleStartedAt
+                )
+            }
         return repository.cancelLatestRoutineDayCompletion(
             restoredDayIndex = completedDayIndex,
             restoredCycleNumber = completedCycleNumber,
-            restoredCycleStartedAt = progress.lastCompletedPreviousCycleStartedAt ?: progress.cycleStartedAt,
+            restoredCycleStartedAt = restoredCycleStartedAt,
+            remainingLatestCompletion = remainingLatestCompletion,
             plannedExerciseIds = completedDay.exercises.map { it.id }.toSet(),
             additionalExerciseIdPrefix = routineAdditionalExerciseIdPrefix(
                 templateId = template.id,

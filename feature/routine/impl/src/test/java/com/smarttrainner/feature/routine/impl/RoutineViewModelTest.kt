@@ -5,9 +5,11 @@ import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
 import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.RecommendExercisePrescriptionUseCase
+import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
@@ -42,12 +44,11 @@ import com.smarttrainner.feature.routine.domain.CompleteRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CancelLatestRoutineDayCompletionUseCase
 import com.smarttrainner.feature.routine.domain.ObserveCurrentWeeklyPlanUseCase
 import com.smarttrainner.feature.routine.domain.ObservePlanTemplatesUseCase
-import com.smarttrainner.feature.routine.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.feature.routine.domain.RecommendRoutineUseCase
+import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
-import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
 import com.smarttrainner.feature.routine.domain.SwitchRoutineTemplateUseCase
@@ -1437,6 +1438,8 @@ private class FakeTrainingRepository :
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
 
+    override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs
+
     override suspend fun getExercise(id: ExerciseId): Exercise? = exercises.firstOrNull { it.id == id }
 
     override suspend fun selectPlanTemplate(templateId: String): Result<Unit> {
@@ -1535,6 +1538,7 @@ private class FakeTrainingRepository :
         restoredDayIndex: Int,
         restoredCycleNumber: Int,
         restoredCycleStartedAt: Instant?,
+        remainingLatestCompletion: RoutineCompletionSnapshot?,
         plannedExerciseIds: Set<PlannedExerciseId>,
         additionalExerciseIdPrefix: String
     ): Result<Unit> {
@@ -1546,10 +1550,10 @@ private class FakeTrainingRepository :
             dayIndex = restoredDayIndex,
             cycleNumber = restoredCycleNumber,
             cycleStartedAt = restoredCycleStartedAt ?: progress.value.cycleStartedAt,
-            lastCompletedDayIndex = null,
-            lastCompletedAt = null,
-            lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedDayIndex = remainingLatestCompletion?.dayIndex,
+            lastCompletedAt = remainingLatestCompletion?.completedAt,
+            lastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
+            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt
         )
         return Result.success(Unit)
     }

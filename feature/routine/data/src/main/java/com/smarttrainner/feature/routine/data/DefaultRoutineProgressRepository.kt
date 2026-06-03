@@ -5,6 +5,7 @@ import com.smarttrainner.core.database.WorkoutLogDao
 import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.domain.TrainingSeedStore
+import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineProgressPreference
@@ -16,8 +17,8 @@ import com.smarttrainner.core.network.RoutineProgressStartRequest
 import com.smarttrainner.core.network.RoutineProgressSwitchTemplateRequest
 import com.smarttrainner.core.network.RoutineProgressSyncRequest
 import com.smarttrainner.core.network.RoutineProgressSyncStatus
+import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
-import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -158,6 +159,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
         restoredDayIndex: Int,
         restoredCycleNumber: Int,
         restoredCycleStartedAt: Instant?,
+        remainingLatestCompletion: RoutineCompletionSnapshot?,
         plannedExerciseIds: Set<PlannedExerciseId>,
         additionalExerciseIdPrefix: String
     ): Result<Unit> = runCatching {
@@ -171,6 +173,11 @@ class DefaultRoutineProgressRepository @Inject constructor(
                     restoredDayIndex = restoredDayIndex,
                     restoredCycleNumber = restoredCycleNumber,
                     restoredCycleStartedAt = restoredCycleStartedAt?.toString(),
+                    remainingLastCompletedDayIndex = remainingLatestCompletion?.dayIndex,
+                    remainingLastCompletedAt = remainingLatestCompletion?.completedAt?.toString(),
+                    remainingLastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
+                    remainingLastCompletedPreviousCycleStartedAt =
+                        remainingLatestCompletion?.previousCycleStartedAt?.toString(),
                     plannedExerciseIds = plannedExerciseIds.map { it.value },
                     additionalExerciseIdPrefix = additionalExerciseIdPrefix
                 )
@@ -190,7 +197,16 @@ class DefaultRoutineProgressRepository @Inject constructor(
             plannedExerciseIds = plannedExerciseIds.map { it.value },
             additionalExerciseIdPrefixPattern = "$additionalExerciseIdPrefix%"
         )
-        preferences.setRoutineProgress(sessionId, serverProgress.toPreference())
+        preferences.setRoutineProgress(
+            sessionId = sessionId,
+            progress = serverProgress.toPreference().copy(
+                lastCompletedDayIndex = remainingLatestCompletion?.dayIndex,
+                lastCompletedAt = remainingLatestCompletion?.completedAt?.toString(),
+                lastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
+                lastCompletedPreviousCycleStartedAt =
+                    remainingLatestCompletion?.previousCycleStartedAt?.toString()
+            )
+        )
     }
 
     private suspend fun templateExists(sessionId: String, templateId: String): Boolean =

@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -69,24 +71,41 @@ fun SmartTrainnerScreenScaffold(
             .fillMaxSize()
             .background(SmartTrainnerGradients.screen())
     ) {
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing),
-            contentPadding = PaddingValues(start = 18.dp, top = 14.dp, end = 18.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .windowInsetsPadding(
+                    WindowInsets.safeDrawing.only(
+                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                    )
+                )
+                .padding(horizontal = 18.dp)
         ) {
-            item { SmartTrainnerScreenHeader(chrome = chrome) }
-            content()
+            SmartTrainnerScreenHeader(
+                chrome = chrome,
+                modifier = Modifier.padding(top = 14.dp, bottom = 12.dp)
+            )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentPadding = PaddingValues(bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                content()
+            }
         }
     }
 }
 
 @Composable
-private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
+private fun SmartTrainnerScreenHeader(
+    chrome: SmartTrainnerScreenChrome,
+    modifier: Modifier = Modifier
+) {
     val headerAction = LocalSmartTrainnerHeaderAction.current
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         color = Color.Transparent,
         shadowElevation = 1.dp
@@ -94,7 +113,7 @@ private fun SmartTrainnerScreenHeader(chrome: SmartTrainnerScreenChrome) {
         Column(
             modifier = Modifier
                 .background(SmartTrainnerGradients.brandLight(), RoundedCornerShape(8.dp))
-                    .padding(14.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(

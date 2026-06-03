@@ -1,9 +1,12 @@
 <resources>
     <string name="analysis_route_title">트레이닝 분석</string>
-    <string name="analysis_route_subtitle">이번 주 진행, 부위 균형, 최근 기록</string>
-    <string name="analysis_week_summary">이번 주 요약</string>
+    <string name="analysis_route_subtitle">사이클 진행, 부위 균형, 최근 기록</string>
+    <string name="analysis_cycle_summary">%1$d사이클 요약</string>
     <string name="analysis_recent_records">최근 기록</string>
-    <string name="analysis_recent_records_count">최근 %1$d개</string>
+    <plurals name="analysis_recent_records_show_more">
+        <item quantity="other">%1$d개 더 보기</item>
+    </plurals>
+    <string name="analysis_recent_records_collapse">접기</string>
     <string name="analysis_recent_record_date">%1$d월 %2$d일</string>
     <string name="analysis_record_metric_sets">세트 %1$d개</string>
     <string name="analysis_record_metric_reps">반복 %1$d회</string>
@@ -16,11 +19,11 @@
     <string name="analysis_empty_logs">아직 기록이 없습니다. 오늘 운동을 마치면 바로 변화가 보입니다.</string>
     <string name="analysis_days_value">%1$d일</string>
     <string name="analysis_count_value">%1$d회</string>
-    <string name="analysis_insight_empty_plan">먼저 루틴을 선택하면 주간 흐름을 볼 수 있어요.</string>
-    <string name="analysis_insight_no_logs">운동 하나를 기록하면 첫 주간 흐름이 열립니다.</string>
-    <string name="analysis_insight_good_rate">이번 주 꾸준함이 좋아요. 루틴 흐름을 계속 이어가세요.</string>
-    <string name="analysis_insight_balance">%1$s 운동을 조금 더 더하면 균형이 좋아집니다.</string>
-    <string name="analysis_insight_steady">차분히 흐름이 만들어지고 있어요. 한 번 더 기록하면 신호가 선명해집니다.</string>
+    <string name="analysis_insight_empty_plan">먼저 루틴을 선택하면 사이클 흐름을 볼 수 있어요.</string>
+    <string name="analysis_insight_no_logs">운동 하나를 기록하면 이번 사이클 흐름이 열립니다.</string>
+    <string name="analysis_insight_good_rate">이번 사이클 꾸준함이 좋아요. 루틴 흐름을 계속 이어가세요.</string>
+    <string name="analysis_insight_balance">%1$s 운동을 조금 더 더하면 이번 사이클 균형이 좋아집니다.</string>
+    <string name="analysis_insight_steady">이번 사이클 흐름이 차분히 만들어지고 있어요. 한 번 더 기록하면 신호가 선명해집니다.</string>
     <string name="analysis_muscle_lower_body">하체</string>
     <string name="analysis_muscle_back">등</string>
     <string name="analysis_muscle_chest">가슴</string>

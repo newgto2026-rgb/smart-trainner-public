@@ -125,12 +125,7 @@ internal fun NextRoutineDayCard(
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                val isCustomRoutine = routineDay.routineTemplate?.source == RoutineSource.CUSTOM
                 val fallbackDayTitle = planDayDisplayTitle(routineDay.day.title, routineDay.dayNumber)
-                val hasCustomDayTitle = routineDay.day.title
-                    .hasMeaningfulPlanDayTitle(routineDay.dayNumber)
-                val shouldShowCustomDayLabel = isCustomRoutine &&
-                    (routineDay.primaryFocus != null || hasCustomDayTitle)
                 Text(
                     text = stringResource(
                         R.string.routine_cycle_day_title,
@@ -150,27 +145,6 @@ internal fun NextRoutineDayCard(
                     fontWeight = FontWeight.ExtraBold,
                     color = SmartTrainnerColors.Ink
                 )
-                if (shouldShowCustomDayLabel) {
-                    Text(
-                        text = stringResource(R.string.routine_day_label, routineDay.dayNumber),
-                        color = SmartTrainnerColors.Coral,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                } else if (!isCustomRoutine) {
-                    Text(
-                        text = stringResource(
-                            R.string.routine_routine_day_subtitle,
-                            routineDay.dayNumber,
-                            routineDay.focus.localizedPlanFocus(),
-                            routineDay.sessionMinutes
-                        ),
-                        modifier = Modifier.testTag("training_next_routine_time_estimate"),
-                        color = SmartTrainnerColors.Coral,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
             SmartTrainnerProgressBar(
                 progress = if (routineDay.totalExerciseCount == 0) {

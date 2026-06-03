@@ -126,6 +126,36 @@ class TrainingPreferencesDataSourceTest {
     }
 
     @Test
+    fun cancelLatestRoutineDayCompletion_canKeepPreviousSameCycleCompletion() = runTest {
+        dataSource.setActiveRoutineTemplate(sessionId = "session", templateId = "template")
+        dataSource.markRoutineDayCompleted(
+            sessionId = "session",
+            completedDayIndex = 2,
+            nextDayIndex = 3,
+            completedAt = cycleInstant.toString(),
+            newCycleStartedAt = null
+        )
+
+        dataSource.cancelLatestRoutineDayCompletion(
+            sessionId = "session",
+            restoredDayIndex = 2,
+            restoredCycleNumber = 1,
+            restoredCycleStartedAt = initialInstant.toString(),
+            remainingLastCompletedDayIndex = 1,
+            remainingLastCompletedAt = null,
+            remainingLastCompletedCycleNumber = 1,
+            remainingLastCompletedPreviousCycleStartedAt = initialInstant.toString()
+        )
+
+        val progress = dataSource.activeRoutineProgress("session").first()
+
+        assertThat(progress.dayIndex).isEqualTo(2)
+        assertThat(progress.lastCompletedDayIndex).isEqualTo(1)
+        assertThat(progress.lastCompletedCycleNumber).isEqualTo(1)
+        assertThat(progress.lastCompletedPreviousCycleStartedAt).isEqualTo(initialInstant.toString())
+    }
+
+    @Test
     fun setRoutineProgress_overwritesLocalRoutineFromServerSnapshot() = runTest {
         dataSource.setActiveRoutineTemplate(sessionId = "session", templateId = "local-template")
 
