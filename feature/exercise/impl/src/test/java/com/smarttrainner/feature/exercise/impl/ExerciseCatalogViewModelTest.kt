@@ -26,6 +26,7 @@ import java.time.LocalDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -69,11 +70,68 @@ class ExerciseCatalogViewModelTest {
             assertThat(state.selectedExerciseId).isNull()
             cancelAndIgnoreRemainingEvents()
         }
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun updateSearchQuery_matchesKoreanTokensInAnyOrder() = runTest {
+        val legPress = exercise("leg_press", MuscleGroup.LOWER_BODY, name = "레그 프레스")
+        val chestPress = exercise("machine_chest_press", MuscleGroup.CHEST, name = "머신 체스트 프레스")
+        val legCurl = exercise("leg_curl", MuscleGroup.LOWER_BODY, name = "레그 컬")
+        repository.exercises.value = listOf(legPress, chestPress, legCurl)
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            advanceUntilIdle()
+            awaitItem()
+
+            viewModel.updateSearchQuery("프레스 레그")
+
+            var state = awaitItem()
+            while (state.searchQuery != "프레스 레그" || state.exercises != listOf(legPress)) {
+                state = awaitItem()
+            }
+            assertThat(state.searchQuery).isEqualTo("프레스 레그")
+            assertThat(state.exercises).containsExactly(legPress)
+            cancelAndIgnoreRemainingEvents()
+        }
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun updateSearchQuery_matchesEnglishExerciseIdTokensInAnyOrder() = runTest {
+        val legPress = exercise("leg_press", MuscleGroup.LOWER_BODY, name = "레그 프레스")
+        val chestPress = exercise("machine_chest_press", MuscleGroup.CHEST, name = "머신 체스트 프레스")
+        val legCurl = exercise("leg_curl", MuscleGroup.LOWER_BODY, name = "레그 컬")
+        repository.exercises.value = listOf(legPress, chestPress, legCurl)
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            advanceUntilIdle()
+            awaitItem()
+
+            viewModel.updateSearchQuery("press leg")
+
+            var state = awaitItem()
+            while (state.searchQuery != "press leg" || state.exercises != listOf(legPress)) {
+                state = awaitItem()
+            }
+            assertThat(state.searchQuery).isEqualTo("press leg")
+            assertThat(state.exercises).containsExactly(legPress)
+            cancelAndIgnoreRemainingEvents()
+        }
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
     }
 
     private fun viewModel() = ExerciseCatalogViewModel(
         observeExercises = ObserveExercisesUseCase(repository),
-        observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository)
+        observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
+        searchDispatcher = mainDispatcherRule.dispatcher
     )
 }
 
@@ -99,9 +157,13 @@ private class FakeExerciseCatalogRepository :
     private fun unused(): Nothing = throw UnsupportedOperationException("Not used by exercise catalog tests")
 }
 
-private fun exercise(id: String, muscleGroup: MuscleGroup) = Exercise(
+private fun exercise(
+    id: String,
+    muscleGroup: MuscleGroup,
+    name: String = id
+) = Exercise(
     id = ExerciseId(id),
-    name = id,
+    name = name,
     muscleGroup = muscleGroup,
     equipment = EquipmentType.MACHINE,
     difficulty = DifficultyLevel.INTERMEDIATE,
