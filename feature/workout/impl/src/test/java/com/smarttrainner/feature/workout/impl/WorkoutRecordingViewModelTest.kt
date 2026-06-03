@@ -312,6 +312,8 @@ private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRep
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
+    override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs
+
     override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
         latestLookupLogs
             .filter { it.exerciseId == exerciseId }

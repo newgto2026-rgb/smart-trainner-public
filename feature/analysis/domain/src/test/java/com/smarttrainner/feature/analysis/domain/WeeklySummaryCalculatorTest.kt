@@ -9,14 +9,17 @@ import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.model.UserSessionId
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import org.junit.Test
 
 class WeeklySummaryCalculatorTest {
@@ -190,6 +193,71 @@ class WeeklySummaryCalculatorTest {
         assertThat(result.insight).contains(MuscleGroup.LOWER_BODY.displayName)
     }
 
+    @Test
+    fun calculateCycle_usesLogsSinceCycleStartAndCapsCompletionToPlanSize() {
+        val first = plannedExercise(id = "leg_press", muscleGroup = MuscleGroup.LOWER_BODY)
+        val second = plannedExercise(id = "row", muscleGroup = MuscleGroup.BACK)
+        val plan = WeeklyPlan(
+            id = PlanId("plan"),
+            templateId = "balanced",
+            name = "균형 루틴",
+            weekStartDate = weekStart,
+            days = listOf(
+                WorkoutDayPlan(
+                    date = weekStart,
+                    title = "1일차",
+                    focus = "전신",
+                    exercises = listOf(first, second)
+                )
+            )
+        )
+        val progress = RoutineProgress(
+            templateId = "balanced",
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            cycleNumber = 2,
+            startedAt = Instant.parse("2026-05-01T00:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-05-20T00:00:00Z")
+        )
+        val logs = listOf(
+            completedLog(
+                id = 1,
+                planned = first,
+                performedAt = LocalDateTime.of(2026, 5, 19, 20, 0)
+            ),
+            completedLog(
+                id = 2,
+                planned = first,
+                performedAt = LocalDateTime.of(2026, 5, 20, 20, 0)
+            ),
+            completedLog(
+                id = 3,
+                planned = second,
+                performedAt = LocalDateTime.of(2026, 5, 21, 20, 0)
+            ),
+            completedLog(
+                id = 4,
+                planned = first.copy(id = PlannedExerciseId("routine-added|balanced|cycle2|day1|extra")),
+                performedAt = LocalDateTime.of(2026, 5, 21, 21, 0)
+            )
+        )
+
+        val result = calculator.calculateCycle(
+            weekStartDate = weekStart,
+            plan = plan,
+            logs = logs,
+            progress = progress,
+            zone = ZoneOffset.UTC
+        )
+
+        assertThat(result.plannedExerciseCount).isEqualTo(2)
+        assertThat(result.completedExerciseCount).isEqualTo(2)
+        assertThat(result.totalSets).isEqualTo(9)
+        assertThat(result.muscleBalance[MuscleGroup.LOWER_BODY]).isEqualTo(2)
+        assertThat(result.muscleBalance[MuscleGroup.BACK]).isEqualTo(1)
+    }
+
     private fun plannedExercise(
         id: String,
         muscleGroup: MuscleGroup
@@ -205,13 +273,14 @@ class WeeklySummaryCalculatorTest {
 
     private fun completedLog(
         id: Long,
-        planned: PlannedExercise
+        planned: PlannedExercise,
+        performedAt: LocalDateTime = LocalDateTime.of(2026, 5, 18, 20, 0)
     ): WorkoutLog = WorkoutLog(
         id = WorkoutLogId(id),
         sessionId = UserSessionId("local-default"),
         plannedExerciseId = planned.id,
         exerciseId = planned.exercise.id,
-        performedAt = LocalDateTime.of(2026, 5, 18, 20, 0),
+        performedAt = performedAt,
         sets = 3,
         reps = 10,
         weightKg = 10.0,

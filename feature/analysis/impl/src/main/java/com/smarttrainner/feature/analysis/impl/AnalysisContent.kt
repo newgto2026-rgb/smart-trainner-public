@@ -5,21 +5,30 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -43,7 +52,7 @@ import java.util.Locale
 @Composable
 internal fun AnalysisContent(state: AnalysisUiState) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        SummaryBand(state.summary)
+        SummaryBand(summary = state.summary, cycleNumber = state.cycleNumber)
         if (state.recentLogs.isNotEmpty()) {
             RecentRecordsCard(records = state.recentLogs)
         }
@@ -55,6 +64,10 @@ internal fun AnalysisContent(state: AnalysisUiState) {
 private fun RecentRecordsCard(
     records: List<RecentWorkoutLogUiModel>
 ) {
+    var visibleRecordLimit by remember(records) { mutableStateOf(RECENT_RECORD_PREVIEW_LIMIT) }
+    val visibleRecords = records.take(visibleRecordLimit)
+    val canShowMore = visibleRecordLimit < records.size
+    val canCollapse = visibleRecordLimit > RECENT_RECORD_PREVIEW_LIMIT
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -86,8 +99,45 @@ private fun RecentRecordsCard(
                     modifier = Modifier.testTag("training_recent_records_count")
                 )
             }
-            records.forEach { record ->
+            visibleRecords.forEach { record ->
                 RecentRecordItem(record = record)
+            }
+            if (canShowMore || canCollapse) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (canShowMore) {
+                        TextButton(
+                            onClick = {
+                                visibleRecordLimit = (visibleRecordLimit + RECENT_RECORD_INCREMENT)
+                                    .coerceAtMost(records.size)
+                            },
+                            modifier = Modifier.testTag("training_recent_records_show_more")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ExpandMore,
+                                contentDescription = null
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(text = stringResource(R.string.analysis_recent_records_show_more))
+                        }
+                    }
+                    if (canCollapse) {
+                        TextButton(
+                            onClick = { visibleRecordLimit = RECENT_RECORD_PREVIEW_LIMIT },
+                            modifier = Modifier.testTag("training_recent_records_collapse")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ExpandLess,
+                                contentDescription = null
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(text = stringResource(R.string.analysis_recent_records_collapse))
+                        }
+                    }
+                }
             }
         }
     }
@@ -180,7 +230,10 @@ private fun WorkoutLog.metricBadges(): List<SmartTrainnerBadgeSpec> = buildList 
 }
 
 @Composable
-private fun SummaryBand(summary: WeeklySummary?) {
+private fun SummaryBand(
+    summary: WeeklySummary?,
+    cycleNumber: Int
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -193,7 +246,7 @@ private fun SummaryBand(summary: WeeklySummary?) {
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            AnalysisSectionHeader(title = stringResource(R.string.analysis_week_summary))
+            AnalysisSectionHeader(title = stringResource(R.string.analysis_cycle_summary, cycleNumber))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmartTrainnerMetricTile(
                     label = stringResource(R.string.analysis_completion_rate),
@@ -223,6 +276,9 @@ private fun SummaryBand(summary: WeeklySummary?) {
         }
     }
 }
+
+private const val RECENT_RECORD_PREVIEW_LIMIT = 3
+private const val RECENT_RECORD_INCREMENT = 10
 
 @Composable
 private fun MuscleBalanceCard(summary: WeeklySummary?) {

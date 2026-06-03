@@ -24,6 +24,7 @@ import com.smarttrainner.app.di.CoreRepositoryBindingsModule
 import com.smarttrainner.app.di.RoutineDataRepositoryBindingsModule
 import com.smarttrainner.app.di.WorkoutDataRepositoryBindingsModule
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
@@ -32,7 +33,6 @@ import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
-import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -124,7 +124,7 @@ class TrainingUiTest {
         waitForNodeWithTag("training_next_routine_day_card")
         scrollToNodeWithTag("training_next_routine_day_card")
         composeRule.onNodeWithTag("training_next_routine_day_card").assertIsDisplayed()
-        composeRule.onNodeWithTag("training_next_routine_time_estimate").assertIsDisplayed()
+        composeRule.onAllNodesWithTag("training_next_routine_time_estimate").assertCountEquals(0)
         composeRule.onNodeWithTag("training_next_routine_badge_duration").assertIsDisplayed()
         composeRule.onNodeWithTag("training_tab_home").assertIsDisplayed()
         composeRule.onNodeWithTag("training_tab_analysis").assertIsDisplayed()

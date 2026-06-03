@@ -1,6 +1,7 @@
 package com.smarttrainner
 
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SeedTrainingContent
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WeeklyPlanRepository
@@ -29,13 +30,14 @@ import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.feature.analysis.domain.WeeklySummaryCalculator
 import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
+import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
-import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -146,9 +148,28 @@ internal class InMemoryTrainingRepository :
             .distinctBy { it.exerciseId }
     }
 
+    override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs.map { currentLogs ->
+        currentLogs.sortedByDescending { it.performedAt }
+    }
+
     override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> =
         combine(observeCurrentWeeklyPlan(weekStartDate), logs) { plan, logs ->
             summaryCalculator.calculate(weekStartDate, plan, logs)
+        }
+
+    override fun observeCycleSummary(
+        weekStartDate: LocalDate,
+        progress: RoutineProgress,
+        zone: ZoneId
+    ): Flow<WeeklySummary> =
+        combine(observeCurrentWeeklyPlan(weekStartDate), logs) { plan, logs ->
+            summaryCalculator.calculateCycle(
+                weekStartDate = weekStartDate,
+                plan = plan,
+                logs = logs,
+                progress = progress,
+                zone = zone
+            )
         }
 
     override suspend fun getExercise(id: ExerciseId): Exercise? = exerciseById[id]
@@ -233,6 +254,7 @@ internal class InMemoryTrainingRepository :
         restoredDayIndex: Int,
         restoredCycleNumber: Int,
         restoredCycleStartedAt: Instant?,
+        remainingLatestCompletion: RoutineCompletionSnapshot?,
         plannedExerciseIds: Set<PlannedExerciseId>,
         additionalExerciseIdPrefix: String
     ): Result<Unit> = runCatching {
@@ -244,10 +266,10 @@ internal class InMemoryTrainingRepository :
             dayIndex = restoredDayIndex,
             cycleNumber = restoredCycleNumber,
             cycleStartedAt = restoredCycleStartedAt ?: progress.value.cycleStartedAt,
-            lastCompletedDayIndex = null,
-            lastCompletedAt = null,
-            lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedDayIndex = remainingLatestCompletion?.dayIndex,
+            lastCompletedAt = remainingLatestCompletion?.completedAt,
+            lastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
+            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt
         )
     }
 

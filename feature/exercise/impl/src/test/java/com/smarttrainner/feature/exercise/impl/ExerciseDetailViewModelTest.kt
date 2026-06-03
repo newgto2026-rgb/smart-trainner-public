@@ -132,6 +132,8 @@ private class FakeExerciseRepository :
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
 
+    override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
+
     override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = unused()
 
     override suspend fun getExercise(id: ExerciseId): Exercise? =

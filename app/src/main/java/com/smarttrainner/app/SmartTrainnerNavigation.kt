@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
@@ -53,6 +54,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -675,9 +677,20 @@ private fun SmartTrainnerBottomBar(
     currentRoute: String,
     onDestinationSelected: (SmartTrainnerDestination) -> Unit
 ) {
+    val dividerColor = SmartTrainnerColors.Line
+
     NavigationBar(
         containerColor = SmartTrainnerColors.SurfaceRaised,
-        modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+        modifier = Modifier
+            .drawBehind {
+                drawLine(
+                    color = dividerColor,
+                    start = Offset.Zero,
+                    end = Offset(size.width, 0f),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+            .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
         destinations.forEach { destination ->
             NavigationBarItem(

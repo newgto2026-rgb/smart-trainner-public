@@ -39,4 +39,11 @@ class DefaultWorkoutLogRepository @Inject constructor(
                         .distinctBy { it.exerciseId }
                 }
         }
+
+    override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> =
+        activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
+            workoutLogDao
+                .observeAll(sessionId = sessionId)
+                .map { entities -> entities.map { it.toModel() } }
+        }
 }

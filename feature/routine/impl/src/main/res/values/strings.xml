@@ -127,7 +127,6 @@
     <string name="routine_routine_badge_duration">About %1$d min</string>
     <string name="routine_routine_badge_exercises">Moves: %1$d</string>
     <string name="routine_routine_completed_progress">Routine progress: %1$d/%2$d</string>
-    <string name="routine_routine_day_subtitle">Day %1$d · %2$s · about %3$d min</string>
     <string name="routine_routine_experience_question">Experience</string>
     <string name="routine_routine_examples">Today workout plan</string>
     <string name="routine_routine_feeling_question">Routine direction</string>

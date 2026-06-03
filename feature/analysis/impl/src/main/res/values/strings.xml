@@ -1,9 +1,11 @@
 <resources>
     <string name="analysis_route_title">Training Analysis</string>
-    <string name="analysis_route_subtitle">Weekly progress, balance, and recent records</string>
-    <string name="analysis_week_summary">This Week</string>
+    <string name="analysis_route_subtitle">Cycle progress, balance, and recent records</string>
+    <string name="analysis_cycle_summary">Summary: Cycle %1$d</string>
     <string name="analysis_recent_records">Recent records</string>
-    <string name="analysis_recent_records_count">Latest %1$d</string>
+    <string name="analysis_recent_records_count">All %1$d</string>
+    <string name="analysis_recent_records_show_more">Show 10 more</string>
+    <string name="analysis_recent_records_collapse">Collapse</string>
     <string name="analysis_recent_record_date">%1$d/%2$d</string>
     <string name="analysis_record_metric_sets">Sets: %1$d</string>
     <string name="analysis_record_metric_reps">Reps: %1$d</string>
@@ -16,11 +18,11 @@
     <string name="analysis_empty_logs">No logs yet. Finish a workout to see your progress.</string>
     <string name="analysis_days_value">%1$d d</string>
     <string name="analysis_count_value">Sessions: %1$d</string>
-    <string name="analysis_insight_empty_plan">Pick a routine first so weekly trends can start forming.</string>
-    <string name="analysis_insight_no_logs">Log one workout to unlock your first weekly trend.</string>
-    <string name="analysis_insight_good_rate">Strong consistency this week. Keep the routine moving.</string>
-    <string name="analysis_insight_balance">Add a little more %1$s work to keep the week balanced.</string>
-    <string name="analysis_insight_steady">A steady week is forming. One more logged session will sharpen the signal.</string>
+    <string name="analysis_insight_empty_plan">Pick a routine first so cycle trends can start forming.</string>
+    <string name="analysis_insight_no_logs">Log one workout to unlock the first trend for this cycle.</string>
+    <string name="analysis_insight_good_rate">Strong consistency this cycle. Keep the routine moving.</string>
+    <string name="analysis_insight_balance">Add a little more %1$s work to keep this cycle balanced.</string>
+    <string name="analysis_insight_steady">A steady cycle is forming. One more logged session will sharpen the signal.</string>
     <string name="analysis_muscle_lower_body">Lower Body</string>
     <string name="analysis_muscle_back">Back</string>
     <string name="analysis_muscle_chest">Chest</string>
