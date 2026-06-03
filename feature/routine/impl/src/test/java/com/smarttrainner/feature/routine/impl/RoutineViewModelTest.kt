@@ -1027,6 +1027,30 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun saveCustomRoutineAndStart_keepsBuilderOpenWhenRoutineSwitchFails() = runTest {
+        repository.switchRoutineResult = Result.failure(IllegalStateException("switch failed"))
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            awaitItem()
+
+            viewModel.showCreateCustomRoutine()
+            viewModel.updateCustomRoutineName("My split")
+            viewModel.addExerciseToCustomRoutine(ExerciseId("back_pull"))
+            viewModel.saveCustomRoutine(startAfterSave = true)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertThat(state.customRoutineBuilder.visible).isTrue()
+            assertThat(state.customRoutineBuilder.error).isEqualTo(CustomRoutineFormError.SAVE_FAILED)
+            assertThat(state.activeRoutineProgress?.templateId).isEqualTo("intermediate-body-part-4day")
+            assertThat(state.customTemplates.map { it.id }).contains("custom-test")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun saveCustomRoutine_editingExistingRoutineDoesNotResetProgress() = runTest {
         val viewModel = viewModel()
 
@@ -1339,6 +1363,7 @@ private class FakeTrainingRepository :
     private val latestLogs = MutableStateFlow<List<WorkoutLog>>(emptyList())
     val requestedPlanWeekStartDates = mutableListOf<LocalDate>()
     val requestedLogWeekStartDates = mutableListOf<LocalDate>()
+    var switchRoutineResult: Result<Unit> = Result.success(Unit)
 
     fun setTemplates(nextTemplates: List<PlanTemplate>) {
         templates.value = nextTemplates
@@ -1352,6 +1377,7 @@ private class FakeTrainingRepository :
         latestLogs.value = emptyList()
         requestedPlanWeekStartDates.clear()
         requestedLogWeekStartDates.clear()
+        switchRoutineResult = Result.success(Unit)
     }
 
     fun setLogs(value: List<WorkoutLog>) {
@@ -1425,6 +1451,7 @@ private class FakeTrainingRepository :
     }
 
     override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> {
+        switchRoutineResult.getOrNull() ?: return switchRoutineResult
         selectedTemplateId.value = templateId
         progress.value = progress.value.copy(
             templateId = templateId,

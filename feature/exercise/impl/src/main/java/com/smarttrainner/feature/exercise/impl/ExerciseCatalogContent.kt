@@ -349,7 +349,7 @@ private fun List<Exercise>.primaryExercisesFor(group: MuscleGroup): List<Exercis
     filter { it.muscleGroup == group }
         .sortedWith(
             compareBy(
-                { it.movementPattern.ordinal },
+                { it.movementPattern.sortRank },
                 { it.variantRank },
                 { it.popularityRank },
                 { it.catalogOrder },

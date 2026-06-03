@@ -158,6 +158,11 @@ internal class InMemoryTrainingRepository :
             .filter { it.exerciseId == exerciseId }
             .maxByOrNull { it.performedAt }
 
+    override suspend fun getLatestWorkoutLog(plannedExerciseId: PlannedExerciseId): WorkoutLog? =
+        logs.value
+            .filter { it.plannedExerciseId == plannedExerciseId }
+            .maxByOrNull { it.performedAt }
+
     override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = runCatching {
         require(templateExists(templateId)) { "Unknown plan template: $templateId" }
         selectedTemplateId.value = templateId

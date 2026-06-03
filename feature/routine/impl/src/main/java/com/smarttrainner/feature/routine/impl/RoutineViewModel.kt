@@ -564,10 +564,16 @@ class RoutineViewModel @Inject constructor(
                 availableExerciseIds = state.exercises.map { it.id }.toSet()
             )
             result.onSuccess { template ->
-                if (startAfterSave) {
+                val switchResult = if (startAfterSave) {
                     switchRoutineTemplate(template.id)
+                } else {
+                    Result.success(Unit)
                 }
-                customRoutineBuilder.value = CustomRoutineBuilderState()
+                if (switchResult.isSuccess) {
+                    customRoutineBuilder.value = CustomRoutineBuilderState()
+                } else {
+                    customRoutineBuilder.update { it.copy(error = CustomRoutineFormError.SAVE_FAILED) }
+                }
             }.onFailure {
                 customRoutineBuilder.update { it.copy(error = CustomRoutineFormError.SAVE_FAILED) }
             }

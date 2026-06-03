@@ -22,6 +22,7 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.feature.workout.domain.GetLatestWorkoutLogUseCase
 import com.smarttrainner.feature.workout.domain.SaveWorkoutLogUseCase
 import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import java.time.Clock
@@ -92,7 +93,7 @@ class WorkoutRecordingViewModelTest {
 
     @Test
     fun updatePlannedExercise_resetsWeightWhenSameExerciseHasNoPlannedExerciseLog() = runTest {
-        repository.setLogs(
+        repository.setLatestLookupLogs(
             listOf(
                 repository.completedLog(
                     plannedExercise = repository.plannedExercise,
@@ -116,6 +117,61 @@ class WorkoutRecordingViewModelTest {
             assertThat(setEntries.map { it.reps }).containsExactly("8", "8", "8").inOrder()
             assertThat(setEntries.map { it.weightKg }).containsExactly("", "", "").inOrder()
             assertThat(setEntries.map { it.restSeconds }).containsExactly("90", "90", "90").inOrder()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun updatePlannedExercise_prefillsFromAllTimePlannedExerciseLookupWhenFlowsStartEmpty() = runTest {
+        repository.setLatestLookupLogs(
+            listOf(
+                repository.completedLog(
+                    plannedExercise = repository.plannedExercise,
+                    performedAt = LocalDateTime.of(2026, 4, 12, 7, 0),
+                    setEntries = listOf(
+                        WorkoutSetLog(order = 1, reps = 9, weightKg = 52.5, durationMinutes = null),
+                        WorkoutSetLog(order = 2, reps = 10, weightKg = 55.0, durationMinutes = null)
+                    )
+                )
+            )
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            viewModel.updatePlannedExercise(repository.plannedExercise)
+            advanceUntilIdle()
+
+            val setEntries = viewModel.uiState.value.recordForm.setEntries
+            assertThat(setEntries.map { it.reps }).containsExactly("9", "10").inOrder()
+            assertThat(setEntries.map { it.weightKg }).containsExactly("52.5", "55").inOrder()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun updatePlannedExercise_doesNotOverwriteEditedFormWhenLatestLookupReturns() = runTest {
+        repository.setLatestLookupLogs(
+            listOf(
+                repository.completedLog(
+                    plannedExercise = repository.plannedExercise,
+                    performedAt = LocalDateTime.of(2026, 4, 12, 7, 0),
+                    setEntries = listOf(
+                        WorkoutSetLog(order = 1, reps = 9, weightKg = 52.5, durationMinutes = null)
+                    )
+                )
+            )
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            viewModel.updatePlannedExercise(repository.plannedExercise)
+            viewModel.updateSetWeight(index = 0, value = "60")
+            advanceUntilIdle()
+
+            val setEntries = viewModel.uiState.value.recordForm.setEntries
+            assertThat(setEntries.first().weightKg).isEqualTo("60")
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -169,6 +225,7 @@ class WorkoutRecordingViewModelTest {
     private fun viewModel() = WorkoutRecordingViewModel(
         observeWorkoutLogs = ObserveWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
+        getLatestWorkoutLog = GetLatestWorkoutLogUseCase(repository),
         saveWorkoutLog = SaveWorkoutLogUseCase(repository),
         clock = fixedClock
     )
@@ -216,14 +273,20 @@ private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRep
     )
     val savedInputs = mutableListOf<WorkoutLogInput>()
     private val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
+    private var latestLookupLogs = emptyList<WorkoutLog>()
 
     fun reset() {
         savedInputs.clear()
         logs.value = emptyList()
+        latestLookupLogs = emptyList()
     }
 
     fun setLogs(value: List<WorkoutLog>) {
         logs.value = value
+    }
+
+    fun setLatestLookupLogs(value: List<WorkoutLog>) {
+        latestLookupLogs = value
     }
 
     fun completedLog(
@@ -250,8 +313,13 @@ private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRep
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
     override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
-        logs.value
+        latestLookupLogs
             .filter { it.exerciseId == exerciseId }
+            .maxByOrNull { it.performedAt }
+
+    override suspend fun getLatestWorkoutLog(plannedExerciseId: PlannedExerciseId): WorkoutLog? =
+        latestLookupLogs
+            .filter { it.plannedExerciseId == plannedExerciseId }
             .maxByOrNull { it.performedAt }
 
     override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> {

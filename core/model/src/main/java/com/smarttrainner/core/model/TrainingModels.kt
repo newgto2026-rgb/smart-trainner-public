@@ -77,30 +77,30 @@ enum class ExerciseMuscleRole {
     SECONDARY
 }
 
-enum class ExerciseMovementPattern {
-    SQUAT,
-    LEG_PRESS,
-    HINGE,
-    LUNGE,
-    STEP_UP,
-    HIP_EXTENSION,
-    KNEE_EXTENSION,
-    KNEE_FLEXION,
-    CALF_RAISE,
-    VERTICAL_PULL,
-    HORIZONTAL_PULL,
-    HORIZONTAL_PUSH,
-    VERTICAL_PUSH,
-    CHEST_ISOLATION,
-    SHOULDER_ISOLATION,
-    ARM_ISOLATION,
-    CORE_STABILITY,
-    CORE_FLEXION,
-    CORE_ROTATION,
-    CARRY,
-    CONDITIONING,
-    CARDIO,
-    ACCESSORY
+enum class ExerciseMovementPattern(val sortRank: Int) {
+    SQUAT(0),
+    LEG_PRESS(1),
+    HINGE(2),
+    LUNGE(3),
+    STEP_UP(4),
+    HIP_EXTENSION(5),
+    KNEE_EXTENSION(6),
+    KNEE_FLEXION(7),
+    CALF_RAISE(8),
+    VERTICAL_PULL(9),
+    HORIZONTAL_PULL(10),
+    HORIZONTAL_PUSH(11),
+    VERTICAL_PUSH(12),
+    CHEST_ISOLATION(13),
+    SHOULDER_ISOLATION(14),
+    ARM_ISOLATION(15),
+    CORE_STABILITY(16),
+    CORE_FLEXION(17),
+    CORE_ROTATION(18),
+    CARRY(19),
+    CONDITIONING(20),
+    CARDIO(21),
+    ACCESSORY(22)
 }
 
 enum class PlanLevel(val displayName: String) {

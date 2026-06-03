@@ -102,7 +102,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedPreviousCycleStartedAt = null
         )
         preferences.setRoutineProgress(sessionId, switchedProgress)
-        val serverProgress = pushServerProgress(sessionId) {
+        val serverProgress = pushServerProgress(sessionId, writeToPreferences = false) {
             routineProgressNetworkApi.switchRoutineTemplate(
                 sessionId = sessionId,
                 request = RoutineProgressSwitchTemplateRequest(
@@ -204,9 +204,14 @@ class DefaultRoutineProgressRepository @Inject constructor(
 
     private suspend fun pushServerProgress(
         sessionId: String,
+        writeToPreferences: Boolean = true,
         request: suspend () -> RoutineProgressDto
     ): RoutineProgressDto? = try {
-        request().also { preferences.setRoutineProgress(sessionId, it.toPreference()) }
+        request().also {
+            if (writeToPreferences) {
+                preferences.setRoutineProgress(sessionId, it.toPreference())
+            }
+        }
     } catch (error: CancellationException) {
         throw error
     } catch (error: HttpException) {
