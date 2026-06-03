@@ -31,8 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,7 +64,6 @@ internal fun AnalysisContent(state: AnalysisUiState) {
 private fun RecentRecordsCard(
     records: List<RecentWorkoutLogUiModel>
 ) {
-    val resources = LocalResources.current
     var visibleRecordLimit by remember(records) { mutableIntStateOf(RECENT_RECORD_PREVIEW_LIMIT) }
     val visibleRecords = records.take(visibleRecordLimit)
     val canShowMore = visibleRecordLimit < records.size
@@ -117,7 +116,7 @@ private fun RecentRecordsCard(
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(
-                                text = resources.getQuantityString(
+                                text = pluralStringResource(
                                     R.plurals.analysis_recent_records_show_more,
                                     showMoreCount,
                                     showMoreCount
