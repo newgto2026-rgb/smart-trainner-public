@@ -33,6 +33,7 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
         ) {
             exerciseCatalogContent(
                 state = routeState,
+                onSearchQueryChanged = viewModel::updateSearchQuery,
                 onExerciseSelected = onExerciseSelected
             )
         }

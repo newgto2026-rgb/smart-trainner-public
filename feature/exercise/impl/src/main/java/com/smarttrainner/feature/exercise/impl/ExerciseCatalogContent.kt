@@ -11,22 +11,32 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.exercisemedia.TrainerExerciseImage
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
@@ -34,7 +44,6 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.model.targetsAnyMuscleGroup
 import com.smarttrainner.core.model.targetsMuscleGroup
-import com.smarttrainner.core.exercisemedia.TrainerExerciseImage
 import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
@@ -48,19 +57,40 @@ private val armDetailGroups = listOf(
 
 internal fun LazyListScope.exerciseCatalogContent(
     state: ExerciseCatalogUiState,
+    onSearchQueryChanged: (String) -> Unit,
     onExerciseSelected: (ExerciseId) -> Unit
 ) {
     val selectedExerciseId = state.selectedExerciseId
+    val isSearching = state.searchQuery.isNotBlank()
+    item {
+        ExerciseSearchField(
+            query = state.searchQuery,
+            onQueryChanged = onSearchQueryChanged,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
     item {
         Text(
-            text = stringResource(R.string.exercise_all_exercises, state.exercises.size),
+            text = stringResource(
+                if (isSearching) {
+                    R.string.exercise_search_results
+                } else {
+                    R.string.exercise_all_exercises
+                },
+                state.exercises.size
+            ),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
     }
-    if (selectedExerciseId == null) {
+    if (selectedExerciseId == null && !isSearching) {
         item {
             SmartTrainnerEmptyState(text = stringResource(R.string.exercise_select_exercise_hint))
+        }
+    }
+    if (state.exercises.isEmpty() && isSearching) {
+        item {
+            SmartTrainnerEmptyState(text = stringResource(R.string.exercise_search_empty))
         }
     }
     MuscleGroup.entries
@@ -73,6 +103,47 @@ internal fun LazyListScope.exerciseCatalogContent(
                 onExerciseSelected = onExerciseSelected
             )
         }
+}
+
+@Composable
+private fun ExerciseSearchField(
+    query: String,
+    onQueryChanged: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val focusManager = LocalFocusManager.current
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChanged,
+        modifier = modifier.testTag("training_exercise_search"),
+        label = { Text(stringResource(R.string.exercise_search_label)) },
+        placeholder = { Text(stringResource(R.string.exercise_search_placeholder)) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null
+            )
+        },
+        trailingIcon = if (query.isNotEmpty()) {
+            {
+                IconButton(
+                    onClick = { onQueryChanged("") },
+                    modifier = Modifier.testTag("training_exercise_search_clear")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.exercise_search_clear)
+                    )
+                }
+            }
+        } else {
+            null
+        },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+        shape = RoundedCornerShape(8.dp)
+    )
 }
 
 private fun LazyListScope.exerciseGroupSection(

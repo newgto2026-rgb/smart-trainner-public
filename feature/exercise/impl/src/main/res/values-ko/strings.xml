@@ -7,6 +7,11 @@
     <string name="exercise_close_image_viewer">확대 이미지 닫기</string>
     <string name="exercise_image_viewer_title">운동 이미지</string>
     <string name="exercise_all_exercises">기본 운동 %1$d개</string>
+    <string name="exercise_search_label">운동 검색</string>
+    <string name="exercise_search_placeholder">레그 프레스 또는 press leg</string>
+    <string name="exercise_search_clear">운동 검색어 지우기</string>
+    <string name="exercise_search_results">검색 결과 %1$d개</string>
+    <string name="exercise_search_empty">검색어와 일치하는 운동이 없습니다.</string>
     <string name="exercise_select_exercise_hint">운동을 선택하면 큰 상세 창에서 방법과 단계 이미지를 볼 수 있습니다.</string>
     <string name="exercise_set_number">%1$d세트</string>
     <string name="exercise_actual_reps">반복 %1$s회</string>

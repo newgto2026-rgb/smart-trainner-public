@@ -7,6 +7,11 @@
     <string name="exercise_close_image_viewer">Close enlarged image</string>
     <string name="exercise_image_viewer_title">Exercise image</string>
     <string name="exercise_all_exercises">Exercise count: %1$d</string>
+    <string name="exercise_search_label">Search exercises</string>
+    <string name="exercise_search_placeholder">Try leg press or press leg</string>
+    <string name="exercise_search_clear">Clear exercise search</string>
+    <string name="exercise_search_results">Search results: %1$d</string>
+    <string name="exercise_search_empty">No exercises match your search.</string>
     <string name="exercise_select_exercise_hint">Choose an exercise to see its method and step images in a large detail dialog.</string>
     <string name="exercise_set_number">Set %1$d</string>
     <string name="exercise_actual_reps">Reps %1$s</string>
