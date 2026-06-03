@@ -27,6 +27,13 @@ class RoutineFeatureEntryImpl @Inject constructor(
         LaunchedEffect(viewModel) {
             viewModel.refreshWeekStartOnWeekBoundary()
         }
+        LaunchedEffect(callbacks.routineLibraryOpenRequest, viewModel) {
+            val request = callbacks.routineLibraryOpenRequest
+            if (request > 0) {
+                viewModel.showRoutineLibrary()
+                callbacks.onRoutineLibraryOpenRequestConsumed(request)
+            }
+        }
         val currentRoutineName = state.plan?.localizedName().orEmpty()
         val actions = remember(callbacks, viewModel) {
             RoutineActions(

@@ -168,7 +168,12 @@ fun SmartTrainnerExercisePickerCard(
     modifier: Modifier = Modifier,
     clickModifier: Modifier = Modifier,
     secondaryActionModifier: Modifier = Modifier,
-    leadingIconTint: Color = SmartTrainnerColors.Coral
+    leadingIconTint: Color = SmartTrainnerColors.Coral,
+    badgeText: String? = null,
+    badgeContainerColor: Color = SmartTrainnerColors.SteelSoft,
+    badgeContentColor: Color = SmartTrainnerColors.Ink,
+    badgeBorderColor: Color? = null,
+    badgeModifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
         Surface(
@@ -205,6 +210,15 @@ fun SmartTrainnerExercisePickerCard(
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (badgeText != null) {
+                    SmartTrainnerBadge(
+                        text = badgeText,
+                        modifier = badgeModifier,
+                        containerColor = badgeContainerColor,
+                        contentColor = badgeContentColor,
+                        borderColor = badgeBorderColor
                     )
                 }
                 OutlinedButton(

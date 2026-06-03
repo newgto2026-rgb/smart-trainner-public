@@ -178,11 +178,14 @@ internal class InMemoryTrainingRepository :
 
     override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> = runCatching {
         require(templateExists(templateId)) { "Unknown plan template: $templateId" }
-        val template = templateById(templateId, customTemplates.value)
         selectedTemplateId.value = templateId
         progress.value = progress.value.copy(
             templateId = templateId,
-            dayIndex = progress.value.dayIndex.coerceIn(0, (template.cycleLength - 1).coerceAtLeast(0))
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            lastCompletedCycleNumber = null,
+            lastCompletedPreviousCycleStartedAt = null
         )
     }
 

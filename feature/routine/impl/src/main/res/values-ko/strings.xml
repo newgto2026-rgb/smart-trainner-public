@@ -105,6 +105,8 @@
     <string name="routine_muscle_forearms">전완근</string>
     <string name="routine_muscle_full_body">전신</string>
     <string name="routine_muscle_lower_body">하체</string>
+    <string name="routine_muscle_role_primary">주</string>
+    <string name="routine_muscle_role_secondary">보조</string>
     <string name="routine_muscle_pull">당기기</string>
     <string name="routine_muscle_push">밀기</string>
     <string name="routine_muscle_shoulders">어깨</string>

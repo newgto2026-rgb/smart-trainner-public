@@ -8,6 +8,8 @@ import com.smarttrainner.core.exercisemedia.exerciseUsesGeneratedTextBackedVisua
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
+import com.smarttrainner.core.model.ExerciseMovementPattern
+import com.smarttrainner.core.model.ExerciseMuscleRole
 import com.smarttrainner.core.model.MuscleGroup
 import java.util.Locale
 
@@ -274,6 +276,43 @@ internal fun MuscleGroup.localizedLabel(): String = stringResource(
         MuscleGroup.CORE -> R.string.exercise_muscle_core
         MuscleGroup.CARDIO -> R.string.exercise_muscle_cardio
         MuscleGroup.FULL_BODY -> R.string.exercise_muscle_full_body
+    }
+)
+
+@Composable
+internal fun ExerciseMuscleRole.localizedLabel(): String = stringResource(
+    when (this) {
+        ExerciseMuscleRole.PRIMARY -> R.string.exercise_muscle_role_primary
+        ExerciseMuscleRole.SECONDARY -> R.string.exercise_muscle_role_secondary
+    }
+)
+
+@Composable
+internal fun ExerciseMovementPattern.localizedLabel(): String = stringResource(
+    when (this) {
+        ExerciseMovementPattern.SQUAT -> R.string.exercise_movement_squat
+        ExerciseMovementPattern.LEG_PRESS -> R.string.exercise_movement_leg_press
+        ExerciseMovementPattern.HINGE -> R.string.exercise_movement_hinge
+        ExerciseMovementPattern.LUNGE -> R.string.exercise_movement_lunge
+        ExerciseMovementPattern.STEP_UP -> R.string.exercise_movement_step_up
+        ExerciseMovementPattern.HIP_EXTENSION -> R.string.exercise_movement_hip_extension
+        ExerciseMovementPattern.KNEE_EXTENSION -> R.string.exercise_movement_knee_extension
+        ExerciseMovementPattern.KNEE_FLEXION -> R.string.exercise_movement_knee_flexion
+        ExerciseMovementPattern.CALF_RAISE -> R.string.exercise_movement_calf_raise
+        ExerciseMovementPattern.VERTICAL_PULL -> R.string.exercise_movement_vertical_pull
+        ExerciseMovementPattern.HORIZONTAL_PULL -> R.string.exercise_movement_horizontal_pull
+        ExerciseMovementPattern.HORIZONTAL_PUSH -> R.string.exercise_movement_horizontal_push
+        ExerciseMovementPattern.VERTICAL_PUSH -> R.string.exercise_movement_vertical_push
+        ExerciseMovementPattern.CHEST_ISOLATION -> R.string.exercise_movement_chest_isolation
+        ExerciseMovementPattern.SHOULDER_ISOLATION -> R.string.exercise_movement_shoulder_isolation
+        ExerciseMovementPattern.ARM_ISOLATION -> R.string.exercise_movement_arm_isolation
+        ExerciseMovementPattern.CORE_STABILITY -> R.string.exercise_movement_core_stability
+        ExerciseMovementPattern.CORE_FLEXION -> R.string.exercise_movement_core_flexion
+        ExerciseMovementPattern.CORE_ROTATION -> R.string.exercise_movement_core_rotation
+        ExerciseMovementPattern.CARRY -> R.string.exercise_movement_carry
+        ExerciseMovementPattern.CONDITIONING -> R.string.exercise_movement_conditioning
+        ExerciseMovementPattern.CARDIO -> R.string.exercise_movement_cardio
+        ExerciseMovementPattern.ACCESSORY -> R.string.exercise_movement_accessory
     }
 )
 

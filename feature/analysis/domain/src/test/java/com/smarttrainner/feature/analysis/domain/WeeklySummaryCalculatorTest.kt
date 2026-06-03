@@ -100,6 +100,54 @@ class WeeklySummaryCalculatorTest {
     }
 
     @Test
+    fun calculate_countsSecondaryMusclesInMuscleBalance() {
+        val exercise = exercise(
+            id = "conventional_deadlift",
+            muscleGroup = MuscleGroup.FULL_BODY,
+            muscleGroups = listOf(
+                MuscleGroup.FULL_BODY,
+                MuscleGroup.LOWER_BODY,
+                MuscleGroup.BACK,
+                MuscleGroup.CORE
+            )
+        )
+        val planned = PlannedExercise(
+            id = PlannedExerciseId("2026-05-18_conventional_deadlift"),
+            exercise = exercise,
+            sets = 3,
+            repRange = 5..8,
+            durationMinutes = null,
+            restSeconds = 150,
+            note = ""
+        )
+        val plan = WeeklyPlan(
+            id = PlanId("plan"),
+            templateId = "custom",
+            name = "전신 루틴",
+            weekStartDate = weekStart,
+            days = listOf(
+                WorkoutDayPlan(
+                    date = weekStart,
+                    title = "전신",
+                    focus = "전신",
+                    exercises = listOf(planned)
+                )
+            )
+        )
+
+        val result = calculator.calculate(
+            weekStartDate = weekStart,
+            plan = plan,
+            logs = listOf(completedLog(id = 1, planned = planned))
+        )
+
+        assertThat(result.muscleBalance[MuscleGroup.FULL_BODY]).isEqualTo(1)
+        assertThat(result.muscleBalance[MuscleGroup.LOWER_BODY]).isEqualTo(1)
+        assertThat(result.muscleBalance[MuscleGroup.BACK]).isEqualTo(1)
+        assertThat(result.muscleBalance[MuscleGroup.CORE]).isEqualTo(1)
+    }
+
+    @Test
     fun calculate_excludesFullBodyFromWeakestMuscleInsight() {
         val completedGroups = listOf(
             MuscleGroup.LOWER_BODY,
@@ -172,10 +220,15 @@ class WeeklySummaryCalculatorTest {
         completed = true
     )
 
-    private fun exercise(id: String, muscleGroup: MuscleGroup): Exercise = Exercise(
+    private fun exercise(
+        id: String,
+        muscleGroup: MuscleGroup,
+        muscleGroups: List<MuscleGroup> = listOf(muscleGroup)
+    ): Exercise = Exercise(
         id = ExerciseId(id),
         name = id,
         muscleGroup = muscleGroup,
+        muscleGroups = muscleGroups,
         equipment = EquipmentType.MACHINE,
         difficulty = DifficultyLevel.BEGINNER,
         imageKey = id,

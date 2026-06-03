@@ -29,9 +29,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -47,6 +49,7 @@ import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.model.toRecommendedDisplayRepRange
 import com.smarttrainner.core.ui.SmartTrainnerNumberField
 import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
@@ -60,6 +63,12 @@ internal fun WorkoutRecordDialog(
     exerciseMediaRenderer: ExerciseMediaRenderer
 ) {
     val planned = state.recordingPlannedExercise ?: return
+    val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
+    LaunchedEffect(planned.id) {
+        focusManager.clearFocus(force = true)
+        scrollState.scrollTo(0)
+    }
     Dialog(
         onDismissRequest = actions.onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -77,7 +86,7 @@ internal fun WorkoutRecordDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(scrollState)
                         .padding(start = 14.dp, top = 38.dp, end = 14.dp, bottom = 14.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -411,9 +420,13 @@ private fun PlannedExercise.workoutMetricBadges(latestLog: WorkoutLog?): List<Sm
         )
         val reps = repRange
         if (reps != null) {
+            val displayReps = reps.toRecommendedDisplayRepRange()
             add(
                 SmartTrainnerBadgeSpec(
-                    text = stringResource(R.string.workout_actual_reps, "${reps.first}-${reps.last}"),
+                    text = stringResource(
+                        R.string.workout_actual_reps,
+                        "${displayReps.first}-${displayReps.last}"
+                    ),
                     containerColor = SmartTrainnerColors.CoralSoft,
                     contentColor = SmartTrainnerColors.Ink
                 )

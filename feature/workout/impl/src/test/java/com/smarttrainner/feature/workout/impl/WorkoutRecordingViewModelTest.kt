@@ -22,7 +22,6 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
-import com.smarttrainner.feature.workout.domain.GetLatestWorkoutLogUseCase
 import com.smarttrainner.feature.workout.domain.SaveWorkoutLogUseCase
 import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import java.time.Clock
@@ -60,10 +59,11 @@ class WorkoutRecordingViewModelTest {
     }
 
     @Test
-    fun updatePlannedExercise_prefillsSetCountRepsAndWeightFromLatestExerciseLog() = runTest {
+    fun updatePlannedExercise_prefillsSetCountRepsAndWeightFromLatestPlannedExerciseLog() = runTest {
         repository.setLogs(
             listOf(
                 repository.completedLog(
+                    plannedExercise = repository.plannedExercise,
                     performedAt = LocalDateTime.of(2026, 5, 19, 7, 0),
                     setEntries = listOf(
                         WorkoutSetLog(order = 1, reps = 7, weightKg = 42.5, durationMinutes = null),
@@ -78,6 +78,7 @@ class WorkoutRecordingViewModelTest {
 
         viewModel.uiState.test {
             skipItems(1)
+            advanceUntilIdle()
             viewModel.updatePlannedExercise(repository.plannedExercise)
             advanceUntilIdle()
 
@@ -85,6 +86,36 @@ class WorkoutRecordingViewModelTest {
             assertThat(setEntries.map { it.reps }).containsExactly("7", "8", "6", "5").inOrder()
             assertThat(setEntries.map { it.weightKg }).containsExactly("42.5", "45", "47.5", "50").inOrder()
             assertThat(setEntries.map { it.restSeconds }).containsExactly("90", "120", "150", "180").inOrder()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun updatePlannedExercise_resetsWeightWhenSameExerciseHasNoPlannedExerciseLog() = runTest {
+        repository.setLogs(
+            listOf(
+                repository.completedLog(
+                    plannedExercise = repository.plannedExercise,
+                    performedAt = LocalDateTime.of(2026, 5, 19, 7, 0),
+                    setEntries = listOf(
+                        WorkoutSetLog(order = 1, reps = 7, weightKg = 42.5, durationMinutes = null),
+                        WorkoutSetLog(order = 2, reps = 8, weightKg = 45.0, durationMinutes = null)
+                    )
+                )
+            )
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            advanceUntilIdle()
+            viewModel.updatePlannedExercise(repository.nextPlannedExerciseWithSameExercise)
+            advanceUntilIdle()
+
+            val setEntries = viewModel.uiState.value.recordForm.setEntries
+            assertThat(setEntries.map { it.reps }).containsExactly("8", "8", "8").inOrder()
+            assertThat(setEntries.map { it.weightKg }).containsExactly("", "", "").inOrder()
+            assertThat(setEntries.map { it.restSeconds }).containsExactly("90", "90", "90").inOrder()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -138,7 +169,6 @@ class WorkoutRecordingViewModelTest {
     private fun viewModel() = WorkoutRecordingViewModel(
         observeWorkoutLogs = ObserveWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
-        getLatestWorkoutLog = GetLatestWorkoutLogUseCase(repository),
         saveWorkoutLog = SaveWorkoutLogUseCase(repository),
         clock = fixedClock
     )
@@ -181,6 +211,9 @@ private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRep
         restSeconds = 90,
         note = ""
     )
+    val nextPlannedExerciseWithSameExercise = plannedExercise.copy(
+        id = PlannedExerciseId("next_planned_chest_press")
+    )
     val savedInputs = mutableListOf<WorkoutLogInput>()
     private val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
 
@@ -194,6 +227,7 @@ private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRep
     }
 
     fun completedLog(
+        plannedExercise: PlannedExercise = this.plannedExercise,
         performedAt: LocalDateTime,
         setEntries: List<WorkoutSetLog>
     ) = WorkoutLog(

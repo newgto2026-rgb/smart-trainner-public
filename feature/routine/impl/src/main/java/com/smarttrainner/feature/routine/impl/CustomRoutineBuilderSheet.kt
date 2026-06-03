@@ -62,10 +62,9 @@ import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.domain.ExercisePrescription
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseMuscleRole
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.RoutineFocus
-import com.smarttrainner.core.model.targetsAnyMuscleGroup
-import com.smarttrainner.core.model.targetsMuscleGroup
 import com.smarttrainner.core.ui.SmartTrainnerExercisePickerCard
 
 @Composable
@@ -519,16 +518,17 @@ private fun ExercisePicker(
     onAddExercise: (ExerciseId) -> Unit
 ) {
     val allowedGroups = allowedCustomRoutineMuscleGroups(selectedFocus)
-    val availableExercises = exercises
-        .filter { it.targetsAnyMuscleGroup(allowedGroups) }
-        .filterNot { it.id in selectedExerciseIds }
+    val exerciseGroups = customRoutineExercisePickerGroups(
+        exercises = exercises.filterNot { it.id in selectedExerciseIds },
+        allowedGroups = allowedGroups
+    )
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = stringResource(R.string.routine_add_exercise_to_day),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
-        if (availableExercises.isEmpty()) {
+        if (exerciseGroups.isEmpty()) {
             Text(
                 text = stringResource(
                     if (selectedFocus == null) {
@@ -542,53 +542,63 @@ private fun ExercisePicker(
                 modifier = Modifier.testTag("training_custom_all_exercises_added")
             )
         }
-        MuscleGroup.entries.filter { it in allowedGroups }.forEach { group ->
-            val groupExercises = availableExercises.filter { it.targetsMuscleGroup(group) }
-            if (groupExercises.isNotEmpty()) {
-                val expanded = group in expandedGroups
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onGroupToggled(group) }
-                        .testTag("training_custom_exercise_group_${group.name}"),
-                    shape = RoundedCornerShape(8.dp),
-                    color = SmartTrainnerColors.Surface,
-                    border = BorderStroke(1.dp, SmartTrainnerColors.Line)
+        exerciseGroups.forEach { group ->
+            val expanded = group.muscleGroup in expandedGroups
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onGroupToggled(group.muscleGroup) }
+                    .testTag("training_custom_exercise_group_${group.muscleGroup.name}"),
+                shape = RoundedCornerShape(8.dp),
+                color = SmartTrainnerColors.Surface,
+                border = BorderStroke(1.dp, SmartTrainnerColors.Line)
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (expanded) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "${group.localizedLabel()} (${groupExercises.size})",
-                            modifier = Modifier.weight(1f),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "${group.muscleGroup.localizedLabel()} (${group.items.size})",
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-                if (expanded) {
-                    groupExercises.forEach { exercise ->
-                        SmartTrainnerExercisePickerCard(
-                            title = exercise.localizedName(),
-                            subtitle = exercisePrescriptions[exercise.id]?.localizedTargetText()
-                                ?: exercise.localizedTargetText(),
-                            leadingIcon = Icons.Default.Add,
-                            secondaryActionLabel = stringResource(R.string.routine_instruction),
-                            secondaryActionIcon = Icons.Default.Info,
-                            onClick = { onAddExercise(exercise.id) },
-                            onSecondaryActionClick = { onExerciseDetailRequested(exercise.id) },
-                            clickModifier = Modifier.testTag("training_custom_add_exercise_${exercise.id.value}"),
-                            secondaryActionModifier = Modifier.testTag(
-                                "training_custom_view_exercise_${exercise.id.value}"
-                            )
+            }
+            if (expanded) {
+                group.items.forEach { item ->
+                    val exercise = item.exercise
+                    val targetText = exercisePrescriptions[exercise.id]?.localizedTargetText()
+                        ?: exercise.localizedTargetText()
+                    SmartTrainnerExercisePickerCard(
+                        title = exercise.localizedName(),
+                        subtitle = targetText,
+                        leadingIcon = Icons.Default.Add,
+                        secondaryActionLabel = stringResource(R.string.routine_instruction),
+                        secondaryActionIcon = Icons.Default.Info,
+                        onClick = { onAddExercise(exercise.id) },
+                        onSecondaryActionClick = { onExerciseDetailRequested(exercise.id) },
+                        clickModifier = Modifier.testTag("training_custom_add_exercise_${exercise.id.value}"),
+                        secondaryActionModifier = Modifier.testTag(
+                            "training_custom_view_exercise_${exercise.id.value}"
+                        ),
+                        badgeText = item.role.localizedRoutineLabel(),
+                        badgeContainerColor = if (item.role == ExerciseMuscleRole.PRIMARY) {
+                            SmartTrainnerColors.CoralSoft
+                        } else {
+                            SmartTrainnerColors.SteelSoft
+                        },
+                        badgeContentColor = SmartTrainnerColors.Ink,
+                        badgeBorderColor = SmartTrainnerColors.Line,
+                        badgeModifier = Modifier.testTag(
+                            "training_custom_exercise_role_${group.muscleGroup.name}_${exercise.id.value}"
                         )
-                    }
+                    )
                 }
             }
         }
@@ -657,6 +667,14 @@ private fun customRoutineFocusGroups(): List<CustomRoutineFocusGroup> = listOf(
         captionRes = R.string.routine_custom_focus_caption_compound,
         options = compoundCustomRoutineFocuses.toList()
     )
+)
+
+@Composable
+private fun ExerciseMuscleRole.localizedRoutineLabel(): String = stringResource(
+    when (this) {
+        ExerciseMuscleRole.PRIMARY -> R.string.routine_muscle_role_primary
+        ExerciseMuscleRole.SECONDARY -> R.string.routine_muscle_role_secondary
+    }
 )
 
 @Composable

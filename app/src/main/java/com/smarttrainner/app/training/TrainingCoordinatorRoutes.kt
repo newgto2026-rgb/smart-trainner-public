@@ -43,12 +43,16 @@ fun TrainingHomeRoute(
 fun TrainingRoutineRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
-    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
+    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
+    routineLibraryOpenRequest: Int = 0,
+    onRoutineLibraryOpenRequestConsumed: (Int) -> Unit = {}
 ) {
     val viewModel = sharedTrainingViewModel()
     val routineRouteState = rememberRoutineRouteState(
         routineFeatureEntry = routineFeatureEntry,
-        viewModel = viewModel
+        viewModel = viewModel,
+        routineLibraryOpenRequest = routineLibraryOpenRequest,
+        onRoutineLibraryOpenRequestConsumed = onRoutineLibraryOpenRequestConsumed
     )
     val routeChrome = trainingRouteChrome(routineRouteState)
     TrainingRoute(
@@ -111,7 +115,9 @@ private data class TrainingRouteChrome(
 @Composable
 private fun rememberRoutineRouteState(
     routineFeatureEntry: RoutineFeatureEntry,
-    viewModel: TrainingViewModel
+    viewModel: TrainingViewModel,
+    routineLibraryOpenRequest: Int = 0,
+    onRoutineLibraryOpenRequestConsumed: (Int) -> Unit = {}
 ): RoutineRouteState = routineFeatureEntry.rememberRouteState(
     callbacks = RoutineFeatureCallbacks(
         onWorkoutStarted = viewModel::startContinuousRecording,
@@ -119,6 +125,8 @@ private fun rememberRoutineRouteState(
         onExerciseMethodSelected = viewModel::showExerciseMethod,
         onRecordSelected = viewModel::selectPlannedExercise,
         onSubstituteExerciseSelected = viewModel::replaceRecordingExercise,
-        onAdditionalExerciseSelected = viewModel::recordAdditionalExercise
+        onAdditionalExerciseSelected = viewModel::recordAdditionalExercise,
+        routineLibraryOpenRequest = routineLibraryOpenRequest,
+        onRoutineLibraryOpenRequestConsumed = onRoutineLibraryOpenRequestConsumed
     )
 )

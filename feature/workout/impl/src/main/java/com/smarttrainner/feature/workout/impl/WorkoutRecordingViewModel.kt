@@ -7,7 +7,6 @@ import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogInput
-import com.smarttrainner.feature.workout.domain.GetLatestWorkoutLogUseCase
 import com.smarttrainner.feature.workout.domain.SaveWorkoutLogUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
@@ -27,7 +26,6 @@ import kotlinx.coroutines.launch
 class WorkoutRecordingViewModel @Inject constructor(
     observeWorkoutLogs: ObserveWorkoutLogsUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
-    private val getLatestWorkoutLog: GetLatestWorkoutLogUseCase,
     private val saveWorkoutLog: SaveWorkoutLogUseCase,
     private val clock: Clock
 ) : ViewModel() {
@@ -36,7 +34,6 @@ class WorkoutRecordingViewModel @Inject constructor(
     private val recordForm = MutableStateFlow(RecordFormState())
     private val formError = MutableStateFlow<RecordFormError?>(null)
     private val recordSaved = MutableStateFlow(false)
-    private var recordPrefillToken = 0L
 
     private val weeklyLogs = observeWorkoutLogs(weekStart).stateIn(
         scope = viewModelScope,
@@ -191,24 +188,9 @@ class WorkoutRecordingViewModel @Inject constructor(
     }
 
     private fun prefillRecordForm(planned: PlannedExercise) {
-        val previousLog = latestWorkoutLogs.value.latestRecordForExercise(planned.exercise.id)
-            ?: weeklyLogs.value.latestRecordForExercise(planned.exercise.id)
-        val initialForm = RecordFormState(setEntries = planned.defaultSetForms(previousLog))
-        val token = recordPrefillToken + 1
-        recordPrefillToken = token
-        recordForm.value = initialForm
-
-        viewModelScope.launch {
-            val latestLog = getLatestWorkoutLog(planned.exercise.id) ?: return@launch
-            val latestForm = RecordFormState(setEntries = planned.defaultSetForms(latestLog))
-            if (
-                recordPrefillToken == token &&
-                recordingPlannedExercise.value?.id == planned.id &&
-                recordForm.value == initialForm
-            ) {
-                recordForm.value = latestForm
-            }
-        }
+        val previousLog = (weeklyLogs.value + latestWorkoutLogs.value)
+            .latestRecordForPlannedExercise(planned.id)
+        recordForm.value = RecordFormState(setEntries = planned.defaultSetForms(previousLog))
     }
 
     private fun updateSetEntry(
@@ -229,7 +211,6 @@ class WorkoutRecordingViewModel @Inject constructor(
     }
 
     fun clearRecording() {
-        recordPrefillToken += 1
         recordingPlannedExercise.value = null
         recordForm.value = RecordFormState()
         formError.value = null

@@ -4,6 +4,7 @@ import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseMovementPattern
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanLevel
 import com.smarttrainner.core.model.PlanTemplate
@@ -29,6 +30,98 @@ object SeedTrainingContent {
     private val ROW_SECONDARY_GROUPS = listOf(MuscleGroup.BICEPS, MuscleGroup.FOREARMS, MuscleGroup.CORE)
     private val PRESS_SECONDARY_GROUPS = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS)
     private val OVERHEAD_PRESS_SECONDARY_GROUPS = listOf(MuscleGroup.TRICEPS, MuscleGroup.CORE)
+    private val sortProfilesByExerciseId = mapOf(
+        "barbell_back_squat" to sortProfile(ExerciseMovementPattern.SQUAT, popularityRank = 1, variantRank = 1),
+        "bodyweight_squat" to sortProfile(ExerciseMovementPattern.SQUAT, popularityRank = 2, variantRank = 2),
+        "leg_press" to sortProfile(ExerciseMovementPattern.LEG_PRESS, popularityRank = 3, variantRank = 1),
+        "goblet_squat" to sortProfile(ExerciseMovementPattern.SQUAT, popularityRank = 4, variantRank = 4),
+        "smith_machine_squat" to sortProfile(ExerciseMovementPattern.SQUAT, popularityRank = 5, variantRank = 5),
+        "hack_squat" to sortProfile(ExerciseMovementPattern.SQUAT, popularityRank = 6, variantRank = 6),
+        "box_squat" to sortProfile(ExerciseMovementPattern.SQUAT, popularityRank = 7, variantRank = 7),
+        "kettlebell_goblet_squat" to sortProfile(ExerciseMovementPattern.SQUAT, popularityRank = 8, variantRank = 8),
+        "kettlebell_box_squat" to sortProfile(ExerciseMovementPattern.SQUAT, popularityRank = 9, variantRank = 9),
+        "conventional_deadlift" to sortProfile(ExerciseMovementPattern.HINGE, popularityRank = 10, variantRank = 1),
+        "barbell_romanian_deadlift" to sortProfile(ExerciseMovementPattern.HINGE, popularityRank = 11, variantRank = 2),
+        "romanian_deadlift" to sortProfile(ExerciseMovementPattern.HINGE, popularityRank = 12, variantRank = 3),
+        "dumbbell_deadlift" to sortProfile(ExerciseMovementPattern.HINGE, popularityRank = 13, variantRank = 4),
+        "kettlebell_deadlift" to sortProfile(ExerciseMovementPattern.HINGE, popularityRank = 14, variantRank = 5),
+        "kettlebell_romanian_deadlift" to sortProfile(ExerciseMovementPattern.HINGE, popularityRank = 15, variantRank = 6),
+        "kettlebell_sumo_deadlift" to sortProfile(ExerciseMovementPattern.HINGE, popularityRank = 16, variantRank = 7),
+        "bulgarian_split_squat" to sortProfile(ExerciseMovementPattern.LUNGE, popularityRank = 17, variantRank = 1),
+        "walking_lunge" to sortProfile(ExerciseMovementPattern.LUNGE, popularityRank = 18, variantRank = 2),
+        "dumbbell_split_squat" to sortProfile(ExerciseMovementPattern.LUNGE, popularityRank = 19, variantRank = 3),
+        "kettlebell_reverse_lunge" to sortProfile(ExerciseMovementPattern.LUNGE, popularityRank = 20, variantRank = 4),
+        "kettlebell_split_squat" to sortProfile(ExerciseMovementPattern.LUNGE, popularityRank = 21, variantRank = 5),
+        "dumbbell_step_up" to sortProfile(ExerciseMovementPattern.STEP_UP, popularityRank = 22, variantRank = 1),
+        "kettlebell_step_up" to sortProfile(ExerciseMovementPattern.STEP_UP, popularityRank = 23, variantRank = 2),
+        "hip_thrust" to sortProfile(ExerciseMovementPattern.HIP_EXTENSION, popularityRank = 24, variantRank = 1),
+        "glute_bridge" to sortProfile(ExerciseMovementPattern.HIP_EXTENSION, popularityRank = 25, variantRank = 2),
+        "back_extension" to sortProfile(ExerciseMovementPattern.HIP_EXTENSION, popularityRank = 26, variantRank = 3),
+        "cable_glute_kickback" to sortProfile(ExerciseMovementPattern.HIP_EXTENSION, popularityRank = 27, variantRank = 4),
+        "leg_extension" to sortProfile(ExerciseMovementPattern.KNEE_EXTENSION, popularityRank = 28, variantRank = 1),
+        "leg_curl" to sortProfile(ExerciseMovementPattern.KNEE_FLEXION, popularityRank = 29, variantRank = 1),
+        "calf_raise" to sortProfile(ExerciseMovementPattern.CALF_RAISE, popularityRank = 30, variantRank = 1),
+        "pullup" to sortProfile(ExerciseMovementPattern.VERTICAL_PULL, popularityRank = 31, variantRank = 1),
+        "assisted_pullup" to sortProfile(ExerciseMovementPattern.VERTICAL_PULL, popularityRank = 32, variantRank = 2),
+        "lat_pulldown" to sortProfile(ExerciseMovementPattern.VERTICAL_PULL, popularityRank = 33, variantRank = 3),
+        "barbell_bent_over_row" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PULL, popularityRank = 34, variantRank = 1),
+        "seated_cable_row" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PULL, popularityRank = 35, variantRank = 2),
+        "one_arm_dumbbell_row" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PULL, popularityRank = 36, variantRank = 3),
+        "machine_row" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PULL, popularityRank = 37, variantRank = 4),
+        "chest_supported_row" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PULL, popularityRank = 38, variantRank = 5),
+        "t_bar_row" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PULL, popularityRank = 39, variantRank = 6),
+        "inverted_row" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PULL, popularityRank = 40, variantRank = 7),
+        "kettlebell_bent_over_row" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PULL, popularityRank = 41, variantRank = 8),
+        "one_arm_kettlebell_row" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PULL, popularityRank = 42, variantRank = 9),
+        "barbell_bench_press" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 43, variantRank = 1),
+        "machine_chest_press" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 44, variantRank = 2),
+        "dumbbell_bench_press" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 45, variantRank = 3),
+        "pushup" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 46, variantRank = 4),
+        "incline_dumbbell_press" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 47, variantRank = 5),
+        "incline_machine_press" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 48, variantRank = 6),
+        "dumbbell_floor_press" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 49, variantRank = 7),
+        "kettlebell_floor_press" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 50, variantRank = 8),
+        "dip" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 51, variantRank = 9),
+        "assisted_dip" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 52, variantRank = 10),
+        "close_grip_pushup" to sortProfile(ExerciseMovementPattern.HORIZONTAL_PUSH, popularityRank = 53, variantRank = 11),
+        "barbell_overhead_press" to sortProfile(ExerciseMovementPattern.VERTICAL_PUSH, popularityRank = 54, variantRank = 1),
+        "machine_shoulder_press" to sortProfile(ExerciseMovementPattern.VERTICAL_PUSH, popularityRank = 55, variantRank = 2),
+        "kettlebell_shoulder_press" to sortProfile(ExerciseMovementPattern.VERTICAL_PUSH, popularityRank = 56, variantRank = 3),
+        "half_kneeling_kettlebell_press" to sortProfile(ExerciseMovementPattern.VERTICAL_PUSH, popularityRank = 57, variantRank = 4),
+        "landmine_press" to sortProfile(ExerciseMovementPattern.VERTICAL_PUSH, popularityRank = 58, variantRank = 5),
+        "pec_deck_fly" to sortProfile(ExerciseMovementPattern.CHEST_ISOLATION, popularityRank = 59, variantRank = 1),
+        "face_pull" to sortProfile(ExerciseMovementPattern.SHOULDER_ISOLATION, popularityRank = 60, variantRank = 1),
+        "incline_prone_y_raise" to sortProfile(ExerciseMovementPattern.SHOULDER_ISOLATION, popularityRank = 61, variantRank = 2),
+        "dumbbell_shrug" to sortProfile(ExerciseMovementPattern.SHOULDER_ISOLATION, popularityRank = 62, variantRank = 3),
+        "dumbbell_curl" to sortProfile(ExerciseMovementPattern.ARM_ISOLATION, popularityRank = 63, variantRank = 1),
+        "hammer_curl" to sortProfile(ExerciseMovementPattern.ARM_ISOLATION, popularityRank = 64, variantRank = 2),
+        "cable_curl" to sortProfile(ExerciseMovementPattern.ARM_ISOLATION, popularityRank = 65, variantRank = 3),
+        "preacher_curl_machine" to sortProfile(ExerciseMovementPattern.ARM_ISOLATION, popularityRank = 66, variantRank = 4),
+        "triceps_pushdown" to sortProfile(ExerciseMovementPattern.ARM_ISOLATION, popularityRank = 67, variantRank = 5),
+        "overhead_triceps_extension" to sortProfile(ExerciseMovementPattern.ARM_ISOLATION, popularityRank = 68, variantRank = 6),
+        "rope_overhead_triceps" to sortProfile(ExerciseMovementPattern.ARM_ISOLATION, popularityRank = 69, variantRank = 7),
+        "reverse_curl" to sortProfile(ExerciseMovementPattern.ARM_ISOLATION, popularityRank = 70, variantRank = 8),
+        "plank" to sortProfile(ExerciseMovementPattern.CORE_STABILITY, popularityRank = 71, variantRank = 1),
+        "side_plank" to sortProfile(ExerciseMovementPattern.CORE_STABILITY, popularityRank = 72, variantRank = 2),
+        "dead_bug" to sortProfile(ExerciseMovementPattern.CORE_STABILITY, popularityRank = 73, variantRank = 3),
+        "pallof_press" to sortProfile(ExerciseMovementPattern.CORE_STABILITY, popularityRank = 74, variantRank = 4),
+        "cable_crunch" to sortProfile(ExerciseMovementPattern.CORE_FLEXION, popularityRank = 75, variantRank = 1),
+        "russian_twist" to sortProfile(ExerciseMovementPattern.CORE_ROTATION, popularityRank = 76, variantRank = 1),
+        "mountain_climber" to sortProfile(ExerciseMovementPattern.CONDITIONING, popularityRank = 77, variantRank = 1),
+        "two_hand_kettlebell_swing" to sortProfile(ExerciseMovementPattern.CONDITIONING, popularityRank = 78, variantRank = 2),
+        "medicine_ball_slam" to sortProfile(ExerciseMovementPattern.CONDITIONING, popularityRank = 79, variantRank = 3),
+        "battle_rope" to sortProfile(ExerciseMovementPattern.CONDITIONING, popularityRank = 80, variantRank = 4),
+        "sled_push" to sortProfile(ExerciseMovementPattern.CONDITIONING, popularityRank = 81, variantRank = 5),
+        "farmer_carry" to sortProfile(ExerciseMovementPattern.CARRY, popularityRank = 82, variantRank = 1),
+        "kettlebell_farmer_carry" to sortProfile(ExerciseMovementPattern.CARRY, popularityRank = 83, variantRank = 2),
+        "kettlebell_suitcase_carry" to sortProfile(ExerciseMovementPattern.CARRY, popularityRank = 84, variantRank = 3),
+        "kettlebell_rack_carry" to sortProfile(ExerciseMovementPattern.CARRY, popularityRank = 85, variantRank = 4),
+        "rowing_machine" to sortProfile(ExerciseMovementPattern.CARDIO, popularityRank = 86, variantRank = 1),
+        "treadmill_walk" to sortProfile(ExerciseMovementPattern.CARDIO, popularityRank = 87, variantRank = 2),
+        "indoor_bike" to sortProfile(ExerciseMovementPattern.CARDIO, popularityRank = 88, variantRank = 3),
+        "elliptical" to sortProfile(ExerciseMovementPattern.CARDIO, popularityRank = 89, variantRank = 4),
+        "stair_climber" to sortProfile(ExerciseMovementPattern.CARDIO, popularityRank = 90, variantRank = 5)
+    )
 
     val exercises: List<Exercise> = listOf(
         exercise("bodyweight_squat", "맨몸 스쿼트", MuscleGroup.LOWER_BODY, EquipmentType.BODYWEIGHT, DifficultyLevel.BEGINNER, "bodyweight_squat", "장비 없이 스쿼트 정렬과 하체 기본 힘을 익히는 대표 운동입니다.", listOf("발 위치: 발을 어깨너비 정도로 두고 발바닥 전체가 바닥에 닿게 섭니다.", "코어 정렬: 갈비뼈가 들리지 않게 복부를 조이고 무릎과 발끝 방향을 맞춥니다.", "앉기: 엉덩이를 뒤로 보내며 통제 가능한 깊이까지 내려갑니다.", "발바닥으로 상승: 뒤꿈치가 뜨지 않게 바닥을 밀어 가슴과 골반이 함께 올라오게 합니다."), listOf("허리가 말리면 깊이를 줄이세요.", "무릎이 안쪽으로 모이지 않게 하세요.", "반동으로 빠르게 튕기지 마세요."), 3, 10..15, null, 90),
@@ -137,7 +230,15 @@ object SeedTrainingContent {
         exercise("kettlebell_rack_carry", "케틀벨 랙 캐리", MuscleGroup.FULL_BODY, EquipmentType.KETTLEBELL, DifficultyLevel.INTERMEDIATE, "kettlebell_rack_carry", "랙 포지션을 유지하며 호흡과 몸통 안정성을 훈련합니다.", listOf("랙 포지션 만들기: 케틀벨을 전완 바깥에 기대고 손목을 세웁니다.", "갈비뼈 내리기: 복부를 조이고 팔꿈치를 몸 가까이 둡니다.", "짧게 걷기: 몸통이 기울지 않게 천천히 걷고 호흡을 유지합니다.", "반대쪽 반복: 안전하게 내려놓은 뒤 반대쪽도 같은 시간 진행합니다."), listOf("손목이 접히면 즉시 다시 잡으세요.", "허리를 젖혀 버티지 마세요."), 3, null, 1, 60),
         exercise("two_hand_kettlebell_swing", "투핸드 케틀벨 스윙", MuscleGroup.FULL_BODY, EquipmentType.KETTLEBELL, DifficultyLevel.INTERMEDIATE, "two_hand_kettlebell_swing", "힙 스냅으로 둔근과 햄스트링, 심폐를 함께 쓰는 중급 전신 운동입니다.", listOf("벨 앞 세팅: 케틀벨을 발 앞에 두고 힙힌지로 내려가 손잡이를 양손으로 잡습니다.", "하이크 패스: 케틀벨을 다리 사이로 당겨 햄스트링에 긴장을 만듭니다.", "힙 스냅: 팔로 들지 않고 엉덩이를 빠르게 펴 케틀벨이 가슴 높이까지 떠오르게 합니다.", "힌지로 받기: 케틀벨이 내려올 때 엉덩이를 뒤로 보내 같은 경로로 받아 다음 반복을 이어갑니다."), listOf("스쿼트처럼 앉아 올리지 마세요.", "허리로 케틀벨을 들어 올리면 즉시 중단하세요.", "초보 루틴에는 넣지 말고 힙힌지가 안정된 뒤 진행하세요."), 3, 10..15, null, 90),
         exercise("medicine_ball_slam", "메디신볼 슬램", MuscleGroup.FULL_BODY, EquipmentType.BODYWEIGHT, DifficultyLevel.INTERMEDIATE, "medicine_ball_slam", "전신 파워와 컨디셔닝을 짧게 넣는 운동입니다.", listOf("가슴 앞 준비: 발을 어깨너비로 두고 메디신볼을 가슴 앞에서 안정적으로 잡습니다.", "머리 위로 올리기: 갈비뼈가 과하게 들리지 않게 복부를 고정하고 공을 머리 위로 올립니다.", "바닥으로 슬램: 엉덩이와 무릎을 접으며 공을 발 앞 바닥으로 강하게 내립니다.", "낮은 자세 마무리: 공이 바닥에 닿은 뒤 등 중립을 유지하며 다음 반복을 준비합니다."), listOf("허리를 둥글게 말아 줍지 마세요.", "주변 공간을 반드시 확인하세요."), 3, 8..10, null, 60)
-    )
+    ).mapIndexed { index, exercise ->
+        val sortProfile = sortProfilesByExerciseId[exercise.id.value]
+        exercise.copy(
+            movementPattern = sortProfile?.movementPattern ?: ExerciseMovementPattern.ACCESSORY,
+            popularityRank = sortProfile?.popularityRank ?: Int.MAX_VALUE,
+            variantRank = sortProfile?.variantRank ?: Int.MAX_VALUE,
+            catalogOrder = index
+        )
+    }
 
     private val exercisesById: Map<String, Exercise> by lazy {
         exercises.associateBy { it.id.value }
@@ -1633,6 +1734,22 @@ object SeedTrainingContent {
     private const val SECONDS_PER_MINUTE = 60
     private const val SESSION_TARGET_TOLERANCE_SECONDS = 10 * SECONDS_PER_MINUTE
 
+    private fun sortProfile(
+        movementPattern: ExerciseMovementPattern,
+        popularityRank: Int,
+        variantRank: Int
+    ): SortProfile = SortProfile(
+        movementPattern = movementPattern,
+        popularityRank = popularityRank,
+        variantRank = variantRank
+    )
+
+    private data class SortProfile(
+        val movementPattern: ExerciseMovementPattern,
+        val popularityRank: Int,
+        val variantRank: Int
+    )
+
     private fun exercise(
         id: String,
         name: String,
@@ -1696,6 +1813,7 @@ object SeedTrainingContent {
         "kettlebell_romanian_deadlift",
         "kettlebell_sumo_deadlift" -> HINGE_SECONDARY_GROUPS
 
+        "conventional_deadlift",
         "dumbbell_deadlift",
         "kettlebell_deadlift" -> listOf(MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.CORE)
 

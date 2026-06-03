@@ -50,7 +50,6 @@ import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
-import com.smarttrainner.feature.routine.domain.StartRoutineUseCase
 import com.smarttrainner.feature.routine.domain.SwitchRoutineTemplateUseCase
 import com.smarttrainner.feature.routine.domain.ValidateCustomRoutineUseCase
 import java.time.Clock
@@ -536,7 +535,7 @@ class RoutineViewModelTest {
     }
 
     @Test
-    fun profileExperienceChange_switchesFutureSystemRoutineWithoutResettingProgress() = runTest {
+    fun profileExperienceChange_keepsCurrentRoutineUntilUserChoosesRoutine() = runTest {
         val beginnerTemplate = PlanTemplate(
             id = "beginner-full-body-3day",
             name = "Beginner",
@@ -589,6 +588,7 @@ class RoutineViewModelTest {
             startedAt = Instant.parse("2026-05-20T00:00:00Z"),
             cycleStartedAt = Instant.parse("2026-05-24T00:00:00Z")
         )
+        val originalCycleStartedAt = repository.progress.value.cycleStartedAt
         val viewModel = viewModel()
 
         viewModel.uiState.test {
@@ -601,13 +601,17 @@ class RoutineViewModelTest {
             advanceUntilIdle()
 
             var updated = awaitItem()
-            while (updated.activeRoutineProgress?.templateId != intermediateTemplate.id) {
+            while (updated.profileExperience != TrainingExperience.INTERMEDIATE) {
                 updated = awaitItem()
             }
-            assertThat(updated.activeRoutineProgress?.dayIndex).isEqualTo(1)
-            assertThat(updated.activeRoutineProgress?.cycleNumber).isEqualTo(2)
+            val progress = updated.activeRoutineProgress
+            assertThat(progress?.templateId).isEqualTo(beginnerTemplate.id)
+            assertThat(progress?.dayIndex).isEqualTo(1)
+            assertThat(progress?.cycleNumber).isEqualTo(2)
+            assertThat(progress?.cycleStartedAt).isEqualTo(originalCycleStartedAt)
             assertThat(updated.nextRoutineDayUi?.dayNumber).isEqualTo(2)
-            assertThat(updated.nextRoutineDayUi?.startExercise?.exercise?.id?.value).isEqualTo("chest_press")
+            assertThat(updated.nextRoutineDayUi?.startExercise?.exercise?.id?.value).isEqualTo("leg_press")
+            assertThat(updated.routineRecommendationInput.experience).isEqualTo(TrainingExperience.INTERMEDIATE)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -651,6 +655,90 @@ class RoutineViewModelTest {
             }
             assertThat(selected.showRoutineLibraryDialog).isFalse()
             assertThat(selected.activeRoutineProgress?.templateId).isEqualTo("intermediate-body-part-4day")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun selectTemplate_resetsDayAndLatestCompletionButKeepsCurrentCycle() = runTest {
+        val beginnerTemplate = PlanTemplate(
+            id = "beginner-full-body-3day",
+            name = "Beginner",
+            level = PlanLevel.BEGINNER,
+            daysPerWeek = 3,
+            description = "Beginner",
+            days = listOf(
+                templateDay(0, "Beginner A", RoutineFocus.FULL_BODY, "back_pull"),
+                templateDay(1, "Beginner B", RoutineFocus.FULL_BODY, "leg_press"),
+                templateDay(2, "Beginner C", RoutineFocus.FULL_BODY, "shoulder_raise")
+            ),
+            structure = RoutineStructure.FULL_BODY,
+            recommendedExperience = TrainingExperience.BEGINNER,
+            cycleLength = 3,
+            sessionMinutes = 45,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+        val intermediateTemplate = PlanTemplate(
+            id = "intermediate-body-part-4day-60",
+            name = "Intermediate",
+            level = PlanLevel.INTERMEDIATE,
+            daysPerWeek = 4,
+            description = "Intermediate",
+            days = listOf(
+                templateDay(0, "Intermediate Pull", RoutineFocus.BACK, "back_row"),
+                templateDay(1, "Intermediate Push", RoutineFocus.CHEST, "chest_press"),
+                templateDay(2, "Intermediate Legs", RoutineFocus.LOWER_BODY, "leg_press"),
+                templateDay(3, "Intermediate Shoulders", RoutineFocus.SHOULDERS, "shoulder_raise")
+            ),
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            recommendedExperience = TrainingExperience.INTERMEDIATE,
+            cycleLength = 4,
+            sessionMinutes = 60,
+            focusSummary = listOf(
+                RoutineFocus.BACK,
+                RoutineFocus.CHEST,
+                RoutineFocus.LOWER_BODY,
+                RoutineFocus.SHOULDERS
+            )
+        )
+        val startedAt = Instant.parse("2026-05-20T00:00:00Z")
+        val cycleStartedAt = Instant.parse("2026-05-27T00:00:00Z")
+        repository.setTemplates(listOf(beginnerTemplate, intermediateTemplate))
+        repository.startRoutine(beginnerTemplate.id)
+        repository.progress.value = RoutineProgress(
+            templateId = beginnerTemplate.id,
+            dayIndex = 2,
+            lastCompletedDayIndex = 1,
+            lastCompletedAt = fixedInstant,
+            cycleNumber = 4,
+            lastCompletedCycleNumber = 4,
+            lastCompletedPreviousCycleStartedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            startedAt = startedAt,
+            cycleStartedAt = cycleStartedAt
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+
+            viewModel.showRoutineLibrary()
+            viewModel.selectTemplate(intermediateTemplate.id)
+            advanceUntilIdle()
+
+            var selected = awaitItem()
+            while (selected.activeRoutineProgress?.templateId != intermediateTemplate.id) {
+                selected = awaitItem()
+            }
+            val progress = selected.activeRoutineProgress
+            assertThat(progress?.dayIndex).isEqualTo(0)
+            assertThat(progress?.cycleNumber).isEqualTo(4)
+            assertThat(progress?.startedAt).isEqualTo(startedAt)
+            assertThat(progress?.cycleStartedAt).isEqualTo(cycleStartedAt)
+            assertThat(progress?.lastCompletedDayIndex).isNull()
+            assertThat(progress?.lastCompletedAt).isNull()
+            assertThat(selected.latestRoutineDayCompletion).isNull()
+            assertThat(selected.nextRoutineDayUi?.dayNumber).isEqualTo(1)
+            assertThat(selected.nextRoutineDayUi?.startExercise?.exercise?.id?.value).isEqualTo("back_row")
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -1088,7 +1176,6 @@ class RoutineViewModelTest {
         recommendExercisePrescription = RecommendExercisePrescriptionUseCase(),
         recommendRoutine = RecommendRoutineUseCase(),
         resolveRoutineCycleCompletion = ResolveRoutineCycleCompletionUseCase(),
-        startRoutine = StartRoutineUseCase(repository),
         switchRoutineTemplate = SwitchRoutineTemplateUseCase(repository),
         completeRoutineDay = CompleteRoutineDayUseCase(repository, AdvanceRoutineDayUseCase()),
         cancelLatestRoutineDayCompletion = CancelLatestRoutineDayCompletionUseCase(repository),
@@ -1338,11 +1425,14 @@ private class FakeTrainingRepository :
     }
 
     override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> {
-        val targetTemplate = templates.value.firstOrNull { it.id == templateId } ?: template
         selectedTemplateId.value = templateId
         progress.value = progress.value.copy(
             templateId = templateId,
-            dayIndex = progress.value.dayIndex.coerceIn(0, (targetTemplate.cycleLength - 1).coerceAtLeast(0))
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            lastCompletedCycleNumber = null,
+            lastCompletedPreviousCycleStartedAt = null
         )
         return Result.success(Unit)
     }

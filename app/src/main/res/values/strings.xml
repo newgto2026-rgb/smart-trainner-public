@@ -22,6 +22,10 @@
     <string name="profile_training_level_beginner">Beginner</string>
     <string name="profile_training_level_intermediate">Intermediate</string>
     <string name="profile_training_level_advanced">Advanced</string>
+    <string name="profile_routine_change_prompt_title">Change routine too?</string>
+    <string name="profile_routine_change_prompt_body">Your training level now updates recommendation defaults only. If you choose a new routine, the current routine is replaced, cycle info is kept, and the new routine starts from Day 1.</string>
+    <string name="profile_routine_change_prompt_confirm">Change routine</string>
+    <string name="profile_routine_change_prompt_dismiss">Keep current routine</string>
     <string name="profile_theme_title">Theme</string>
     <string name="profile_theme_red">Red</string>
     <string name="profile_theme_blue">Blue</string>

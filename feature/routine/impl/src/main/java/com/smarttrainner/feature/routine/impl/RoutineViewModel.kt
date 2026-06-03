@@ -15,7 +15,6 @@ import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineProgress
-import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutDayPlan
@@ -29,7 +28,6 @@ import com.smarttrainner.feature.routine.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.feature.routine.domain.RecommendRoutineUseCase
 import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
-import com.smarttrainner.feature.routine.domain.StartRoutineUseCase
 import com.smarttrainner.feature.routine.domain.SwitchRoutineTemplateUseCase
 import com.smarttrainner.feature.routine.domain.routineAdditionalExerciseIdPrefix
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -67,7 +65,6 @@ class RoutineViewModel @Inject constructor(
     private val recommendExercisePrescription: RecommendExercisePrescriptionUseCase,
     private val recommendRoutine: RecommendRoutineUseCase,
     private val resolveRoutineCycleCompletion: ResolveRoutineCycleCompletionUseCase,
-    private val startRoutine: StartRoutineUseCase,
     private val switchRoutineTemplate: SwitchRoutineTemplateUseCase,
     private val completeRoutineDay: CompleteRoutineDayUseCase,
     private val cancelLatestRoutineDayCompletion: CancelLatestRoutineDayCompletionUseCase,
@@ -259,31 +256,11 @@ class RoutineViewModel @Inject constructor(
                     recommendationForm.value = RoutineRecommendationFormState.defaultFor(experience)
                 }
         }
-        viewModelScope.launch {
-            combine(
-                observeTrainingExperience(),
-                observePlanTemplates(),
-                observeRoutineProgress()
-            ) { experience, templates, progress ->
-                RoutineExperienceSwitchState(
-                    experience = experience,
-                    templates = templates,
-                    templateId = progress.templateId
-                )
-            }.distinctUntilChanged()
-                .collect { state ->
-                    switchActiveSystemRoutineForExperience(
-                        experience = state.experience,
-                        templates = state.templates,
-                        templateId = state.templateId
-                    )
-                }
-        }
     }
 
     fun selectTemplate(templateId: String) {
         viewModelScope.launch {
-            val result = startRoutine(templateId)
+            val result = switchRoutineTemplate(templateId)
             if (result.isSuccess) {
                 showRoutineLibraryDialog.value = false
             }
@@ -341,7 +318,7 @@ class RoutineViewModel @Inject constructor(
         val state = uiState.value
         val templateId = state.routinePreviewTemplateId ?: state.recommendedTemplateId ?: return
         viewModelScope.launch {
-            startRoutine(templateId)
+            switchRoutineTemplate(templateId)
             showRoutineLibraryDialog.value = false
             showRoutineRecommendationsDialog.value = false
             showRoutineSettingsDialog.value = false
@@ -588,7 +565,7 @@ class RoutineViewModel @Inject constructor(
             )
             result.onSuccess { template ->
                 if (startAfterSave) {
-                    startRoutine(template.id)
+                    switchRoutineTemplate(template.id)
                 }
                 customRoutineBuilder.value = CustomRoutineBuilderState()
             }.onFailure {
@@ -789,27 +766,6 @@ class RoutineViewModel @Inject constructor(
         state.templates.firstOrNull { it.id == state.activeRoutineProgress?.templateId }
             ?: state.templates.firstOrNull { it.id == state.selectedTemplateId }
 
-    private suspend fun switchActiveSystemRoutineForExperience(
-        experience: TrainingExperience,
-        templates: List<PlanTemplate>,
-        templateId: String
-    ) {
-        val currentTemplate = templates.firstOrNull { it.id == templateId } ?: return
-        if (currentTemplate.source != RoutineSource.SYSTEM || currentTemplate.recommendedExperience == experience) {
-            return
-        }
-        val recommendationInput = RoutineRecommendationFormState.defaultFor(experience)
-            .normalizedFor(templates)
-            .toInput()
-        val recommendedTemplateId = recommendRoutine(
-            input = recommendationInput,
-            templates = templates
-        ).primaryTemplateId
-        if (recommendedTemplateId != templateId) {
-            switchRoutineTemplate(recommendedTemplateId)
-        }
-    }
-
     private data class RoutineDataState(
         val templates: List<PlanTemplate>,
         val plan: WeeklyPlan,
@@ -818,12 +774,6 @@ class RoutineViewModel @Inject constructor(
         val latestLogs: List<WorkoutLog>,
         val exercises: List<com.smarttrainner.core.model.Exercise>,
         val profileExperience: TrainingExperience
-    )
-
-    private data class RoutineExperienceSwitchState(
-        val experience: TrainingExperience,
-        val templates: List<PlanTemplate>,
-        val templateId: String
     )
 
     private data class RoutineLogState(
