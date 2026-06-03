@@ -268,14 +268,14 @@ class RoutineViewModel @Inject constructor(
                 RoutineExperienceSwitchState(
                     experience = experience,
                     templates = templates,
-                    progress = progress
+                    templateId = progress.templateId
                 )
             }.distinctUntilChanged()
                 .collect { state ->
                     switchActiveSystemRoutineForExperience(
                         experience = state.experience,
                         templates = state.templates,
-                        progress = state.progress
+                        templateId = state.templateId
                     )
                 }
         }
@@ -792,9 +792,9 @@ class RoutineViewModel @Inject constructor(
     private suspend fun switchActiveSystemRoutineForExperience(
         experience: TrainingExperience,
         templates: List<PlanTemplate>,
-        progress: RoutineProgress
+        templateId: String
     ) {
-        val currentTemplate = templates.firstOrNull { it.id == progress.templateId } ?: return
+        val currentTemplate = templates.firstOrNull { it.id == templateId } ?: return
         if (currentTemplate.source != RoutineSource.SYSTEM || currentTemplate.recommendedExperience == experience) {
             return
         }
@@ -805,7 +805,7 @@ class RoutineViewModel @Inject constructor(
             input = recommendationInput,
             templates = templates
         ).primaryTemplateId
-        if (recommendedTemplateId != progress.templateId) {
+        if (recommendedTemplateId != templateId) {
             switchRoutineTemplate(recommendedTemplateId)
         }
     }
@@ -823,7 +823,7 @@ class RoutineViewModel @Inject constructor(
     private data class RoutineExperienceSwitchState(
         val experience: TrainingExperience,
         val templates: List<PlanTemplate>,
-        val progress: RoutineProgress
+        val templateId: String
     )
 
     private data class RoutineLogState(

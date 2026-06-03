@@ -107,6 +107,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
                 )
             ).data
         }
+        Unit
     }
 
     override suspend fun markRoutineDayCompleted(
