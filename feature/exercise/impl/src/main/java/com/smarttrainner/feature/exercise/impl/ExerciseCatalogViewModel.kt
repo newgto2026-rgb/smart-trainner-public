@@ -8,9 +8,11 @@ import com.smarttrainner.core.model.Exercise
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
@@ -20,13 +22,20 @@ class ExerciseCatalogViewModel @Inject constructor(
 ) : ViewModel() {
     private val searchQuery = MutableStateFlow("")
 
-    internal val uiState = combine(
+    private val filteredExercises = combine(
         observeExercises(),
+        searchQuery
+    ) { exercises, query ->
+        exercises.filterBySearchQuery(query)
+    }.flowOn(Dispatchers.Default)
+
+    internal val uiState = combine(
+        filteredExercises,
         observeLatestWorkoutLogs(),
         searchQuery
     ) { exercises, latestLogs, query ->
         ExerciseCatalogUiState(
-            exercises = exercises.filterBySearchQuery(query),
+            exercises = exercises,
             latestWorkoutLogs = latestLogs,
             searchQuery = query
         )
@@ -59,14 +68,10 @@ private fun String.searchTokens(): List<String> =
         .distinct()
         .toList()
 
-private fun Exercise.searchText(): String = listOf(
-    name,
-    id.value,
-    muscleGroup.displayName,
-    muscleGroup.name,
-    equipment.displayName,
-    equipment.name
-).joinToString(separator = " ") { it.normalizedForSearch() }
+private fun Exercise.searchText(): String =
+    "${name.normalizedForSearch()} ${id.value.normalizedForSearch()} " +
+        "${muscleGroup.displayName.normalizedForSearch()} ${muscleGroup.name.normalizedForSearch()} " +
+        "${equipment.displayName.normalizedForSearch()} ${equipment.name.normalizedForSearch()}"
 
 private fun String.normalizedForSearch(): String =
     lowercase(Locale.ROOT)

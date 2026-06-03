@@ -26,6 +26,7 @@ import java.time.LocalDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -69,6 +70,8 @@ class ExerciseCatalogViewModelTest {
             assertThat(state.selectedExerciseId).isNull()
             cancelAndIgnoreRemainingEvents()
         }
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
     }
 
     @Test
@@ -86,11 +89,16 @@ class ExerciseCatalogViewModelTest {
 
             viewModel.updateSearchQuery("프레스 레그")
 
-            val state = awaitItem()
+            var state = awaitItem()
+            while (state.searchQuery != "프레스 레그" || state.exercises != listOf(legPress)) {
+                state = awaitItem()
+            }
             assertThat(state.searchQuery).isEqualTo("프레스 레그")
             assertThat(state.exercises).containsExactly(legPress)
             cancelAndIgnoreRemainingEvents()
         }
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
     }
 
     @Test
@@ -108,11 +116,16 @@ class ExerciseCatalogViewModelTest {
 
             viewModel.updateSearchQuery("press leg")
 
-            val state = awaitItem()
+            var state = awaitItem()
+            while (state.searchQuery != "press leg" || state.exercises != listOf(legPress)) {
+                state = awaitItem()
+            }
             assertThat(state.searchQuery).isEqualTo("press leg")
             assertThat(state.exercises).containsExactly(legPress)
             cancelAndIgnoreRemainingEvents()
         }
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
     }
 
     private fun viewModel() = ExerciseCatalogViewModel(
