@@ -83,7 +83,8 @@ val checkModuleBoundaries by tasks.registering {
             ":feature:routine:data" to ":core:datastore",
             ":feature:routine:data" to ":core:network",
             ":feature:workout:data" to ":core:database",
-            ":feature:workout:data" to ":core:datastore"
+            ":feature:workout:data" to ":core:datastore",
+            ":feature:workout:data" to ":core:network"
         )
         val allowedAppFeatureImplDependencies = setOf(
             ":app" to ":feature:analysis:impl",

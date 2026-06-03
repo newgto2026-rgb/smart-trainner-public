@@ -32,6 +32,7 @@ class WorkoutLogDaoTest {
     fun upsertWithSetsStoresVariableSetRows() = runTest {
         database.workoutLogDao().upsertWithSets(
             log = WorkoutLogEntity(
+                clientLogId = "client-log-1",
                 sessionId = "local-default",
                 plannedExerciseId = "2026-05-20_leg_press",
                 exerciseId = "leg_press",
@@ -69,6 +70,7 @@ class WorkoutLogDaoTest {
     @Test
     fun observeBetweenFiltersBySession() = runTest {
         val log = WorkoutLogEntity(
+            clientLogId = "client-log-1",
             sessionId = "local-default",
             plannedExerciseId = "2026-05-20_leg_press",
             exerciseId = "leg_press",
@@ -83,7 +85,7 @@ class WorkoutLogDaoTest {
         )
         database.workoutLogDao().upsertWithSets(log, emptyList())
         database.workoutLogDao().upsertWithSets(
-            log.copy(sessionId = "google-user-1"),
+            log.copy(clientLogId = "client-log-2", sessionId = "google-user-1"),
             emptyList()
         )
 
@@ -102,6 +104,7 @@ class WorkoutLogDaoTest {
     @Test
     fun latestByExerciseReturnsMostRecentMatchingLogWithSets() = runTest {
         val oldLog = WorkoutLogEntity(
+            clientLogId = "client-log-1",
             sessionId = "local-default",
             plannedExerciseId = "2026-05-20_leg_press",
             exerciseId = "leg_press",
@@ -115,6 +118,7 @@ class WorkoutLogDaoTest {
             completed = true
         )
         val latestLog = oldLog.copy(
+            clientLogId = "client-log-2",
             plannedExerciseId = "2026-05-27_leg_press",
             performedDate = "2026-05-27",
             performedAt = "2026-05-27T09:00:00",
@@ -139,5 +143,38 @@ class WorkoutLogDaoTest {
         assertThat(result?.setLogs?.single()?.reps).isEqualTo(8)
         assertThat(result?.setLogs?.single()?.weightKg).isEqualTo(30.0)
         assertThat(result?.setLogs?.single()?.restSeconds).isEqualTo(120)
+    }
+
+    @Test
+    fun samePlannedExerciseCanKeepMultiplePerformedLogs() = runTest {
+        val firstLog = WorkoutLogEntity(
+            clientLogId = "client-log-1",
+            sessionId = "local-default",
+            plannedExerciseId = "routine-day-1-leg_press",
+            exerciseId = "leg_press",
+            performedDate = "2026-05-20",
+            performedAt = "2026-05-20T09:00:00",
+            sets = 1,
+            reps = 10,
+            weightKg = 20.0,
+            durationMinutes = null,
+            memo = "",
+            completed = true
+        )
+        val secondLog = firstLog.copy(
+            clientLogId = "client-log-2",
+            performedDate = "2026-05-21",
+            performedAt = "2026-05-21T09:00:00",
+            reps = 12,
+            weightKg = 22.5
+        )
+        database.workoutLogDao().upsertWithSets(firstLog, emptyList())
+        database.workoutLogDao().upsertWithSets(secondLog, emptyList())
+
+        val result = database.workoutLogDao()
+            .observeAll(sessionId = "local-default")
+            .first()
+
+        assertThat(result.map { it.log.clientLogId }).containsExactly("client-log-2", "client-log-1").inOrder()
     }
 }

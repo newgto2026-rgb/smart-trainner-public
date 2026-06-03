@@ -1,5 +1,6 @@
 package com.smarttrainner.core.database
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -8,13 +9,17 @@ import androidx.room.PrimaryKey
     tableName = "workout_logs",
     indices = [
         Index(value = ["sessionId"]),
-        Index(value = ["sessionId", "plannedExerciseId"], unique = true),
-        Index(value = ["performedDate"])
+        Index(value = ["sessionId", "clientLogId"], unique = true),
+        Index(value = ["sessionId", "plannedExerciseId"]),
+        Index(value = ["sessionId", "performedDate"]),
+        Index(value = ["sessionId", "exerciseId", "performedAt"])
     ]
 )
 data class WorkoutLogEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    @ColumnInfo(defaultValue = "''")
+    val clientLogId: String = "",
     val sessionId: String,
     val plannedExerciseId: String,
     val exerciseId: String,
