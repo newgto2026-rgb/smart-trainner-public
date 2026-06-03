@@ -168,6 +168,7 @@
     <string name="routine_start_record">운동 시작</string>
     <string name="routine_start_routine">이 루틴 시작</string>
     <string name="routine_target_duration">%1$d세트 · %2$d분</string>
+    <string name="routine_target_reps_single">%1$d세트 · %2$d회</string>
     <string name="routine_target_reps">%1$d세트 · %2$d-%3$d회</string>
     <string name="routine_template_beginner_full_body_2day_description">기구 사용이 낯선 사용자가 요일에 묶이지 않고 전신 A/B를 이어가는 보수적 루틴입니다.</string>
     <string name="routine_template_beginner_full_body_2day_name">초보자 전신 2일 루틴</string>

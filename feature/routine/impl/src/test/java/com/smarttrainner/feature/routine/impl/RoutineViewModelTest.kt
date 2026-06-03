@@ -51,6 +51,7 @@ import com.smarttrainner.feature.routine.domain.RoutineProgressRepository
 import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
 import com.smarttrainner.feature.routine.domain.StartRoutineUseCase
+import com.smarttrainner.feature.routine.domain.SwitchRoutineTemplateUseCase
 import com.smarttrainner.feature.routine.domain.ValidateCustomRoutineUseCase
 import java.time.Clock
 import java.time.Instant
@@ -62,6 +63,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
@@ -157,7 +160,11 @@ class RoutineViewModelTest {
             advanceTimeBy(1_000)
             runCurrent()
 
-            assertThat(awaitItem().plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
+            var refreshed = awaitItem()
+            while (refreshed.plan?.weekStartDate != LocalDate.of(2026, 5, 25)) {
+                refreshed = awaitItem()
+            }
+            assertThat(refreshed.plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
             assertThat(repository.requestedPlanWeekStartDates)
                 .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
             assertThat(repository.requestedLogWeekStartDates)
@@ -348,6 +355,34 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun requestCompleteCurrentRoutineDay_excludesSessionRecordedExercisesFromConfirmation() = runTest {
+        val recorded = repository.plannedExercise(dayIndex = 0, exerciseIndex = 0)
+        val unrecorded = repository.plannedExercise(dayIndex = 0, exerciseIndex = 1)
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi == null) {
+                state = awaitItem()
+            }
+
+            viewModel.requestCompleteCurrentRoutineDay(
+                skippedPlannedExerciseIds = emptySet(),
+                justRecordedPlannedExerciseIds = setOf(recorded.id)
+            )
+            advanceUntilIdle()
+
+            var updated = awaitItem()
+            while (updated.routineCompletionConfirm == null) {
+                updated = awaitItem()
+            }
+            val confirmation = updated.routineCompletionConfirm
+            assertThat(confirmation?.unrecordedExercises?.map { it.id }).containsExactly(unrecorded.id)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun confirmCancelLatestRoutineDay_restoresLatestDayAndDeletesDayLogs() = runTest {
         val firstDayLog = repository.completedLog(
             dayIndex = 0,
@@ -501,6 +536,83 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun profileExperienceChange_switchesFutureSystemRoutineWithoutResettingProgress() = runTest {
+        val beginnerTemplate = PlanTemplate(
+            id = "beginner-full-body-3day",
+            name = "Beginner",
+            level = PlanLevel.BEGINNER,
+            daysPerWeek = 3,
+            description = "Beginner",
+            days = listOf(
+                templateDay(0, "Beginner A", RoutineFocus.FULL_BODY, "back_pull"),
+                templateDay(1, "Beginner B", RoutineFocus.FULL_BODY, "leg_press"),
+                templateDay(2, "Beginner C", RoutineFocus.FULL_BODY, "shoulder_raise")
+            ),
+            structure = RoutineStructure.FULL_BODY,
+            recommendedExperience = TrainingExperience.BEGINNER,
+            cycleLength = 3,
+            sessionMinutes = 45,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+        val intermediateTemplate = PlanTemplate(
+            id = "intermediate-body-part-4day-60",
+            name = "Intermediate",
+            level = PlanLevel.INTERMEDIATE,
+            daysPerWeek = 4,
+            description = "Intermediate",
+            days = listOf(
+                templateDay(0, "Intermediate Pull", RoutineFocus.BACK, "back_row"),
+                templateDay(1, "Intermediate Push", RoutineFocus.CHEST, "chest_press"),
+                templateDay(2, "Intermediate Legs", RoutineFocus.LOWER_BODY, "leg_press"),
+                templateDay(3, "Intermediate Shoulders", RoutineFocus.SHOULDERS, "shoulder_raise")
+            ),
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            recommendedExperience = TrainingExperience.INTERMEDIATE,
+            cycleLength = 4,
+            sessionMinutes = 60,
+            focusSummary = listOf(
+                RoutineFocus.BACK,
+                RoutineFocus.CHEST,
+                RoutineFocus.LOWER_BODY,
+                RoutineFocus.SHOULDERS
+            )
+        )
+        repository.setTemplates(listOf(beginnerTemplate, intermediateTemplate))
+        repository.startRoutine(beginnerTemplate.id)
+        repository.progress.value = RoutineProgress(
+            templateId = beginnerTemplate.id,
+            dayIndex = 1,
+            lastCompletedDayIndex = 0,
+            lastCompletedAt = fixedInstant,
+            cycleNumber = 2,
+            lastCompletedCycleNumber = 2,
+            startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-05-24T00:00:00Z")
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.activeRoutineProgress?.templateId != beginnerTemplate.id) {
+                state = awaitItem()
+            }
+
+            sessionRepository.setExperience(TrainingExperience.INTERMEDIATE)
+            advanceUntilIdle()
+
+            var updated = awaitItem()
+            while (updated.activeRoutineProgress?.templateId != intermediateTemplate.id) {
+                updated = awaitItem()
+            }
+            assertThat(updated.activeRoutineProgress?.dayIndex).isEqualTo(1)
+            assertThat(updated.activeRoutineProgress?.cycleNumber).isEqualTo(2)
+            assertThat(updated.nextRoutineDayUi?.dayNumber).isEqualTo(2)
+            assertThat(updated.nextRoutineDayUi?.startExercise?.exercise?.id?.value).isEqualTo("chest_press")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun routineLibraryClosesWhenStartingTemplateOrOpeningRecommendationSettings() = runTest {
         val viewModel = viewModel()
 
@@ -640,7 +752,51 @@ class RoutineViewModelTest {
     }
 
     @Test
-    fun addExerciseToCustomRoutine_usesProfileExerciseRecommendation() = runTest {
+    fun addExerciseToCustomRoutine_allowsExercisesWhenSecondaryMuscleGroupMatchesFocus() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            awaitItem()
+
+            viewModel.showCreateCustomRoutine()
+            viewModel.updateCustomRoutineDayFocus(RoutineFocus.BACK)
+            viewModel.addExerciseToCustomRoutine(ExerciseId("squat_pattern"))
+            advanceUntilIdle()
+
+            assertThat(
+                viewModel.uiState.value.customRoutineBuilder.days.first().exercises
+                    .map { it.exercise.id.value }
+            ).containsExactly("squat_pattern")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun updateCustomRoutineDayFocus_keepsExercisesWhenSecondaryMuscleGroupMatchesFocus() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            awaitItem()
+
+            viewModel.showCreateCustomRoutine()
+            viewModel.addExerciseToCustomRoutine(ExerciseId("squat_pattern"))
+            advanceUntilIdle()
+
+            viewModel.updateCustomRoutineDayFocus(RoutineFocus.BACK)
+            advanceUntilIdle()
+
+            assertThat(
+                viewModel.uiState.value.customRoutineBuilder.days.first().exercises
+                    .map { it.exercise.id.value }
+            ).containsExactly("squat_pattern")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun addExerciseToCustomRoutine_usesBaselineRepRecommendationAcrossProfileLevels() = runTest {
         sessionRepository.setExperience(TrainingExperience.ADVANCED)
         val viewModel = viewModel()
 
@@ -653,9 +809,9 @@ class RoutineViewModelTest {
             advanceUntilIdle()
 
             val exercise = viewModel.uiState.value.customRoutineBuilder.days.first().exercises.single()
-            assertThat(exercise.sets).isEqualTo(4)
-            assertThat(exercise.repRangeStart).isEqualTo(6)
-            assertThat(exercise.repRangeEnd).isEqualTo(10)
+            assertThat(exercise.sets).isEqualTo(3)
+            assertThat(exercise.repRangeStart).isEqualTo(15)
+            assertThat(exercise.repRangeEnd).isEqualTo(15)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -933,6 +1089,7 @@ class RoutineViewModelTest {
         recommendRoutine = RecommendRoutineUseCase(),
         resolveRoutineCycleCompletion = ResolveRoutineCycleCompletionUseCase(),
         startRoutine = StartRoutineUseCase(repository),
+        switchRoutineTemplate = SwitchRoutineTemplateUseCase(repository),
         completeRoutineDay = CompleteRoutineDayUseCase(repository, AdvanceRoutineDayUseCase()),
         cancelLatestRoutineDayCompletion = CancelLatestRoutineDayCompletionUseCase(repository),
         saveCustomRoutineUseCase = SaveCustomRoutineUseCase(repository, ValidateCustomRoutineUseCase()),
@@ -1021,6 +1178,11 @@ private class FakeTrainingRepository :
         exercise("back_row", MuscleGroup.BACK),
         exercise("chest_press", MuscleGroup.CHEST),
         exercise("leg_press", MuscleGroup.LOWER_BODY),
+        exercise(
+            "squat_pattern",
+            MuscleGroup.LOWER_BODY,
+            muscleGroups = listOf(MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.CORE)
+        ),
         exercise("shoulder_raise", MuscleGroup.SHOULDERS)
     )
     private val template = PlanTemplate(
@@ -1042,19 +1204,24 @@ private class FakeTrainingRepository :
         focusSummary = listOf(RoutineFocus.BACK, RoutineFocus.CHEST, RoutineFocus.LOWER_BODY, RoutineFocus.SHOULDERS)
     )
     private val templates = MutableStateFlow(listOf(template))
-    private val plan = WeeklyPlan(
+    private val selectedTemplateId = MutableStateFlow(template.id)
+
+    private fun weeklyPlan(
+        template: PlanTemplate = this.template,
+        weekStartDate: LocalDate = weekStart
+    ) = WeeklyPlan(
         id = PlanId("plan"),
         templateId = template.id,
         name = template.name,
-        weekStartDate = weekStart,
+        weekStartDate = weekStartDate,
         days = template.days.map { day ->
-            val date = weekStart.plusDays(day.dayOffset.toLong())
+            val date = weekStartDate.plusDays(day.dayOffset.toLong())
             WorkoutDayPlan(
                 date = date,
                 title = day.title,
                 focus = day.focus,
                 exercises = day.exercises.map { templateExercise ->
-                    val exercise = exercises.first { it.id == templateExercise.exerciseId }
+                    val exercise = exercises.firstOrNull { it.id == templateExercise.exerciseId } ?: exercises.first()
                     PlannedExercise(
                         id = PlannedExerciseId("${date}_${exercise.id.value}"),
                         exercise = exercise,
@@ -1092,6 +1259,7 @@ private class FakeTrainingRepository :
 
     fun reset() {
         templates.value = listOf(template)
+        selectedTemplateId.value = template.id
         progress.value = RoutineProgress(template.id, 0, null, null)
         logs.value = emptyList()
         latestLogs.value = emptyList()
@@ -1111,7 +1279,7 @@ private class FakeTrainingRepository :
     }
 
     fun plannedExercise(dayIndex: Int, exerciseIndex: Int = 0): PlannedExercise =
-        plan.days[dayIndex].exercises[exerciseIndex]
+        weeklyPlan(template).days[dayIndex].exercises[exerciseIndex]
 
     fun completedLog(
         dayIndex: Int,
@@ -1141,7 +1309,10 @@ private class FakeTrainingRepository :
 
     override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> {
         requestedPlanWeekStartDates += weekStartDate
-        return MutableStateFlow(plan.copy(weekStartDate = weekStartDate))
+        return combine(selectedTemplateId, templates) { templateId, templates ->
+            val selectedTemplate = templates.firstOrNull { it.id == templateId } ?: template
+            weeklyPlan(selectedTemplate, weekStartDate)
+        }.distinctUntilChanged()
     }
 
     override fun observeRoutineProgress(): Flow<RoutineProgress> = progress
@@ -1155,10 +1326,24 @@ private class FakeTrainingRepository :
 
     override suspend fun getExercise(id: ExerciseId): Exercise? = exercises.firstOrNull { it.id == id }
 
-    override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = Result.success(Unit)
+    override suspend fun selectPlanTemplate(templateId: String): Result<Unit> {
+        selectedTemplateId.value = templateId
+        return Result.success(Unit)
+    }
 
     override suspend fun startRoutine(templateId: String): Result<Unit> {
+        selectedTemplateId.value = templateId
         progress.value = RoutineProgress(templateId, 0, null, null)
+        return Result.success(Unit)
+    }
+
+    override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> {
+        val targetTemplate = templates.value.firstOrNull { it.id == templateId } ?: template
+        selectedTemplateId.value = templateId
+        progress.value = progress.value.copy(
+            templateId = templateId,
+            dayIndex = progress.value.dayIndex.coerceIn(0, (targetTemplate.cycleLength - 1).coerceAtLeast(0))
+        )
         return Result.success(Unit)
     }
 
@@ -1254,10 +1439,15 @@ private class FakeTrainingRepository :
 
 }
 
-private fun exercise(id: String, muscleGroup: MuscleGroup) = Exercise(
+private fun exercise(
+    id: String,
+    muscleGroup: MuscleGroup,
+    muscleGroups: List<MuscleGroup> = listOf(muscleGroup)
+) = Exercise(
     id = ExerciseId(id),
     name = id,
     muscleGroup = muscleGroup,
+    muscleGroups = muscleGroups,
     equipment = EquipmentType.MACHINE,
     difficulty = DifficultyLevel.INTERMEDIATE,
     imageKey = id,

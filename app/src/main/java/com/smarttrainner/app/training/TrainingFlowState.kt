@@ -9,6 +9,7 @@ internal data class TrainingFlowState(
     val selectedExerciseId: ExerciseId? = null,
     val recordingFlow: RecordingFlow = RecordingFlow.SINGLE,
     val skippedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
+    val recordedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
     val pausedPlannedExercise: PlannedExercise? = null
 ) {
     val uiState: TrainingUiState
@@ -16,7 +17,8 @@ internal data class TrainingFlowState(
             recordingPlannedExercise = recordingPlannedExercise,
             selectedExerciseId = selectedExerciseId,
             recordingFlow = recordingFlow,
-            skippedPlannedExerciseIds = skippedPlannedExerciseIds
+            skippedPlannedExerciseIds = skippedPlannedExerciseIds,
+            recordedPlannedExerciseIds = recordedPlannedExerciseIds
         )
 
     fun showExerciseDetail(exerciseId: ExerciseId): TrainingFlowState =
@@ -38,6 +40,7 @@ internal data class TrainingFlowState(
             recordingPlannedExercise = exercise,
             selectedExerciseId = null,
             skippedPlannedExerciseIds = emptySet(),
+            recordedPlannedExerciseIds = emptySet(),
             pausedPlannedExercise = null
         )
 
@@ -46,24 +49,36 @@ internal data class TrainingFlowState(
             recordingPlannedExercise = null,
             recordingFlow = RecordingFlow.SINGLE,
             skippedPlannedExerciseIds = emptySet(),
+            recordedPlannedExerciseIds = emptySet(),
             pausedPlannedExercise = null
         )
 
     fun recordSaved(nextPlannedExercise: PlannedExercise?): TrainingFlowState {
+        val current = recordingPlannedExercise
+        val nextRecordedIds = if (recordingFlow == RecordingFlow.CONTINUOUS && current != null) {
+            recordedPlannedExerciseIds + current.id
+        } else {
+            recordedPlannedExerciseIds
+        }
         val paused = pausedPlannedExercise
         if (paused != null) {
             return copy(
                 recordingPlannedExercise = paused,
+                recordedPlannedExerciseIds = nextRecordedIds,
                 pausedPlannedExercise = null
             )
         }
         val nextPlanned = if (recordingFlow == RecordingFlow.CONTINUOUS) nextPlannedExercise else null
         return if (nextPlanned != null) {
-            copy(recordingPlannedExercise = nextPlanned)
+            copy(
+                recordingPlannedExercise = nextPlanned,
+                recordedPlannedExerciseIds = nextRecordedIds
+            )
         } else {
             copy(
                 recordingPlannedExercise = null,
                 recordingFlow = RecordingFlow.SINGLE,
+                recordedPlannedExerciseIds = emptySet(),
                 pausedPlannedExercise = null
             )
         }
@@ -90,6 +105,7 @@ internal data class TrainingFlowState(
                 recordingPlannedExercise = null,
                 recordingFlow = RecordingFlow.SINGLE,
                 skippedPlannedExerciseIds = skippedPlannedExerciseIds + current.id,
+                recordedPlannedExerciseIds = emptySet(),
                 pausedPlannedExercise = null,
                 selectedExerciseId = null
             )
@@ -114,6 +130,7 @@ internal data class TrainingFlowState(
             recordingPlannedExercise = null,
             recordingFlow = RecordingFlow.SINGLE,
             skippedPlannedExerciseIds = emptySet(),
+            recordedPlannedExerciseIds = emptySet(),
             pausedPlannedExercise = null
         )
 }

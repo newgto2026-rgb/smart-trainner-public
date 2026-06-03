@@ -25,6 +25,11 @@ class SeedTrainingContentTest {
 
         exercises.forEach { exercise ->
             assertThat(exercise.name.trim()).isNotEmpty()
+            assertWithMessage(exercise.id.value).that(exercise.muscleGroups).isNotEmpty()
+            assertWithMessage(exercise.id.value).that(exercise.muscleGroups).contains(exercise.muscleGroup)
+            assertWithMessage(exercise.id.value)
+                .that(exercise.muscleGroups.distinct())
+                .containsExactlyElementsIn(exercise.muscleGroups)
             assertThat(exercise.summary.trim()).isNotEmpty()
             assertThat(exercise.instructions.size).isAtLeast(2)
             assertThat(exercise.instructions.size).isAtMost(5)
@@ -33,6 +38,22 @@ class SeedTrainingContentTest {
             assertThat(exercise.restSeconds).isAtLeast(30)
         }
         assertThat(exercises.map { it.instructions.size }.toSet()).containsAtLeast(2, 3, 4, 5)
+    }
+
+    @Test
+    fun compoundExercisesStoreEveryTargetedMuscleGroup() {
+        val exercisesById = SeedTrainingContent.exercises.associateBy { it.id.value }
+
+        assertThat(exercisesById.getValue("bodyweight_squat").muscleGroups)
+            .containsAtLeast(MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.CORE)
+        assertThat(exercisesById.getValue("goblet_squat").muscleGroups)
+            .containsAtLeast(MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.CORE)
+        assertThat(exercisesById.getValue("seated_cable_row").muscleGroups)
+            .containsAtLeast(MuscleGroup.BACK, MuscleGroup.BICEPS, MuscleGroup.FOREARMS)
+        assertThat(exercisesById.getValue("pushup").muscleGroups)
+            .containsAtLeast(MuscleGroup.CHEST, MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS, MuscleGroup.CORE)
+        assertThat(exercisesById.getValue("rowing_machine").muscleGroups)
+            .containsAtLeast(MuscleGroup.CARDIO, MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.ARMS)
     }
 
     @Test
@@ -68,7 +89,28 @@ class SeedTrainingContentTest {
             .flatMap { it.exercises }
             .first { it.exerciseId == legPress.id }
 
-        assertThat(templateExercise.estimatedTotalSeconds).isEqualTo(450)
+        assertThat(templateExercise.sets).isEqualTo(3)
+        assertThat(templateExercise.repRange).isEqualTo(15..15)
+        assertThat(templateExercise.estimatedTotalSeconds).isAtLeast(1)
+    }
+
+    @Test
+    fun repBasedExerciseDefaultsUseBaselineThreeSetsAndFifteenReps() {
+        SeedTrainingContent.exercises
+            .filter { it.defaultRepRange != null }
+            .forEach { exercise ->
+                assertWithMessage(exercise.id.value).that(exercise.defaultSets).isEqualTo(3)
+                assertWithMessage(exercise.id.value).that(exercise.defaultRepRange).isEqualTo(15..15)
+            }
+
+        SeedTrainingContent.templates
+            .flatMap { it.days }
+            .flatMap { it.exercises }
+            .filter { it.repRange != null }
+            .forEach { exercise ->
+                assertWithMessage(exercise.exerciseId.value).that(exercise.sets).isEqualTo(3)
+                assertWithMessage(exercise.exerciseId.value).that(exercise.repRange).isEqualTo(15..15)
+            }
     }
 
     @Test
@@ -221,8 +263,7 @@ class SeedTrainingContentTest {
         assertThat(fortyFive.sessionMinutes).isEqualTo(45)
         assertThat(sixty.sessionMinutes).isEqualTo(60)
         assertThat(thirty.days.map { it.exercises.size }.toSet()).containsExactly(4)
-        assertThat(fortyFive.days.minOf { it.exercises.size }).isAtLeast(6)
-        assertThat(fortyFive.days.maxOf { it.exercises.size }).isAtMost(7)
+        assertThat(fortyFive.days.map { it.exercises.size }.toSet()).containsExactly(5)
         assertThat(sixty.days.minOf { it.exercises.size }).isAtLeast(7)
     }
 

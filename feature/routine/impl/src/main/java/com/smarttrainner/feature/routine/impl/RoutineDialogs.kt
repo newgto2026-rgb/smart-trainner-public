@@ -67,6 +67,7 @@ import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.estimatedSessionMinutes
+import com.smarttrainner.core.model.targetsMuscleGroup
 import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
@@ -593,7 +594,7 @@ internal fun RoutineExercisePickerDialog(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     MuscleGroup.entries.forEach { group ->
-                        val groupExercises = exercises.filter { it.muscleGroup == group }
+                        val groupExercises = exercises.filter { it.targetsMuscleGroup(group) }
                         if (groupExercises.isEmpty()) return@forEach
                         val expanded = group in expandedGroups
                         Surface(

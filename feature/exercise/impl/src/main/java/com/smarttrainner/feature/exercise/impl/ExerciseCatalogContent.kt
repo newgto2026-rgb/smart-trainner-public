@@ -32,6 +32,8 @@ import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.model.targetsAnyMuscleGroup
+import com.smarttrainner.core.model.targetsMuscleGroup
 import com.smarttrainner.core.exercisemedia.TrainerExerciseImage
 import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
@@ -81,9 +83,9 @@ private fun LazyListScope.exerciseGroupSection(
 ) {
     val groupExercises = state.exercises.filter {
         if (group == MuscleGroup.ARMS) {
-            it.muscleGroup == MuscleGroup.ARMS || it.muscleGroup in armDetailGroups
+            it.targetsMuscleGroup(MuscleGroup.ARMS) || it.targetsAnyMuscleGroup(armDetailGroups)
         } else {
-            it.muscleGroup == group
+            it.targetsMuscleGroup(group)
         }
     }
     if (groupExercises.isEmpty()) return
@@ -97,7 +99,7 @@ private fun LazyListScope.exerciseGroupSection(
     }
     if (group == MuscleGroup.ARMS) {
         armDetailGroups.forEach { armGroup ->
-            val armExercises = groupExercises.filter { it.muscleGroup == armGroup }
+            val armExercises = groupExercises.filter { it.targetsMuscleGroup(armGroup) }
             if (armExercises.isNotEmpty()) {
                 item {
                     Text(
@@ -111,6 +113,7 @@ private fun LazyListScope.exerciseGroupSection(
                     exercises = armExercises,
                     latestWorkoutLogs = state.latestWorkoutLogs,
                     selectedExerciseId = selectedExerciseId,
+                    keyPrefix = "${group.name}_${armGroup.name}",
                     onExerciseSelected = onExerciseSelected
                 )
             }
@@ -120,6 +123,7 @@ private fun LazyListScope.exerciseGroupSection(
             exercises = uncategorizedArms,
             latestWorkoutLogs = state.latestWorkoutLogs,
             selectedExerciseId = selectedExerciseId,
+            keyPrefix = group.name,
             onExerciseSelected = onExerciseSelected
         )
     } else {
@@ -127,6 +131,7 @@ private fun LazyListScope.exerciseGroupSection(
             exercises = groupExercises,
             latestWorkoutLogs = state.latestWorkoutLogs,
             selectedExerciseId = selectedExerciseId,
+            keyPrefix = group.name,
             onExerciseSelected = onExerciseSelected
         )
     }
@@ -136,9 +141,10 @@ private fun LazyListScope.exerciseRows(
     exercises: List<Exercise>,
     latestWorkoutLogs: List<WorkoutLog>,
     selectedExerciseId: ExerciseId?,
+    keyPrefix: String,
     onExerciseSelected: (ExerciseId) -> Unit
 ) {
-    items(exercises, key = { it.id.value }) { exercise ->
+    items(exercises, key = { "$keyPrefix:${it.id.value}" }) { exercise ->
         ExerciseRow(
             exercise = exercise,
             latestLog = latestWorkoutLogs.latestForExercise(exercise.id),

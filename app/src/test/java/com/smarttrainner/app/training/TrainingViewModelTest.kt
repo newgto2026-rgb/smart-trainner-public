@@ -63,6 +63,26 @@ class TrainingViewModelTest {
     }
 
     @Test
+    fun startContinuousRecording_saveRecordTracksSessionRecordedExercises() = runTest {
+        val first = plannedExercise("back_pull")
+        val second = plannedExercise("back_row")
+        val third = plannedExercise("lat_pulldown")
+        val viewModel = TrainingViewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            viewModel.startContinuousRecording(first)
+            viewModel.handleRecordSaved(nextPlannedExercise = second)
+            viewModel.handleRecordSaved(nextPlannedExercise = third)
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.recordedPlannedExerciseIds)
+                .containsExactly(first.id, second.id)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun selectPlannedExercise_saveRecordClosesSingleRecordDialog() = runTest {
         val planned = plannedExercise("chest_press")
         val viewModel = TrainingViewModel()

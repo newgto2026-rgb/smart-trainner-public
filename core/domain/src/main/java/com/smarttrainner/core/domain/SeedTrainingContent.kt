@@ -19,6 +19,16 @@ object SeedTrainingContent {
         "two_hand_kettlebell_swing",
         "medicine_ball_slam"
     )
+    private const val DEFAULT_REP_SETS = 3
+    private const val DEFAULT_TIME_BASED_SETS = 3
+    private val DEFAULT_REP_RANGE = 15..15
+    private val SQUAT_PATTERN_SECONDARY_GROUPS = listOf(MuscleGroup.BACK, MuscleGroup.CORE)
+    private val UNILATERAL_LOWER_SECONDARY_GROUPS = listOf(MuscleGroup.CORE)
+    private val HINGE_SECONDARY_GROUPS = listOf(MuscleGroup.BACK, MuscleGroup.CORE)
+    private val PULL_SECONDARY_GROUPS = listOf(MuscleGroup.BICEPS, MuscleGroup.FOREARMS)
+    private val ROW_SECONDARY_GROUPS = listOf(MuscleGroup.BICEPS, MuscleGroup.FOREARMS, MuscleGroup.CORE)
+    private val PRESS_SECONDARY_GROUPS = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS)
+    private val OVERHEAD_PRESS_SECONDARY_GROUPS = listOf(MuscleGroup.TRICEPS, MuscleGroup.CORE)
 
     val exercises: List<Exercise> = listOf(
         exercise("bodyweight_squat", "맨몸 스쿼트", MuscleGroup.LOWER_BODY, EquipmentType.BODYWEIGHT, DifficultyLevel.BEGINNER, "bodyweight_squat", "장비 없이 스쿼트 정렬과 하체 기본 힘을 익히는 대표 운동입니다.", listOf("발 위치: 발을 어깨너비 정도로 두고 발바닥 전체가 바닥에 닿게 섭니다.", "코어 정렬: 갈비뼈가 들리지 않게 복부를 조이고 무릎과 발끝 방향을 맞춥니다.", "앉기: 엉덩이를 뒤로 보내며 통제 가능한 깊이까지 내려갑니다.", "발바닥으로 상승: 뒤꿈치가 뜨지 않게 바닥을 밀어 가슴과 골반이 함께 올라오게 합니다."), listOf("허리가 말리면 깊이를 줄이세요.", "무릎이 안쪽으로 모이지 않게 하세요.", "반동으로 빠르게 튕기지 마세요."), 3, 10..15, null, 90),
@@ -408,9 +418,7 @@ object SeedTrainingContent {
                     "seated_cable_row",
                     "machine_row",
                     "chest_supported_row",
-                    "assisted_pullup",
                     "straight_arm_pulldown",
-                    "cable_curl",
                     secondaryFocuses = listOf(RoutineFocus.PULL),
                     minRecoveryHours = 36
                 ),
@@ -422,7 +430,6 @@ object SeedTrainingContent {
                     "machine_chest_press",
                     "dumbbell_bench_press",
                     "incline_machine_press",
-                    "incline_dumbbell_press",
                     "pec_deck_fly",
                     "cable_fly",
                     secondaryFocuses = listOf(RoutineFocus.PUSH),
@@ -438,7 +445,6 @@ object SeedTrainingContent {
                     "hack_squat",
                     "leg_extension",
                     "leg_curl",
-                    "calf_raise",
                     minRecoveryHours = 48
                 ),
                 day(
@@ -449,7 +455,6 @@ object SeedTrainingContent {
                     "machine_shoulder_press",
                     "dumbbell_lateral_raise",
                     "rear_delt_machine",
-                    "face_pull",
                     "dumbbell_curl",
                     "triceps_pushdown",
                     secondaryFocuses = listOf(RoutineFocus.ARMS, RoutineFocus.BICEPS, RoutineFocus.TRICEPS),
@@ -574,7 +579,6 @@ object SeedTrainingContent {
                     "cable_fly",
                     "assisted_dip",
                     "pec_deck_fly",
-                    "pushup",
                     "triceps_pushdown",
                     secondaryFocuses = listOf(RoutineFocus.PUSH),
                     minRecoveryHours = 36
@@ -591,7 +595,6 @@ object SeedTrainingContent {
                     "chest_supported_row",
                     "assisted_pullup",
                     "straight_arm_pulldown",
-                    "cable_curl",
                     secondaryFocuses = listOf(RoutineFocus.PULL),
                     minRecoveryHours = 36
                 ),
@@ -621,7 +624,6 @@ object SeedTrainingContent {
                     "cable_lateral_raise",
                     "rear_delt_machine",
                     "face_pull",
-                    "half_kneeling_kettlebell_press",
                     minRecoveryHours = 36
                 ),
                 day(
@@ -636,7 +638,6 @@ object SeedTrainingContent {
                     "reverse_curl",
                     "triceps_pushdown",
                     "rope_overhead_triceps",
-                    "close_grip_pushup",
                     "rowing_machine",
                     "stair_climber",
                     secondaryFocuses = listOf(
@@ -796,11 +797,24 @@ object SeedTrainingContent {
         val targetSeconds = sessionMinutes * SECONDS_PER_MINUTE
         var totalSeconds = 0
 
-        exerciseIds.distinct().forEach { exerciseId ->
+        for (exerciseId in exerciseIds.distinct()) {
             val exerciseSeconds = exerciseEstimateSeconds(exerciseId)
-            if (totalSeconds + exerciseSeconds <= targetSeconds) {
+            val candidateTotalSeconds = totalSeconds + exerciseSeconds
+            if (candidateTotalSeconds <= targetSeconds) {
                 selected += exerciseId
-                totalSeconds += exerciseSeconds
+                totalSeconds = candidateTotalSeconds
+                continue
+            }
+
+            val underTargetGap = targetSeconds - totalSeconds
+            val overTargetGap = candidateTotalSeconds - targetSeconds
+            if (
+                selected.isEmpty() ||
+                (overTargetGap < underTargetGap && overTargetGap <= SESSION_TARGET_TOLERANCE_SECONDS)
+            ) {
+                selected += exerciseId
+                totalSeconds = candidateTotalSeconds
+                break
             }
         }
 
@@ -1617,6 +1631,7 @@ object SeedTrainingContent {
 
     private val SUPPORTED_DAYS_PER_WEEK = 2..5
     private const val SECONDS_PER_MINUTE = 60
+    private const val SESSION_TARGET_TOLERANCE_SECONDS = 10 * SECONDS_PER_MINUTE
 
     private fun exercise(
         id: String,
@@ -1632,27 +1647,128 @@ object SeedTrainingContent {
         defaultRepRange: IntRange?,
         defaultDurationMinutes: Int?,
         restSeconds: Int
-    ) = Exercise(
-        id = ExerciseId(id),
-        name = name,
-        muscleGroup = muscleGroup,
-        equipment = equipment,
-        difficulty = difficulty,
-        imageKey = imageKey,
-        summary = summary,
-        instructions = instructions,
-        safetyCues = safetyCues,
-        defaultSets = defaultSets,
-        defaultRepRange = defaultRepRange,
-        defaultDurationMinutes = defaultDurationMinutes,
-        restSeconds = restSeconds,
-        defaultRepDurationSeconds = defaultRepDurationSeconds(
-            id = id,
+    ): Exercise {
+        val normalizedSets = when {
+            defaultRepRange != null -> DEFAULT_REP_SETS
+            muscleGroup == MuscleGroup.CARDIO -> defaultSets
+            else -> defaultSets.coerceAtLeast(DEFAULT_TIME_BASED_SETS)
+        }
+        return Exercise(
+            id = ExerciseId(id),
+            name = name,
             muscleGroup = muscleGroup,
+            muscleGroups = (listOf(muscleGroup) + secondaryMuscleGroupsFor(id, muscleGroup)).distinct(),
             equipment = equipment,
-            difficulty = difficulty
+            difficulty = difficulty,
+            imageKey = imageKey,
+            summary = summary,
+            instructions = instructions,
+            safetyCues = safetyCues,
+            defaultSets = normalizedSets,
+            defaultRepRange = defaultRepRange?.let { DEFAULT_REP_RANGE },
+            defaultDurationMinutes = defaultDurationMinutes,
+            restSeconds = restSeconds,
+            defaultRepDurationSeconds = defaultRepDurationSeconds(
+                id = id,
+                muscleGroup = muscleGroup,
+                equipment = equipment,
+                difficulty = difficulty
+            )
         )
-    )
+    }
+
+    private fun secondaryMuscleGroupsFor(id: String, primary: MuscleGroup): List<MuscleGroup> = when (id) {
+        "bodyweight_squat",
+        "goblet_squat",
+        "box_squat",
+        "kettlebell_goblet_squat",
+        "kettlebell_box_squat" -> SQUAT_PATTERN_SECONDARY_GROUPS
+
+        "dumbbell_split_squat",
+        "bulgarian_split_squat",
+        "walking_lunge",
+        "kettlebell_reverse_lunge",
+        "kettlebell_split_squat",
+        "kettlebell_step_up" -> UNILATERAL_LOWER_SECONDARY_GROUPS
+
+        "romanian_deadlift",
+        "barbell_romanian_deadlift",
+        "kettlebell_romanian_deadlift",
+        "kettlebell_sumo_deadlift" -> HINGE_SECONDARY_GROUPS
+
+        "dumbbell_deadlift",
+        "kettlebell_deadlift" -> listOf(MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.CORE)
+
+        "lat_pulldown",
+        "assisted_pullup",
+        "pullup" -> PULL_SECONDARY_GROUPS + MuscleGroup.CORE
+
+        "seated_cable_row",
+        "chest_supported_row",
+        "one_arm_dumbbell_row",
+        "kettlebell_bent_over_row",
+        "one_arm_kettlebell_row" -> ROW_SECONDARY_GROUPS
+
+        "face_pull",
+        "incline_prone_y_raise" -> listOf(MuscleGroup.BACK)
+
+        "machine_chest_press",
+        "dumbbell_bench_press",
+        "incline_dumbbell_press",
+        "dumbbell_floor_press",
+        "kettlebell_floor_press" -> PRESS_SECONDARY_GROUPS
+
+        "pushup",
+        "close_grip_pushup",
+        "dip",
+        "assisted_dip" -> PRESS_SECONDARY_GROUPS + MuscleGroup.CORE
+
+        "machine_shoulder_press",
+        "kettlebell_shoulder_press",
+        "half_kneeling_kettlebell_press",
+        "landmine_press" -> OVERHEAD_PRESS_SECONDARY_GROUPS
+
+        "pallof_press",
+        "mountain_climber",
+        "plank",
+        "side_plank" -> listOf(MuscleGroup.SHOULDERS)
+
+        "farmer_carry",
+        "kettlebell_farmer_carry" -> listOf(
+            MuscleGroup.LOWER_BODY,
+            MuscleGroup.BACK,
+            MuscleGroup.CORE,
+            MuscleGroup.FOREARMS
+        )
+
+        "kettlebell_suitcase_carry",
+        "kettlebell_rack_carry" -> listOf(MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.FOREARMS)
+
+        "two_hand_kettlebell_swing" -> listOf(
+            MuscleGroup.LOWER_BODY,
+            MuscleGroup.BACK,
+            MuscleGroup.CORE,
+            MuscleGroup.CARDIO
+        )
+
+        "medicine_ball_slam" -> listOf(
+            MuscleGroup.LOWER_BODY,
+            MuscleGroup.BACK,
+            MuscleGroup.SHOULDERS,
+            MuscleGroup.CORE,
+            MuscleGroup.CARDIO
+        )
+
+        "battle_rope" -> listOf(MuscleGroup.SHOULDERS, MuscleGroup.ARMS, MuscleGroup.CORE, MuscleGroup.CARDIO)
+        "sled_push" -> listOf(MuscleGroup.LOWER_BODY, MuscleGroup.CHEST, MuscleGroup.SHOULDERS, MuscleGroup.CORE)
+        "rowing_machine" -> listOf(MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.ARMS, MuscleGroup.CORE)
+        "treadmill_walk",
+        "indoor_bike",
+        "elliptical",
+        "stair_climber" -> listOf(MuscleGroup.LOWER_BODY)
+
+        else -> emptyList()
+    }.filterNot { it == primary }
 
     private fun exerciseById(exerciseId: String): Exercise =
         exercisesById[exerciseId] ?: throw NoSuchElementException("Exercise $exerciseId not found")

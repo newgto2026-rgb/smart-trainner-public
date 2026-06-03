@@ -34,6 +34,7 @@ internal fun TrainingRoute(
         onRecordSelected = viewModel::selectPlannedExercise,
         onRecordSaved = { planned ->
             val skippedIds = state.skippedPlannedExerciseIds
+            val recordedIds = state.recordedPlannedExerciseIds + planned.id
             val nextPlannedExercise = routineRouteState.nextPlannedExerciseAfterSaved(
                 plannedExercise = planned,
                 skippedPlannedExerciseIds = skippedIds
@@ -48,7 +49,7 @@ internal fun TrainingRoute(
             ) {
                 routineRouteState.requestCompleteRoutineDay(
                     skippedPlannedExerciseIds = skippedIds,
-                    justRecordedPlannedExerciseIds = setOf(planned.id)
+                    justRecordedPlannedExerciseIds = recordedIds
                 )
             }
         },
@@ -60,7 +61,10 @@ internal fun TrainingRoute(
             )
             viewModel.skipCurrentExercise(nextPlannedExercise)
             if (state.recordingFlow == RecordingFlow.CONTINUOUS && nextPlannedExercise == null) {
-                routineRouteState.requestCompleteRoutineDay(skippedPlannedExerciseIds = skippedIds)
+                routineRouteState.requestCompleteRoutineDay(
+                    skippedPlannedExerciseIds = skippedIds,
+                    justRecordedPlannedExerciseIds = state.recordedPlannedExerciseIds
+                )
             }
         },
         onSubstituteExerciseRequested = routineRouteState::requestSubstituteExercise,
