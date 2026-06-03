@@ -130,7 +130,8 @@ class ExerciseCatalogViewModelTest {
 
     private fun viewModel() = ExerciseCatalogViewModel(
         observeExercises = ObserveExercisesUseCase(repository),
-        observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository)
+        observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
+        searchDispatcher = mainDispatcherRule.dispatcher
     )
 }
 

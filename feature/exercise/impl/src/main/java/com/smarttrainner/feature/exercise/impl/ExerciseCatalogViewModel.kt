@@ -8,42 +8,59 @@ import com.smarttrainner.core.model.Exercise
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
-class ExerciseCatalogViewModel @Inject constructor(
-    observeExercises: ObserveExercisesUseCase,
-    observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase
-) : ViewModel() {
+class ExerciseCatalogViewModel : ViewModel {
     private val searchQuery = MutableStateFlow("")
 
-    private val filteredExercises = combine(
-        observeExercises(),
-        searchQuery
-    ) { exercises, query ->
-        exercises.filterBySearchQuery(query)
-    }.flowOn(Dispatchers.Default)
+    internal val uiState: StateFlow<ExerciseCatalogUiState>
 
-    internal val uiState = combine(
-        filteredExercises,
-        observeLatestWorkoutLogs(),
-        searchQuery
-    ) { exercises, latestLogs, query ->
-        ExerciseCatalogUiState(
-            exercises = exercises,
-            latestWorkoutLogs = latestLogs,
-            searchQuery = query
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = ExerciseCatalogUiState()
+    @Inject
+    constructor(
+        observeExercises: ObserveExercisesUseCase,
+        observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase
+    ) : this(
+        observeExercises = observeExercises,
+        observeLatestWorkoutLogs = observeLatestWorkoutLogs,
+        searchDispatcher = Dispatchers.Default
     )
+
+    internal constructor(
+        observeExercises: ObserveExercisesUseCase,
+        observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
+        searchDispatcher: CoroutineDispatcher
+    ) : super() {
+        val filteredExercises = combine(
+            observeExercises(),
+            searchQuery
+        ) { exercises, query ->
+            exercises.filterBySearchQuery(query)
+        }.flowOn(searchDispatcher)
+
+        uiState = combine(
+            filteredExercises,
+            observeLatestWorkoutLogs(),
+            searchQuery
+        ) { exercises, latestLogs, query ->
+            ExerciseCatalogUiState(
+                exercises = exercises,
+                latestWorkoutLogs = latestLogs,
+                searchQuery = query
+            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = ExerciseCatalogUiState()
+        )
+    }
 
     internal fun updateSearchQuery(query: String) {
         searchQuery.value = query
