@@ -358,9 +358,13 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_custom_add_exercise_goblet_squat").performClick()
         scrollToNodeWithTag("training_custom_move_up_1")
         composeRule.onNodeWithTag("training_custom_move_up_1").performClick()
+        scrollToNodeWithTag("training_custom_exercise_goblet_squat_0")
         composeRule.onNodeWithTag("training_custom_exercise_goblet_squat_0").assertIsDisplayed()
+        scrollToNodeWithTag("training_custom_exercise_leg_press_1")
         composeRule.onNodeWithTag("training_custom_exercise_leg_press_1").assertIsDisplayed()
+        scrollToNodeWithTag("training_custom_move_down_0")
         composeRule.onNodeWithTag("training_custom_move_down_0").performClick()
+        scrollToNodeWithTag("training_custom_exercise_leg_press_0")
         composeRule.onNodeWithTag("training_custom_exercise_leg_press_0").assertIsDisplayed()
         composeRule.onNodeWithTag("training_add_custom_day").performScrollTo().performClick()
         composeRule.onNodeWithTag("training_custom_day_tab_2").performClick()
@@ -504,25 +508,7 @@ class TrainingUiTest {
     }
 
     private fun clickExerciseRow(testTag: String) {
-        composeRule.waitUntil(timeoutMillis = 10_000) {
-            composeRule.onAllNodesWithTag("training_exercise_row_leg_press").fetchSemanticsNodes().isNotEmpty()
-        }
-        val scrollContainerCount = composeRule.onAllNodes(hasScrollAction()).fetchSemanticsNodes().size
-        var lastFailure: AssertionError? = null
-        for (index in 0 until scrollContainerCount) {
-            try {
-                composeRule.onAllNodes(hasScrollAction())[index]
-                    .performScrollToNode(hasTestTag(testTag))
-                lastFailure = null
-                break
-            } catch (error: AssertionError) {
-                lastFailure = error
-            }
-        }
-        lastFailure?.let { throw it }
-        composeRule.waitUntil(timeoutMillis = 10_000) {
-            composeRule.onAllNodesWithTag(testTag).fetchSemanticsNodes().isNotEmpty()
-        }
+        scrollToNodeWithTag(testTag)
         composeRule.onNodeWithTag(testTag).assertIsDisplayed().performClick()
     }
 
