@@ -42,8 +42,7 @@ import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
-import com.smarttrainner.core.model.targetsAnyMuscleGroup
-import com.smarttrainner.core.model.targetsMuscleGroup
+import com.smarttrainner.core.model.toRecommendedDisplayRepRange
 import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
@@ -152,14 +151,15 @@ private fun LazyListScope.exerciseGroupSection(
     selectedExerciseId: ExerciseId?,
     onExerciseSelected: (ExerciseId) -> Unit
 ) {
-    val groupExercises = state.exercises.filter {
-        if (group == MuscleGroup.ARMS) {
-            it.targetsMuscleGroup(MuscleGroup.ARMS) || it.targetsAnyMuscleGroup(armDetailGroups)
-        } else {
-            it.targetsMuscleGroup(group)
+    val exercises = state.exercises.primaryExercisesFor(group)
+    val armExercises = if (group == MuscleGroup.ARMS) {
+        armDetailGroups.associateWith { armGroup ->
+            state.exercises.primaryExercisesFor(armGroup)
         }
+    } else {
+        emptyMap()
     }
-    if (groupExercises.isEmpty()) return
+    if (exercises.isEmpty() && armExercises.values.all { it.isEmpty() }) return
 
     item {
         Text(
@@ -169,9 +169,8 @@ private fun LazyListScope.exerciseGroupSection(
         )
     }
     if (group == MuscleGroup.ARMS) {
-        armDetailGroups.forEach { armGroup ->
-            val armExercises = groupExercises.filter { it.targetsMuscleGroup(armGroup) }
-            if (armExercises.isNotEmpty()) {
+        armExercises.forEach { (armGroup, groupExercises) ->
+            if (groupExercises.isNotEmpty()) {
                 item {
                     Text(
                         text = armGroup.localizedLabel(),
@@ -181,7 +180,7 @@ private fun LazyListScope.exerciseGroupSection(
                     )
                 }
                 exerciseRows(
-                    exercises = armExercises,
+                    exercises = groupExercises,
                     latestWorkoutLogs = state.latestWorkoutLogs,
                     selectedExerciseId = selectedExerciseId,
                     keyPrefix = "${group.name}_${armGroup.name}",
@@ -189,9 +188,8 @@ private fun LazyListScope.exerciseGroupSection(
                 )
             }
         }
-        val uncategorizedArms = groupExercises.filter { it.muscleGroup == MuscleGroup.ARMS }
         exerciseRows(
-            exercises = uncategorizedArms,
+            exercises = exercises,
             latestWorkoutLogs = state.latestWorkoutLogs,
             selectedExerciseId = selectedExerciseId,
             keyPrefix = group.name,
@@ -199,7 +197,7 @@ private fun LazyListScope.exerciseGroupSection(
         )
     } else {
         exerciseRows(
-            exercises = groupExercises,
+            exercises = exercises,
             latestWorkoutLogs = state.latestWorkoutLogs,
             selectedExerciseId = selectedExerciseId,
             keyPrefix = group.name,
@@ -313,9 +311,13 @@ private fun Exercise.catalogMetricBadges(latestLog: WorkoutLog?): List<SmartTrai
         )
         val reps = defaultRepRange
         if (reps != null) {
+            val displayReps = reps.toRecommendedDisplayRepRange()
             add(
                 SmartTrainnerBadgeSpec(
-                    text = stringResource(R.string.exercise_actual_reps, "${reps.first}-${reps.last}"),
+                    text = stringResource(
+                        R.string.exercise_actual_reps,
+                        "${displayReps.first}-${displayReps.last}"
+                    ),
                     containerColor = SmartTrainnerColors.CoralSoft,
                     contentColor = SmartTrainnerColors.Ink
                 )
@@ -342,6 +344,18 @@ private fun Exercise.catalogMetricBadges(latestLog: WorkoutLog?): List<SmartTrai
             )
         )
     }
+
+private fun List<Exercise>.primaryExercisesFor(group: MuscleGroup): List<Exercise> =
+    filter { it.muscleGroup == group }
+        .sortedWith(
+            compareBy(
+                { it.movementPattern.sortRank },
+                { it.variantRank },
+                { it.popularityRank },
+                { it.catalogOrder },
+                { it.id.value }
+            )
+        )
 
 @Composable
 private fun WorkoutLog.catalogRecordMetricBadges(): List<SmartTrainnerBadgeSpec> {

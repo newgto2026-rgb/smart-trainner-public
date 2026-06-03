@@ -191,15 +191,15 @@ class WorkoutRecordingViewModel @Inject constructor(
     }
 
     private fun prefillRecordForm(planned: PlannedExercise) {
-        val previousLog = latestWorkoutLogs.value.latestRecordForExercise(planned.exercise.id)
-            ?: weeklyLogs.value.latestRecordForExercise(planned.exercise.id)
+        val previousLog = latestWorkoutLogs.value
+            .latestRecordForPlannedExercise(planned.id)
         val initialForm = RecordFormState(setEntries = planned.defaultSetForms(previousLog))
         val token = recordPrefillToken + 1
         recordPrefillToken = token
         recordForm.value = initialForm
 
         viewModelScope.launch {
-            val latestLog = getLatestWorkoutLog(planned.exercise.id) ?: return@launch
+            val latestLog = getLatestWorkoutLog(planned.id) ?: return@launch
             val latestForm = RecordFormState(setEntries = planned.defaultSetForms(latestLog))
             if (
                 recordPrefillToken == token &&

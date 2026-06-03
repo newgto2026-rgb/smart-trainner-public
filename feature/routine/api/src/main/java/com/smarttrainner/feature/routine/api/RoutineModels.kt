@@ -10,7 +10,9 @@ data class RoutineFeatureCallbacks(
     val onExerciseMethodSelected: (ExerciseId) -> Unit = {},
     val onRecordSelected: (PlannedExercise) -> Unit = {},
     val onSubstituteExerciseSelected: (PlannedExercise) -> Unit = {},
-    val onAdditionalExerciseSelected: (PlannedExercise) -> Unit = {}
+    val onAdditionalExerciseSelected: (PlannedExercise) -> Unit = {},
+    val routineLibraryOpenRequest: Int = 0,
+    val onRoutineLibraryOpenRequestConsumed: (Int) -> Unit = {}
 )
 
 interface RoutineRouteState {

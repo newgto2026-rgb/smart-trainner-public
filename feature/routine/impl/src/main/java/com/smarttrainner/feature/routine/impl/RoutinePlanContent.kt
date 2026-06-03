@@ -42,6 +42,7 @@ import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.core.model.toRecommendedDisplayRepRange
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.core.ui.SmartTrainnerMetricCluster
@@ -299,9 +300,13 @@ private fun PlannedExercise.trainingMetricBadges(
     )
     val reps = repRange
     if (reps != null) {
+        val displayReps = reps.toRecommendedDisplayRepRange()
         add(
             SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.routine_actual_reps, "${reps.first}-${reps.last}"),
+                text = stringResource(
+                    R.string.routine_actual_reps,
+                    "${displayReps.first}-${displayReps.last}"
+                ),
                 containerColor = SmartTrainnerColors.CoralSoft,
                 contentColor = SmartTrainnerColors.Ink
             )

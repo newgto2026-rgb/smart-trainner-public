@@ -3,6 +3,8 @@ package com.smarttrainner.core.domain
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.smarttrainner.core.model.EquipmentType
+import com.smarttrainner.core.model.ExerciseMovementPattern
+import com.smarttrainner.core.model.ExerciseMuscleRole
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlanTemplateDay
@@ -54,6 +56,37 @@ class SeedTrainingContentTest {
             .containsAtLeast(MuscleGroup.CHEST, MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS, MuscleGroup.CORE)
         assertThat(exercisesById.getValue("rowing_machine").muscleGroups)
             .containsAtLeast(MuscleGroup.CARDIO, MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.ARMS)
+    }
+
+    @Test
+    fun compoundExercisesExposePrimaryAndSecondaryMuscleRoles() {
+        val exercisesById = SeedTrainingContent.exercises.associateBy { it.id.value }
+        val deadlift = exercisesById.getValue("conventional_deadlift")
+
+        assertThat(deadlift.roleFor(MuscleGroup.FULL_BODY)).isEqualTo(ExerciseMuscleRole.PRIMARY)
+        assertThat(deadlift.roleFor(MuscleGroup.BACK)).isEqualTo(ExerciseMuscleRole.SECONDARY)
+        assertThat(deadlift.roleFor(MuscleGroup.LOWER_BODY)).isEqualTo(ExerciseMuscleRole.SECONDARY)
+        assertThat(deadlift.roleFor(MuscleGroup.CORE)).isEqualTo(ExerciseMuscleRole.SECONDARY)
+        assertThat(deadlift.involvedMuscleGroups)
+            .containsAtLeast(MuscleGroup.FULL_BODY, MuscleGroup.LOWER_BODY, MuscleGroup.BACK, MuscleGroup.CORE)
+    }
+
+    @Test
+    fun exerciseCatalogStoresMovementSortMetadata() {
+        val exercisesById = SeedTrainingContent.exercises.associateBy { it.id.value }
+
+        assertThat(exercisesById.getValue("barbell_back_squat").movementPattern)
+            .isEqualTo(ExerciseMovementPattern.SQUAT)
+        assertThat(exercisesById.getValue("leg_press").movementPattern)
+            .isEqualTo(ExerciseMovementPattern.LEG_PRESS)
+        assertThat(exercisesById.getValue("conventional_deadlift").movementPattern)
+            .isEqualTo(ExerciseMovementPattern.HINGE)
+        assertThat(exercisesById.getValue("barbell_back_squat").variantRank)
+            .isLessThan(exercisesById.getValue("box_squat").variantRank)
+        assertThat(exercisesById.getValue("conventional_deadlift").variantRank)
+            .isLessThan(exercisesById.getValue("romanian_deadlift").variantRank)
+        assertThat(SeedTrainingContent.exercises.map { it.catalogOrder }.distinct())
+            .hasSize(SeedTrainingContent.exercises.size)
     }
 
     @Test

@@ -244,7 +244,18 @@ private fun ExerciseImageViewerDialog(
 
 @Composable
 private fun ExerciseMetaChips(exercise: Exercise) {
-    val labels = exercise.muscleGroups.map { it.localizedLabel() } +
+    val labels = exercise.involvedMuscleGroups.map { group ->
+        val role = exercise.roleFor(group)
+        if (role == null) {
+            group.localizedLabel()
+        } else {
+            stringResource(
+                R.string.exercise_muscle_role_template,
+                group.localizedLabel(),
+                role.localizedLabel()
+            )
+        }
+    } +
         exercise.equipment.localizedLabel() +
         exercise.difficulty.localizedLabel()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

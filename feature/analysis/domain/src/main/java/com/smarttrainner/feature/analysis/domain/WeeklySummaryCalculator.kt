@@ -31,7 +31,7 @@ class WeeklySummaryCalculator @Inject constructor() {
             .flatMap { it.exercises }
             .associateBy { it.id }
         val muscleBalance = completedLogs
-            .mapNotNull { log -> exerciseByPlanId[log.plannedExerciseId]?.exercise?.muscleGroup }
+            .flatMap { log -> exerciseByPlanId[log.plannedExerciseId]?.exercise?.involvedMuscleGroups.orEmpty() }
             .groupingBy { it }
             .eachCount()
         val streakDays = completedLogs

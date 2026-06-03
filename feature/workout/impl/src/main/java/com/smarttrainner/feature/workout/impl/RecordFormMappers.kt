@@ -1,7 +1,7 @@
 package com.smarttrainner.feature.workout.impl
 
-import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
+import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 
@@ -42,8 +42,8 @@ internal fun PlannedExercise.defaultSetForm(previousSet: WorkoutSetLog? = null):
     )
 }
 
-internal fun List<WorkoutLog>.latestRecordForExercise(exerciseId: ExerciseId): WorkoutLog? =
-    filter { it.exerciseId == exerciseId }
+internal fun List<WorkoutLog>.latestRecordForPlannedExercise(plannedExerciseId: PlannedExerciseId): WorkoutLog? =
+    filter { it.plannedExerciseId == plannedExerciseId }
         .maxByOrNull { it.performedAt }
 
 private fun WorkoutLog.reusableSetEntries(): List<WorkoutSetLog> =

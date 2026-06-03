@@ -49,6 +49,21 @@ interface WorkoutLogDao {
         exerciseId: String
     ): WorkoutLogWithSets?
 
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM workout_logs
+        WHERE sessionId = :sessionId
+        AND plannedExerciseId = :plannedExerciseId
+        ORDER BY performedAt DESC
+        LIMIT 1
+        """
+    )
+    suspend fun latestByPlannedExercise(
+        sessionId: String,
+        plannedExerciseId: String
+    ): WorkoutLogWithSets?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(log: WorkoutLogEntity): Long
 

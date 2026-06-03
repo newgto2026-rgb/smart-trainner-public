@@ -147,6 +147,32 @@ class TrainingUiTest {
     }
 
     @Test
+    fun trainingLevelChangePromptsBeforeOpeningRoutineLibrary() {
+        continueFromLoginIfNeeded()
+
+        composeRule.onNodeWithTag("profile_button").performClick()
+        composeRule.onNodeWithTag("profile_training_level_entry").performClick()
+        composeRule.onNodeWithTag("profile_training_level_intermediate").performClick()
+        waitForNodeWithTag("profile_routine_change_prompt")
+        composeRule.onNodeWithTag("profile_routine_change_prompt").assertIsDisplayed()
+        composeRule.onAllNodesWithTag("training_routine_library_dialog").assertCountEquals(0)
+
+        composeRule.onNodeWithTag("profile_keep_current_routine").performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithTag("profile_routine_change_prompt").fetchSemanticsNodes().isEmpty()
+        }
+        composeRule.onAllNodesWithTag("training_routine_library_dialog").assertCountEquals(0)
+
+        composeRule.onNodeWithTag("profile_button").performClick()
+        composeRule.onNodeWithTag("profile_training_level_entry").performClick()
+        composeRule.onNodeWithTag("profile_training_level_advanced").performClick()
+        waitForNodeWithTag("profile_routine_change_prompt")
+        composeRule.onNodeWithTag("profile_confirm_routine_change").performClick()
+        waitForNodeWithTag("training_routine_library_dialog")
+        composeRule.onNodeWithTag("training_routine_library_dialog").assertIsDisplayed()
+    }
+
+    @Test
     fun exerciseDetailShowsStepImages() {
         continueFromLoginIfNeeded()
         composeRule.onNodeWithTag("training_tab_exercises").performClick()
@@ -167,6 +193,25 @@ class TrainingUiTest {
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_exercise_image_viewer").fetchSemanticsNodes().isEmpty()
         }
+    }
+
+    @Test
+    fun customRoutineBuilderIncludesSecondaryBackMatchesWithRoleBadge() {
+        continueFromLoginIfNeeded()
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        composeRule.onNodeWithTag("training_create_custom_routine_button").performClick()
+        composeRule.onNodeWithTag("training_custom_routine_builder").assertIsDisplayed()
+        selectCustomFocus("training_custom_focus_BACK")
+        scrollToNodeWithTag("training_custom_exercise_group_BACK")
+        composeRule.onNodeWithTag("training_custom_exercise_group_BACK").performClick()
+        scrollToNodeWithTag("training_custom_add_exercise_conventional_deadlift")
+
+        composeRule.onNodeWithTag("training_custom_add_exercise_conventional_deadlift")
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag(
+            "training_custom_exercise_role_BACK_conventional_deadlift",
+            useUnmergedTree = true
+        ).assertIsDisplayed()
     }
 
     @Test
@@ -313,9 +358,13 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_custom_add_exercise_goblet_squat").performClick()
         scrollToNodeWithTag("training_custom_move_up_1")
         composeRule.onNodeWithTag("training_custom_move_up_1").performClick()
+        scrollToNodeWithTag("training_custom_exercise_goblet_squat_0")
         composeRule.onNodeWithTag("training_custom_exercise_goblet_squat_0").assertIsDisplayed()
+        scrollToNodeWithTag("training_custom_exercise_leg_press_1")
         composeRule.onNodeWithTag("training_custom_exercise_leg_press_1").assertIsDisplayed()
+        scrollToNodeWithTag("training_custom_move_down_0")
         composeRule.onNodeWithTag("training_custom_move_down_0").performClick()
+        scrollToNodeWithTag("training_custom_exercise_leg_press_0")
         composeRule.onNodeWithTag("training_custom_exercise_leg_press_0").assertIsDisplayed()
         composeRule.onNodeWithTag("training_add_custom_day").performScrollTo().performClick()
         composeRule.onNodeWithTag("training_custom_day_tab_2").performClick()
@@ -459,25 +508,7 @@ class TrainingUiTest {
     }
 
     private fun clickExerciseRow(testTag: String) {
-        composeRule.waitUntil(timeoutMillis = 10_000) {
-            composeRule.onAllNodesWithTag("training_exercise_row_leg_press").fetchSemanticsNodes().isNotEmpty()
-        }
-        val scrollContainerCount = composeRule.onAllNodes(hasScrollAction()).fetchSemanticsNodes().size
-        var lastFailure: AssertionError? = null
-        for (index in 0 until scrollContainerCount) {
-            try {
-                composeRule.onAllNodes(hasScrollAction())[index]
-                    .performScrollToNode(hasTestTag(testTag))
-                lastFailure = null
-                break
-            } catch (error: AssertionError) {
-                lastFailure = error
-            }
-        }
-        lastFailure?.let { throw it }
-        composeRule.waitUntil(timeoutMillis = 10_000) {
-            composeRule.onAllNodesWithTag(testTag).fetchSemanticsNodes().isNotEmpty()
-        }
+        scrollToNodeWithTag(testTag)
         composeRule.onNodeWithTag(testTag).assertIsDisplayed().performClick()
     }
 

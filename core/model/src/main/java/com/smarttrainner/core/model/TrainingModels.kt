@@ -72,6 +72,37 @@ enum class DifficultyLevel(val displayName: String) {
     ADVANCED("숙련")
 }
 
+enum class ExerciseMuscleRole {
+    PRIMARY,
+    SECONDARY
+}
+
+enum class ExerciseMovementPattern(val sortRank: Int) {
+    SQUAT(0),
+    LEG_PRESS(1),
+    HINGE(2),
+    LUNGE(3),
+    STEP_UP(4),
+    HIP_EXTENSION(5),
+    KNEE_EXTENSION(6),
+    KNEE_FLEXION(7),
+    CALF_RAISE(8),
+    VERTICAL_PULL(9),
+    HORIZONTAL_PULL(10),
+    HORIZONTAL_PUSH(11),
+    VERTICAL_PUSH(12),
+    CHEST_ISOLATION(13),
+    SHOULDER_ISOLATION(14),
+    ARM_ISOLATION(15),
+    CORE_STABILITY(16),
+    CORE_FLEXION(17),
+    CORE_ROTATION(18),
+    CARRY(19),
+    CONDITIONING(20),
+    CARDIO(21),
+    ACCESSORY(22)
+}
+
 enum class PlanLevel(val displayName: String) {
     INTRO("입문"),
     BEGINNER("초보"),
@@ -134,17 +165,34 @@ data class Exercise(
     val defaultRepRange: IntRange?,
     val defaultDurationMinutes: Int?,
     val restSeconds: Int,
-    val defaultRepDurationSeconds: Int = DEFAULT_REP_DURATION_SECONDS
+    val defaultRepDurationSeconds: Int = DEFAULT_REP_DURATION_SECONDS,
+    val movementPattern: ExerciseMovementPattern = ExerciseMovementPattern.ACCESSORY,
+    val popularityRank: Int = Int.MAX_VALUE,
+    val variantRank: Int = Int.MAX_VALUE,
+    val catalogOrder: Int = Int.MAX_VALUE
 ) {
     val targetText: String
         get() = if (defaultRepRange != null) {
-            if (defaultRepRange.first == defaultRepRange.last) {
-                "${defaultSets}세트 x ${defaultRepRange.first}회"
+            val displayRepRange = defaultRepRange.toRecommendedDisplayRepRange()
+            if (displayRepRange.first == displayRepRange.last) {
+                "${defaultSets}세트 x ${displayRepRange.first}회"
             } else {
-                "${defaultSets}세트 x ${defaultRepRange.first}-${defaultRepRange.last}회"
+                "${defaultSets}세트 x ${displayRepRange.first}-${displayRepRange.last}회"
             }
         } else {
             "${defaultSets}세트 x ${defaultDurationMinutes ?: 10}분"
+    }
+
+    val secondaryMuscleGroups: List<MuscleGroup>
+        get() = muscleGroups.filterNot { it == muscleGroup }
+
+    val involvedMuscleGroups: List<MuscleGroup>
+        get() = (listOf(muscleGroup) + secondaryMuscleGroups).distinct()
+
+    fun roleFor(group: MuscleGroup): ExerciseMuscleRole? = when {
+        group == muscleGroup -> ExerciseMuscleRole.PRIMARY
+        group in secondaryMuscleGroups -> ExerciseMuscleRole.SECONDARY
+        else -> null
     }
 }
 
@@ -153,6 +201,16 @@ fun Exercise.targetsMuscleGroup(group: MuscleGroup): Boolean =
 
 fun Exercise.targetsAnyMuscleGroup(groups: Collection<MuscleGroup>): Boolean =
     muscleGroups.any { it in groups }
+
+fun IntRange.toRecommendedDisplayRepRange(): IntRange =
+    if (first == FIXED_REP_TARGET && last == FIXED_REP_TARGET) {
+        RECOMMENDED_REP_DISPLAY_START..FIXED_REP_TARGET
+    } else {
+        this
+    }
+
+private const val FIXED_REP_TARGET = 15
+private const val RECOMMENDED_REP_DISPLAY_START = 12
 
 data class PlanTemplate(
     val id: String,
@@ -304,7 +362,8 @@ data class PlannedExercise(
 ) {
     val targetText: String
         get() = if (repRange != null) {
-            "${sets}세트 x ${repRange.first}-${repRange.last}회"
+            val displayRepRange = repRange.toRecommendedDisplayRepRange()
+            "${sets}세트 x ${displayRepRange.first}-${displayRepRange.last}회"
         } else {
             "${sets}세트 x ${durationMinutes ?: 10}분"
         }

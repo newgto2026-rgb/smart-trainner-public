@@ -28,6 +28,12 @@ class DefaultWorkoutRecordingRepository @Inject constructor(
             exerciseId = exerciseId.value
         )?.toModel()
 
+    override suspend fun getLatestWorkoutLog(plannedExerciseId: PlannedExerciseId): WorkoutLog? =
+        workoutLogDao.latestByPlannedExercise(
+            sessionId = activeSessionResolver.sessionId(),
+            plannedExerciseId = plannedExerciseId.value
+        )?.toModel()
+
     override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = runCatching {
         val setEntries = input.setEntries.ifEmpty {
             List(input.sets) { index ->

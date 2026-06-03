@@ -101,6 +101,8 @@ fun SmartTrainnerMainScreen(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: SmartTrainnerDestination.Home.route
     var profileOpen by rememberSaveable { mutableStateOf(false) }
+    var routineChangePromptOpen by rememberSaveable { mutableStateOf(false) }
+    var routineLibraryOpenRequest by rememberSaveable { mutableStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         CompositionLocalProvider(
@@ -150,7 +152,13 @@ fun SmartTrainnerMainScreen(
                                     SmartTrainnerDestination.Routine -> TrainingRoutineRoute(
                                         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
                                         routineFeatureEntry = routineFeatureEntry,
-                                        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
+                                        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+                                        routineLibraryOpenRequest = routineLibraryOpenRequest,
+                                        onRoutineLibraryOpenRequestConsumed = { request ->
+                                            if (routineLibraryOpenRequest == request) {
+                                                routineLibraryOpenRequest = 0
+                                            }
+                                        }
                                     )
                                     SmartTrainnerDestination.Exercises -> TrainingExercisesRoute(
                                         exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
@@ -174,13 +182,69 @@ fun SmartTrainnerMainScreen(
                 selectedThemeTone = selectedThemeTone,
                 onDismiss = { profileOpen = false },
                 onThemeToneSelected = onThemeToneSelected,
-                onTrainingExperienceSelected = onTrainingExperienceSelected,
+                onTrainingExperienceSelected = { experience ->
+                    val changed = experience != trainingExperience
+                    onTrainingExperienceSelected(experience)
+                    profileOpen = false
+                    if (changed) {
+                        routineChangePromptOpen = true
+                    }
+                },
                 onLinkGoogle = onLinkGoogle,
                 onLogout = {
                     profileOpen = false
                     onLogout()
                 },
                 modifier = Modifier.zIndex(3f)
+            )
+        }
+        if (routineChangePromptOpen) {
+            AlertDialog(
+                onDismissRequest = { routineChangePromptOpen = false },
+                modifier = Modifier.testTag("profile_routine_change_prompt"),
+                shape = RoundedCornerShape(8.dp),
+                containerColor = SmartTrainnerColors.SurfaceRaised,
+                title = {
+                    Text(
+                        text = stringResource(R.string.profile_routine_change_prompt_title),
+                        color = SmartTrainnerColors.Ink,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(R.string.profile_routine_change_prompt_body),
+                        color = SmartTrainnerColors.Muted,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            routineChangePromptOpen = false
+                            routineLibraryOpenRequest += 1
+                            navController.navigate(SmartTrainnerDestination.Routine.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        modifier = Modifier.testTag("profile_confirm_routine_change")
+                    ) {
+                        Text(stringResource(R.string.profile_routine_change_prompt_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { routineChangePromptOpen = false },
+                        modifier = Modifier.testTag("profile_keep_current_routine")
+                    ) {
+                        Text(stringResource(R.string.profile_routine_change_prompt_dismiss))
+                    }
+                }
             )
         }
     }

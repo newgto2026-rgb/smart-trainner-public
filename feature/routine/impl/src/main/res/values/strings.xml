@@ -105,6 +105,8 @@
     <string name="routine_muscle_forearms">Forearms</string>
     <string name="routine_muscle_full_body">Full Body</string>
     <string name="routine_muscle_lower_body">Lower Body</string>
+    <string name="routine_muscle_role_primary">Main</string>
+    <string name="routine_muscle_role_secondary">Assist</string>
     <string name="routine_muscle_pull">Pull</string>
     <string name="routine_muscle_push">Push</string>
     <string name="routine_muscle_shoulders">Shoulders</string>

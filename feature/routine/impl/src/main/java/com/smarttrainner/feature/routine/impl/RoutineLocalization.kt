@@ -39,6 +39,7 @@ import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.model.toRecommendedDisplayRepRange
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -103,10 +104,12 @@ internal fun PlannedExercise.localizedTargetText(): String {
 
 @Composable
 private fun localizedRepTargetText(sets: Int, reps: IntRange): String =
-    if (reps.first == reps.last) {
-        stringResource(R.string.routine_target_reps_single, sets, reps.first)
-    } else {
-        stringResource(R.string.routine_target_reps, sets, reps.first, reps.last)
+    reps.toRecommendedDisplayRepRange().let { displayReps ->
+        if (displayReps.first == displayReps.last) {
+            stringResource(R.string.routine_target_reps_single, sets, displayReps.first)
+        } else {
+            stringResource(R.string.routine_target_reps, sets, displayReps.first, displayReps.last)
+        }
     }
 
 @Composable

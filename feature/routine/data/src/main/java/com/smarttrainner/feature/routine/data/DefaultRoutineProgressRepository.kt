@@ -91,14 +91,18 @@ class DefaultRoutineProgressRepository @Inject constructor(
 
     override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> = runCatching {
         val sessionId = activeSessionResolver.sessionId()
-        val template = templateFor(sessionId, templateId)
+        templateFor(sessionId, templateId)
         val localProgress = preferences.activeRoutineProgress(sessionId).first()
         val switchedProgress = localProgress.copy(
             templateId = templateId,
-            dayIndex = localProgress.dayIndex.coerceIn(0, (template.cycleLength - 1).coerceAtLeast(0))
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            lastCompletedCycleNumber = null,
+            lastCompletedPreviousCycleStartedAt = null
         )
         preferences.setRoutineProgress(sessionId, switchedProgress)
-        pushServerProgress(sessionId) {
+        val serverProgress = pushServerProgress(sessionId, writeToPreferences = false) {
             routineProgressNetworkApi.switchRoutineTemplate(
                 sessionId = sessionId,
                 request = RoutineProgressSwitchTemplateRequest(
@@ -107,6 +111,17 @@ class DefaultRoutineProgressRepository @Inject constructor(
                 )
             ).data
         }
+        val syncedProgress = serverProgress?.toPreference()?.copy(
+            dayIndex = switchedProgress.dayIndex,
+            cycleNumber = switchedProgress.cycleNumber,
+            startedAt = switchedProgress.startedAt,
+            cycleStartedAt = switchedProgress.cycleStartedAt,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            lastCompletedCycleNumber = null,
+            lastCompletedPreviousCycleStartedAt = null
+        ) ?: switchedProgress
+        preferences.setRoutineProgress(sessionId, syncedProgress)
         Unit
     }
 
@@ -189,9 +204,14 @@ class DefaultRoutineProgressRepository @Inject constructor(
 
     private suspend fun pushServerProgress(
         sessionId: String,
+        writeToPreferences: Boolean = true,
         request: suspend () -> RoutineProgressDto
     ): RoutineProgressDto? = try {
-        request().also { preferences.setRoutineProgress(sessionId, it.toPreference()) }
+        request().also {
+            if (writeToPreferences) {
+                preferences.setRoutineProgress(sessionId, it.toPreference())
+            }
+        }
     } catch (error: CancellationException) {
         throw error
     } catch (error: HttpException) {
