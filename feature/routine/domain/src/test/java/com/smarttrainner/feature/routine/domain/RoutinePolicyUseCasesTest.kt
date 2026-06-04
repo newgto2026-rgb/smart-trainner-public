@@ -294,6 +294,50 @@ class RoutinePolicyUseCasesTest {
     }
 
     @Test
+    fun resolveRoutineCycleCompletion_usesRoutineDayInstanceForRepeatedCurrentDay() {
+        val currentCycleStart = Instant.parse("2026-05-24T12:00:00Z")
+        val progress = RoutineProgress(
+            templateId = "intermediate-body-part-4day",
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            cycleNumber = 1,
+            startedAt = currentCycleStart,
+            cycleStartedAt = currentCycleStart
+        )
+        val dayOneExercise = PlannedExerciseId("2026-05-25_bench_press")
+        val dayOneSecondExercise = PlannedExerciseId("2026-05-25_incline_press")
+        val previousDayExercise = PlannedExerciseId("2026-05-24_row")
+
+        val result = resolveRoutineCycleCompletion(
+            logs = listOf(
+                completedLog(
+                    id = 1,
+                    plannedExerciseId = dayOneSecondExercise.value,
+                    performedAt = LocalDateTime.of(2026, 5, 25, 10, 0)
+                ),
+                completedLog(
+                    id = 2,
+                    plannedExerciseId = previousDayExercise.value,
+                    performedAt = LocalDateTime.of(2026, 5, 24, 13, 0)
+                ),
+                completedLog(
+                    id = 3,
+                    plannedExerciseId = dayOneExercise.value,
+                    performedAt = LocalDateTime.of(2026, 5, 25, 11, 0),
+                    routineDayInstanceId = "routine-day|intermediate-body-part-4day|cycle1|day1"
+                )
+            ),
+            progress = progress,
+            zone = ZoneOffset.UTC,
+            routineDayInstanceId = "routine-day|intermediate-body-part-4day|cycle1|day1",
+            currentDayPlannedExerciseIds = setOf(dayOneExercise, dayOneSecondExercise)
+        )
+
+        assertThat(result).containsExactly(dayOneExercise, previousDayExercise)
+    }
+
+    @Test
     fun evaluateReadiness_returnsWarningBeforeMinimumRecovery() {
         val result = evaluateReadiness(
             lastCompletedAt = Instant.parse("2026-05-24T09:00:00Z"),
@@ -441,7 +485,8 @@ class RoutinePolicyUseCasesTest {
     private fun completedLog(
         id: Long,
         plannedExerciseId: String,
-        performedAt: LocalDateTime
+        performedAt: LocalDateTime,
+        routineDayInstanceId: String? = null
     ) = WorkoutLog(
         id = WorkoutLogId(id),
         sessionId = UserSessionId("session"),
@@ -453,6 +498,7 @@ class RoutinePolicyUseCasesTest {
         weightKg = null,
         durationMinutes = null,
         memo = "",
-        completed = true
+        completed = true,
+        routineDayInstanceId = routineDayInstanceId
     )
 }

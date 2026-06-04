@@ -39,7 +39,6 @@ import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutSetLog
-import com.smarttrainner.core.model.completedCycleDurationDays as calculateCompletedCycleDurationDays
 import com.smarttrainner.feature.routine.domain.AdvanceRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CompleteRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CancelLatestRoutineDayCompletionUseCase
@@ -1254,7 +1253,10 @@ private class FakeSessionRepository : SessionRepository {
 
     override fun observeTrainingExperience(): Flow<TrainingExperience> = trainingExperience
 
-    override suspend fun startDefaultSession(): Result<com.smarttrainner.core.model.UserSession> =
+    override suspend fun startDefaultSession(
+        nickname: String,
+        profileSetup: com.smarttrainner.core.model.ProfileSetup
+    ): Result<com.smarttrainner.core.model.UserSession> =
         Result.failure(IllegalStateException("Not used"))
 
     override suspend fun checkNicknameAvailability(
@@ -1264,14 +1266,27 @@ private class FakeSessionRepository : SessionRepository {
 
     override suspend fun signInWithGoogle(
         idToken: String,
-        nickname: String
+        nickname: String?,
+        profileSetup: com.smarttrainner.core.model.ProfileSetup?,
+        forceDeviceLogin: Boolean
     ): Result<com.smarttrainner.core.model.UserSession> =
         Result.failure(IllegalStateException("Not used"))
+
+    override suspend fun validateActiveSessionDevice(): Result<Unit> =
+        Result.success(Unit)
 
     override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> {
         trainingExperience.value = experience
         return Result.success(Unit)
     }
+
+    override suspend fun updateBodyProfile(
+        gender: com.smarttrainner.core.model.ProfileGender?,
+        heightCm: Int,
+        weightKg: Double,
+        nickname: String?
+    ): Result<Unit> =
+        Result.failure(IllegalStateException("Not used"))
 
     override suspend fun logout(): Result<Unit> =
         Result.failure(IllegalStateException("Not used"))
@@ -1463,8 +1478,7 @@ private class FakeTrainingRepository :
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null,
-            lastCompletedCycleDurationDays = null
+            lastCompletedPreviousCycleStartedAt = null
         )
         return Result.success(Unit)
     }
@@ -1531,12 +1545,7 @@ private class FakeTrainingRepository :
             lastCompletedCycleNumber = current.cycleNumber,
             lastCompletedPreviousCycleStartedAt = current.cycleStartedAt,
             startedAt = current.startedAt,
-            cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt,
-            lastCompletedCycleDurationDays = if (startsNewCycle) {
-                calculateCompletedCycleDurationDays(current.cycleStartedAt, completedAt)
-            } else {
-                null
-            }
+            cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt
         )
         return Result.success(Unit)
     }
@@ -1546,12 +1555,19 @@ private class FakeTrainingRepository :
         restoredCycleNumber: Int,
         restoredCycleStartedAt: Instant?,
         remainingLatestCompletion: RoutineCompletionSnapshot?,
+        routineDayInstanceId: String,
         plannedExerciseIds: Set<PlannedExerciseId>,
         additionalExerciseIdPrefix: String
     ): Result<Unit> {
         logs.value = logs.value.filterNot { log ->
-            log.plannedExerciseId in plannedExerciseIds ||
-                log.plannedExerciseId.value.startsWith(additionalExerciseIdPrefix)
+            log.routineDayInstanceId == routineDayInstanceId ||
+                (
+                    log.routineDayInstanceId == null &&
+                        (
+                            log.plannedExerciseId in plannedExerciseIds ||
+                                log.plannedExerciseId.value.startsWith(additionalExerciseIdPrefix)
+                            )
+                    )
         }
         progress.value = progress.value.copy(
             dayIndex = restoredDayIndex,
@@ -1560,8 +1576,7 @@ private class FakeTrainingRepository :
             lastCompletedDayIndex = remainingLatestCompletion?.dayIndex,
             lastCompletedAt = remainingLatestCompletion?.completedAt,
             lastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
-            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt,
-            lastCompletedCycleDurationDays = remainingLatestCompletion?.cycleDurationDays
+            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt
         )
         return Result.success(Unit)
     }

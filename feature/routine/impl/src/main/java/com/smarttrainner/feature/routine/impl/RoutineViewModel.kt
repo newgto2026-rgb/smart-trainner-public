@@ -30,6 +30,7 @@ import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUse
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
 import com.smarttrainner.feature.routine.domain.SwitchRoutineTemplateUseCase
 import com.smarttrainner.feature.routine.domain.routineAdditionalExerciseIdPrefix
+import com.smarttrainner.feature.routine.domain.routineDayInstanceId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
@@ -176,7 +177,6 @@ class RoutineViewModel @Inject constructor(
         formControlState,
         dataState
     ) { control, data ->
-        val completedIds = resolveRoutineCycleCompletion(data.logs, data.routineProgress, clock.zone)
         val activeTemplate = data.templates.firstOrNull { it.id == data.routineProgress.templateId }
             ?: data.templates.firstOrNull { it.id == data.plan.templateId }
         val nextDayIndex = data.routineProgress.dayIndex.coerceIn(
@@ -184,6 +184,27 @@ class RoutineViewModel @Inject constructor(
             (data.plan.days.size - 1).coerceAtLeast(0)
         )
         val nextRoutineDay = data.plan.days.getOrNull(nextDayIndex) ?: data.plan.days.firstOrNull()
+        val nextRoutineDayInstanceId = activeTemplate?.let { template ->
+            nextRoutineDay?.let { day ->
+                routineDayInstanceId(
+                    templateId = template.id,
+                    cycleNumber = data.routineProgress.cycleNumber,
+                    dayNumber = day.dayNumber
+                )
+            }
+        }
+        val currentDayPlannedExerciseIds = nextRoutineDay
+            ?.exercises
+            ?.map { it.id }
+            ?.toSet()
+            .orEmpty()
+        val completedIds = resolveRoutineCycleCompletion(
+            logs = data.logs,
+            progress = data.routineProgress,
+            zone = clock.zone,
+            routineDayInstanceId = nextRoutineDayInstanceId,
+            currentDayPlannedExerciseIds = currentDayPlannedExerciseIds
+        )
         val nextDayUi = nextRoutineDay?.toNextRoutineDayUiModel(
             template = activeTemplate,
             dayIndex = nextDayIndex,
@@ -219,7 +240,7 @@ class RoutineViewModel @Inject constructor(
             today = LocalDate.now(clock),
             plan = data.plan,
             activeRoutineProgress = data.routineProgress,
-            nextRoutineDay = nextRoutineDay,
+            nextRoutineDay = nextDayUi?.day ?: nextRoutineDay,
             nextRoutineDayUi = nextDayUi,
             latestRoutineDayCompletion = latestCompletion,
             profileExperience = data.profileExperience,
@@ -704,7 +725,10 @@ class RoutineViewModel @Inject constructor(
                     repRange = prescription.repRange,
                     durationMinutes = prescription.durationMinutes,
                     restSeconds = prescription.restSeconds,
-                    note = ""
+                    note = "",
+                    routineDayInstanceId = routineDay.previewExercises
+                        .firstOrNull()
+                        ?.routineDayInstanceId
                 )
             }
         }

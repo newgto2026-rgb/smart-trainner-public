@@ -192,6 +192,7 @@ class WorkoutRecordingViewModelTest {
             val input = repository.savedInputs.single()
             assertThat(savedPlanned).isEqualTo(repository.plannedExercise)
             assertThat(input.plannedExerciseId).isEqualTo(repository.plannedExercise.id)
+            assertThat(input.routineDayInstanceId).isEqualTo(repository.plannedExercise.routineDayInstanceId)
             assertThat(input.exerciseId).isEqualTo(repository.plannedExercise.exercise.id)
             assertThat(input.performedAt).isEqualTo(LocalDateTime.of(2026, 5, 24, 12, 0))
             assertThat(input.sets).isEqualTo(3)
@@ -266,7 +267,8 @@ private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRep
         repRange = 8..12,
         durationMinutes = null,
         restSeconds = 90,
-        note = ""
+        note = "",
+        routineDayInstanceId = "routine-day|template|cycle1|day1"
     )
     val nextPlannedExerciseWithSameExercise = plannedExercise.copy(
         id = PlannedExerciseId("next_planned_chest_press")
@@ -297,6 +299,7 @@ private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRep
         id = WorkoutLogId(1),
         sessionId = UserSessionId("local-default"),
         plannedExerciseId = plannedExercise.id,
+        routineDayInstanceId = plannedExercise.routineDayInstanceId,
         exerciseId = plannedExercise.exercise.id,
         performedAt = performedAt,
         sets = setEntries.size,

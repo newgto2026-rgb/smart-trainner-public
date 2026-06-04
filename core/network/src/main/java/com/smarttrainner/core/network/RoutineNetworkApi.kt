@@ -77,6 +77,7 @@ data class CustomRoutineSelectionDto(
 
 @Serializable
 data class CustomRoutineRequest(
+    val id: String? = null,
     val name: String,
     val description: String? = null,
     val days: List<CustomRoutineDayRequest>

@@ -159,6 +159,11 @@ class CancelLatestRoutineDayCompletionUseCase @Inject constructor(
             restoredCycleNumber = completedCycleNumber,
             restoredCycleStartedAt = restoredCycleStartedAt,
             remainingLatestCompletion = remainingLatestCompletion,
+            routineDayInstanceId = routineDayInstanceId(
+                templateId = template.id,
+                cycleNumber = completedCycleNumber,
+                dayNumber = completedDay.dayNumber
+            ),
             plannedExerciseIds = completedDay.exercises.map { it.id }.toSet(),
             additionalExerciseIdPrefix = routineAdditionalExerciseIdPrefix(
                 templateId = template.id,
@@ -168,6 +173,12 @@ class CancelLatestRoutineDayCompletionUseCase @Inject constructor(
         )
     }
 }
+
+fun routineDayInstanceId(
+    templateId: String,
+    cycleNumber: Int,
+    dayNumber: Int
+): String = "routine-day|$templateId|cycle$cycleNumber|day$dayNumber"
 
 fun routineAdditionalExerciseIdPrefix(
     templateId: String,

@@ -29,7 +29,9 @@ dependencies {
     implementation(project(":core:datastore"))
     implementation(project(":core:network"))
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.javax.inject)
+    implementation(libs.retrofit)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     testImplementation(libs.junit)

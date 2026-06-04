@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -34,6 +36,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,6 +62,8 @@ import com.smarttrainner.core.designsystem.SmartTrainnerBrandWordmarkImage
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerGradients
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
+import com.smarttrainner.core.model.ProfileGender
+import com.smarttrainner.core.model.toProfileSetupOrNull
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
@@ -90,7 +96,7 @@ fun SmartTrainnerApp(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    fun requestGoogleSignIn(nickname: String) {
+    fun requestGoogleSignIn(nickname: String? = null) {
         scope.launch {
             viewModel.beginGoogleCredentialRequest()
             when (val credential = requestGoogleCredential(context)) {
@@ -103,31 +109,86 @@ fun SmartTrainnerApp(
             }
         }
     }
-    when {
-        state.isLoading -> LoadingScreen()
-        state.activeSession == null -> LoginScreen(
-            state = state,
-            onNicknameChanged = viewModel::updateLoginNickname,
-            onCheckNickname = viewModel::checkNickname,
-            onGoogleSignIn = { requestGoogleSignIn(state.nicknameInput) },
-            onContinueDefaultSession = viewModel::continueWithDefaultSession
-        )
-        else -> SmartTrainnerMainScreen(
-            analysisFeatureEntry = analysisFeatureEntry,
-            exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
-            exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-            routineFeatureEntry = routineFeatureEntry,
-            workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-            activeSession = requireNotNull(state.activeSession),
-            trainingExperience = state.trainingExperience,
-            googleSignInInProgress = state.googleSignInInProgress,
-            selectedThemeTone = selectedThemeTone,
-            onThemeToneSelected = onThemeToneSelected,
-            onTrainingExperienceSelected = viewModel::updateTrainingExperience,
-            onLinkGoogle = { requestGoogleSignIn(requireNotNull(state.activeSession).nickname) },
-            onLogout = viewModel::logout
+    if (state.deviceLoginConflict) {
+        DeviceLoginConflictDialog(
+            activeDeviceName = state.deviceLoginConflictDeviceName,
+            onConfirm = viewModel::confirmDeviceLoginTakeover,
+            onDismiss = viewModel::dismissDeviceLoginConflict
         )
     }
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            state.isLoading -> LoadingScreen()
+            state.activeSession == null -> LoginScreen(
+                state = state,
+                onGoogleSignIn = { requestGoogleSignIn() }
+            )
+            state.activeSession?.profile?.toProfileSetupOrNull() == null -> ProfileSetupScreen(
+                state = state,
+                onNicknameChanged = viewModel::updateLoginNickname,
+                onGenderSelected = viewModel::updateLoginGender,
+                onHeightCmChanged = viewModel::updateLoginHeightCm,
+                onWeightKgChanged = viewModel::updateLoginWeightKg,
+                onCheckNickname = viewModel::checkNickname,
+                onSaveProfile = viewModel::completeProfileSetup
+            )
+            else -> SmartTrainnerMainScreen(
+                analysisFeatureEntry = analysisFeatureEntry,
+                exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
+                exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                routineFeatureEntry = routineFeatureEntry,
+                workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+                activeSession = requireNotNull(state.activeSession),
+                trainingExperience = state.trainingExperience,
+                googleSignInInProgress = state.googleSignInInProgress,
+                selectedThemeTone = selectedThemeTone,
+                onThemeToneSelected = onThemeToneSelected,
+                onTrainingExperienceSelected = viewModel::updateTrainingExperience,
+                onBodyProfileSaved = viewModel::updateBodyProfile,
+                onLinkGoogle = { requestGoogleSignIn(requireNotNull(state.activeSession).nickname) },
+                onLogout = viewModel::logout
+            )
+        }
+        if (state.syncInProgress) {
+            SyncProgressPill(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(top = 10.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeviceLoginConflictDialog(
+    activeDeviceName: String?,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val deviceName = activeDeviceName ?: stringResource(R.string.device_login_conflict_unknown_device)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.device_login_conflict_title)) },
+        text = { Text(stringResource(R.string.device_login_conflict_message, deviceName)) },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                modifier = Modifier.testTag("device_login_takeover_confirm")
+            ) {
+                Text(stringResource(R.string.device_login_conflict_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.testTag("device_login_takeover_dismiss")
+            ) {
+                Text(stringResource(R.string.device_login_conflict_dismiss))
+            }
+        },
+        modifier = Modifier.testTag("device_login_conflict_dialog")
+    )
 }
 
 @Composable
@@ -185,17 +246,42 @@ private fun LoadingScreen() {
 }
 
 @Composable
+private fun SyncProgressPill(modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = SmartTrainnerColors.SurfaceRaised,
+        tonalElevation = 2.dp,
+        shadowElevation = 3.dp,
+        modifier = modifier.testTag("app_sync_progress")
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CircularProgressIndicator(
+                color = SmartTrainnerColors.Coral,
+                strokeWidth = 2.dp,
+                modifier = Modifier
+                    .size(18.dp)
+                    .testTag("app_sync_progress_spinner")
+            )
+            Text(
+                text = stringResource(R.string.app_sync_in_progress),
+                color = SmartTrainnerColors.Ink,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
 private fun LoginScreen(
     state: SmartTrainnerAppUiState,
-    onNicknameChanged: (String) -> Unit,
-    onCheckNickname: () -> Unit,
-    onGoogleSignIn: () -> Unit,
-    onContinueDefaultSession: () -> Unit
+    onGoogleSignIn: () -> Unit
 ) {
-    val trimmedNickname = state.nicknameInput.trim()
-    val nicknameIsChecked = state.nicknameCheckStatus == NicknameCheckStatus.Available &&
-        state.checkedNickname == trimmedNickname
-    val googleEnabled = nicknameIsChecked && !state.googleSignInInProgress
+    val googleEnabled = !state.googleSignInInProgress
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -234,27 +320,7 @@ private fun LoginScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 SessionPreviewRow()
-                OutlinedTextField(
-                    value = state.nicknameInput,
-                    onValueChange = onNicknameChanged,
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.login_nickname_label)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("login_nickname_input")
-                )
-                OutlinedButton(
-                    onClick = onCheckNickname,
-                    enabled = state.nicknameCheckStatus != NicknameCheckStatus.Checking,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .testTag("login_check_nickname")
-                ) {
-                    Text(stringResource(R.string.login_check_nickname))
-                }
-                LoginNicknameMessage(state)
+                LoginGoogleMessage(state)
                 Button(
                     onClick = onGoogleSignIn,
                     enabled = googleEnabled,
@@ -268,22 +334,179 @@ private fun LoginScreen(
                     Spacer(Modifier.size(8.dp))
                     Text(stringResource(R.string.login_continue_google))
                 }
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun ProfileSetupScreen(
+    state: SmartTrainnerAppUiState,
+    onNicknameChanged: (String) -> Unit,
+    onGenderSelected: (ProfileGender) -> Unit,
+    onHeightCmChanged: (String) -> Unit,
+    onWeightKgChanged: (String) -> Unit,
+    onCheckNickname: () -> Unit,
+    onSaveProfile: () -> Unit
+) {
+    val trimmedNickname = state.nicknameInput.trim()
+    val nicknameInputValid = trimmedNickname.length >= MIN_NICKNAME_LENGTH
+    val profileInputValid = state.loginProfileInputIsValid()
+    val canSave = nicknameInputValid && profileInputValid && !state.googleSignInInProgress
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SmartTrainnerGradients.screen())
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 24.dp)
+            .testTag("profile_setup_screen"),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        SmartTrainnerBrandWordmarkImage(
+            modifier = Modifier
+                .fillMaxWidth(0.78f)
+                .height(36.dp),
+            contentDescription = stringResource(R.string.app_name)
+        )
+        Text(
+            text = stringResource(R.string.profile_setup_detail),
+            color = SmartTrainnerColors.Muted,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = SmartTrainnerColors.SurfaceRaised,
+            tonalElevation = 1.dp,
+            shadowElevation = 1.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_setup_title),
+                    color = SmartTrainnerColors.Ink,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                OutlinedTextField(
+                    value = state.nicknameInput,
+                    onValueChange = onNicknameChanged,
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.login_nickname_label)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("profile_setup_nickname_input")
+                )
+                LoginProfileFields(
+                    state = state,
+                    onGenderSelected = onGenderSelected,
+                    onHeightCmChanged = onHeightCmChanged,
+                    onWeightKgChanged = onWeightKgChanged
+                )
+                OutlinedButton(
+                    onClick = onCheckNickname,
+                    enabled = state.nicknameCheckStatus != NicknameCheckStatus.Checking,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("profile_setup_check_nickname")
+                ) {
+                    Text(stringResource(R.string.login_check_nickname))
+                }
+                LoginNicknameMessage(state)
                 Button(
-                    onClick = onContinueDefaultSession,
-                    enabled = !state.googleSignInInProgress,
+                    onClick = onSaveProfile,
+                    enabled = canSave,
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
-                        .testTag("login_continue_default")
+                        .testTag("profile_setup_save")
                 ) {
-                    Icon(Icons.Default.FitnessCenter, contentDescription = null)
+                    Icon(Icons.Default.AccountCircle, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.login_continue_default))
+                    Text(stringResource(R.string.profile_setup_save))
                 }
             }
         }
         Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun LoginProfileFields(
+    state: SmartTrainnerAppUiState,
+    onGenderSelected: (ProfileGender) -> Unit,
+    onHeightCmChanged: (String) -> Unit,
+    onWeightKgChanged: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = stringResource(R.string.login_gender_label),
+            color = SmartTrainnerColors.Ink,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ProfileGender.entries.forEach { gender ->
+                OutlinedButton(
+                    onClick = { onGenderSelected(gender) },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .testTag("login_gender_${gender.name.lowercase()}")
+                ) {
+                    Text(
+                        text = stringResource(gender.labelResId()),
+                        color = if (state.genderInput == gender) {
+                            SmartTrainnerColors.Coral
+                        } else {
+                            SmartTrainnerColors.Ink
+                        }
+                    )
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = state.heightCmInput,
+                onValueChange = onHeightCmChanged,
+                singleLine = true,
+                label = { Text(stringResource(R.string.login_height_label)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("login_height_input")
+            )
+            OutlinedTextField(
+                value = state.weightKgInput,
+                onValueChange = onWeightKgChanged,
+                singleLine = true,
+                label = { Text(stringResource(R.string.login_weight_label)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("login_weight_input")
+            )
+        }
+        if (state.profileInputInvalid) {
+            Text(
+                text = stringResource(R.string.login_profile_invalid),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.testTag("login_profile_message")
+            )
+        }
     }
 }
 
@@ -315,6 +538,34 @@ private fun LoginNicknameMessage(state: SmartTrainnerAppUiState) {
         modifier = Modifier.testTag("login_nickname_message")
     )
 }
+
+@Composable
+private fun LoginGoogleMessage(state: SmartTrainnerAppUiState) {
+    val message = when {
+        state.googleSignInCancelled -> stringResource(R.string.login_google_cancelled)
+        state.loginFailed -> stringResource(R.string.login_google_failed)
+        else -> stringResource(R.string.login_start_detail)
+    }
+    Text(
+        text = message,
+        color = if (state.loginFailed) MaterialTheme.colorScheme.error else SmartTrainnerColors.Muted,
+        style = MaterialTheme.typography.bodySmall,
+        modifier = Modifier.testTag("login_google_message")
+    )
+}
+
+
+private fun SmartTrainnerAppUiState.loginProfileInputIsValid(): Boolean =
+    genderInput != null &&
+        heightCmInput.toIntOrNull()?.let { it > 0 } == true &&
+        weightKgInput.toDoubleOrNull()?.let { it > 0.0 } == true
+
+private fun ProfileGender.labelResId(): Int = when (this) {
+    ProfileGender.MALE -> R.string.profile_gender_male
+    ProfileGender.FEMALE -> R.string.profile_gender_female
+}
+
+private const val MIN_NICKNAME_LENGTH = 2
 
 @Composable
 private fun SessionPreviewRow() {

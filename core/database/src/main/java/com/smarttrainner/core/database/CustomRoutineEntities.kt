@@ -1,11 +1,16 @@
 package com.smarttrainner.core.database
 
 import androidx.room.Embedded
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+
+const val CUSTOM_ROUTINE_SYNCED = "synced"
+const val CUSTOM_ROUTINE_SYNC_PENDING_UPSERT = "pending_upsert"
+const val CUSTOM_ROUTINE_SYNC_PENDING_DELETE = "pending_delete"
 
 @Entity(
     tableName = "custom_routines",
@@ -17,7 +22,9 @@ data class CustomRoutineEntity(
     val name: String,
     val description: String,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
+    @ColumnInfo(defaultValue = "'pending_upsert'")
+    val syncState: String = CUSTOM_ROUTINE_SYNC_PENDING_UPSERT
 )
 
 @Entity(

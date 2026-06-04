@@ -9,8 +9,7 @@ data class RoutineCompletionSnapshot(
     val dayIndex: Int,
     val completedAt: Instant?,
     val cycleNumber: Int,
-    val previousCycleStartedAt: Instant?,
-    val cycleDurationDays: Int? = null
+    val previousCycleStartedAt: Instant?
 )
 
 interface RoutinePlanCommandRepository {
@@ -34,6 +33,7 @@ interface RoutineProgressCommandRepository {
         restoredCycleNumber: Int,
         restoredCycleStartedAt: Instant?,
         remainingLatestCompletion: RoutineCompletionSnapshot?,
+        routineDayInstanceId: String,
         plannedExerciseIds: Set<PlannedExerciseId>,
         additionalExerciseIdPrefix: String
     ): Result<Unit>

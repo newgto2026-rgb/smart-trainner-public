@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
+import com.smarttrainner.core.model.PlannedExerciseId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,8 +47,16 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
         flowState.update { it.dismissRecordDialog() }
     }
 
-    fun handleRecordSaved(nextPlannedExercise: PlannedExercise?) {
-        flowState.update { it.recordSaved(nextPlannedExercise) }
+    internal fun handleRecordSaved(nextPlannedExercise: PlannedExercise?): TrainingRecordSavedResult {
+        var result = TrainingRecordSavedResult()
+        flowState.update { current ->
+            result = TrainingRecordSavedResult(
+                wasContinuous = current.recordingFlow == RecordingFlow.CONTINUOUS,
+                recordedPlannedExerciseIds = current.recordedPlannedExerciseIdsAfterCurrentSaved()
+            )
+            current.recordSaved(nextPlannedExercise)
+        }
+        return result
     }
 
     fun skipCurrentExercise(nextPlannedExercise: PlannedExercise?) {
@@ -66,3 +75,8 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
         flowState.update { it.clearRecordingFlow() }
     }
 }
+
+internal data class TrainingRecordSavedResult(
+    val wasContinuous: Boolean = false,
+    val recordedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet()
+)

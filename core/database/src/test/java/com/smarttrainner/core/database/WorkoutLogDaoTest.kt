@@ -177,4 +177,88 @@ class WorkoutLogDaoTest {
 
         assertThat(result.map { it.log.clientLogId }).containsExactly("client-log-2", "client-log-1").inOrder()
     }
+
+    @Test
+    fun deleteRoutineDayLogsWithInstanceDoesNotDeleteLegacyPlannedIds() = runTest {
+        val currentInstanceLog = WorkoutLogEntity(
+            clientLogId = "client-log-1",
+            sessionId = "local-default",
+            plannedExerciseId = "2026-05-20_leg_press",
+            routineDayInstanceId = "routine-day|template|cycle1|day1",
+            exerciseId = "leg_press",
+            performedDate = "2026-05-20",
+            performedAt = "2026-05-20T09:00:00",
+            sets = 1,
+            reps = 10,
+            weightKg = 20.0,
+            durationMinutes = null,
+            memo = "",
+            completed = true
+        )
+        val otherInstanceLog = currentInstanceLog.copy(
+            clientLogId = "client-log-2",
+            routineDayInstanceId = "routine-day|template|cycle2|day1",
+            performedAt = "2026-05-20T10:00:00"
+        )
+        val legacyLog = currentInstanceLog.copy(
+            clientLogId = "client-log-3",
+            routineDayInstanceId = null,
+            performedAt = "2026-05-20T11:00:00"
+        )
+        database.workoutLogDao().upsertWithSets(currentInstanceLog, emptyList())
+        database.workoutLogDao().upsertWithSets(otherInstanceLog, emptyList())
+        database.workoutLogDao().upsertWithSets(legacyLog, emptyList())
+
+        database.workoutLogDao().deleteRoutineDayLogs(
+            sessionId = "local-default",
+            routineDayInstanceId = "routine-day|template|cycle1|day1",
+            plannedExerciseIds = listOf("2026-05-20_leg_press"),
+            additionalExerciseIdPrefixPattern = "routine-added|template|cycle1|day1|%"
+        )
+
+        val result = database.workoutLogDao()
+            .observeAll(sessionId = "local-default")
+            .first()
+
+        assertThat(result.map { it.log.clientLogId }).containsExactly("client-log-3", "client-log-2").inOrder()
+    }
+
+    @Test
+    fun deleteRoutineDayLogsWithoutInstanceFallsBackToLegacyPlannedIds() = runTest {
+        val legacyLog = WorkoutLogEntity(
+            clientLogId = "client-log-1",
+            sessionId = "local-default",
+            plannedExerciseId = "2026-05-20_leg_press",
+            routineDayInstanceId = null,
+            exerciseId = "leg_press",
+            performedDate = "2026-05-20",
+            performedAt = "2026-05-20T09:00:00",
+            sets = 1,
+            reps = 10,
+            weightKg = 20.0,
+            durationMinutes = null,
+            memo = "",
+            completed = true
+        )
+        val instanceLog = legacyLog.copy(
+            clientLogId = "client-log-2",
+            routineDayInstanceId = "routine-day|template|cycle2|day1",
+            performedAt = "2026-05-20T10:00:00"
+        )
+        database.workoutLogDao().upsertWithSets(legacyLog, emptyList())
+        database.workoutLogDao().upsertWithSets(instanceLog, emptyList())
+
+        database.workoutLogDao().deleteRoutineDayLogs(
+            sessionId = "local-default",
+            routineDayInstanceId = null,
+            plannedExerciseIds = listOf("2026-05-20_leg_press"),
+            additionalExerciseIdPrefixPattern = "routine-added|template|cycle1|day1|%"
+        )
+
+        val result = database.workoutLogDao()
+            .observeAll(sessionId = "local-default")
+            .first()
+
+        assertThat(result.map { it.log.clientLogId }).containsExactly("client-log-2")
+    }
 }

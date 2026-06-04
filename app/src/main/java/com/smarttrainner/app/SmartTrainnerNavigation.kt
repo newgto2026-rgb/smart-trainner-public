@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -60,6 +62,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -70,7 +73,9 @@ import androidx.navigation.compose.rememberNavController
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import com.smarttrainner.core.designsystem.swatchColor
+import com.smarttrainner.core.model.ProfileGender
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.UserProfile
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.ui.LocalSmartTrainnerHeaderAction
 import com.smarttrainner.app.training.TrainingExercisesRoute
@@ -95,6 +100,7 @@ fun SmartTrainnerMainScreen(
     selectedThemeTone: SmartTrainnerThemeTone,
     onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
     onTrainingExperienceSelected: (TrainingExperience) -> Unit,
+    onBodyProfileSaved: (ProfileGender?, Int, Double) -> Unit,
     onLinkGoogle: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -192,6 +198,7 @@ fun SmartTrainnerMainScreen(
                         routineChangePromptOpen = true
                     }
                 },
+                onBodyProfileSaved = onBodyProfileSaved,
                 onLinkGoogle = onLinkGoogle,
                 onLogout = {
                     profileOpen = false
@@ -284,12 +291,14 @@ private fun ProfileDrawer(
     onDismiss: () -> Unit,
     onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
     onTrainingExperienceSelected: (TrainingExperience) -> Unit,
+    onBodyProfileSaved: (ProfileGender?, Int, Double) -> Unit,
     onLinkGoogle: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var themeSettingsOpen by rememberSaveable { mutableStateOf(false) }
     var trainingLevelSettingsOpen by rememberSaveable { mutableStateOf(false) }
+    var bodyProfileSettingsOpen by rememberSaveable { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -347,6 +356,10 @@ private fun ProfileDrawer(
                         style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
                     )
                 }
+                BodyProfileSettingsEntry(
+                    profile = session.profile,
+                    onClick = { bodyProfileSettingsOpen = true }
+                )
                 TrainingLevelSettingsEntry(
                     trainingExperience = trainingExperience,
                     onClick = { trainingLevelSettingsOpen = true }
@@ -404,7 +417,215 @@ private fun ProfileDrawer(
                 }
             )
         }
+        if (bodyProfileSettingsOpen) {
+            BodyProfileSettingsDialog(
+                profile = session.profile,
+                onDismiss = { bodyProfileSettingsOpen = false },
+                onBodyProfileSaved = { gender, heightCm, weightKg ->
+                    onBodyProfileSaved(gender, heightCm, weightKg)
+                    bodyProfileSettingsOpen = false
+                }
+            )
+        }
     }
+}
+
+@Composable
+private fun BodyProfileSettingsEntry(
+    profile: UserProfile,
+    onClick: () -> Unit
+) {
+    val measurement = profile.latestBodyMeasurement
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        color = SmartTrainnerColors.Surface,
+        border = BorderStroke(1.dp, SmartTrainnerColors.Line),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .testTag("profile_body_entry")
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = null,
+                tint = SmartTrainnerColors.Coral,
+                modifier = Modifier.size(18.dp)
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.profile_body_title),
+                    color = SmartTrainnerColors.Ink,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = if (measurement != null) {
+                        stringResource(
+                            R.string.profile_body_summary,
+                            measurement.heightCm,
+                            measurement.weightKg
+                        )
+                    } else {
+                        stringResource(R.string.profile_body_missing)
+                    },
+                    color = SmartTrainnerColors.Muted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Text(
+                text = profile.gender?.let { stringResource(it.labelResId()) }
+                    ?: stringResource(R.string.profile_body_missing),
+                color = SmartTrainnerColors.Muted,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+@Composable
+private fun BodyProfileSettingsDialog(
+    profile: UserProfile,
+    onDismiss: () -> Unit,
+    onBodyProfileSaved: (ProfileGender?, Int, Double) -> Unit
+) {
+    val measurement = profile.latestBodyMeasurement
+    var selectedGender by rememberSaveable(profile.gender) { mutableStateOf(profile.gender) }
+    var heightCmInput by rememberSaveable(measurement?.heightCm) {
+        mutableStateOf(measurement?.heightCm?.toString() ?: "")
+    }
+    var weightKgInput by rememberSaveable(measurement?.weightKg) {
+        mutableStateOf(measurement?.weightKg?.toDisplayWeight() ?: "")
+    }
+    val genderCanBeSet = profile.gender == null
+    val heightCm = heightCmInput.toIntOrNull()
+    val weightKg = weightKgInput.toDoubleOrNull()
+    val canSave = selectedGender != null &&
+        heightCm?.let { it > 0 } == true &&
+        weightKg?.let { it > 0.0 } == true
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(8.dp),
+        containerColor = SmartTrainnerColors.SurfaceRaised,
+        title = {
+            Text(
+                text = stringResource(R.string.profile_body_title),
+                color = SmartTrainnerColors.Ink,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(R.string.login_gender_label),
+                    color = SmartTrainnerColors.Ink,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                if (genderCanBeSet) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ProfileGender.entries.forEach { gender ->
+                            OutlinedButton(
+                                onClick = { selectedGender = gender },
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                                    .testTag("profile_gender_${gender.name.lowercase()}")
+                            ) {
+                                Text(
+                                    text = stringResource(gender.labelResId()),
+                                    color = if (selectedGender == gender) {
+                                        SmartTrainnerColors.Coral
+                                    } else {
+                                        SmartTrainnerColors.Ink
+                                    }
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = SmartTrainnerColors.Surface,
+                        border = BorderStroke(1.dp, SmartTrainnerColors.Line),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .testTag("profile_gender_locked")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(requireNotNull(profile.gender).labelResId()),
+                                color = SmartTrainnerColors.Muted,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = heightCmInput,
+                    onValueChange = { heightCmInput = it.filter { character -> character.isDigit() }.take(3) },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.login_height_label)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("profile_height_input")
+                )
+                OutlinedTextField(
+                    value = weightKgInput,
+                    onValueChange = {
+                        weightKgInput = it.filter { character -> character.isDigit() || character == '.' }
+                            .take(6)
+                    },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.login_weight_label)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("profile_weight_input")
+                )
+                measurement?.let {
+                    Text(
+                        text = stringResource(R.string.profile_measurement_date, it.recordedDate.toString()),
+                        color = SmartTrainnerColors.Muted,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onBodyProfileSaved(
+                        if (genderCanBeSet) selectedGender else null,
+                        requireNotNull(heightCm),
+                        requireNotNull(weightKg)
+                    )
+                },
+                enabled = canSave,
+                modifier = Modifier.testTag("profile_save_body")
+            ) {
+                Text(stringResource(R.string.profile_body_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.profile_theme_close))
+            }
+        }
+    )
 }
 
 @Composable
@@ -667,6 +888,18 @@ private fun TrainingExperience.profileLabelResId(): Int = when (this) {
     TrainingExperience.INTERMEDIATE -> R.string.profile_training_level_intermediate
     TrainingExperience.ADVANCED -> R.string.profile_training_level_advanced
 }
+
+private fun ProfileGender.labelResId(): Int = when (this) {
+    ProfileGender.MALE -> R.string.profile_gender_male
+    ProfileGender.FEMALE -> R.string.profile_gender_female
+}
+
+private fun Double.toDisplayWeight(): String =
+    if (this % 1.0 == 0.0) {
+        toInt().toString()
+    } else {
+        toString()
+    }
 
 private fun UserSession.profileInitial(): String =
     nickname.ifBlank { displayName }.trim().take(1).uppercase()

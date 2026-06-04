@@ -6,6 +6,7 @@ import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.domain.TrainingSeedStore
 import com.smarttrainner.core.domain.RoutineProgressRepository
+import com.smarttrainner.core.domain.TrainingDataSyncer
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineCycleCompletion
 import com.smarttrainner.core.model.RoutineProgress
@@ -47,7 +48,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
     private val activeSessionResolver: ActiveSessionResolver,
     private val seedStore: TrainingSeedStore,
     private val routineProgressNetworkApi: RoutineProgressNetworkApi
-) : RoutineProgressRepository, RoutineProgressCommandRepository {
+) : RoutineProgressRepository, RoutineProgressCommandRepository, TrainingDataSyncer {
     override fun observeRoutineProgress(): Flow<RoutineProgress> =
         activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
             channelFlow {
@@ -72,8 +73,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
                         lastCompletedCycleNumber = preference.lastCompletedCycleNumber,
                         lastCompletedPreviousCycleStartedAt = preference.lastCompletedPreviousCycleStartedAt.toInstantOrNull(),
                         startedAt = startedAt,
-                        cycleStartedAt = preference.cycleStartedAt.toInstantOrNull() ?: startedAt,
-                        lastCompletedCycleDurationDays = preference.lastCompletedCycleDurationDays
+                        cycleStartedAt = preference.cycleStartedAt.toInstantOrNull() ?: startedAt
                     )
                 }.collect { send(it) }
             }
@@ -87,8 +87,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
                 .map {
                     RoutineCycleCompletionRefreshKey(
                         cycleNumber = it.cycleNumber,
-                        lastCompletedAt = it.lastCompletedAt,
-                        lastCompletedCycleDurationDays = it.lastCompletedCycleDurationDays
+                        lastCompletedAt = it.lastCompletedAt
                     )
                 }
                 .distinctUntilChanged()
@@ -127,8 +126,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null,
-            lastCompletedCycleDurationDays = null
+            lastCompletedPreviousCycleStartedAt = null
         )
         preferences.setRoutineProgress(sessionId, switchedProgress)
         val serverProgress = pushServerProgress(sessionId, writeToPreferences = false) {
@@ -148,8 +146,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null,
-            lastCompletedCycleDurationDays = null
+            lastCompletedPreviousCycleStartedAt = null
         ) ?: switchedProgress
         preferences.setRoutineProgress(sessionId, syncedProgress)
         Unit
@@ -189,15 +186,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
                     newCycleStartedAt = newCycleStartedAt?.toString(),
                     completedCycleDurationDays = cycleDurationDays
                 )
-            ).data.let { serverProgress ->
-                serverProgress.copy(
-                    lastCompletedCycleDurationDays = if (newCycleStartedAt != null) {
-                        cycleDurationDays ?: serverProgress.lastCompletedCycleDurationDays
-                    } else {
-                        null
-                    }
-                )
-            }
+            ).data
         }
     }
 
@@ -206,6 +195,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
         restoredCycleNumber: Int,
         restoredCycleStartedAt: Instant?,
         remainingLatestCompletion: RoutineCompletionSnapshot?,
+        routineDayInstanceId: String,
         plannedExerciseIds: Set<PlannedExerciseId>,
         additionalExerciseIdPrefix: String
     ): Result<Unit> = runCatching {
@@ -224,7 +214,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
                     remainingLastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
                     remainingLastCompletedPreviousCycleStartedAt =
                         remainingLatestCompletion?.previousCycleStartedAt?.toString(),
-                    remainingLastCompletedCycleDurationDays = remainingLatestCompletion?.cycleDurationDays,
+                    routineDayInstanceId = routineDayInstanceId,
                     plannedExerciseIds = plannedExerciseIds.map { it.value },
                     additionalExerciseIdPrefix = additionalExerciseIdPrefix
                 )
@@ -241,6 +231,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
         }
         workoutLogDao.deleteRoutineDayLogs(
             sessionId = sessionId,
+            routineDayInstanceId = routineDayInstanceId,
             plannedExerciseIds = plannedExerciseIds.map { it.value },
             additionalExerciseIdPrefixPattern = "$additionalExerciseIdPrefix%"
         )
@@ -251,10 +242,13 @@ class DefaultRoutineProgressRepository @Inject constructor(
                 lastCompletedAt = remainingLatestCompletion?.completedAt?.toString(),
                 lastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
                 lastCompletedPreviousCycleStartedAt =
-                    remainingLatestCompletion?.previousCycleStartedAt?.toString(),
-                lastCompletedCycleDurationDays = remainingLatestCompletion?.cycleDurationDays
+                    remainingLatestCompletion?.previousCycleStartedAt?.toString()
             )
         )
+    }
+
+    override suspend fun syncPendingTrainingData(): Result<Unit> = runCatching {
+        syncLocalProgressWithServer(activeSessionResolver.sessionId())
     }
 
     private suspend fun templateExists(sessionId: String, templateId: String): Boolean =
@@ -324,8 +318,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = lastCompletedDayIndex,
             lastCompletedAt = lastCompletedAt,
             lastCompletedCycleNumber = lastCompletedCycleNumber,
-            lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt,
-            lastCompletedCycleDurationDays = lastCompletedCycleDurationDays
+            lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt
         )
 
     private fun RoutineCycleCompletionDto.toModel(): RoutineCycleCompletion? {
@@ -354,8 +347,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = lastCompletedDayIndex,
             lastCompletedAt = lastCompletedAt,
             lastCompletedCycleNumber = lastCompletedCycleNumber,
-            lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt,
-            lastCompletedCycleDurationDays = lastCompletedCycleDurationDays
+            lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt
         )
 
     private fun String?.toInstantOrNull(): Instant? =
@@ -364,6 +356,5 @@ class DefaultRoutineProgressRepository @Inject constructor(
 
 private data class RoutineCycleCompletionRefreshKey(
     val cycleNumber: Int,
-    val lastCompletedAt: String?,
-    val lastCompletedCycleDurationDays: Int?
+    val lastCompletedAt: String?
 )

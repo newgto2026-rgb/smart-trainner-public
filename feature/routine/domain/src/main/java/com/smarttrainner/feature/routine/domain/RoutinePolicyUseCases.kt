@@ -203,12 +203,26 @@ class ResolveRoutineCycleCompletionUseCase @Inject constructor() {
     operator fun invoke(
         logs: List<WorkoutLog>,
         progress: RoutineProgress,
-        zone: ZoneId
+        zone: ZoneId,
+        routineDayInstanceId: String? = null,
+        currentDayPlannedExerciseIds: Set<PlannedExerciseId> = emptySet()
     ): Set<PlannedExerciseId> {
         val cycleStartedAt = progress.cycleStartedAt?.let { LocalDateTime.ofInstant(it, zone) }
-        return logs.asSequence()
+        val eligibleLogs = logs.asSequence()
             .filter { it.completed }
             .filter { log -> cycleStartedAt == null || !log.performedAt.isBefore(cycleStartedAt) }
+            .toList()
+        val instanceLogs = routineDayInstanceId?.let { instanceId ->
+            eligibleLogs.filter { it.routineDayInstanceId == instanceId }
+        }.orEmpty()
+        val completionLogs = if (instanceLogs.isEmpty()) {
+            eligibleLogs
+        } else {
+            eligibleLogs.filter { log ->
+                log.routineDayInstanceId != null || log.plannedExerciseId !in currentDayPlannedExerciseIds
+            }
+        }
+        return completionLogs.asSequence()
             .map { it.plannedExerciseId }
             .toSet()
     }

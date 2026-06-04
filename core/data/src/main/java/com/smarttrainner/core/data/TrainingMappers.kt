@@ -44,6 +44,7 @@ fun WorkoutLogWithSets.toModel(): WorkoutLog {
         durationMinutes = log.durationMinutes,
         memo = log.memo,
         completed = log.completed,
-        setEntries = setEntries
+        setEntries = setEntries,
+        routineDayInstanceId = log.routineDayInstanceId
     )
 }
