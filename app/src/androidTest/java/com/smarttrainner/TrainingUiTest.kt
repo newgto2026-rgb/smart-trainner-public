@@ -11,10 +11,8 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
-import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -252,15 +250,17 @@ class TrainingUiTest {
         }
         composeRule.onNodeWithTag("training_record_dialog").assertIsDisplayed()
         composeRule.onNodeWithTag("training_record_selected_exercise").assertIsDisplayed()
-        composeRule.onNodeWithTag("training_set_reps_input_0").performTextClearance()
-        composeRule.onNodeWithTag("training_set_weight_input_0").performTextClearance()
-        composeRule.onNodeWithTag("training_set_rest_input_0").performTextClearance()
-        composeRule.onNodeWithTag("training_set_reps_input_0").performTextInput("10")
-        composeRule.onNodeWithTag("training_set_weight_input_0").performTextInput("80")
-        composeRule.onNodeWithTag("training_set_rest_input_0").performTextInput("75")
-        composeRule.onNodeWithTag("training_set_weight_input_1").performTextInput("85")
+        composeRule.onNodeWithTag("training_set_reps_input_0").performClick()
+        composeRule.onNodeWithTag("training_set_reps_option_0_5").performClick()
+        composeRule.onNodeWithTag("training_set_weight_input_0").performClick()
+        composeRule.onNodeWithTag("training_set_weight_option_0_1").performClick()
+        composeRule.onNodeWithTag("training_set_rest_input_0").performClick()
+        composeRule.onNodeWithTag("training_set_rest_option_0_90").performClick()
+        composeRule.onNodeWithTag("training_set_weight_input_1").performClick()
+        composeRule.onNodeWithTag("training_set_weight_option_1_1_5").performClick()
         composeRule.onNodeWithTag("training_add_set_button").performScrollTo().performClick()
-        composeRule.onNodeWithTag("training_set_weight_input_3").performScrollTo().performTextInput("90")
+        composeRule.onNodeWithTag("training_set_weight_input_3").performScrollTo().performClick()
+        composeRule.onNodeWithTag("training_set_weight_option_3_2").performClick()
         composeRule.onNodeWithTag("training_save_record").performScrollTo().performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_record_dialog").fetchSemanticsNodes().isEmpty()

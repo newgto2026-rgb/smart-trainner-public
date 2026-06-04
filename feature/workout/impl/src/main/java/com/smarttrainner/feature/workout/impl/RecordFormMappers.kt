@@ -79,6 +79,7 @@ internal fun validateSetEntries(
             }
             entry.restSeconds.isNotBlank() && (rest == null || rest !in 0..600) -> return RecordFormError.REST
             planned.repRange != null && reps == null -> return RecordFormError.REPS
+            planned.repRange != null && weight == null -> return RecordFormError.WEIGHT
             planned.repRange == null && duration == null -> return RecordFormError.DURATION
         }
     }

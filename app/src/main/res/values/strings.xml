@@ -31,8 +31,7 @@
     <string name="profile_setup_detail">Add the body details needed for analysis before entering home.</string>
     <string name="profile_setup_save">Enter home</string>
     <string name="profile_body_title">Body profile</string>
-    <string name="profile_body_missing">Not set</string>
-    <string name="profile_body_summary">%1$d cm · %2$.1f kg</string>
+    <string name="profile_body_change_action">Edit body profile</string>
     <string name="profile_body_save">Save</string>
     <string name="profile_gender_male">Male</string>
     <string name="profile_gender_female">Female</string>
