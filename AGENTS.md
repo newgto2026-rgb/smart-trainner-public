@@ -3,6 +3,8 @@
 ## Source Of Truth
 - GitHub app repo: `newgto2026-rgb/smart-trainner-public`.
 - The `origin` remote for this checkout should point to `https://github.com/newgto2026-rgb/smart-trainner-public.git`.
+- Companion server repo: `/Users/kimtaenyun/server/smart-trainner` (`newgto2026-rgb/smart-trainner-server`).
+- When Android `core:network` request/response DTOs or API paths change, update and verify the companion server repo in the same task unless the user explicitly excludes server work.
 
 ## New Task Workflow
 - Start every new task from the latest public `main` by running `scripts/new-smart-task <task-name>`.
@@ -19,7 +21,8 @@ git worktree add -b codex/<task-name> "$HOME/.codex/worktrees/<task-name>/smart-
 2. Confirm new work is based on fresh `origin/main`.
 3. Identify affected Gradle modules.
 4. Open affected module-local `AGENTS.md` files when they exist.
-5. Check module boundaries and dependency direction before editing.
+5. Check whether the change affects server API contracts and, if so, inspect `/Users/kimtaenyun/server/smart-trainner/AGENTS.md`.
+6. Check module boundaries and dependency direction before editing.
 
 ## Required Pre-PR Checks
 1. Run affected module unit tests.

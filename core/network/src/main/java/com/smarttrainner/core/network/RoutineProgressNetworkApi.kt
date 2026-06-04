@@ -5,12 +5,19 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface RoutineProgressNetworkApi {
     @GET("api/routine-progress")
     suspend fun getRoutineProgress(
         @Header("x-smart-trainner-session-id") sessionId: String
     ): RoutineProgressResponse
+
+    @GET("api/routine-progress/cycles")
+    suspend fun getRoutineCycleCompletions(
+        @Header("x-smart-trainner-session-id") sessionId: String,
+        @Query("templateId") templateId: String? = null
+    ): RoutineCycleCompletionsResponse
 
     @POST("api/routine-progress/start")
     suspend fun startRoutineProgress(
@@ -46,6 +53,12 @@ interface RoutineProgressNetworkApi {
 @Serializable
 data class RoutineProgressResponse(
     val data: RoutineProgressDto? = null
+)
+
+@Serializable
+data class RoutineCycleCompletionsResponse(
+    val data: List<RoutineCycleCompletionDto> = emptyList(),
+    val count: Int = data.size
 )
 
 @Serializable
@@ -104,7 +117,22 @@ data class RoutineProgressDto(
     val lastCompletedAt: String? = null,
     val lastCompletedCycleNumber: Int? = null,
     val lastCompletedPreviousCycleStartedAt: String? = null,
+    val lastCompletedCycleDurationDays: Int? = null,
     val revision: Int,
+    val createdAt: String,
+    val updatedAt: String
+)
+
+@Serializable
+data class RoutineCycleCompletionDto(
+    val id: String,
+    val sessionId: String,
+    val templateId: String,
+    val cycleNumber: Int,
+    val startedAt: String,
+    val completedAt: String,
+    val durationDays: Int,
+    val completedDayIndex: Int,
     val createdAt: String,
     val updatedAt: String
 )
@@ -128,7 +156,8 @@ data class RoutineProgressCompleteDayRequest(
     val completedDayIndex: Int,
     val nextDayIndex: Int,
     val completedAt: String,
-    val newCycleStartedAt: String? = null
+    val newCycleStartedAt: String? = null,
+    val completedCycleDurationDays: Int? = null
 )
 
 @Serializable
@@ -141,6 +170,7 @@ data class RoutineProgressCancelLatestRequest(
     val remainingLastCompletedAt: String? = null,
     val remainingLastCompletedCycleNumber: Int? = null,
     val remainingLastCompletedPreviousCycleStartedAt: String? = null,
+    val remainingLastCompletedCycleDurationDays: Int? = null,
     val plannedExerciseIds: List<String>,
     val additionalExerciseIdPrefix: String
 )
@@ -155,5 +185,6 @@ data class RoutineProgressSyncRequest(
     val lastCompletedDayIndex: Int? = null,
     val lastCompletedAt: String? = null,
     val lastCompletedCycleNumber: Int? = null,
-    val lastCompletedPreviousCycleStartedAt: String? = null
+    val lastCompletedPreviousCycleStartedAt: String? = null,
+    val lastCompletedCycleDurationDays: Int? = null
 )

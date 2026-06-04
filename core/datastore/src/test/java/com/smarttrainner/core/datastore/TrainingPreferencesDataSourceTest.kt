@@ -72,6 +72,7 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.lastCompletedAt).isEqualTo(cycleInstant.toString())
         assertThat(progress.lastCompletedCycleNumber).isEqualTo(1)
         assertThat(progress.lastCompletedPreviousCycleStartedAt).isEqualTo(initialInstant.toString())
+        assertThat(progress.lastCompletedCycleDurationDays).isEqualTo(2)
         assertThat(progress.startedAt).isEqualTo(initialInstant.toString())
         assertThat(progress.cycleStartedAt).isEqualTo(cycleInstant.toString())
     }
@@ -93,6 +94,7 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.dayIndex).isEqualTo(2)
         assertThat(progress.cycleNumber).isEqualTo(1)
         assertThat(progress.lastCompletedDayIndex).isEqualTo(1)
+        assertThat(progress.lastCompletedCycleDurationDays).isNull()
         assertThat(progress.startedAt).isEqualTo(initialInstant.toString())
         assertThat(progress.cycleStartedAt).isEqualTo(initialInstant.toString())
     }
@@ -123,6 +125,7 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.lastCompletedDayIndex).isNull()
         assertThat(progress.lastCompletedAt).isNull()
         assertThat(progress.lastCompletedCycleNumber).isNull()
+        assertThat(progress.lastCompletedCycleDurationDays).isNull()
     }
 
     @Test
@@ -153,6 +156,7 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.lastCompletedDayIndex).isEqualTo(1)
         assertThat(progress.lastCompletedCycleNumber).isEqualTo(1)
         assertThat(progress.lastCompletedPreviousCycleStartedAt).isEqualTo(initialInstant.toString())
+        assertThat(progress.lastCompletedCycleDurationDays).isNull()
     }
 
     @Test
@@ -170,7 +174,8 @@ class TrainingPreferencesDataSourceTest {
                 lastCompletedDayIndex = 1,
                 lastCompletedAt = "2026-06-08T10:00:00Z",
                 lastCompletedCycleNumber = 4,
-                lastCompletedPreviousCycleStartedAt = "2026-06-08T00:00:00Z"
+                lastCompletedPreviousCycleStartedAt = "2026-06-08T00:00:00Z",
+                lastCompletedCycleDurationDays = 1
             )
         )
 
@@ -181,6 +186,7 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.dayIndex).isEqualTo(2)
         assertThat(progress.cycleNumber).isEqualTo(4)
         assertThat(progress.lastCompletedDayIndex).isEqualTo(1)
+        assertThat(progress.lastCompletedCycleDurationDays).isEqualTo(1)
     }
 
     @Test
