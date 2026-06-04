@@ -106,29 +106,38 @@ class DefaultRoutinePlanRepository @Inject constructor(
         }
     }
 
-    override suspend fun syncPendingTrainingData(): Result<Unit> = runCatching {
-        val sessionId = activeSessionResolver.sessionId()
+    override suspend fun syncPendingTrainingData(): Result<Unit> {
+        val sessionId = runCatching { activeSessionResolver.sessionId() }
+            .getOrElse { return Result.failure(it) }
+        var firstFailure: Throwable? = null
         customRoutineDao.pendingSyncForSession(sessionId).forEach { pending ->
-            when (pending.routine.syncState) {
-                CUSTOM_ROUTINE_SYNC_PENDING_DELETE -> {
-                    deleteRemoteCustomRoutine(sessionId, pending.routine.id)
-                    customRoutineDao.deleteRoutine(sessionId, pending.routine.id)
+            runCatching {
+                when (pending.routine.syncState) {
+                    CUSTOM_ROUTINE_SYNC_PENDING_DELETE -> {
+                        deleteRemoteCustomRoutine(sessionId, pending.routine.id)
+                        customRoutineDao.deleteRoutine(sessionId, pending.routine.id)
+                    }
+                    else -> {
+                        routineNetworkApi.createCustomRoutine(
+                            sessionId = sessionId,
+                            request = pending.toNetworkRequest()
+                        )
+                        customRoutineDao.updateSyncState(
+                            sessionId = sessionId,
+                            routineId = pending.routine.id,
+                            syncState = CUSTOM_ROUTINE_SYNCED
+                        )
+                    }
                 }
-                else -> {
-                    routineNetworkApi.createCustomRoutine(
-                        sessionId = sessionId,
-                        request = pending.toNetworkRequest()
-                    )
-                    customRoutineDao.updateSyncState(
-                        sessionId = sessionId,
-                        routineId = pending.routine.id,
-                        syncState = CUSTOM_ROUTINE_SYNCED
-                    )
-                }
+            }.onFailure { error ->
+                if (firstFailure == null) firstFailure = error
             }
         }
-        syncSelectedCustomRoutine(sessionId)
-        syncCustomRoutinesFromServer(sessionId)
+        runCatching { syncSelectedCustomRoutine(sessionId) }
+            .onFailure { error -> if (firstFailure == null) firstFailure = error }
+        runCatching { syncCustomRoutinesFromServer(sessionId) }
+            .onFailure { error -> if (firstFailure == null) firstFailure = error }
+        return firstFailure?.let { Result.failure(it) } ?: Result.success(Unit)
     }
 
     private suspend fun templateExists(sessionId: String, templateId: String): Boolean =

@@ -96,6 +96,14 @@ interface WorkoutLogDao {
         insertSetLogs(setLogs.map { it.copy(workoutLogId = workoutLogId) })
     }
 
+    @Transaction
+    suspend fun upsertAllWithSets(logsWithSets: List<WorkoutLogSetWrite>) {
+        logsWithSets.forEach { write ->
+            val workoutLogId = upsert(write.log)
+            insertSetLogs(write.setLogs.map { it.copy(workoutLogId = workoutLogId) })
+        }
+    }
+
     @Query(
         """
         UPDATE workout_logs
@@ -113,6 +121,8 @@ interface WorkoutLogDao {
         AND (
             (:routineDayInstanceId IS NOT NULL AND routineDayInstanceId = :routineDayInstanceId)
             OR (
+                :routineDayInstanceId IS NULL
+                AND
                 routineDayInstanceId IS NULL
                 AND (
                     plannedExerciseId IN (:plannedExerciseIds)
@@ -154,3 +164,8 @@ interface WorkoutLogDao {
         }
     }
 }
+
+data class WorkoutLogSetWrite(
+    val log: WorkoutLogEntity,
+    val setLogs: List<WorkoutSetLogEntity>
+)

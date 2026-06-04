@@ -9,8 +9,12 @@ import javax.inject.Singleton
 class DefaultDeviceSessionStore @Inject constructor(
     private val preferences: TrainingPreferencesDataSource
 ) : DeviceSessionStore {
+    @Volatile
+    private var cachedDeviceId: String? = null
+
     override suspend fun installationDeviceId(): String =
-        preferences.installationDeviceId()
+        cachedDeviceId ?: preferences.installationDeviceId()
+            .also { cachedDeviceId = it }
 
     override suspend fun clearActiveSession() {
         preferences.clearActiveSession()

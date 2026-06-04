@@ -2,6 +2,7 @@ package com.smarttrainner.feature.workout.data
 
 import com.smarttrainner.core.database.WorkoutLogDao
 import com.smarttrainner.core.database.WorkoutLogEntity
+import com.smarttrainner.core.database.WorkoutLogSetWrite
 import com.smarttrainner.core.database.WorkoutLogWithSets
 import com.smarttrainner.core.database.WorkoutSetLogEntity
 import com.smarttrainner.core.datastore.ActiveSessionResolver
@@ -108,14 +109,15 @@ class DefaultWorkoutRecordingRepository @Inject constructor(
         }
         val pendingClientLogIds = workoutLogDao.pendingSyncClientLogIds(sessionId).toSet()
         runCatching {
-            workoutLogNetworkApi.getWorkoutLogs(sessionId).data
+            val remoteWrites = workoutLogNetworkApi.getWorkoutLogs(sessionId).data
                 .filterNot { it.id in pendingClientLogIds }
-                .forEach { remoteLog ->
-                    workoutLogDao.upsertWithSets(
-                        remoteLog.toEntity(),
-                        remoteLog.sets.toSetEntities()
+                .map { remoteLog ->
+                    WorkoutLogSetWrite(
+                        log = remoteLog.toEntity(),
+                        setLogs = remoteLog.sets.toSetEntities()
                     )
                 }
+            workoutLogDao.upsertAllWithSets(remoteWrites)
         }.onFailure { error ->
             if (firstFailure == null) firstFailure = error
         }

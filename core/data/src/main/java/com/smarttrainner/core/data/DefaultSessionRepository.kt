@@ -108,7 +108,8 @@ class DefaultSessionRepository @Inject constructor(
                 gender = it.gender,
                 heightCm = it.heightCm,
                 weightKg = it.weightKg,
-                nickname = normalizedNickname
+                nickname = normalizedNickname,
+                syncPending = false
             )
         }
         Result.success(remoteSession.copy(profile = profile ?: remoteSession.profile))
@@ -172,6 +173,7 @@ class DefaultSessionRepository @Inject constructor(
                     weightKg = weightKg
                 )
             )
+            preferences.markProfileSynced(sessionId)
         }.onFailure { error ->
             val remoteError = error.toRemoteError()
             if (remoteError?.isInvalidDevice == true) {
@@ -187,6 +189,7 @@ class DefaultSessionRepository @Inject constructor(
         return try {
             val session = preferences.activeSession.first() ?: return Result.success(Unit)
             if (session.provider != AuthProvider.GOOGLE) return Result.success(Unit)
+            if (!preferences.profileSyncPending(session.id.value)) return Result.success(Unit)
             val measurement = session.profile.latestBodyMeasurement ?: return Result.success(Unit)
             sessionNetworkApi.updateSessionProfile(
                 session.id.value,
@@ -198,6 +201,7 @@ class DefaultSessionRepository @Inject constructor(
                     weightKg = measurement.weightKg
                 )
             )
+            preferences.markProfileSynced(session.id.value)
             Result.success(Unit)
         } catch (error: Throwable) {
             val remoteError = error.toRemoteError()

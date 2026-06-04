@@ -238,6 +238,33 @@ class TrainingPreferencesDataSourceTest {
     }
 
     @Test
+    fun bodyProfile_marksProfileSyncPendingUntilMarkedSynced() = runTest {
+        dataSource.startDefaultSession(
+            nickname = "Lift Kim",
+            profileSetup = ProfileSetup(
+                gender = ProfileGender.MALE,
+                heightCm = 180,
+                weightKg = 82.5
+            )
+        )
+
+        assertThat(dataSource.profileSyncPending(DEFAULT_USER_SESSION_ID)).isFalse()
+
+        dataSource.updateBodyProfile(
+            sessionId = DEFAULT_USER_SESSION_ID,
+            gender = ProfileGender.MALE,
+            heightCm = 181,
+            weightKg = 83.0
+        )
+
+        assertThat(dataSource.profileSyncPending(DEFAULT_USER_SESSION_ID)).isTrue()
+
+        dataSource.markProfileSynced(DEFAULT_USER_SESSION_ID)
+
+        assertThat(dataSource.profileSyncPending(DEFAULT_USER_SESSION_ID)).isFalse()
+    }
+
+    @Test
     fun selectedThemeTone_defaultsToBlueAndPersistsSelection() = runTest {
         assertThat(dataSource.selectedThemeTone.first()).isEqualTo("blue")
 

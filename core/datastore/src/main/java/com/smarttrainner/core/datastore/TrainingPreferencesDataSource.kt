@@ -1,6 +1,7 @@
 package com.smarttrainner.core.datastore
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -282,6 +283,7 @@ class TrainingPreferencesDataSource @Inject constructor(
             session.linkedAt?.let { preferences[sessionLinkedAtKey(sessionId)] = it }
                 ?: preferences.remove(sessionLinkedAtKey(sessionId))
             preferences.mergeUserProfile(sessionId, session.profile)
+            preferences[profileSyncPendingKey(sessionId)] = false
         }
     }
 
@@ -290,7 +292,8 @@ class TrainingPreferencesDataSource @Inject constructor(
         gender: ProfileGender?,
         heightCm: Int,
         weightKg: Double,
-        nickname: String? = null
+        nickname: String? = null,
+        syncPending: Boolean = true
     ): UserProfile {
         var profile = UserProfile()
         context.trainingDataStore.edit { preferences ->
@@ -303,8 +306,18 @@ class TrainingPreferencesDataSource @Inject constructor(
                 heightCm = heightCm,
                 weightKg = weightKg
             )
+            preferences[profileSyncPendingKey(sessionId)] = syncPending
         }
         return profile
+    }
+
+    suspend fun profileSyncPending(sessionId: String): Boolean =
+        context.trainingDataStore.data.first()[profileSyncPendingKey(sessionId)] ?: false
+
+    suspend fun markProfileSynced(sessionId: String) {
+        context.trainingDataStore.edit { preferences ->
+            preferences[profileSyncPendingKey(sessionId)] = false
+        }
     }
 
     suspend fun clearActiveSession() {
@@ -384,6 +397,9 @@ class TrainingPreferencesDataSource @Inject constructor(
 
         fun sessionBodyMeasurementsKey(sessionId: String) =
             stringPreferencesKey("session_body_measurements_$sessionId")
+
+        fun profileSyncPendingKey(sessionId: String) =
+            booleanPreferencesKey("profile_sync_pending_$sessionId")
     }
 
     private fun MutablePreferences.upsertBodyProfile(
