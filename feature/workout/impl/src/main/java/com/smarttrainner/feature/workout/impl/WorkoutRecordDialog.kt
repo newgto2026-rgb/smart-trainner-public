@@ -41,7 +41,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -66,8 +65,8 @@ import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerMetricCluster
 import java.util.Locale
 
-private val recordRepsOptions = (5..30).map { it.toString() }
-private val recordWeightKgOptions = (0..400).map { (it * 0.5).toRecordInput() }
+private val recordRepsOptions = (MIN_RECORD_REPS..MAX_RECORD_REPS).map { it.toString() }
+private val recordWeightKgOptions = (0..800).map { (it * 0.5).toRecordInput() }
 private val recordDurationMinuteOptions = (1..240).map { it.toString() }
 private val recordRestSecondOptions = (0..600 step 30).map { it.toString() }
 
@@ -424,9 +423,8 @@ private fun RecordValueSelector(
             }
         }
     }
-    LaunchedEffect(expanded, selectedMenuIndex) {
+    LaunchedEffect(expanded, selectedMenuIndex, density) {
         if (expanded) {
-            withFrameNanos { }
             val itemHeightPx = with(density) { 48.dp.roundToPx() }
             val menuHeightPx = with(density) { 280.dp.roundToPx() }
             val centeredScrollOffset = selectedMenuIndex * itemHeightPx - (menuHeightPx - itemHeightPx) / 2

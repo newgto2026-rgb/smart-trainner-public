@@ -246,6 +246,28 @@ class WorkoutRecordingViewModelTest {
     }
 
     @Test
+    fun saveRecord_rejectsRepsBelowSelectableMinimum() = runTest {
+        val viewModel = viewModel()
+        var savedPlanned: PlannedExercise? = null
+
+        viewModel.uiState.test {
+            skipItems(1)
+            viewModel.updatePlannedExercise(repository.plannedExercise)
+            advanceUntilIdle()
+            viewModel.updateSetReps(index = 0, value = "4")
+            viewModel.updateSetWeight(index = 0, value = "20")
+
+            viewModel.saveRecord { savedPlanned = it }
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.formError).isEqualTo(RecordFormError.REPS)
+            assertThat(repository.savedInputs).isEmpty()
+            assertThat(savedPlanned).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun clearRecording_resetsDialogState() = runTest {
         val viewModel = viewModel()
 

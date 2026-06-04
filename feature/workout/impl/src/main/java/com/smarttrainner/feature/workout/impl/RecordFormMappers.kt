@@ -6,6 +6,8 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 
 internal const val MAX_RECORD_SETS = 12
+internal const val MIN_RECORD_REPS = 5
+internal const val MAX_RECORD_REPS = 50
 
 internal fun PlannedExercise.defaultSetForms(previousLog: WorkoutLog? = null): List<RecordSetFormState> {
     val previousSets = previousLog?.reusableSetEntries().orEmpty()
@@ -72,7 +74,9 @@ internal fun validateSetEntries(
         val duration = entry.durationMinutes.toIntOrNull()
         val rest = entry.restSeconds.toIntOrNull()
         when {
-            entry.reps.isNotBlank() && (reps == null || reps !in 1..50) -> return RecordFormError.REPS
+            entry.reps.isNotBlank() && (reps == null || reps !in MIN_RECORD_REPS..MAX_RECORD_REPS) -> {
+                return RecordFormError.REPS
+            }
             entry.weightKg.isNotBlank() && (weight == null || weight < 0.0) -> return RecordFormError.WEIGHT
             entry.durationMinutes.isNotBlank() && (duration == null || duration !in 1..240) -> {
                 return RecordFormError.DURATION

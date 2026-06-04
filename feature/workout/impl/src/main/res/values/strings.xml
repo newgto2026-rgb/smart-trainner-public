@@ -13,7 +13,7 @@
     <string name="workout_set_number">Set %1$d</string>
     <string name="workout_error_select">Choose an exercise to record first.</string>
     <string name="workout_error_sets">Record between 1 and 12 sets.</string>
-    <string name="workout_error_reps">Enter reps between 1 and 50.</string>
+    <string name="workout_error_reps">Enter reps between 5 and 50.</string>
     <string name="workout_error_weight">Choose a weight for every set.</string>
     <string name="workout_error_duration">Enter time between 1 and 240 minutes.</string>
     <string name="workout_error_rest">Enter rest between 0 and 600 seconds.</string>
