@@ -1,17 +1,23 @@
 package com.smarttrainner.app.di
 
+import com.smarttrainner.app.DefaultNetworkStatusRepository
 import com.smarttrainner.core.data.DefaultExerciseRepository
+import com.smarttrainner.core.data.DefaultDeviceSessionStore
 import com.smarttrainner.core.data.DefaultSessionRepository
 import com.smarttrainner.core.data.DefaultWeeklyPlanRepository
 import com.smarttrainner.core.data.DefaultWorkoutLogRepository
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.DeviceSessionStore
+import com.smarttrainner.core.domain.NetworkStatusRepository
 import com.smarttrainner.core.domain.SessionRepository
+import com.smarttrainner.core.domain.TrainingDataSyncer
 import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import dagger.Binds
 import dagger.Module
+import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
@@ -40,6 +46,22 @@ abstract class CoreRepositoryBindingsModule {
     abstract fun bindSessionRepository(
         repository: DefaultSessionRepository
     ): SessionRepository
+
+    @Binds
+    abstract fun bindNetworkStatusRepository(
+        repository: DefaultNetworkStatusRepository
+    ): NetworkStatusRepository
+
+    @Binds
+    @IntoSet
+    abstract fun bindSessionTrainingDataSyncer(
+        repository: DefaultSessionRepository
+    ): TrainingDataSyncer
+
+    @Binds
+    abstract fun bindDeviceSessionStore(
+        store: DefaultDeviceSessionStore
+    ): DeviceSessionStore
 }
 
 class ThemePreferenceStore @Inject constructor(

@@ -117,7 +117,6 @@ data class RoutineProgressDto(
     val lastCompletedAt: String? = null,
     val lastCompletedCycleNumber: Int? = null,
     val lastCompletedPreviousCycleStartedAt: String? = null,
-    val lastCompletedCycleDurationDays: Int? = null,
     val revision: Int,
     val createdAt: String,
     val updatedAt: String
@@ -170,7 +169,7 @@ data class RoutineProgressCancelLatestRequest(
     val remainingLastCompletedAt: String? = null,
     val remainingLastCompletedCycleNumber: Int? = null,
     val remainingLastCompletedPreviousCycleStartedAt: String? = null,
-    val remainingLastCompletedCycleDurationDays: Int? = null,
+    val routineDayInstanceId: String? = null,
     val plannedExerciseIds: List<String>,
     val additionalExerciseIdPrefix: String
 )
@@ -185,6 +184,5 @@ data class RoutineProgressSyncRequest(
     val lastCompletedDayIndex: Int? = null,
     val lastCompletedAt: String? = null,
     val lastCompletedCycleNumber: Int? = null,
-    val lastCompletedPreviousCycleStartedAt: String? = null,
-    val lastCompletedCycleDurationDays: Int? = null
+    val lastCompletedPreviousCycleStartedAt: String? = null
 )

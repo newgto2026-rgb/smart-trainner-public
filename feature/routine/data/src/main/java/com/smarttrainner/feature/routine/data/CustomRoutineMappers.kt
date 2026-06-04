@@ -6,6 +6,7 @@ import com.smarttrainner.core.database.CustomRoutineDayWrite
 import com.smarttrainner.core.database.CustomRoutineEntity
 import com.smarttrainner.core.database.CustomRoutineExerciseEntity
 import com.smarttrainner.core.database.CustomRoutineWithDays
+import com.smarttrainner.core.database.CUSTOM_ROUTINE_SYNC_PENDING_UPSERT
 import com.smarttrainner.core.model.CustomRoutineDayInput
 import com.smarttrainner.core.model.CustomRoutineExerciseInput
 import com.smarttrainner.core.model.CustomRoutineInput
@@ -26,14 +27,16 @@ fun CustomRoutineInput.toEntity(
     routineId: String,
     sessionId: String,
     createdAt: String,
-    updatedAt: String
+    updatedAt: String,
+    syncState: String = CUSTOM_ROUTINE_SYNC_PENDING_UPSERT
 ): CustomRoutineEntity = CustomRoutineEntity(
     id = routineId,
     sessionId = sessionId,
     name = name.trim(),
     description = description.trim(),
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    syncState = syncState
 )
 
 fun CustomRoutineInput.toDayWrites(routineId: String): List<CustomRoutineDayWrite> =

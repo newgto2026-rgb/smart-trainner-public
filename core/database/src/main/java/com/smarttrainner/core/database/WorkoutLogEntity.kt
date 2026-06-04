@@ -11,6 +11,7 @@ import androidx.room.PrimaryKey
         Index(value = ["sessionId"]),
         Index(value = ["sessionId", "clientLogId"], unique = true),
         Index(value = ["sessionId", "plannedExerciseId"]),
+        Index(value = ["sessionId", "routineDayInstanceId"]),
         Index(value = ["sessionId", "performedDate"]),
         Index(value = ["sessionId", "exerciseId", "performedAt"])
     ]
@@ -22,6 +23,7 @@ data class WorkoutLogEntity(
     val clientLogId: String = "",
     val sessionId: String,
     val plannedExerciseId: String,
+    val routineDayInstanceId: String? = null,
     val exerciseId: String,
     val performedDate: String,
     val performedAt: String,
@@ -30,5 +32,7 @@ data class WorkoutLogEntity(
     val weightKg: Double?,
     val durationMinutes: Int?,
     val memo: String,
-    val completed: Boolean
+    val completed: Boolean,
+    @ColumnInfo(defaultValue = "1")
+    val syncPending: Boolean = true
 )

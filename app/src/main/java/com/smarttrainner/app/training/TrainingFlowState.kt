@@ -54,12 +54,7 @@ internal data class TrainingFlowState(
         )
 
     fun recordSaved(nextPlannedExercise: PlannedExercise?): TrainingFlowState {
-        val current = recordingPlannedExercise
-        val nextRecordedIds = if (recordingFlow == RecordingFlow.CONTINUOUS && current != null) {
-            recordedPlannedExerciseIds + current.id
-        } else {
-            recordedPlannedExerciseIds
-        }
+        val nextRecordedIds = recordedPlannedExerciseIdsAfterCurrentSaved()
         val paused = pausedPlannedExercise
         if (paused != null) {
             return copy(
@@ -81,6 +76,15 @@ internal data class TrainingFlowState(
                 recordedPlannedExerciseIds = emptySet(),
                 pausedPlannedExercise = null
             )
+        }
+    }
+
+    fun recordedPlannedExerciseIdsAfterCurrentSaved(): Set<PlannedExerciseId> {
+        val current = recordingPlannedExercise
+        return if (recordingFlow == RecordingFlow.CONTINUOUS && current != null) {
+            recordedPlannedExerciseIds + current.id
+        } else {
+            recordedPlannedExerciseIds
         }
     }
 

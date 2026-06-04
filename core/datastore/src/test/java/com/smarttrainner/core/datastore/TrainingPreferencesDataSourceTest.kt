@@ -3,10 +3,14 @@ package com.smarttrainner.core.datastore
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import com.google.common.truth.Truth.assertThat
+import com.smarttrainner.core.model.ProfileGender
+import com.smarttrainner.core.model.ProfileSetup
 import com.smarttrainner.core.model.RoutineProgressPreference
 import com.smarttrainner.core.model.TrainingExperience
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -21,6 +25,7 @@ import org.robolectric.RuntimeEnvironment
 class TrainingPreferencesDataSourceTest {
     private val initialInstant = Instant.parse("2026-05-24T09:00:00Z")
     private val cycleInstant = Instant.parse("2026-05-25T12:00:00Z")
+    private val mutableClock = MutableClock(initialInstant, ZoneOffset.UTC)
     private lateinit var context: Context
     private lateinit var dataSource: TrainingPreferencesDataSource
 
@@ -28,9 +33,10 @@ class TrainingPreferencesDataSourceTest {
     fun setUp() = runTest {
         context = RuntimeEnvironment.getApplication()
         context.trainingDataStore.edit { it.clear() }
+        mutableClock.currentInstant = initialInstant
         dataSource = TrainingPreferencesDataSource(
             context = context,
-            clock = Clock.fixed(initialInstant, ZoneOffset.UTC)
+            clock = mutableClock
         )
     }
 
@@ -72,7 +78,6 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.lastCompletedAt).isEqualTo(cycleInstant.toString())
         assertThat(progress.lastCompletedCycleNumber).isEqualTo(1)
         assertThat(progress.lastCompletedPreviousCycleStartedAt).isEqualTo(initialInstant.toString())
-        assertThat(progress.lastCompletedCycleDurationDays).isEqualTo(2)
         assertThat(progress.startedAt).isEqualTo(initialInstant.toString())
         assertThat(progress.cycleStartedAt).isEqualTo(cycleInstant.toString())
     }
@@ -94,7 +99,6 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.dayIndex).isEqualTo(2)
         assertThat(progress.cycleNumber).isEqualTo(1)
         assertThat(progress.lastCompletedDayIndex).isEqualTo(1)
-        assertThat(progress.lastCompletedCycleDurationDays).isNull()
         assertThat(progress.startedAt).isEqualTo(initialInstant.toString())
         assertThat(progress.cycleStartedAt).isEqualTo(initialInstant.toString())
     }
@@ -125,7 +129,6 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.lastCompletedDayIndex).isNull()
         assertThat(progress.lastCompletedAt).isNull()
         assertThat(progress.lastCompletedCycleNumber).isNull()
-        assertThat(progress.lastCompletedCycleDurationDays).isNull()
     }
 
     @Test
@@ -156,7 +159,6 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.lastCompletedDayIndex).isEqualTo(1)
         assertThat(progress.lastCompletedCycleNumber).isEqualTo(1)
         assertThat(progress.lastCompletedPreviousCycleStartedAt).isEqualTo(initialInstant.toString())
-        assertThat(progress.lastCompletedCycleDurationDays).isNull()
     }
 
     @Test
@@ -174,8 +176,7 @@ class TrainingPreferencesDataSourceTest {
                 lastCompletedDayIndex = 1,
                 lastCompletedAt = "2026-06-08T10:00:00Z",
                 lastCompletedCycleNumber = 4,
-                lastCompletedPreviousCycleStartedAt = "2026-06-08T00:00:00Z",
-                lastCompletedCycleDurationDays = 1
+                lastCompletedPreviousCycleStartedAt = "2026-06-08T00:00:00Z"
             )
         )
 
@@ -186,12 +187,18 @@ class TrainingPreferencesDataSourceTest {
         assertThat(progress.dayIndex).isEqualTo(2)
         assertThat(progress.cycleNumber).isEqualTo(4)
         assertThat(progress.lastCompletedDayIndex).isEqualTo(1)
-        assertThat(progress.lastCompletedCycleDurationDays).isEqualTo(1)
     }
 
     @Test
     fun startDefaultSession_setsLocalNicknameAndClearActiveSessionLogsOut() = runTest {
-        val session = dataSource.startDefaultSession()
+        val session = dataSource.startDefaultSession(
+            nickname = "local-athlete",
+            profileSetup = ProfileSetup(
+                gender = ProfileGender.MALE,
+                heightCm = 180,
+                weightKg = 82.5
+            )
+        )
 
         assertThat(session.nickname).isEqualTo("local-athlete")
         assertThat(dataSource.activeSession.first()?.nickname).isEqualTo("local-athlete")
@@ -199,6 +206,35 @@ class TrainingPreferencesDataSourceTest {
         dataSource.clearActiveSession()
 
         assertThat(dataSource.activeSession.first()).isNull()
+    }
+
+    @Test
+    fun bodyProfile_keepsGenderAndStoresMeasurementsByDate() = runTest {
+        dataSource.startDefaultSession(
+            nickname = "Lift Kim",
+            profileSetup = ProfileSetup(
+                gender = ProfileGender.MALE,
+                heightCm = 180,
+                weightKg = 82.5
+            )
+        )
+
+        mutableClock.currentInstant = Instant.parse("2026-05-25T10:00:00Z")
+        dataSource.updateBodyProfile(
+            sessionId = DEFAULT_USER_SESSION_ID,
+            gender = ProfileGender.FEMALE,
+            heightCm = 181,
+            weightKg = 83.0
+        )
+
+        val profile = dataSource.activeSession.first()?.profile
+        assertThat(profile?.gender).isEqualTo(ProfileGender.MALE)
+        assertThat(profile?.bodyMeasurements?.map { it.recordedDate }).containsExactly(
+            LocalDate.of(2026, 5, 24),
+            LocalDate.of(2026, 5, 25)
+        ).inOrder()
+        assertThat(profile?.latestBodyMeasurement?.heightCm).isEqualTo(181)
+        assertThat(profile?.latestBodyMeasurement?.weightKg).isEqualTo(83.0)
     }
 
     @Test
@@ -221,4 +257,15 @@ class TrainingPreferencesDataSourceTest {
         assertThat(dataSource.trainingExperience("session-a").first()).isEqualTo(TrainingExperience.ADVANCED)
         assertThat(dataSource.trainingExperience("session-b").first()).isEqualTo(TrainingExperience.INTERMEDIATE)
     }
+}
+
+private class MutableClock(
+    var currentInstant: Instant,
+    private val currentZone: ZoneId
+) : Clock() {
+    override fun instant(): Instant = currentInstant
+
+    override fun getZone(): ZoneId = currentZone
+
+    override fun withZone(zone: ZoneId): Clock = MutableClock(currentInstant, zone)
 }

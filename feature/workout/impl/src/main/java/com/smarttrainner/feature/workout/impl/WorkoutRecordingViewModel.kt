@@ -176,7 +176,8 @@ class WorkoutRecordingViewModel @Inject constructor(
                     durationMinutes = totalDuration,
                     memo = form.memo,
                     completed = true,
-                    setEntries = setEntries
+                    setEntries = setEntries,
+                    routineDayInstanceId = planned.routineDayInstanceId
                 )
             )
             if (result.isSuccess) {

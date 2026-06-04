@@ -39,6 +39,26 @@ interface WorkoutLogDao {
         """
         SELECT * FROM workout_logs
         WHERE sessionId = :sessionId
+        AND syncPending = 1
+        ORDER BY performedAt ASC
+        """
+    )
+    suspend fun pendingSyncLogs(sessionId: String): List<WorkoutLogWithSets>
+
+    @Query(
+        """
+        SELECT clientLogId FROM workout_logs
+        WHERE sessionId = :sessionId
+        AND syncPending = 1
+        """
+    )
+    suspend fun pendingSyncClientLogIds(sessionId: String): List<String>
+
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM workout_logs
+        WHERE sessionId = :sessionId
         AND exerciseId = :exerciseId
         ORDER BY performedAt DESC
         LIMIT 1
@@ -78,16 +98,33 @@ interface WorkoutLogDao {
 
     @Query(
         """
+        UPDATE workout_logs
+        SET syncPending = 0
+        WHERE sessionId = :sessionId
+        AND clientLogId = :clientLogId
+        """
+    )
+    suspend fun markSynced(sessionId: String, clientLogId: String)
+
+    @Query(
+        """
         SELECT id FROM workout_logs
         WHERE sessionId = :sessionId
         AND (
-            plannedExerciseId IN (:plannedExerciseIds)
-            OR plannedExerciseId LIKE :additionalExerciseIdPrefixPattern
+            (:routineDayInstanceId IS NOT NULL AND routineDayInstanceId = :routineDayInstanceId)
+            OR (
+                routineDayInstanceId IS NULL
+                AND (
+                    plannedExerciseId IN (:plannedExerciseIds)
+                    OR plannedExerciseId LIKE :additionalExerciseIdPrefixPattern
+                )
+            )
         )
         """
     )
     suspend fun routineDayWorkoutLogIds(
         sessionId: String,
+        routineDayInstanceId: String?,
         plannedExerciseIds: List<String>,
         additionalExerciseIdPrefixPattern: String
     ): List<Long>
@@ -101,11 +138,13 @@ interface WorkoutLogDao {
     @Transaction
     suspend fun deleteRoutineDayLogs(
         sessionId: String,
+        routineDayInstanceId: String?,
         plannedExerciseIds: List<String>,
         additionalExerciseIdPrefixPattern: String
     ) {
         val workoutLogIds = routineDayWorkoutLogIds(
             sessionId = sessionId,
+            routineDayInstanceId = routineDayInstanceId,
             plannedExerciseIds = plannedExerciseIds,
             additionalExerciseIdPrefixPattern = additionalExerciseIdPrefixPattern
         )

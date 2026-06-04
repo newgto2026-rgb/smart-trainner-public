@@ -139,6 +139,8 @@ class RoutineCommandUseCasesTest {
 
         assertThat(repository.restoredDayIndex).isEqualTo(1)
         assertThat(repository.restoredCycleNumber).isEqualTo(1)
+        assertThat(repository.routineDayInstanceId)
+            .isEqualTo("routine-day|intermediate-body-part-4day|cycle1|day2")
         assertThat(repository.additionalExerciseIdPrefix)
             .isEqualTo("routine-added|intermediate-body-part-4day|cycle1|day2|")
     }
@@ -338,6 +340,7 @@ private class CapturingRoutineProgressRepository : RoutineProgressCommandReposit
     var restoredDayIndex: Int? = null
     var restoredCycleNumber: Int? = null
     var remainingLatestCompletion: RoutineCompletionSnapshot? = null
+    var routineDayInstanceId: String? = null
     var additionalExerciseIdPrefix: String? = null
 
     override suspend fun startRoutine(templateId: String): Result<Unit> = error("Not used")
@@ -360,12 +363,14 @@ private class CapturingRoutineProgressRepository : RoutineProgressCommandReposit
         restoredCycleNumber: Int,
         restoredCycleStartedAt: Instant?,
         remainingLatestCompletion: RoutineCompletionSnapshot?,
+        routineDayInstanceId: String,
         plannedExerciseIds: Set<PlannedExerciseId>,
         additionalExerciseIdPrefix: String
     ): Result<Unit> {
         this.restoredDayIndex = restoredDayIndex
         this.restoredCycleNumber = restoredCycleNumber
         this.remainingLatestCompletion = remainingLatestCompletion
+        this.routineDayInstanceId = routineDayInstanceId
         this.additionalExerciseIdPrefix = additionalExerciseIdPrefix
         return Result.success(Unit)
     }

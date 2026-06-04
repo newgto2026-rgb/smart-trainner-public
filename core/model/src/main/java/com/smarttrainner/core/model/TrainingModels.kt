@@ -31,10 +31,46 @@ data class UserSession(
     val nickname: String = displayName,
     val email: String?,
     val provider: AuthProvider,
-    val linkedAt: String?
+    val linkedAt: String?,
+    val profile: UserProfile = UserProfile()
 ) {
     val isLinked: Boolean
         get() = provider != AuthProvider.LOCAL
+}
+
+enum class ProfileGender {
+    MALE,
+    FEMALE
+}
+
+data class BodyMeasurement(
+    val recordedDate: LocalDate,
+    val heightCm: Int,
+    val weightKg: Double
+)
+
+data class UserProfile(
+    val gender: ProfileGender? = null,
+    val bodyMeasurements: List<BodyMeasurement> = emptyList()
+) {
+    val latestBodyMeasurement: BodyMeasurement?
+        get() = bodyMeasurements.maxByOrNull { it.recordedDate }
+}
+
+data class ProfileSetup(
+    val gender: ProfileGender,
+    val heightCm: Int,
+    val weightKg: Double
+)
+
+fun UserProfile.toProfileSetupOrNull(): ProfileSetup? {
+    val gender = gender ?: return null
+    val measurement = latestBodyMeasurement ?: return null
+    return ProfileSetup(
+        gender = gender,
+        heightCm = measurement.heightCm,
+        weightKg = measurement.weightKg
+    )
 }
 
 data class NicknameAvailability(
@@ -331,8 +367,7 @@ data class RoutineProgressPreference(
     val lastCompletedDayIndex: Int?,
     val lastCompletedAt: String?,
     val lastCompletedCycleNumber: Int?,
-    val lastCompletedPreviousCycleStartedAt: String?,
-    val lastCompletedCycleDurationDays: Int? = null
+    val lastCompletedPreviousCycleStartedAt: String?
 )
 
 data class RoutineProgress(
@@ -344,8 +379,7 @@ data class RoutineProgress(
     val lastCompletedCycleNumber: Int? = null,
     val lastCompletedPreviousCycleStartedAt: Instant? = null,
     val startedAt: Instant? = null,
-    val cycleStartedAt: Instant? = startedAt,
-    val lastCompletedCycleDurationDays: Int? = null
+    val cycleStartedAt: Instant? = startedAt
 )
 
 data class RoutineCycleCompletion(
@@ -385,7 +419,8 @@ data class PlannedExercise(
     val repRange: IntRange?,
     val durationMinutes: Int?,
     val restSeconds: Int,
-    val note: String
+    val note: String,
+    val routineDayInstanceId: String? = null
 ) {
     val targetText: String
         get() = if (repRange != null) {
@@ -430,7 +465,8 @@ data class WorkoutLog(
     val durationMinutes: Int?,
     val memo: String,
     val completed: Boolean,
-    val setEntries: List<WorkoutSetLog> = emptyList()
+    val setEntries: List<WorkoutSetLog> = emptyList(),
+    val routineDayInstanceId: String? = null
 ) {
     val volumeKg: Double
         get() = if (setEntries.isNotEmpty()) {
@@ -452,7 +488,8 @@ data class WorkoutLogInput(
     val durationMinutes: Int?,
     val memo: String,
     val completed: Boolean,
-    val setEntries: List<WorkoutSetLog> = emptyList()
+    val setEntries: List<WorkoutSetLog> = emptyList(),
+    val routineDayInstanceId: String? = null
 )
 
 data class WorkoutSetLog(

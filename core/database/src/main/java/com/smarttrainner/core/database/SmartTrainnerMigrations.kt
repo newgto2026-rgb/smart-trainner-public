@@ -154,11 +154,36 @@ object SmartTrainnerMigrations {
         }
     }
 
+    private val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE `workout_logs` ADD COLUMN `syncPending` INTEGER NOT NULL DEFAULT 1"
+            )
+            db.execSQL(
+                "ALTER TABLE `custom_routines` ADD COLUMN `syncState` TEXT NOT NULL DEFAULT 'pending_upsert'"
+            )
+        }
+    }
+
+    private val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE `workout_logs` ADD COLUMN `routineDayInstanceId` TEXT"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_workout_logs_sessionId_routineDayInstanceId` " +
+                    "ON `workout_logs` (`sessionId`, `routineDayInstanceId`)"
+            )
+        }
+    }
+
     val ALL = arrayOf(
         MIGRATION_1_2,
         MIGRATION_2_3,
         MIGRATION_3_4,
         MIGRATION_4_5,
-        MIGRATION_5_6
+        MIGRATION_5_6,
+        MIGRATION_6_7,
+        MIGRATION_7_8
     )
 }

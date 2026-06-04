@@ -34,22 +34,21 @@ internal fun TrainingRoute(
         onRecordSelected = viewModel::selectPlannedExercise,
         onRecordSaved = { planned ->
             val skippedIds = state.skippedPlannedExerciseIds
-            val recordedIds = state.recordedPlannedExerciseIds + planned.id
             val nextPlannedExercise = routineRouteState.nextPlannedExerciseAfterSaved(
                 plannedExercise = planned,
                 skippedPlannedExerciseIds = skippedIds
             )
-            viewModel.handleRecordSaved(
+            val savedResult = viewModel.handleRecordSaved(
                 nextPlannedExercise = nextPlannedExercise
             )
             if (
-                state.recordingFlow == RecordingFlow.CONTINUOUS &&
+                savedResult.wasContinuous &&
                 nextPlannedExercise == null &&
                 !planned.id.value.startsWith("routine-added|")
             ) {
                 routineRouteState.requestCompleteRoutineDay(
                     skippedPlannedExerciseIds = skippedIds,
-                    justRecordedPlannedExerciseIds = recordedIds
+                    justRecordedPlannedExerciseIds = savedResult.recordedPlannedExerciseIds
                 )
             }
         },

@@ -24,10 +24,14 @@ import com.smarttrainner.app.di.CoreRepositoryBindingsModule
 import com.smarttrainner.app.di.RoutineDataRepositoryBindingsModule
 import com.smarttrainner.app.di.WorkoutDataRepositoryBindingsModule
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.NetworkStatusRepository
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
+import com.smarttrainner.core.domain.TrainingDataSyncer
 import com.smarttrainner.core.domain.WeeklyPlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.ProfileGender
+import com.smarttrainner.core.model.ProfileSetup
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
@@ -38,6 +42,9 @@ import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -100,6 +107,16 @@ class TrainingUiTest {
     @BindValue
     @JvmField
     val sessionRepository: SessionRepository = InMemorySessionRepository()
+
+    @BindValue
+    @JvmField
+    val networkStatusRepository: NetworkStatusRepository = object : NetworkStatusRepository {
+        override fun observeOnline(): Flow<Boolean> = flowOf(true)
+    }
+
+    @BindValue
+    @JvmField
+    val trainingDataSyncers: Set<@JvmSuppressWildcards TrainingDataSyncer> = emptySet()
 
     private lateinit var scenario: ActivityScenario<MainActivity>
 
@@ -468,7 +485,14 @@ class TrainingUiTest {
                 composeRule.onAllNodesWithTag("training_tab_home").fetchSemanticsNodes().isNotEmpty()
         }
         if (composeRule.onAllNodesWithTag("login_screen").fetchSemanticsNodes().isNotEmpty()) {
-            composeRule.onNodeWithTag("login_continue_default").performClick()
+            runBlocking {
+                (sessionRepository as InMemorySessionRepository).signInWithGoogle(
+                    idToken = "ui-test-token",
+                    nickname = "UI Tester",
+                    profileSetup = ProfileSetup(ProfileGender.MALE, heightCm = 180, weightKg = 82.5),
+                    forceDeviceLogin = false
+                )
+            }
         }
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_tab_home").fetchSemanticsNodes().isNotEmpty()

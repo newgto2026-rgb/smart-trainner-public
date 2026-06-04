@@ -17,10 +17,14 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlanTemplateDay
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.BodyMeasurement
+import com.smarttrainner.core.model.ProfileGender
+import com.smarttrainner.core.model.ProfileSetup
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TemplateExercise
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.UserProfile
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WeeklyPlan
@@ -28,7 +32,6 @@ import com.smarttrainner.core.model.WeeklySummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
-import com.smarttrainner.core.model.completedCycleDurationDays as calculateCompletedCycleDurationDays
 import com.smarttrainner.feature.analysis.domain.WeeklySummaryCalculator
 import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
@@ -62,14 +65,15 @@ internal class InMemorySessionRepository : SessionRepository {
 
     override fun observeTrainingExperience(): Flow<TrainingExperience> = trainingExperience
 
-    override suspend fun startDefaultSession(): Result<UserSession> {
+    override suspend fun startDefaultSession(nickname: String, profileSetup: ProfileSetup): Result<UserSession> {
         val session = UserSession(
             id = UserSessionId(TEST_SESSION_ID),
             displayName = "Test Athlete",
-            nickname = "test-athlete",
+            nickname = nickname,
             email = null,
             provider = AuthProvider.LOCAL,
-            linkedAt = null
+            linkedAt = null,
+            profile = profileSetup.toUserProfile()
         )
         activeSession.value = session
         return Result.success(session)
@@ -78,21 +82,51 @@ internal class InMemorySessionRepository : SessionRepository {
     override suspend fun checkNicknameAvailability(nickname: String): Result<NicknameAvailability> =
         Result.success(NicknameAvailability(nickname = nickname.trim(), available = true))
 
-    override suspend fun signInWithGoogle(idToken: String, nickname: String): Result<UserSession> {
+    override suspend fun signInWithGoogle(
+        idToken: String,
+        nickname: String?,
+        profileSetup: ProfileSetup?,
+        forceDeviceLogin: Boolean
+    ): Result<UserSession> {
+        val resolvedNickname = nickname?.trim()?.takeIf { it.isNotEmpty() } ?: "Google Test Athlete"
         val session = UserSession(
             id = UserSessionId("google-test-athlete"),
             displayName = "Google Test Athlete",
-            nickname = nickname.trim(),
+            nickname = resolvedNickname,
             email = "test@example.com",
             provider = AuthProvider.GOOGLE,
-            linkedAt = "2026-06-02T00:00:00Z"
+            linkedAt = "2026-06-02T00:00:00Z",
+            profile = profileSetup?.toUserProfile() ?: activeSession.value?.profile ?: UserProfile()
         )
         activeSession.value = session
         return Result.success(session)
     }
 
+    override suspend fun validateActiveSessionDevice(): Result<Unit> =
+        Result.success(Unit)
+
     override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> {
         trainingExperience.value = experience
+        return Result.success(Unit)
+    }
+
+    override suspend fun updateBodyProfile(
+        gender: ProfileGender?,
+        heightCm: Int,
+        weightKg: Double,
+        nickname: String?
+    ): Result<Unit> {
+        val current = activeSession.value ?: return Result.success(Unit)
+        val profile = current.profile
+        activeSession.value = current.copy(
+            nickname = nickname?.trim()?.takeIf { it.isNotEmpty() } ?: current.nickname,
+            profile = profile.copy(
+                gender = profile.gender ?: gender,
+                bodyMeasurements = profile.bodyMeasurements
+                    .filterNot { it.recordedDate == LocalDate.of(2026, 6, 3) } +
+                    BodyMeasurement(LocalDate.of(2026, 6, 3), heightCm, weightKg)
+            )
+        )
         return Result.success(Unit)
     }
 
@@ -102,6 +136,18 @@ internal class InMemorySessionRepository : SessionRepository {
     }
 
 }
+
+private fun ProfileSetup.toUserProfile(): UserProfile =
+    UserProfile(
+        gender = gender,
+        bodyMeasurements = listOf(
+            BodyMeasurement(
+                recordedDate = LocalDate.of(2026, 6, 3),
+                heightCm = heightCm,
+                weightKg = weightKg
+            )
+        )
+    )
 
 internal class InMemoryTrainingRepository :
     ExerciseRepository,
@@ -212,8 +258,7 @@ internal class InMemoryTrainingRepository :
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null,
-            lastCompletedCycleDurationDays = null
+            lastCompletedPreviousCycleStartedAt = null
         )
     }
 
@@ -248,12 +293,7 @@ internal class InMemoryTrainingRepository :
             lastCompletedAt = completedAt,
             lastCompletedCycleNumber = current.cycleNumber,
             lastCompletedPreviousCycleStartedAt = current.cycleStartedAt,
-            cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt,
-            lastCompletedCycleDurationDays = if (startsNewCycle) {
-                calculateCompletedCycleDurationDays(current.cycleStartedAt, completedAt)
-            } else {
-                null
-            }
+            cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt
         )
     }
 
@@ -262,12 +302,19 @@ internal class InMemoryTrainingRepository :
         restoredCycleNumber: Int,
         restoredCycleStartedAt: Instant?,
         remainingLatestCompletion: RoutineCompletionSnapshot?,
+        routineDayInstanceId: String,
         plannedExerciseIds: Set<PlannedExerciseId>,
         additionalExerciseIdPrefix: String
     ): Result<Unit> = runCatching {
         logs.value = logs.value.filterNot { log ->
-            log.plannedExerciseId in plannedExerciseIds ||
-                log.plannedExerciseId.value.startsWith(additionalExerciseIdPrefix)
+            log.routineDayInstanceId == routineDayInstanceId ||
+                (
+                    log.routineDayInstanceId == null &&
+                        (
+                            log.plannedExerciseId in plannedExerciseIds ||
+                                log.plannedExerciseId.value.startsWith(additionalExerciseIdPrefix)
+                            )
+                    )
         }
         progress.value = progress.value.copy(
             dayIndex = restoredDayIndex,
@@ -276,8 +323,7 @@ internal class InMemoryTrainingRepository :
             lastCompletedDayIndex = remainingLatestCompletion?.dayIndex,
             lastCompletedAt = remainingLatestCompletion?.completedAt,
             lastCompletedCycleNumber = remainingLatestCompletion?.cycleNumber,
-            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt,
-            lastCompletedCycleDurationDays = remainingLatestCompletion?.cycleDurationDays
+            lastCompletedPreviousCycleStartedAt = remainingLatestCompletion?.previousCycleStartedAt
         )
     }
 
@@ -294,7 +340,8 @@ internal class InMemoryTrainingRepository :
             durationMinutes = input.durationMinutes,
             memo = input.memo,
             completed = input.completed,
-            setEntries = input.setEntries
+            setEntries = input.setEntries,
+            routineDayInstanceId = input.routineDayInstanceId
         )
         logs.value = logs.value.filterNot { it.plannedExerciseId == input.plannedExerciseId } + nextLog
     }

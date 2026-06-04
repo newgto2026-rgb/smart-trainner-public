@@ -5,6 +5,7 @@ import com.smarttrainner.core.database.WorkoutLogEntity
 import com.smarttrainner.core.database.WorkoutLogWithSets
 import com.smarttrainner.core.database.WorkoutSetLogEntity
 import com.smarttrainner.core.datastore.ActiveSessionResolver
+import com.smarttrainner.core.domain.TrainingDataSyncer
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.UserSessionId
@@ -12,12 +13,15 @@ import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.network.WorkoutLogDto
 import com.smarttrainner.core.network.WorkoutLogNetworkApi
 import com.smarttrainner.core.network.WorkoutLogRequest
+import com.smarttrainner.core.network.WorkoutSetLogDto
 import com.smarttrainner.core.network.WorkoutSetLogRequest
 import com.smarttrainner.feature.workout.domain.WorkoutRecordingRepository
 import java.security.MessageDigest
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -28,7 +32,7 @@ class DefaultWorkoutRecordingRepository @Inject constructor(
     private val workoutLogDao: WorkoutLogDao,
     private val activeSessionResolver: ActiveSessionResolver,
     private val workoutLogNetworkApi: WorkoutLogNetworkApi
-) : WorkoutRecordingRepository {
+) : WorkoutRecordingRepository, TrainingDataSyncer {
     override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
         workoutLogDao.latestByExercise(
             sessionId = activeSessionResolver.sessionId(),
@@ -73,14 +77,49 @@ class DefaultWorkoutRecordingRepository @Inject constructor(
         val sessionId = activeSessionResolver.sessionId()
         val normalizedInput = input.copy(sets = setEntries.size, setEntries = setEntries)
         val clientLogId = normalizedInput.clientLogId(sessionId)
-        workoutLogNetworkApi.createWorkoutLog(
-            sessionId = sessionId,
-            request = normalizedInput.toNetworkRequest(clientLogId)
-        )
         workoutLogDao.upsertWithSets(
             normalizedInput.toEntity(sessionId = sessionId, clientLogId = clientLogId),
             setEntries.toEntities()
         )
+        runCatching {
+            workoutLogNetworkApi.createWorkoutLog(
+                sessionId = sessionId,
+                request = normalizedInput.toNetworkRequest(clientLogId)
+            )
+        }.onSuccess {
+            workoutLogDao.markSynced(sessionId, clientLogId)
+        }
+    }
+
+    override suspend fun syncPendingTrainingData(): Result<Unit> {
+        val sessionId = runCatching { activeSessionResolver.sessionId() }
+            .getOrElse { return Result.failure(it) }
+        var firstFailure: Throwable? = null
+        workoutLogDao.pendingSyncLogs(sessionId).forEach { localLog ->
+            runCatching {
+                workoutLogNetworkApi.createWorkoutLog(
+                    sessionId = sessionId,
+                    request = localLog.toNetworkRequest()
+                )
+                workoutLogDao.markSynced(sessionId, localLog.log.clientLogId)
+            }.onFailure { error ->
+                if (firstFailure == null) firstFailure = error
+            }
+        }
+        val pendingClientLogIds = workoutLogDao.pendingSyncClientLogIds(sessionId).toSet()
+        runCatching {
+            workoutLogNetworkApi.getWorkoutLogs(sessionId).data
+                .filterNot { it.id in pendingClientLogIds }
+                .forEach { remoteLog ->
+                    workoutLogDao.upsertWithSets(
+                        remoteLog.toEntity(),
+                        remoteLog.sets.toSetEntities()
+                    )
+                }
+        }.onFailure { error ->
+            if (firstFailure == null) firstFailure = error
+        }
+        return firstFailure?.let { Result.failure(it) } ?: Result.success(Unit)
     }
 }
 
@@ -88,6 +127,7 @@ internal fun WorkoutLogInput.toEntity(sessionId: String, clientLogId: String): W
     sessionId = sessionId,
     clientLogId = clientLogId,
     plannedExerciseId = plannedExerciseId.value,
+    routineDayInstanceId = routineDayInstanceId,
     exerciseId = exerciseId.value,
     performedDate = performedAt.toLocalDate().toString(),
     performedAt = performedAt.toString(),
@@ -107,6 +147,7 @@ internal fun WorkoutLogInput.toNetworkRequest(clientLogId: String): WorkoutLogRe
             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
         exerciseId = exerciseId.value,
         plannedExerciseId = plannedExerciseId.value,
+        routineDayInstanceId = routineDayInstanceId,
         notes = memo.takeIf { it.isNotBlank() },
         sets = setEntries.map {
             WorkoutSetLogRequest(
@@ -120,8 +161,69 @@ internal fun WorkoutLogInput.toNetworkRequest(clientLogId: String): WorkoutLogRe
         }
     )
 
+internal fun WorkoutLogWithSets.toNetworkRequest(): WorkoutLogRequest =
+    WorkoutLogRequest(
+        id = log.clientLogId,
+        date = LocalDateTime.parse(log.performedAt).atZone(ZoneId.systemDefault())
+            .toOffsetDateTime()
+            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+        exerciseId = log.exerciseId,
+        plannedExerciseId = log.plannedExerciseId.takeIf { it.isNotBlank() },
+        routineDayInstanceId = log.routineDayInstanceId,
+        notes = log.memo.takeIf { it.isNotBlank() },
+        sets = setLogs
+            .sortedBy { it.setIndex }
+            .map {
+                WorkoutSetLogRequest(
+                    setIndex = it.setIndex,
+                    reps = it.reps,
+                    weightKg = it.weightKg,
+                    durationMinutes = it.durationMinutes,
+                    restSeconds = it.restSeconds,
+                    completed = log.completed
+                )
+            }
+    )
+
+internal fun WorkoutLogDto.toEntity(): WorkoutLogEntity {
+    val performedAtLocal = OffsetDateTime.parse(date).toLocalDateTime()
+    return WorkoutLogEntity(
+        clientLogId = id,
+        sessionId = sessionId,
+        plannedExerciseId = plannedExerciseId.orEmpty(),
+        routineDayInstanceId = routineDayInstanceId,
+        exerciseId = exerciseId,
+        performedDate = performedAtLocal.toLocalDate().toString(),
+        performedAt = performedAtLocal.toString(),
+        sets = sets.size,
+        reps = sets.firstOrNull()?.reps,
+        weightKg = sets.firstOrNull()?.weightKg,
+        durationMinutes = sets.firstOrNull()?.durationMinutes,
+        memo = notes.orEmpty(),
+        completed = sets.all { it.completed },
+        syncPending = false
+    )
+}
+
+internal fun List<WorkoutSetLogDto>.toSetEntities(workoutLogId: Long = 0): List<WorkoutSetLogEntity> = map {
+    WorkoutSetLogEntity(
+        workoutLogId = workoutLogId,
+        setIndex = it.setIndex,
+        reps = it.reps,
+        weightKg = it.weightKg,
+        durationMinutes = it.durationMinutes,
+        restSeconds = it.restSeconds
+    )
+}
+
 internal fun WorkoutLogInput.clientLogId(sessionId: String): String {
-    val input = listOf(sessionId, plannedExerciseId.value, exerciseId.value, performedAt.toString())
+    val input = listOf(
+        sessionId,
+        plannedExerciseId.value,
+        routineDayInstanceId.orEmpty(),
+        exerciseId.value,
+        performedAt.toString()
+    )
         .joinToString(separator = "|")
     val digest = MessageDigest.getInstance("SHA-256")
         .digest(input.toByteArray(Charsets.UTF_8))
@@ -175,6 +277,7 @@ internal fun WorkoutLogWithSets.toModel(): WorkoutLog {
         durationMinutes = log.durationMinutes,
         memo = log.memo,
         completed = log.completed,
-        setEntries = setEntries
+        setEntries = setEntries,
+        routineDayInstanceId = log.routineDayInstanceId
     )
 }
