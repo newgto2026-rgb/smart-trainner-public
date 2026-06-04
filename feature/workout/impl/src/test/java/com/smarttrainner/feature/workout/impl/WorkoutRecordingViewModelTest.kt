@@ -177,6 +177,25 @@ class WorkoutRecordingViewModelTest {
     }
 
     @Test
+    fun updateSetWeight_onFirstSetCopiesWeightOnlyToUnrecordedSets() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            viewModel.updatePlannedExercise(repository.plannedExercise)
+            advanceUntilIdle()
+
+            viewModel.updateSetWeight(index = 1, value = "25")
+            viewModel.updateSetWeight(index = 0, value = "20")
+            advanceUntilIdle()
+
+            val setEntries = viewModel.uiState.value.recordForm.setEntries
+            assertThat(setEntries.map { it.weightKg }).containsExactly("20", "25", "20").inOrder()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun saveRecord_persistsWorkoutLogAndReportsSavedPlannedExercise() = runTest {
         val viewModel = viewModel()
         var savedPlanned: PlannedExercise? = null
@@ -185,6 +204,7 @@ class WorkoutRecordingViewModelTest {
             skipItems(1)
             viewModel.updatePlannedExercise(repository.plannedExercise)
             advanceUntilIdle()
+            viewModel.updateSetWeight(index = 0, value = "20")
 
             viewModel.saveRecord { savedPlanned = it }
             advanceUntilIdle()
@@ -198,6 +218,51 @@ class WorkoutRecordingViewModelTest {
             assertThat(input.sets).isEqualTo(3)
             assertThat(input.reps).isEqualTo(8)
             assertThat(input.setEntries).hasSize(3)
+            assertThat(input.setEntries.map { it.weightKg }).containsExactly(20.0, 20.0, 20.0).inOrder()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun saveRecord_requiresWeightForEveryRepSet() = runTest {
+        val viewModel = viewModel()
+        var savedPlanned: PlannedExercise? = null
+
+        viewModel.uiState.test {
+            skipItems(1)
+            viewModel.updatePlannedExercise(repository.plannedExercise)
+            advanceUntilIdle()
+            viewModel.updateSetWeight(index = 0, value = "20")
+            viewModel.updateSetWeight(index = 2, value = "")
+
+            viewModel.saveRecord { savedPlanned = it }
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.formError).isEqualTo(RecordFormError.WEIGHT)
+            assertThat(repository.savedInputs).isEmpty()
+            assertThat(savedPlanned).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun saveRecord_rejectsRepsBelowSelectableMinimum() = runTest {
+        val viewModel = viewModel()
+        var savedPlanned: PlannedExercise? = null
+
+        viewModel.uiState.test {
+            skipItems(1)
+            viewModel.updatePlannedExercise(repository.plannedExercise)
+            advanceUntilIdle()
+            viewModel.updateSetReps(index = 0, value = "4")
+            viewModel.updateSetWeight(index = 0, value = "20")
+
+            viewModel.saveRecord { savedPlanned = it }
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.formError).isEqualTo(RecordFormError.REPS)
+            assertThat(repository.savedInputs).isEmpty()
+            assertThat(savedPlanned).isNull()
             cancelAndIgnoreRemainingEvents()
         }
     }

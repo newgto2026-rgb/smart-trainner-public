@@ -1,10 +1,12 @@
 package com.smarttrainner.feature.workout.impl
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,15 +15,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,14 +37,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -50,11 +60,15 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.model.toRecommendedDisplayRepRange
-import com.smarttrainner.core.ui.SmartTrainnerNumberField
 import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerMetricCluster
 import java.util.Locale
+
+private val recordRepsOptions = (MIN_RECORD_REPS..MAX_RECORD_REPS).map { it.toString() }
+private val recordWeightKgOptions = (0..800).map { (it * 0.5).toRecordInput() }
+private val recordDurationMinuteOptions = (1..240).map { it.toString() }
+private val recordRestSecondOptions = (0..600 step 30).map { it.toString() }
 
 @Composable
 internal fun WorkoutRecordDialog(
@@ -221,43 +235,47 @@ private fun RecordForm(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (showReps) {
-                        SmartTrainnerNumberField(
+                        RecordValueSelector(
                             label = stringResource(R.string.workout_reps),
                             value = setEntry.reps,
                             onValueChange = { actions.onSetRepsChanged(index, it) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("training_set_reps_input_$index")
+                            options = recordRepsOptions,
+                            modifier = Modifier.weight(1f),
+                            testTag = "training_set_reps_input_$index",
+                            optionTestTagPrefix = "training_set_reps_option_$index"
                         )
                     }
                     if (showWeight) {
-                        SmartTrainnerNumberField(
+                        RecordValueSelector(
                             label = stringResource(R.string.workout_weight_short),
                             value = setEntry.weightKg,
                             onValueChange = { actions.onSetWeightChanged(index, it) },
-                            keyboardType = KeyboardType.Decimal,
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("training_set_weight_input_$index")
+                            options = recordWeightKgOptions,
+                            modifier = Modifier.weight(1f),
+                            testTag = "training_set_weight_input_$index",
+                            optionTestTagPrefix = "training_set_weight_option_$index",
+                            emptyOptionLabel = stringResource(R.string.workout_not_recorded)
                         )
                     }
                     if (showDuration) {
-                        SmartTrainnerNumberField(
+                        RecordValueSelector(
                             label = stringResource(R.string.workout_duration),
                             value = setEntry.durationMinutes,
                             onValueChange = { actions.onSetDurationChanged(index, it) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("training_set_duration_input_$index")
+                            options = recordDurationMinuteOptions,
+                            modifier = Modifier.weight(1f),
+                            testTag = "training_set_duration_input_$index",
+                            optionTestTagPrefix = "training_set_duration_option_$index"
                         )
                     }
-                    SmartTrainnerNumberField(
+                    RecordValueSelector(
                         label = stringResource(R.string.workout_rest_seconds),
                         value = setEntry.restSeconds,
                         onValueChange = { actions.onSetRestChanged(index, it) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("training_set_rest_input_$index")
+                        options = recordRestSecondOptions,
+                        modifier = Modifier.weight(1f),
+                        testTag = "training_set_rest_input_$index",
+                        optionTestTagPrefix = "training_set_rest_option_$index"
                     )
                 }
             }
@@ -377,6 +395,133 @@ private fun CompactActionButton(
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold
         )
+    }
+}
+
+@Composable
+private fun RecordValueSelector(
+    label: String,
+    value: String,
+    options: List<String>,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    testTag: String,
+    optionTestTagPrefix: String,
+    emptyOptionLabel: String? = null
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val menuOptions = remember(options, value) { options.withCurrentValue(value) }
+    val displayValue = value.ifBlank { emptyOptionLabel.orEmpty() }
+    val menuScrollState = rememberScrollState()
+    val density = LocalDensity.current
+    val selectedMenuIndex = remember(menuOptions, value, emptyOptionLabel) {
+        when {
+            value.isBlank() && emptyOptionLabel != null -> 0
+            else -> {
+                val optionIndex = menuOptions.indexOf(value).coerceAtLeast(0)
+                optionIndex + if (emptyOptionLabel != null) 1 else 0
+            }
+        }
+    }
+    LaunchedEffect(expanded, selectedMenuIndex, density) {
+        if (expanded) {
+            val itemHeightPx = with(density) { 48.dp.roundToPx() }
+            val menuHeightPx = with(density) { 280.dp.roundToPx() }
+            val centeredScrollOffset = selectedMenuIndex * itemHeightPx - (menuHeightPx - itemHeightPx) / 2
+            menuScrollState.scrollTo(centeredScrollOffset.coerceAtLeast(0))
+        }
+    }
+    BoxWithConstraints(modifier = modifier) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 58.dp)
+                .clickable { expanded = true }
+                .testTag(testTag),
+            shape = RoundedCornerShape(8.dp),
+            color = SmartTrainnerColors.Surface,
+            border = BorderStroke(
+                width = 1.dp,
+                color = if (value.isBlank()) SmartTrainnerColors.Line else SmartTrainnerColors.Green
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = SmartTrainnerColors.Muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = displayValue,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (value.isBlank()) SmartTrainnerColors.Muted else SmartTrainnerColors.Ink,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = SmartTrainnerColors.Muted,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            scrollState = menuScrollState,
+            modifier = Modifier
+                .heightIn(max = 280.dp)
+                .width(maxWidth)
+                .testTag("${testTag}_menu")
+        ) {
+            emptyOptionLabel?.let { labelText ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = labelText,
+                            color = SmartTrainnerColors.Muted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    onClick = {
+                        onValueChange("")
+                        expanded = false
+                    },
+                    modifier = Modifier.testTag("${optionTestTagPrefix}_none")
+                )
+            }
+            menuOptions.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = option,
+                            fontWeight = if (option == value) FontWeight.Bold else FontWeight.Normal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    },
+                    modifier = Modifier.testTag("${optionTestTagPrefix}_${option.toOptionTestTagValue()}")
+                )
+            }
+        }
     }
 }
 
@@ -527,6 +672,16 @@ private fun <T> List<T>.toCollapsedText(): String? =
 
 private fun Double.toRecordInput(): String =
     if (rem(1.0) == 0.0) toLong().toString() else toString()
+
+private fun List<String>.withCurrentValue(value: String): List<String> {
+    if (value.isBlank() || value in this) return this
+    return (this + value)
+        .distinct()
+        .sortedWith(compareBy<String> { it.toDoubleOrNull() ?: Double.MAX_VALUE }.thenBy { it })
+}
+
+private fun String.toOptionTestTagValue(): String =
+    replace(".", "_").replace("-", "minus_").ifBlank { "empty" }
 
 private fun List<WorkoutLog>.latestForExercise(exerciseId: ExerciseId): WorkoutLog? =
     filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }

@@ -111,7 +111,24 @@ class WorkoutRecordingViewModel @Inject constructor(
     }
 
     fun updateSetWeight(index: Int, value: String) {
-        updateSetEntry(index) { it.copy(weightKg = value.onlyDecimal()) }
+        val nextWeight = value.onlyDecimal()
+        recordForm.update { form ->
+            if (index !in form.setEntries.indices) {
+                form
+            } else {
+                form.copy(
+                    setEntries = form.setEntries.mapIndexed { entryIndex, entry ->
+                        when {
+                            entryIndex == index -> entry.copy(weightKg = nextWeight)
+                            index == 0 && nextWeight.isNotBlank() && entry.weightKg.isBlank() -> {
+                                entry.copy(weightKg = nextWeight)
+                            }
+                            else -> entry
+                        }
+                    }
+                )
+            }
+        }
     }
 
     fun updateSetDuration(index: Int, value: String) {

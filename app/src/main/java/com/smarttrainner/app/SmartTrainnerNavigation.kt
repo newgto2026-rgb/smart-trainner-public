@@ -356,10 +356,7 @@ private fun ProfileDrawer(
                         style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
                     )
                 }
-                BodyProfileSettingsEntry(
-                    profile = session.profile,
-                    onClick = { bodyProfileSettingsOpen = true }
-                )
+                BodyProfileSettingsEntry(onClick = { bodyProfileSettingsOpen = true })
                 TrainingLevelSettingsEntry(
                     trainingExperience = trainingExperience,
                     onClick = { trainingLevelSettingsOpen = true }
@@ -432,10 +429,8 @@ private fun ProfileDrawer(
 
 @Composable
 private fun BodyProfileSettingsEntry(
-    profile: UserProfile,
     onClick: () -> Unit
 ) {
-    val measurement = profile.latestBodyMeasurement
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(8.dp),
@@ -443,7 +438,7 @@ private fun BodyProfileSettingsEntry(
         border = BorderStroke(1.dp, SmartTrainnerColors.Line),
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(56.dp)
             .testTag("profile_body_entry")
     ) {
         Row(
@@ -457,32 +452,12 @@ private fun BodyProfileSettingsEntry(
                 tint = SmartTrainnerColors.Coral,
                 modifier = Modifier.size(18.dp)
             )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.profile_body_title),
-                    color = SmartTrainnerColors.Ink,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = if (measurement != null) {
-                        stringResource(
-                            R.string.profile_body_summary,
-                            measurement.heightCm,
-                            measurement.weightKg
-                        )
-                    } else {
-                        stringResource(R.string.profile_body_missing)
-                    },
-                    color = SmartTrainnerColors.Muted,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
             Text(
-                text = profile.gender?.let { stringResource(it.labelResId()) }
-                    ?: stringResource(R.string.profile_body_missing),
-                color = SmartTrainnerColors.Muted,
-                style = MaterialTheme.typography.bodySmall
+                text = stringResource(R.string.profile_body_change_action),
+                color = SmartTrainnerColors.Ink,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
         }
     }

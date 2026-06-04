@@ -31,8 +31,7 @@
     <string name="profile_setup_detail">홈으로 들어가기 전에 분석에 쓸 신체 정보를 입력하세요.</string>
     <string name="profile_setup_save">홈으로 들어가기</string>
     <string name="profile_body_title">신체 정보</string>
-    <string name="profile_body_missing">미입력</string>
-    <string name="profile_body_summary">%1$d cm · %2$.1f kg</string>
+    <string name="profile_body_change_action">신체 정보 변경</string>
     <string name="profile_body_save">저장</string>
     <string name="profile_gender_male">남성</string>
     <string name="profile_gender_female">여성</string>
