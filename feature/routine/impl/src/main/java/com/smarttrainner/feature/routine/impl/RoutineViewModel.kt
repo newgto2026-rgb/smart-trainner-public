@@ -3,6 +3,7 @@ package com.smarttrainner.feature.routine.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
+import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
@@ -28,6 +29,7 @@ import com.smarttrainner.feature.routine.domain.ObservePlanTemplatesUseCase
 import com.smarttrainner.feature.routine.domain.RecommendRoutineUseCase
 import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
+import com.smarttrainner.feature.routine.domain.SetRoutineDayDateUseCase
 import com.smarttrainner.feature.routine.domain.SwitchRoutineTemplateUseCase
 import com.smarttrainner.feature.routine.domain.routineAdditionalExerciseIdPrefix
 import com.smarttrainner.feature.routine.domain.routineDayInstanceId
@@ -35,6 +37,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.temporal.TemporalAdjusters
@@ -62,6 +65,7 @@ class RoutineViewModel @Inject constructor(
     observeRoutineProgress: ObserveRoutineProgressUseCase,
     observeTrainingExperience: ObserveTrainingExperienceUseCase,
     observeWorkoutLogs: ObserveWorkoutLogsUseCase,
+    observeAllWorkoutLogs: ObserveAllWorkoutLogsUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
     private val recommendExercisePrescription: RecommendExercisePrescriptionUseCase,
     private val recommendRoutine: RecommendRoutineUseCase,
@@ -69,6 +73,7 @@ class RoutineViewModel @Inject constructor(
     private val switchRoutineTemplate: SwitchRoutineTemplateUseCase,
     private val completeRoutineDay: CompleteRoutineDayUseCase,
     private val cancelLatestRoutineDayCompletion: CancelLatestRoutineDayCompletionUseCase,
+    private val setRoutineDayDate: SetRoutineDayDateUseCase,
     private val saveCustomRoutineUseCase: SaveCustomRoutineUseCase,
     private val clock: Clock
 ) : ViewModel() {
@@ -85,18 +90,23 @@ class RoutineViewModel @Inject constructor(
     private val showRoutineSettingsDialog = MutableStateFlow(false)
     private val showRoutineRecommendationsDialog = MutableStateFlow(false)
     private val completionConfirm = MutableStateFlow<RoutineCompletionConfirmState?>(null)
+    private val routineDayDatePicker = MutableStateFlow<RoutineDayDatePickerState?>(null)
+    private val routineDayDateError = MutableStateFlow<RoutineDayDateError?>(null)
     private val routineExercisePicker = MutableStateFlow<RoutineExercisePickerState?>(null)
     private val showCancelLatestRoutineDayDialog = MutableStateFlow(false)
     private val customRoutineBuilder = MutableStateFlow(CustomRoutineBuilderState())
     private val completeDayFailed = MutableStateFlow(false)
+    private var pendingRoutineDayDateAction: PendingRoutineDayDateAction? = null
 
     private val routineModalState = combine(
         completionConfirm,
+        routineDayDatePicker,
         routineExercisePicker,
         showCancelLatestRoutineDayDialog
-    ) { completionConfirm, exercisePicker, showCancelLatest ->
+    ) { completionConfirm, datePicker, exercisePicker, showCancelLatest ->
         RoutineModalState(
             completionConfirm = completionConfirm,
+            datePicker = datePicker,
             exercisePicker = exercisePicker,
             showCancelLatest = showCancelLatest
         )
@@ -115,6 +125,7 @@ class RoutineViewModel @Inject constructor(
             showSettings = showSettings,
             showRecommendations = showRecommendations,
             completionConfirm = modal.completionConfirm,
+            datePicker = modal.datePicker,
             exercisePicker = modal.exercisePicker,
             showCancelLatest = modal.showCancelLatest
         )
@@ -124,12 +135,14 @@ class RoutineViewModel @Inject constructor(
         recommendationForm,
         customRoutineBuilder,
         completeDayFailed,
+        routineDayDateError,
         routineDialogState
-    ) { recommendation, builder, completeDayFailed, routineDialog ->
+    ) { recommendation, builder, completeDayFailed, dateError, routineDialog ->
         RoutineFormControlState(
             recommendationForm = recommendation,
             customRoutineBuilder = builder,
             completeDayFailed = completeDayFailed,
+            routineDayDateError = dateError,
             routineDialogState = routineDialog
         )
     }
@@ -146,10 +159,12 @@ class RoutineViewModel @Inject constructor(
     private val logState = weekStartFlow.flatMapLatest { weekStart ->
         combine(
             observeWorkoutLogs(weekStart),
+            observeAllWorkoutLogs(),
             observeLatestWorkoutLogs()
-        ) { weeklyLogs, latestLogs ->
+        ) { weeklyLogs, allLogs, latestLogs ->
             RoutineLogState(
                 weeklyLogs = weeklyLogs,
+                allLogs = allLogs,
                 latestLogs = latestLogs
             )
         }
@@ -166,7 +181,7 @@ class RoutineViewModel @Inject constructor(
             templates = templates,
             plan = routinePlan.plan,
             routineProgress = routinePlan.routineProgress,
-            logs = logState.weeklyLogs,
+            logs = logState.allLogs,
             latestLogs = logState.latestLogs,
             exercises = exercises,
             profileExperience = profileExperience
@@ -193,6 +208,20 @@ class RoutineViewModel @Inject constructor(
                 )
             }
         }
+        val routineDayDate = nextRoutineDayInstanceId?.let { instanceId ->
+            data.routineProgress.routineDateFor(instanceId, data.logs)
+        }
+        val previousRoutineDayDate = activeTemplate
+            ?.let { template ->
+                nextRoutineDay?.let { day ->
+                    previousRoutineDayInstanceId(
+                        template = template,
+                        cycleNumber = data.routineProgress.cycleNumber,
+                        dayNumber = day.dayNumber
+                    )
+                }
+            }
+            ?.let { instanceId -> data.routineProgress.routineDateFor(instanceId, data.logs) }
         val currentDayPlannedExerciseIds = nextRoutineDay
             ?.exercises
             ?.map { it.id }
@@ -209,6 +238,8 @@ class RoutineViewModel @Inject constructor(
             template = activeTemplate,
             dayIndex = nextDayIndex,
             cycleNumber = data.routineProgress.cycleNumber,
+            routineDayDate = routineDayDate,
+            previousRoutineDayDate = previousRoutineDayDate,
             completedIds = completedIds
         )
         val normalizedRecommendationForm = control.recommendationForm.normalizedFor(data.templates)
@@ -254,6 +285,7 @@ class RoutineViewModel @Inject constructor(
             showRoutineSettingsDialog = control.routineDialogState.showSettings,
             showRoutineRecommendationsDialog = control.routineDialogState.showRecommendations,
             routineCompletionConfirm = control.routineDialogState.completionConfirm,
+            routineDayDatePicker = control.routineDialogState.datePicker,
             routineExercisePicker = control.routineDialogState.exercisePicker,
             showCancelLatestRoutineDayDialog = control.routineDialogState.showCancelLatest,
             customRoutineBuilder = control.customRoutineBuilder,
@@ -261,7 +293,8 @@ class RoutineViewModel @Inject constructor(
             logs = data.logs,
             latestWorkoutLogs = data.latestLogs,
             completedPlannedExerciseIds = completedIds,
-            completeDayError = control.completeDayFailed
+            completeDayError = control.completeDayFailed,
+            routineDayDateError = control.routineDayDateError
         )
     }.stateIn(
         scope = viewModelScope,
@@ -623,12 +656,37 @@ class RoutineViewModel @Inject constructor(
     ) {
         val state = uiState.value
         val routineDay = state.nextRoutineDayUi ?: return
+        if (routineDay.routineDayDate == null) {
+            openRoutineDayDatePicker(
+                reason = RoutineDayDatePickerReason.COMPLETE_DAY,
+                pendingAction = PendingRoutineDayDateAction.CompleteDay(
+                    skippedPlannedExerciseIds = skippedPlannedExerciseIds,
+                    justRecordedPlannedExerciseIds = justRecordedPlannedExerciseIds
+                )
+            )
+            return
+        }
+        continueCompleteCurrentRoutineDay(
+            state = state,
+            routineDay = routineDay,
+            skippedPlannedExerciseIds = skippedPlannedExerciseIds,
+            justRecordedPlannedExerciseIds = justRecordedPlannedExerciseIds
+        )
+    }
+
+    private fun continueCompleteCurrentRoutineDay(
+        state: RoutineUiState,
+        routineDay: NextRoutineDayUiModel,
+        skippedPlannedExerciseIds: Set<PlannedExerciseId>,
+        justRecordedPlannedExerciseIds: Set<PlannedExerciseId>,
+        completedAtOverride: Instant? = null
+    ) {
         val effectiveCompletedIds = state.completedPlannedExerciseIds + justRecordedPlannedExerciseIds
         val unrecordedExercises = routineDay.previewExercises.filter { exercise ->
             exercise.id !in effectiveCompletedIds || exercise.id in skippedPlannedExerciseIds
         }
         if (unrecordedExercises.isEmpty()) {
-            completeCurrentRoutineDay()
+            completeCurrentRoutineDay(completedAtOverride = completedAtOverride)
         } else {
             completionConfirm.value = RoutineCompletionConfirmState(
                 reason = if (skippedPlannedExerciseIds.isEmpty()) {
@@ -649,6 +707,110 @@ class RoutineViewModel @Inject constructor(
 
     fun dismissCompleteRoutineDayConfirmation() {
         completionConfirm.value = null
+    }
+
+    fun requestStartWorkout(onStarted: (PlannedExercise) -> Unit) {
+        val state = uiState.value
+        val startExercise = state.nextRoutineDayUi?.startExercise ?: return
+        if (state.nextRoutineDayUi.routineDayDate == null) {
+            openRoutineDayDatePicker(
+                reason = RoutineDayDatePickerReason.START_WORKOUT,
+                pendingAction = PendingRoutineDayDateAction.StartWorkout(startExercise)
+            )
+            return
+        }
+        onStarted(startExercise)
+    }
+
+    fun requestRecordSelected(
+        plannedExercise: PlannedExercise,
+        onSelected: (PlannedExercise) -> Unit
+    ) {
+        val state = uiState.value
+        val recordableExercise = plannedExercise.currentRoutineDayExercise(state) ?: return
+        if (recordableExercise.id in state.completedPlannedExerciseIds) return
+        if (recordableExercise.routineDayDate == null) {
+            openRoutineDayDatePicker(
+                reason = RoutineDayDatePickerReason.START_WORKOUT,
+                pendingAction = PendingRoutineDayDateAction.RecordExercise(recordableExercise)
+            )
+            return
+        }
+        onSelected(recordableExercise)
+    }
+
+    fun requestEditRoutineDayDate() {
+        openRoutineDayDatePicker(
+            reason = RoutineDayDatePickerReason.EDIT,
+            pendingAction = null
+        )
+    }
+
+    fun dismissRoutineDayDatePicker() {
+        pendingRoutineDayDateAction = null
+        routineDayDatePicker.value = null
+    }
+
+    fun selectRoutineDayDate(
+        date: LocalDate,
+        onWorkoutStarted: (PlannedExercise) -> Unit,
+        onRecordSelected: (PlannedExercise) -> Unit
+    ) {
+        val state = uiState.value
+        val routineDay = state.nextRoutineDayUi ?: return
+        val routineDayInstanceId = routineDay.routineDayInstanceId ?: return
+        val validationError = validateRoutineDayDate(date, routineDay, state.today)
+        if (validationError != null) {
+            routineDayDateError.value = validationError
+            return
+        }
+        viewModelScope.launch {
+            val result = setRoutineDayDate(
+                routineDayInstanceId = routineDayInstanceId,
+                assignedDate = date,
+                cycleStartedAt = if (routineDay.dayNumber == 1) {
+                    date.atStartOfDay(clock.zone).toInstant()
+                } else {
+                    null
+                }
+            )
+            if (result.isFailure) {
+                routineDayDateError.value = RoutineDayDateError.SAVE_FAILED
+                return@launch
+            }
+            val pendingAction = pendingRoutineDayDateAction
+            pendingRoutineDayDateAction = null
+            routineDayDatePicker.value = null
+            routineDayDateError.value = null
+            when (pendingAction) {
+                is PendingRoutineDayDateAction.StartWorkout -> {
+                    onWorkoutStarted(
+                        pendingAction.plannedExercise.withRoutineDayDate(
+                            date = date,
+                            routineDayInstanceId = routineDayInstanceId
+                        )
+                    )
+                }
+                is PendingRoutineDayDateAction.RecordExercise -> {
+                    onRecordSelected(
+                        pendingAction.plannedExercise.withRoutineDayDate(
+                            date = date,
+                            routineDayInstanceId = routineDayInstanceId
+                        )
+                    )
+                }
+                is PendingRoutineDayDateAction.CompleteDay -> {
+                    continueCompleteCurrentRoutineDay(
+                        state = state,
+                        routineDay = routineDay.copy(routineDayDate = date),
+                        skippedPlannedExerciseIds = pendingAction.skippedPlannedExerciseIds,
+                        justRecordedPlannedExerciseIds = pendingAction.justRecordedPlannedExerciseIds,
+                        completedAtOverride = routineDayCompletedAt(date)
+                    )
+                }
+                null -> Unit
+            }
+        }
     }
 
     fun requestCancelLatestRoutineDay() {
@@ -728,7 +890,8 @@ class RoutineViewModel @Inject constructor(
                     note = "",
                     routineDayInstanceId = routineDay.previewExercises
                         .firstOrNull()
-                        ?.routineDayInstanceId
+                        ?.routineDayInstanceId,
+                    routineDayDate = routineDay.routineDayDate
                 )
             }
         }
@@ -739,18 +902,25 @@ class RoutineViewModel @Inject constructor(
         )
     }
 
-    fun completeCurrentRoutineDay(onCompleted: () -> Unit = {}) {
+    fun completeCurrentRoutineDay(
+        onCompleted: () -> Unit = {},
+        completedAtOverride: Instant? = null
+    ) {
         val state = uiState.value
         val template = activeTemplate(state)
             ?: return
         val dayIndex = state.activeRoutineProgress?.dayIndex
             ?.coerceIn(0, (template.cycleLength - 1).coerceAtLeast(0))
             ?: 0
+        val completedAt = completedAtOverride ?: state.nextRoutineDayUi
+            ?.routineDayDate
+            ?.let(::routineDayCompletedAt)
+            ?: clock.instant()
         viewModelScope.launch {
             val result = completeRoutineDay(
                 template = template,
                 completedDayIndex = dayIndex,
-                completedAt = clock.instant()
+                completedAt = completedAt
             )
             completeDayFailed.value = result.isFailure
             if (result.isSuccess) {
@@ -758,6 +928,9 @@ class RoutineViewModel @Inject constructor(
             }
         }
     }
+
+    private fun routineDayCompletedAt(date: LocalDate): Instant =
+        date.atTime(LocalTime.NOON).atZone(clock.zone).toInstant()
 
     fun refreshWeekStartIfNeeded() {
         val currentWeekStart = currentWeekStart()
@@ -796,6 +969,85 @@ class RoutineViewModel @Inject constructor(
         state.templates.firstOrNull { it.id == state.activeRoutineProgress?.templateId }
             ?: state.templates.firstOrNull { it.id == state.selectedTemplateId }
 
+    private fun openRoutineDayDatePicker(
+        reason: RoutineDayDatePickerReason,
+        pendingAction: PendingRoutineDayDateAction?
+    ) {
+        val state = uiState.value
+        val routineDay = state.nextRoutineDayUi ?: return
+        val minimumDate = routineDay.previousRoutineDayDate
+        val maximumDate = state.today
+        val earliestSelectableDate = minimumDate?.plusDays(1) ?: LocalDate.MIN
+        if (earliestSelectableDate.isAfter(maximumDate)) {
+            pendingRoutineDayDateAction = null
+            routineDayDatePicker.value = null
+            routineDayDateError.value = RoutineDayDateError.BEFORE_PREVIOUS_DAY
+            return
+        }
+        pendingRoutineDayDateAction = pendingAction
+        routineDayDateError.value = null
+        routineDayDatePicker.value = RoutineDayDatePickerState(
+            reason = reason,
+            initialDate = routineDay.routineDayDate
+                ?: maximumDate.coerceAtLeast(earliestSelectableDate),
+            minDateExclusive = minimumDate,
+            maxDateInclusive = maximumDate
+        )
+    }
+
+    private fun validateRoutineDayDate(
+        date: LocalDate,
+        routineDay: NextRoutineDayUiModel,
+        today: LocalDate
+    ): RoutineDayDateError? = when {
+        date.isAfter(today) -> RoutineDayDateError.FUTURE
+        routineDay.previousRoutineDayDate != null &&
+            !date.isAfter(routineDay.previousRoutineDayDate) -> RoutineDayDateError.BEFORE_PREVIOUS_DAY
+        else -> null
+    }
+
+    private fun RoutineProgress.routineDateFor(
+        routineDayInstanceId: String,
+        logs: List<WorkoutLog>
+    ): LocalDate? =
+        routineDayDates[routineDayInstanceId]
+            ?: logs.firstOrNull { it.routineDayInstanceId == routineDayInstanceId }
+                ?.performedAt
+                ?.toLocalDate()
+
+    private fun previousRoutineDayInstanceId(
+        template: PlanTemplate,
+        cycleNumber: Int,
+        dayNumber: Int
+    ): String? = when {
+        dayNumber > 1 -> routineDayInstanceId(
+            templateId = template.id,
+            cycleNumber = cycleNumber,
+            dayNumber = dayNumber - 1
+        )
+        cycleNumber > 1 -> routineDayInstanceId(
+            templateId = template.id,
+            cycleNumber = cycleNumber - 1,
+            dayNumber = template.cycleLength
+        )
+        else -> null
+    }
+
+    private fun PlannedExercise.withRoutineDayDate(
+        date: LocalDate,
+        routineDayInstanceId: String
+    ): PlannedExercise = copy(
+        routineDayInstanceId = this.routineDayInstanceId ?: routineDayInstanceId,
+        routineDayDate = date
+    )
+
+    private fun PlannedExercise.currentRoutineDayExercise(state: RoutineUiState): PlannedExercise? {
+        val currentDay = state.nextRoutineDayUi ?: return null
+        currentDay.previewExercises.firstOrNull { it.id == id }?.let { return it }
+        if (routineDayInstanceId != currentDay.routineDayInstanceId) return null
+        return copy(routineDayDate = routineDayDate ?: currentDay.routineDayDate)
+    }
+
     private data class RoutineDataState(
         val templates: List<PlanTemplate>,
         val plan: WeeklyPlan,
@@ -808,6 +1060,7 @@ class RoutineViewModel @Inject constructor(
 
     private data class RoutineLogState(
         val weeklyLogs: List<WorkoutLog>,
+        val allLogs: List<WorkoutLog>,
         val latestLogs: List<WorkoutLog>
     )
 
@@ -820,11 +1073,13 @@ class RoutineViewModel @Inject constructor(
         val recommendationForm: RoutineRecommendationFormState,
         val customRoutineBuilder: CustomRoutineBuilderState,
         val completeDayFailed: Boolean,
+        val routineDayDateError: RoutineDayDateError?,
         val routineDialogState: RoutineDialogState
     )
 
     private data class RoutineModalState(
         val completionConfirm: RoutineCompletionConfirmState?,
+        val datePicker: RoutineDayDatePickerState?,
         val exercisePicker: RoutineExercisePickerState?,
         val showCancelLatest: Boolean
     )
@@ -835,7 +1090,17 @@ class RoutineViewModel @Inject constructor(
         val showSettings: Boolean,
         val showRecommendations: Boolean,
         val completionConfirm: RoutineCompletionConfirmState?,
+        val datePicker: RoutineDayDatePickerState?,
         val exercisePicker: RoutineExercisePickerState?,
         val showCancelLatest: Boolean
     )
+
+    private sealed interface PendingRoutineDayDateAction {
+        data class StartWorkout(val plannedExercise: PlannedExercise) : PendingRoutineDayDateAction
+        data class RecordExercise(val plannedExercise: PlannedExercise) : PendingRoutineDayDateAction
+        data class CompleteDay(
+            val skippedPlannedExerciseIds: Set<PlannedExerciseId>,
+            val justRecordedPlannedExerciseIds: Set<PlannedExerciseId>
+        ) : PendingRoutineDayDateAction
+    }
 }

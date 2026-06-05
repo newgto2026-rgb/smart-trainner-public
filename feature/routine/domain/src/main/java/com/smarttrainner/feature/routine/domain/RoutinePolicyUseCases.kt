@@ -210,7 +210,11 @@ class ResolveRoutineCycleCompletionUseCase @Inject constructor() {
         val cycleStartedAt = progress.cycleStartedAt?.let { LocalDateTime.ofInstant(it, zone) }
         val eligibleLogs = logs.asSequence()
             .filter { it.completed }
-            .filter { log -> cycleStartedAt == null || !log.performedAt.isBefore(cycleStartedAt) }
+            .filter { log ->
+                (routineDayInstanceId != null && log.routineDayInstanceId == routineDayInstanceId) ||
+                    cycleStartedAt == null ||
+                    !log.performedAt.isBefore(cycleStartedAt)
+            }
             .toList()
         val instanceLogs = routineDayInstanceId?.let { instanceId ->
             eligibleLogs.filter { it.routineDayInstanceId == instanceId }

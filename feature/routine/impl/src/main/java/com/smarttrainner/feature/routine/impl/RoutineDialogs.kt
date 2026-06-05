@@ -34,14 +34,20 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +80,76 @@ import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.core.ui.SmartTrainnerEmptyState
 import com.smarttrainner.core.ui.SmartTrainnerExercisePickerCard
 import com.smarttrainner.core.ui.SmartTrainnerProgressBar
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun RoutineDayDatePickerDialog(
+    picker: RoutineDayDatePickerState,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = picker.initialDate.toUtcMillis(),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val date = utcTimeMillis.toUtcLocalDate()
+                return (picker.minDateExclusive == null || date.isAfter(picker.minDateExclusive)) &&
+                    !date.isAfter(picker.maxDateInclusive)
+            }
+        }
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.testTag("training_routine_day_date_dialog"),
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis
+                        ?.toUtcLocalDate()
+                        ?.let(onDateSelected)
+                },
+                enabled = datePickerState.selectedDateMillis != null,
+                modifier = Modifier.testTag("training_confirm_routine_day_date")
+            ) {
+                Text(stringResource(R.string.routine_save_custom_routine))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismissRequest,
+                modifier = Modifier.testTag("training_cancel_routine_day_date")
+            ) {
+                Text(stringResource(R.string.routine_cancel))
+            }
+        }
+    ) {
+        DatePicker(
+            state = datePickerState,
+            modifier = Modifier.testTag("training_routine_day_date_picker"),
+            title = {
+                Text(
+                    text = stringResource(picker.reason.titleResId()),
+                    modifier = Modifier.padding(start = 24.dp, end = 12.dp, top = 16.dp)
+                )
+            }
+        )
+    }
+}
+
+private fun RoutineDayDatePickerReason.titleResId(): Int = when (this) {
+    RoutineDayDatePickerReason.START_WORKOUT -> R.string.routine_day_date_start_title
+    RoutineDayDatePickerReason.COMPLETE_DAY -> R.string.routine_day_date_complete_title
+    RoutineDayDatePickerReason.EDIT -> R.string.routine_day_date_edit_title
+}
+
+internal fun LocalDate.toUtcMillis(): Long =
+    atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+internal fun Long.toUtcLocalDate(): LocalDate =
+    Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()
 
 @Composable
 internal fun RoutineRecommendationControls(

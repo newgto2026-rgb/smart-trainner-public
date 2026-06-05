@@ -59,6 +59,38 @@ class TrainingPreferencesDataSourceTest {
     }
 
     @Test
+    fun setRoutineDayDate_persistsAssignedDateAndOptionalCycleStart() = runTest {
+        dataSource.setActiveRoutineTemplate(sessionId = "session", templateId = "template")
+
+        dataSource.setRoutineDayDate(
+            sessionId = "session",
+            routineDayInstanceId = "routine-day|template|cycle1|day1",
+            assignedDate = LocalDate.of(2026, 5, 23).toString(),
+            cycleStartedAt = cycleInstant.toString()
+        )
+
+        val progress = dataSource.activeRoutineProgress("session").first()
+
+        assertThat(progress.routineDayDates)
+            .containsEntry("routine-day|template|cycle1|day1", "2026-05-23")
+        assertThat(progress.cycleStartedAt).isEqualTo(cycleInstant.toString())
+    }
+
+    @Test
+    fun setActiveRoutineTemplate_clearsRoutineDayDates() = runTest {
+        dataSource.setActiveRoutineTemplate(sessionId = "session", templateId = "template")
+        dataSource.setRoutineDayDate(
+            sessionId = "session",
+            routineDayInstanceId = "routine-day|template|cycle1|day1",
+            assignedDate = LocalDate.of(2026, 5, 23).toString()
+        )
+
+        dataSource.setActiveRoutineTemplate(sessionId = "session", templateId = "template")
+
+        assertThat(dataSource.activeRoutineProgress("session").first().routineDayDates).isEmpty()
+    }
+
+    @Test
     fun markRoutineDayCompleted_withNewCycleStartUpdatesOnlyCycleBoundary() = runTest {
         dataSource.setActiveRoutineTemplate(sessionId = "session", templateId = "template")
 

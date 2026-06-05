@@ -79,9 +79,16 @@ class WeeklySummaryCalculator @Inject constructor() {
         zone: ZoneId
     ): WeeklySummary {
         val cycleStartedAt = progress.cycleStartedAt?.let { LocalDateTime.ofInstant(it, zone) }
+        val currentRoutineDayInstancePrefix =
+            "routine-day|${progress.templateId}|cycle${progress.cycleNumber}|"
         val plannedCount = plan.days.sumOf { it.exercises.size }
         val completedLogs = logs.filter { log ->
-            log.completed && (cycleStartedAt == null || !log.performedAt.isBefore(cycleStartedAt))
+            log.completed &&
+                (
+                    log.routineDayInstanceId?.startsWith(currentRoutineDayInstancePrefix) == true ||
+                        cycleStartedAt == null ||
+                        !log.performedAt.isBefore(cycleStartedAt)
+                    )
         }
         val completedCount = completedLogs
             .distinctBy { it.plannedExerciseId }

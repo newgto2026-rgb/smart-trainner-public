@@ -3,7 +3,6 @@ package com.smarttrainner.feature.routine.impl
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
-import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 
 internal fun RoutineUiState.nextPlannedExerciseAfterSaved(
@@ -26,18 +25,26 @@ internal fun RoutineUiState.recordablePlannedExerciseFor(exerciseId: ExerciseId)
     if (customRoutineBuilder.visible) {
         null
     } else {
-        nextRoutineDayUi?.previewExercises?.firstOrNull { it.exercise.id == exerciseId }
-            ?: plan?.plannedExerciseFor(exerciseId)
+        nextRoutineDayUi?.previewExercises?.firstOrNull { planned ->
+            planned.exercise.id == exerciseId && planned.id !in completedPlannedExerciseIds
+        }
     }
+
+internal fun RoutineUiState.isPlanExerciseCompleted(
+    dayIndex: Int,
+    plannedExercise: PlannedExercise
+): Boolean = plannedExercise.id in completedPlannedExerciseIds || isRoutineDayCompleted(dayIndex)
 
 private fun RoutineUiState.currentDayFor(currentId: PlannedExerciseId): WorkoutDayPlan? =
     nextRoutineDayUi?.day?.takeIf { day -> day.exercises.any { it.id == currentId } }
         ?: plan?.days?.firstOrNull { day -> day.exercises.any { it.id == currentId } }
 
-private fun WeeklyPlan.plannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =
-    days.firstNotNullOfOrNull { day ->
-        day.exercises.firstOrNull { it.exercise.id == exerciseId }
-    }
+private fun RoutineUiState.isRoutineDayCompleted(dayIndex: Int): Boolean {
+    val progress = activeRoutineProgress ?: return false
+    val lastCompletedDayIndex = progress.lastCompletedDayIndex ?: return false
+    val lastCompletedCycleNumber = progress.lastCompletedCycleNumber ?: progress.cycleNumber
+    return lastCompletedCycleNumber == progress.cycleNumber && dayIndex <= lastCompletedDayIndex
+}
 
 private fun WorkoutDayPlan.nextIncompleteInSameDay(
     currentId: PlannedExerciseId,

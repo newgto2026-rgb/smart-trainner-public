@@ -116,6 +116,23 @@ interface WorkoutLogDao {
 
     @Query(
         """
+        UPDATE workout_logs
+        SET performedDate = :performedDate,
+            performedAt = :performedAt,
+            syncPending = 1
+        WHERE sessionId = :sessionId
+        AND routineDayInstanceId = :routineDayInstanceId
+        """
+    )
+    suspend fun updateRoutineDayLogDate(
+        sessionId: String,
+        routineDayInstanceId: String,
+        performedDate: String,
+        performedAt: String
+    )
+
+    @Query(
+        """
         SELECT id FROM workout_logs
         WHERE sessionId = :sessionId
         AND (

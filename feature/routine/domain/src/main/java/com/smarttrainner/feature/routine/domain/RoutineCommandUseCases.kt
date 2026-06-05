@@ -6,6 +6,7 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WorkoutDayPlan
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 
 enum class CustomRoutineValidationError {
@@ -97,6 +98,20 @@ class SwitchRoutineTemplateUseCase @Inject constructor(
     private val repository: RoutineProgressCommandRepository
 ) {
     suspend operator fun invoke(templateId: String) = repository.switchRoutineTemplate(templateId)
+}
+
+class SetRoutineDayDateUseCase @Inject constructor(
+    private val repository: RoutineProgressCommandRepository
+) {
+    suspend operator fun invoke(
+        routineDayInstanceId: String,
+        assignedDate: LocalDate,
+        cycleStartedAt: Instant?
+    ) = repository.setRoutineDayDate(
+        routineDayInstanceId = routineDayInstanceId,
+        assignedDate = assignedDate,
+        cycleStartedAt = cycleStartedAt
+    )
 }
 
 class AdvanceRoutineDayUseCase @Inject constructor() {

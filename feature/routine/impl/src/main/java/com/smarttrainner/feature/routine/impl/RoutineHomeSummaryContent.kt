@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
@@ -59,7 +60,17 @@ internal fun LazyListScope.homeSummaryContent(
             NextRoutineDayCard(
                 routineDay = nextRoutineDay,
                 onRecordSelected = actions.onWorkoutStarted,
-                onCompleteRoutineDay = actions.onCompleteRoutineDay
+                onCompleteRoutineDay = actions.onCompleteRoutineDay,
+                onEditRoutineDayDate = actions.onEditRoutineDayDate
+            )
+        }
+    }
+    state.routineDayDateError?.let { error ->
+        item {
+            Text(
+                text = error.message(),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
@@ -87,10 +98,19 @@ private fun completeRoutineDayErrorMessage(): String =
     stringResource(R.string.routine_error_complete_day)
 
 @Composable
+private fun RoutineDayDateError.message(): String = when (this) {
+    RoutineDayDateError.REQUIRED -> stringResource(R.string.routine_day_date_error_required)
+    RoutineDayDateError.BEFORE_PREVIOUS_DAY -> stringResource(R.string.routine_day_date_error_after_previous)
+    RoutineDayDateError.FUTURE -> stringResource(R.string.routine_day_date_error_future)
+    RoutineDayDateError.SAVE_FAILED -> stringResource(R.string.routine_day_date_error_save)
+}
+
+@Composable
 internal fun NextRoutineDayCard(
     routineDay: NextRoutineDayUiModel,
     onRecordSelected: (PlannedExercise) -> Unit,
-    onCompleteRoutineDay: () -> Unit
+    onCompleteRoutineDay: () -> Unit,
+    onEditRoutineDayDate: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -157,6 +177,21 @@ internal fun NextRoutineDayCard(
                     .height(8.dp)
             )
             RoutineDayBadgeRow(routineDay)
+            OutlinedButton(
+                onClick = onEditRoutineDayDate,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("training_routine_day_date"),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.size(8.dp))
+                Text(
+                    text = routineDay.routineDayDate?.let { date ->
+                        stringResource(R.string.routine_day_date_assigned, date.toString())
+                    } ?: stringResource(R.string.routine_day_date_unassigned)
+                )
+            }
             Text(
                 text = stringResource(
                     R.string.routine_routine_completed_progress,

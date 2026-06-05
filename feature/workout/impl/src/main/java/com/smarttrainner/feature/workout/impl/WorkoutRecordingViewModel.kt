@@ -13,7 +13,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -180,13 +179,14 @@ class WorkoutRecordingViewModel @Inject constructor(
         val firstReps = setEntries.firstOrNull { it.reps != null }?.reps
         val firstWeight = setEntries.firstOrNull { it.weightKg != null }?.weightKg
         val totalDuration = setEntries.sumOf { it.durationMinutes ?: 0 }.takeIf { it > 0 }
+        val performedAt = (planned.routineDayDate ?: LocalDate.now(clock)).atTime(12, 0)
 
         viewModelScope.launch {
             val result = saveWorkoutLog(
                 WorkoutLogInput(
                     plannedExerciseId = planned.id,
                     exerciseId = planned.exercise.id,
-                    performedAt = LocalDateTime.now(clock),
+                    performedAt = performedAt,
                     sets = setEntries.size,
                     reps = firstReps,
                     weightKg = firstWeight,

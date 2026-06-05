@@ -6,11 +6,14 @@ import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.estimatedSessionMinutes
 import com.smarttrainner.feature.routine.domain.routineDayInstanceId
+import java.time.LocalDate
 
 internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel(
     template: PlanTemplate?,
     dayIndex: Int,
     cycleNumber: Int,
+    routineDayDate: LocalDate?,
+    previousRoutineDayDate: LocalDate?,
     completedIds: Set<PlannedExerciseId>
 ): NextRoutineDayUiModel {
     val nextDay = template?.days?.takeIf { it.isNotEmpty() }?.let { days ->
@@ -24,11 +27,17 @@ internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel
         )
     }
     val instanceExercises = exercises.map { exercise ->
-        exercise.copy(routineDayInstanceId = dayInstanceId)
+        exercise.copy(
+            routineDayInstanceId = dayInstanceId,
+            routineDayDate = routineDayDate
+        )
     }
     return NextRoutineDayUiModel(
         day = copy(exercises = instanceExercises),
         routineTemplate = template,
+        routineDayInstanceId = dayInstanceId,
+        routineDayDate = routineDayDate,
+        previousRoutineDayDate = previousRoutineDayDate,
         primaryFocus = primaryFocus,
         secondaryFocuses = secondaryFocuses,
         cycleNumber = cycleNumber,
