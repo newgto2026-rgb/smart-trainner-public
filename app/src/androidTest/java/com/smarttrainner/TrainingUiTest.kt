@@ -196,7 +196,7 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_tab_exercises").performClick()
         waitForNodeWithTag("training_exercise_search")
 
-        composeRule.onNodeWithTag("training_exercise_search").performTextReplacement("press leg")
+        composeRule.onNodeWithTag("training_exercise_search").performTextReplacement("leg press")
         waitForNodeWithTag("training_exercise_row_leg_press")
         composeRule.onNodeWithTag("training_exercise_row_leg_press").assertIsDisplayed()
         composeRule.onAllNodesWithTag("training_exercise_row_machine_chest_press")
