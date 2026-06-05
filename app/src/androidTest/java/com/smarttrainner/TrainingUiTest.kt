@@ -2,7 +2,9 @@ package com.smarttrainner
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -147,6 +149,33 @@ class TrainingUiTest {
     }
 
     @Test
+    fun profileSetupCompletesNewGoogleUserAndLogoutReturnsToLogin() {
+        waitForLoginScreen()
+        signInGoogleUserWithoutProfile("Google Draft")
+        waitForNodeWithTag("profile_setup_screen")
+        composeRule.onNodeWithTag("profile_setup_save").assertIsNotEnabled()
+
+        composeRule.onNodeWithTag("profile_setup_nickname_input").performTextReplacement("Fresh Runner")
+        composeRule.onNodeWithTag("profile_setup_check_nickname").performClick()
+        waitForNodeWithTag("login_nickname_message")
+        composeRule.onNodeWithTag("login_gender_female").performClick()
+        composeRule.onNodeWithTag("login_height_input").performTextReplacement("171")
+        composeRule.onNodeWithTag("login_weight_input").performTextReplacement("64.5")
+        composeRule.onNodeWithTag("profile_setup_save")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertIsEnabled()
+            .performClick()
+
+        waitForNodeWithTag("training_tab_home")
+        composeRule.onNodeWithTag("profile_button").performClick()
+        composeRule.onNode(hasText("Fresh Runner")).assertIsDisplayed()
+        composeRule.onNodeWithTag("profile_logout").performClick()
+        waitForLoginScreen()
+        composeRule.onNodeWithTag("login_screen").assertIsDisplayed()
+    }
+
+    @Test
     fun weeklySummaryOnlyAppearsOnAnalysisTab() {
         continueFromLoginIfNeeded()
         composeRule.onAllNodesWithTag("training_summary_band").assertCountEquals(0)
@@ -159,6 +188,24 @@ class TrainingUiTest {
 
         composeRule.onNodeWithTag("training_tab_analysis").performClick()
         composeRule.onNodeWithTag("training_summary_band").assertIsDisplayed()
+    }
+
+    @Test
+    fun exerciseSearchFiltersCatalogAndClearRestoresRows() {
+        continueFromLoginIfNeeded()
+        composeRule.onNodeWithTag("training_tab_exercises").performClick()
+        waitForNodeWithTag("training_exercise_search")
+
+        composeRule.onNodeWithTag("training_exercise_search").performTextReplacement("press leg")
+        waitForNodeWithTag("training_exercise_row_leg_press")
+        composeRule.onNodeWithTag("training_exercise_row_leg_press").assertIsDisplayed()
+        composeRule.onAllNodesWithTag("training_exercise_row_machine_chest_press")
+            .assertCountEquals(0)
+
+        composeRule.onNodeWithTag("training_exercise_search_clear").performClick()
+        waitForNodeWithTagToDisappear("training_exercise_search_clear")
+        scrollToNodeWithTag("training_exercise_row_machine_chest_press")
+        composeRule.onNodeWithTag("training_exercise_row_machine_chest_press").assertIsDisplayed()
     }
 
     @Test
@@ -267,6 +314,14 @@ class TrainingUiTest {
             composeRule.onAllNodesWithTag("training_record_dialog").fetchSemanticsNodes().isEmpty()
         }
         composeRule.onAllNodesWithTag("training_record_dialog").assertCountEquals(0)
+        assertLegPressRecordVisibleInPlan()
+
+        composeRule.onNodeWithTag("training_tab_analysis").performClick()
+        waitForNodeWithTag("training_recent_records_card")
+        composeRule.onNodeWithTag("training_recent_records_card").assertIsDisplayed()
+        composeRule.onNode(
+            hasText("레그 프레스", substring = true) or hasText("Leg Press", substring = true)
+        ).assertIsDisplayed()
     }
 
     @Test
@@ -475,9 +530,32 @@ class TrainingUiTest {
         (sessionRepository as InMemorySessionRepository).reset()
     }
 
+    private fun waitForLoginScreen() {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithTag("login_screen").fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
     private fun waitForNodeWithTag(testTag: String) {
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag(testTag).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    private fun waitForNodeWithTagToDisappear(testTag: String) {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithTag(testTag).fetchSemanticsNodes().isEmpty()
+        }
+    }
+
+    private fun signInGoogleUserWithoutProfile(nickname: String) {
+        runBlocking {
+            (sessionRepository as InMemorySessionRepository).signInWithGoogle(
+                idToken = "ui-test-token-without-profile",
+                nickname = nickname,
+                profileSetup = null,
+                forceDeviceLogin = false
+            )
         }
     }
 
@@ -499,6 +577,11 @@ class TrainingUiTest {
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_tab_home").fetchSemanticsNodes().isNotEmpty()
         }
+    }
+
+    private fun assertLegPressRecordVisibleInPlan() {
+        scrollToNodeWithTag("training_plan_exercise_leg_press")
+        composeRule.onNodeWithTag("training_plan_exercise_leg_press").assertIsDisplayed()
     }
 
     private fun selectCustomFocus(optionTag: String) {
