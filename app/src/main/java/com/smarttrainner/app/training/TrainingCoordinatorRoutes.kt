@@ -27,7 +27,7 @@ fun TrainingHomeRoute(
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-        routineRouteState = routineRouteState,
+        routineSessionCoordinator = routineRouteState.sessionCoordinator,
         viewModel = viewModel,
         routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {
@@ -58,7 +58,7 @@ fun TrainingRoutineRoute(
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-        routineRouteState = routineRouteState,
+        routineSessionCoordinator = routineRouteState.sessionCoordinator,
         viewModel = viewModel,
         routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {
@@ -87,7 +87,7 @@ fun TrainingExercisesRoute(
     TrainingRoute(
         exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-        routineRouteState = routineRouteState,
+        routineSessionCoordinator = routineRouteState.sessionCoordinator,
         viewModel = viewModel,
         routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {

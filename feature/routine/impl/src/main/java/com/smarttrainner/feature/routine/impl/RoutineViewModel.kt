@@ -7,7 +7,6 @@ import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
-import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.RecommendExercisePrescriptionUseCase
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
@@ -64,7 +63,6 @@ class RoutineViewModel @Inject constructor(
     observeCurrentWeeklyPlan: ObserveCurrentWeeklyPlanUseCase,
     observeRoutineProgress: ObserveRoutineProgressUseCase,
     observeTrainingExperience: ObserveTrainingExperienceUseCase,
-    observeWorkoutLogs: ObserveWorkoutLogsUseCase,
     observeAllWorkoutLogs: ObserveAllWorkoutLogsUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
     private val recommendExercisePrescription: RecommendExercisePrescriptionUseCase,
@@ -156,18 +154,14 @@ class RoutineViewModel @Inject constructor(
         }
     }
 
-    private val logState = weekStartFlow.flatMapLatest { weekStart ->
-        combine(
-            observeWorkoutLogs(weekStart),
-            observeAllWorkoutLogs(),
-            observeLatestWorkoutLogs()
-        ) { weeklyLogs, allLogs, latestLogs ->
-            RoutineLogState(
-                weeklyLogs = weeklyLogs,
-                allLogs = allLogs,
-                latestLogs = latestLogs
-            )
-        }
+    private val logState = combine(
+        observeAllWorkoutLogs(),
+        observeLatestWorkoutLogs()
+    ) { allLogs, latestLogs ->
+        RoutineLogState(
+            allLogs = allLogs,
+            latestLogs = latestLogs
+        )
     }
 
     private val dataState = combine(
@@ -1059,7 +1053,6 @@ class RoutineViewModel @Inject constructor(
     )
 
     private data class RoutineLogState(
-        val weeklyLogs: List<WorkoutLog>,
         val allLogs: List<WorkoutLog>,
         val latestLogs: List<WorkoutLog>
     )

@@ -8,7 +8,6 @@ import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
-import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.RecommendExercisePrescriptionUseCase
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
@@ -253,7 +252,7 @@ class RoutineViewModelTest {
     }
 
     @Test
-    fun uiState_refreshesWeeklySourcesWhenCollectionRestartsAfterWeekChange() = runTest {
+    fun uiState_refreshesWeeklyPlanWhenCollectionRestartsAfterWeekChange() = runTest {
         val clock = MutableClock(fixedInstant, fixedClock.zone)
         val viewModel = viewModel(clock)
 
@@ -272,14 +271,12 @@ class RoutineViewModelTest {
             assertThat(awaitItem().plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
             assertThat(repository.requestedPlanWeekStartDates)
                 .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
-            assertThat(repository.requestedLogWeekStartDates)
-                .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun uiState_refreshesWeeklySourcesWhenWeekBoundaryPassesWhileSubscribed() = runTest {
+    fun uiState_refreshesWeeklyPlanWhenWeekBoundaryPassesWhileSubscribed() = runTest {
         val clock = MutableClock(Instant.parse("2026-05-24T23:59:59Z"), fixedClock.zone)
         val viewModel = viewModel(clock)
         backgroundScope.launch {
@@ -300,8 +297,6 @@ class RoutineViewModelTest {
             }
             assertThat(refreshed.plan?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
             assertThat(repository.requestedPlanWeekStartDates)
-                .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
-            assertThat(repository.requestedLogWeekStartDates)
                 .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
             cancelAndIgnoreRemainingEvents()
         }
@@ -591,7 +586,10 @@ class RoutineViewModelTest {
             viewModel.confirmCancelLatestRoutineDay()
             advanceUntilIdle()
 
-            val canceled = awaitItem()
+            var canceled = awaitItem()
+            while (canceled.activeRoutineProgress?.dayIndex != 0) {
+                canceled = awaitItem()
+            }
             assertThat(canceled.activeRoutineProgress?.dayIndex).isEqualTo(0)
             assertThat(canceled.activeRoutineProgress?.lastCompletedDayIndex).isNull()
             assertThat(repository.currentLogs()).isEmpty()
@@ -1375,7 +1373,6 @@ class RoutineViewModelTest {
         observeCurrentWeeklyPlan = ObserveCurrentWeeklyPlanUseCase(repository),
         observeRoutineProgress = ObserveRoutineProgressUseCase(repository),
         observeTrainingExperience = ObserveTrainingExperienceUseCase(sessionRepository),
-        observeWorkoutLogs = ObserveWorkoutLogsUseCase(repository),
         observeAllWorkoutLogs = ObserveAllWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
         recommendExercisePrescription = RecommendExercisePrescriptionUseCase(),

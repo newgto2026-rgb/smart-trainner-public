@@ -1,11 +1,16 @@
 package com.smarttrainner.feature.routine.impl
 
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttrainner.core.domain.RoutineSessionCoordinator
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
@@ -22,7 +27,7 @@ class RoutineFeatureEntryImpl @Inject constructor(
 ) : RoutineFeatureEntry {
     @Composable
     override fun rememberRouteState(callbacks: RoutineFeatureCallbacks): RoutineRouteState {
-        val viewModel: RoutineViewModel = hiltViewModel()
+        val viewModel: RoutineViewModel = sharedRoutineViewModel()
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         LaunchedEffect(viewModel) {
             viewModel.refreshWeekStartOnWeekBoundary()
@@ -120,7 +125,11 @@ class RoutineFeatureEntryImpl @Inject constructor(
             DefaultRoutineRouteState(
                 state = state,
                 actions = actions,
-                currentRoutineName = currentRoutineName
+                currentRoutineName = currentRoutineName,
+                sessionCoordinator = DefaultRoutineSessionCoordinator(
+                    state = state,
+                    actions = actions
+                )
             )
         }
     }
@@ -259,11 +268,34 @@ class RoutineFeatureEntryImpl @Inject constructor(
     }
 }
 
+@Composable
+internal fun sharedRoutineViewModel(): RoutineViewModel {
+    val context = LocalContext.current
+    val sharedOwner = remember(context) { context.findViewModelStoreOwner() }
+    return if (sharedOwner != null) {
+        hiltViewModel(sharedOwner)
+    } else {
+        hiltViewModel()
+    }
+}
+
+private tailrec fun Context.findViewModelStoreOwner(): ViewModelStoreOwner? = when (this) {
+    is ViewModelStoreOwner -> this
+    is ContextWrapper -> baseContext.findViewModelStoreOwner()
+    else -> null
+}
+
 internal class DefaultRoutineRouteState(
     val state: RoutineUiState,
     val actions: RoutineActions,
-    override val currentRoutineName: String
-) : RoutineRouteState {
+    override val currentRoutineName: String,
+    override val sessionCoordinator: RoutineSessionCoordinator
+) : RoutineRouteState
+
+private class DefaultRoutineSessionCoordinator(
+    private val state: RoutineUiState,
+    private val actions: RoutineActions
+) : RoutineSessionCoordinator {
     override fun nextPlannedExerciseAfterSaved(
         plannedExercise: PlannedExercise,
         skippedPlannedExerciseIds: Set<PlannedExerciseId>

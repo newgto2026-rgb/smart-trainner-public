@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import retrofit2.HttpException
 
 @Singleton
@@ -52,7 +51,6 @@ class DefaultRoutinePlanRepository @Inject constructor(
     private fun observeCustomRoutines(): Flow<List<PlanTemplate>> =
         activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
             customRoutineDao.observeForSession(sessionId)
-                .onStart { runCatching { syncCustomRoutinesFromServer(sessionId) } }
                 .map { routines -> routines.map { it.toPlanTemplate(seedStore.exercises) } }
         }
 

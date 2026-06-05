@@ -146,6 +146,58 @@ class WorkoutLogDaoTest {
     }
 
     @Test
+    fun observeLatestByExerciseForSessionReturnsMostRecentLogPerExercise() = runTest {
+        val oldLegLog = WorkoutLogEntity(
+            clientLogId = "client-log-1",
+            sessionId = "local-default",
+            plannedExerciseId = "2026-05-20_leg_press",
+            exerciseId = "leg_press",
+            performedDate = "2026-05-20",
+            performedAt = "2026-05-20T09:00:00",
+            sets = 1,
+            reps = 10,
+            weightKg = 20.0,
+            durationMinutes = null,
+            memo = "",
+            completed = true
+        )
+        val latestLegLog = oldLegLog.copy(
+            clientLogId = "client-log-2",
+            plannedExerciseId = "2026-05-27_leg_press",
+            performedDate = "2026-05-27",
+            performedAt = "2026-05-27T09:00:00",
+            reps = 8,
+            weightKg = 30.0
+        )
+        val chestLog = oldLegLog.copy(
+            clientLogId = "client-log-3",
+            plannedExerciseId = "2026-05-25_chest_press",
+            exerciseId = "chest_press",
+            performedDate = "2026-05-25",
+            performedAt = "2026-05-25T09:00:00",
+            reps = 12,
+            weightKg = 25.0
+        )
+        database.workoutLogDao().upsertWithSets(oldLegLog, emptyList())
+        database.workoutLogDao().upsertWithSets(
+            latestLegLog,
+            listOf(WorkoutSetLogEntity(workoutLogId = 0, setIndex = 1, reps = 8, weightKg = 30.0, durationMinutes = null, restSeconds = 120))
+        )
+        database.workoutLogDao().upsertWithSets(chestLog, emptyList())
+        database.workoutLogDao().upsertWithSets(
+            oldLegLog.copy(clientLogId = "client-log-4", sessionId = "google-user-1"),
+            emptyList()
+        )
+
+        val result = database.workoutLogDao()
+            .observeLatestByExerciseForSession(sessionId = "local-default")
+            .first()
+
+        assertThat(result.map { it.log.clientLogId }).containsExactly("client-log-2", "client-log-3").inOrder()
+        assertThat(result.single { it.log.clientLogId == "client-log-2" }.setLogs.single().restSeconds).isEqualTo(120)
+    }
+
+    @Test
     fun samePlannedExerciseCanKeepMultiplePerformedLogs() = runTest {
         val firstLog = WorkoutLogEntity(
             clientLogId = "client-log-1",
