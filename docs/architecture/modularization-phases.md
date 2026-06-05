@@ -7,8 +7,10 @@ This plan follows the Android modularization guidance: keep modules highly cohes
 The final architecture should make the app module a thin composition layer:
 
 - `:app` owns application startup, session gating, root navigation, and top-level chrome.
-- `:core:*` modules provide reusable models, domain contracts, data implementations, design tokens, and shared UI primitives.
+- `:core:*` modules provide reusable models, shared domain contracts, shared data implementations, design tokens, and shared UI primitives.
 - `:feature:*:api` modules expose stable route keys and public contracts only.
+- `:feature:*:domain` modules own feature-specific repository contracts, policies, and use cases once their consumers are feature-local.
+- `:feature:*:data` modules own approved feature-specific persistence/sync implementations without depending on `:core:data`.
 - `:feature:*:impl` modules own screen implementation, ViewModels, and feature-specific UI.
 - `:app` owns the DI composition root that binds feature API contracts to feature implementations.
 
@@ -1340,6 +1342,8 @@ Current state is strict at the feature-module dependency level. State ownership 
 Current guardrails still enforce the important lower-level boundary:
 
 - `core:*` must not depend on `feature:*`.
+- Shared repository contracts stay in `:core:domain` only when multiple feature/app flows consume the contract; feature-specific contracts belong in the owning `:feature:*:domain`.
+- Shared repository implementations stay in `:core:data`; feature-specific implementations belong in the owning approved `:feature:*:data`.
 - Feature modules must not depend on shared `:core:data` implementations.
 - Feature data modules may use core storage/network infrastructure only through explicit allowlists; `:feature:routine:data` and `:feature:workout:data` currently may use `:core:database` and `:core:datastore`, while `:feature:analysis:data` currently uses only shared core domain/model contracts.
 - New feature-local domain/data/network modules require an explicit ownership decision before being introduced; `:feature:analysis:domain`, `:feature:analysis:data`, `:feature:exercise:domain`, `:feature:routine:domain`, `:feature:routine:data`, `:feature:workout:domain`, and `:feature:workout:data` are the current approved feature-local modules.

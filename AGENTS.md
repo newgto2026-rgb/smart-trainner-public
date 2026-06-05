@@ -35,7 +35,9 @@ git worktree add -b codex/<task-name> "$HOME/.codex/worktrees/<task-name>/smart-
 - Keep module boundaries and dependency direction intact.
 - `core:*` must not depend on `feature:*`.
 - `feature:*` depends on domain use cases and public models, not data implementations.
-- Repository interfaces live in `core:domain`; implementations live in `core:data`.
+- Shared, cross-feature repository contracts live in `core:domain`; their shared implementations live in `core:data`.
+- Feature-owned repository contracts, policies, and use cases live in that feature's `feature:*:domain`; their implementations may live in that feature's approved `feature:*:data`.
+- `app` owns final DI composition. App production code may reference implementation/data/domain classes only from approved app-owned DI modules.
 - DTO, database, and DataStore models are not domain models.
 - Network contracts belong in `core:network`; Room contracts belong in `core:database`.
 
