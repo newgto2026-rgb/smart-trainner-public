@@ -208,12 +208,18 @@ class ResolveRoutineCycleCompletionUseCase @Inject constructor() {
         currentDayPlannedExerciseIds: Set<PlannedExerciseId> = emptySet()
     ): Set<PlannedExerciseId> {
         val cycleStartedAt = progress.cycleStartedAt?.let { LocalDateTime.ofInstant(it, zone) }
+        val currentRoutineDayInstancePrefix =
+            "routine-day|${progress.templateId}|cycle${progress.cycleNumber}|"
         val eligibleLogs = logs.asSequence()
             .filter { it.completed }
             .filter { log ->
-                (routineDayInstanceId != null && log.routineDayInstanceId == routineDayInstanceId) ||
+                val routineDayInstanceId = log.routineDayInstanceId
+                if (routineDayInstanceId != null) {
+                    routineDayInstanceId.startsWith(currentRoutineDayInstancePrefix)
+                } else {
                     cycleStartedAt == null ||
-                    !log.performedAt.isBefore(cycleStartedAt)
+                        !log.performedAt.isBefore(cycleStartedAt)
+                }
             }
             .toList()
         val instanceLogs = routineDayInstanceId?.let { instanceId ->

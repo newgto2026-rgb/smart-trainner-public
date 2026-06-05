@@ -26,7 +26,7 @@ import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.ZoneOffset
+import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -401,22 +401,24 @@ class DefaultRoutineProgressRepository @Inject constructor(
     private fun String.toLocalDateOrNull(): LocalDate? =
         runCatching { LocalDate.parse(this) }.getOrNull()
 
-    private fun RoutineProgressPreference.effectiveCycleStartedAt(): String? {
-        val assignedDayOneStart = routineDayDates[routineDayInstanceId(dayNumber = 1)]
-            ?.toLocalDateOrNull()
-            ?.atStartOfDay(ZoneOffset.UTC)
-            ?.toInstant()
-            ?: return cycleStartedAt
-        val storedCycleStartedAt = cycleStartedAt.toInstantOrNull()
-        return if (storedCycleStartedAt == null || storedCycleStartedAt.isAfter(assignedDayOneStart)) {
-            assignedDayOneStart.toString()
-        } else {
-            cycleStartedAt
-        }
-    }
+    private fun RoutineProgressPreference.effectiveCycleStartedAt(): String? =
+        effectiveCycleStartedAt(ZoneId.systemDefault())
+}
 
-    private fun RoutineProgressPreference.routineDayInstanceId(dayNumber: Int): String =
-        "routine-day|$templateId|cycle$cycleNumber|day$dayNumber"
+internal fun RoutineProgressPreference.effectiveCycleStartedAt(zoneId: ZoneId): String? {
+    val assignedDayOneStart = routineDayDates["routine-day|$templateId|cycle$cycleNumber|day1"]
+        ?.let { rawDate -> runCatching { LocalDate.parse(rawDate) }.getOrNull() }
+        ?.atStartOfDay(zoneId)
+        ?.toInstant()
+        ?: return cycleStartedAt
+    val storedCycleStartedAt = cycleStartedAt?.let { rawInstant ->
+        runCatching { Instant.parse(rawInstant) }.getOrNull()
+    }
+    return if (storedCycleStartedAt == null || storedCycleStartedAt.isAfter(assignedDayOneStart)) {
+        assignedDayOneStart.toString()
+    } else {
+        cycleStartedAt
+    }
 }
 
 private data class RoutineCycleCompletionRefreshKey(

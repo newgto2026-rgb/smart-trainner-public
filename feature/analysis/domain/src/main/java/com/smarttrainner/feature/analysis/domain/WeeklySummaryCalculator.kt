@@ -83,12 +83,14 @@ class WeeklySummaryCalculator @Inject constructor() {
             "routine-day|${progress.templateId}|cycle${progress.cycleNumber}|"
         val plannedCount = plan.days.sumOf { it.exercises.size }
         val completedLogs = logs.filter { log ->
+            val routineDayInstanceId = log.routineDayInstanceId
             log.completed &&
-                (
-                    log.routineDayInstanceId?.startsWith(currentRoutineDayInstancePrefix) == true ||
-                        cycleStartedAt == null ||
+                if (routineDayInstanceId != null) {
+                    routineDayInstanceId.startsWith(currentRoutineDayInstancePrefix)
+                } else {
+                    cycleStartedAt == null ||
                         !log.performedAt.isBefore(cycleStartedAt)
-                    )
+                }
         }
         val completedCount = completedLogs
             .distinctBy { it.plannedExerciseId }
