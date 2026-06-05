@@ -154,10 +154,10 @@
     <string name="routine_complete_routine_day">Complete Today</string>
     <string name="routine_add_exercise_title">Add exercise</string>
     <string name="routine_cancel_latest_day_action">Cancel latest completion</string>
-    <string name="routine_cancel_latest_day_body">Every workout record for C%1$s-D%2$s will be deleted, then the routine moves back to that slot.</string>
+    <string name="routine_cancel_latest_day_body">Every workout record for Cycle %1$s · Day %2$s will be deleted, then the routine moves back to that day.</string>
     <string name="routine_cancel_latest_day_title">Cancel latest day?</string>
     <string name="routine_complete_day_confirm_action">Complete anyway</string>
-    <string name="routine_complete_day_confirm_body">Unrecorded exercises: %1$s. Complete C%2$s-D%3$s anyway?</string>
+    <string name="routine_complete_day_confirm_body">Unrecorded exercises: %1$s. Complete Cycle %2$s · Day %3$s anyway?</string>
     <string name="routine_complete_day_confirm_return">Go back</string>
     <string name="routine_complete_day_confirm_title">Unrecorded exercises remain</string>
     <string name="routine_cycle_day_title">Cycle %1$d · Day %2$d</string>
