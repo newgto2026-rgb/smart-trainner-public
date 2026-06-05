@@ -341,11 +341,23 @@ private class CapturingRoutineProgressRepository : RoutineProgressCommandReposit
     var restoredCycleNumber: Int? = null
     var remainingLatestCompletion: RoutineCompletionSnapshot? = null
     var routineDayInstanceId: String? = null
+    var assignedDate: LocalDate? = null
     var additionalExerciseIdPrefix: String? = null
 
     override suspend fun startRoutine(templateId: String): Result<Unit> = error("Not used")
 
     override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> = error("Not used")
+
+    override suspend fun setRoutineDayDate(
+        routineDayInstanceId: String,
+        assignedDate: LocalDate,
+        cycleStartedAt: Instant?
+    ): Result<Unit> {
+        this.routineDayInstanceId = routineDayInstanceId
+        this.assignedDate = assignedDate
+        this.newCycleStartedAt = cycleStartedAt
+        return Result.success(Unit)
+    }
 
     override suspend fun markRoutineDayCompleted(
         completedDayIndex: Int,

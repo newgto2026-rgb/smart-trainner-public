@@ -161,6 +161,15 @@
     <string name="routine_complete_day_confirm_return">Go back</string>
     <string name="routine_complete_day_confirm_title">Unrecorded exercises remain</string>
     <string name="routine_cycle_day_title">Cycle %1$d · Day %2$d</string>
+    <string name="routine_day_date_assigned">Workout date: %1$s</string>
+    <string name="routine_day_date_complete_title">Choose the date for this routine day</string>
+    <string name="routine_day_date_edit_title">Change routine day date</string>
+    <string name="routine_day_date_error_after_previous">This day must be later than the previous routine day. Add extra same-day work to the current day instead.</string>
+    <string name="routine_day_date_error_future">Workout date cannot be in the future.</string>
+    <string name="routine_day_date_error_required">Choose a workout date before recording this routine day.</string>
+    <string name="routine_day_date_error_save">Could not save the workout date. Try again.</string>
+    <string name="routine_day_date_start_title">When did you do this routine day?</string>
+    <string name="routine_day_date_unassigned">Choose workout date</string>
     <string name="routine_delete_and_cancel_day">Delete and cancel</string>
     <string name="routine_keep_day_completion">Keep completion</string>
     <string name="routine_latest_completed_day_body">Only the most recently completed day can be canceled.</string>

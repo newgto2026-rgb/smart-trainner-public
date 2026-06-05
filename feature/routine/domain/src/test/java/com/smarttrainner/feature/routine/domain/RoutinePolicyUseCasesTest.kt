@@ -294,6 +294,92 @@ class RoutinePolicyUseCasesTest {
     }
 
     @Test
+    fun resolveRoutineCycleCompletion_includesMatchingRoutineDayInstanceBeforeCurrentCycle() {
+        val currentCycleStart = Instant.parse("2026-05-24T12:00:00Z")
+        val progress = RoutineProgress(
+            templateId = "intermediate-body-part-4day",
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            startedAt = currentCycleStart,
+            cycleStartedAt = currentCycleStart
+        )
+        val dayOneExercise = PlannedExerciseId("day-1-exercise")
+        val routineDayInstanceId = "routine-day|intermediate-body-part-4day|cycle1|day1"
+
+        val result = resolveRoutineCycleCompletion(
+            logs = listOf(
+                completedLog(
+                    id = 1,
+                    plannedExerciseId = "stale-exercise",
+                    performedAt = LocalDateTime.of(2026, 5, 24, 11, 30)
+                ),
+                completedLog(
+                    id = 2,
+                    plannedExerciseId = dayOneExercise.value,
+                    performedAt = LocalDateTime.of(2026, 5, 24, 11, 59),
+                    routineDayInstanceId = routineDayInstanceId
+                )
+            ),
+            progress = progress,
+            zone = ZoneOffset.UTC,
+            routineDayInstanceId = routineDayInstanceId,
+            currentDayPlannedExerciseIds = setOf(dayOneExercise)
+        )
+
+        assertThat(result).containsExactly(dayOneExercise)
+    }
+
+    @Test
+    fun resolveRoutineCycleCompletion_excludesRoutineLogsFromOtherTemplatesOrCycles() {
+        val currentCycleStart = Instant.parse("2026-05-24T12:00:00Z")
+        val progress = RoutineProgress(
+            templateId = "intermediate-body-part-4day",
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            cycleNumber = 2,
+            startedAt = currentCycleStart,
+            cycleStartedAt = currentCycleStart
+        )
+
+        val result = resolveRoutineCycleCompletion(
+            logs = listOf(
+                completedLog(
+                    id = 1,
+                    plannedExerciseId = "current-cycle-exercise",
+                    performedAt = LocalDateTime.of(2026, 5, 24, 13, 0),
+                    routineDayInstanceId = "routine-day|intermediate-body-part-4day|cycle2|day1"
+                ),
+                completedLog(
+                    id = 2,
+                    plannedExerciseId = "previous-cycle-exercise",
+                    performedAt = LocalDateTime.of(2026, 5, 24, 14, 0),
+                    routineDayInstanceId = "routine-day|intermediate-body-part-4day|cycle1|day1"
+                ),
+                completedLog(
+                    id = 3,
+                    plannedExerciseId = "other-template-exercise",
+                    performedAt = LocalDateTime.of(2026, 5, 24, 15, 0),
+                    routineDayInstanceId = "routine-day|other-template|cycle2|day1"
+                ),
+                completedLog(
+                    id = 4,
+                    plannedExerciseId = "ad-hoc-exercise",
+                    performedAt = LocalDateTime.of(2026, 5, 24, 16, 0)
+                )
+            ),
+            progress = progress,
+            zone = ZoneOffset.UTC
+        )
+
+        assertThat(result).containsExactly(
+            PlannedExerciseId("current-cycle-exercise"),
+            PlannedExerciseId("ad-hoc-exercise")
+        )
+    }
+
+    @Test
     fun resolveRoutineCycleCompletion_usesRoutineDayInstanceForRepeatedCurrentDay() {
         val currentCycleStart = Instant.parse("2026-05-24T12:00:00Z")
         val progress = RoutineProgress(

@@ -3,6 +3,7 @@ package com.smarttrainner.feature.routine.impl
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
@@ -51,8 +52,10 @@ import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
 import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
+import com.smarttrainner.feature.routine.domain.SetRoutineDayDateUseCase
 import com.smarttrainner.feature.routine.domain.SwitchRoutineTemplateUseCase
 import com.smarttrainner.feature.routine.domain.ValidateCustomRoutineUseCase
+import com.smarttrainner.feature.routine.domain.routineDayInstanceId
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -114,6 +117,137 @@ class RoutineViewModelTest {
             assertThat(state.nextRoutineDayUi?.primaryFocus).isEqualTo(RoutineFocus.CHEST)
             assertThat(state.nextRoutineDayUi?.startExercise?.exercise?.id?.value).isEqualTo("chest_press")
             assertThat(state.today).isEqualTo(LocalDate.of(2026, 5, 24))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun requestStartWorkout_requiresRoutineDayDateBeforeStarting() = runTest {
+        val viewModel = viewModel()
+        var startedExercise: PlannedExercise? = null
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi == null) {
+                state = awaitItem()
+            }
+
+            viewModel.requestStartWorkout { startedExercise = it }
+            advanceUntilIdle()
+
+            assertThat(startedExercise).isNull()
+            assertThat(viewModel.uiState.value.routineDayDatePicker?.reason)
+                .isEqualTo(RoutineDayDatePickerReason.START_WORKOUT)
+
+            viewModel.selectRoutineDayDate(
+                date = LocalDate.of(2026, 5, 24),
+                onWorkoutStarted = { startedExercise = it },
+                onRecordSelected = {}
+            )
+            advanceUntilIdle()
+
+            assertThat(startedExercise?.routineDayDate).isEqualTo(LocalDate.of(2026, 5, 24))
+            assertThat(startedExercise?.routineDayInstanceId).isNotNull()
+            assertThat(viewModel.uiState.value.routineDayDatePicker).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun requestRecordSelected_appliesRoutineDayDateToAdditionalExerciseAfterDateSelection() = runTest {
+        val viewModel = viewModel()
+        var selectedExercise: PlannedExercise? = null
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi?.previewExercises.isNullOrEmpty()) {
+                state = awaitItem()
+            }
+            val routineDay = state.nextRoutineDayUi ?: error("Expected routine day")
+            val baseExercise = routineDay.previewExercises.first()
+            val additionalExercise = baseExercise.copy(
+                id = PlannedExerciseId("additional-exercise"),
+                routineDayDate = null
+            )
+
+            viewModel.requestRecordSelected(additionalExercise) { selectedExercise = it }
+            advanceUntilIdle()
+            viewModel.selectRoutineDayDate(
+                date = LocalDate.of(2026, 5, 24),
+                onWorkoutStarted = {},
+                onRecordSelected = { selectedExercise = it }
+            )
+            advanceUntilIdle()
+
+            assertThat(selectedExercise?.id).isEqualTo(additionalExercise.id)
+            assertThat(selectedExercise?.routineDayDate).isEqualTo(LocalDate.of(2026, 5, 24))
+            assertThat(selectedExercise?.routineDayInstanceId).isEqualTo(routineDay.routineDayInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun requestRecordSelected_ignoresCompletedPreviousRoutineDayExercise() = runTest {
+        val completedDate = LocalDate.of(2026, 5, 23)
+        repository.progress.value = RoutineProgress(
+            templateId = "intermediate-body-part-4day",
+            dayIndex = 1,
+            lastCompletedDayIndex = 0,
+            lastCompletedAt = Instant.parse("2026-05-23T12:00:00Z"),
+            cycleNumber = 1,
+            lastCompletedCycleNumber = 1,
+            startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-05-23T00:00:00Z")
+        )
+        repository.assignRoutineDayDate(
+            dayIndex = 0,
+            cycleNumber = 1,
+            date = completedDate
+        )
+        val completedDayExercise = repository.plannedExercise(dayIndex = 0, exerciseIndex = 0)
+        val viewModel = viewModel()
+        var selectedExercise: PlannedExercise? = null
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi?.dayNumber != 2) {
+                state = awaitItem()
+            }
+
+            viewModel.requestRecordSelected(completedDayExercise) { selectedExercise = it }
+            advanceUntilIdle()
+
+            assertThat(selectedExercise).isNull()
+            assertThat(viewModel.uiState.value.routineDayDatePicker).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun completeCurrentRoutineDay_exposesLatestCompletionAfterFirstDay() = runTest {
+        repository.assignCurrentRoutineDayDate(LocalDate.of(2026, 5, 24))
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi?.dayNumber != 1) {
+                state = awaitItem()
+            }
+
+            viewModel.completeCurrentRoutineDay()
+            advanceUntilIdle()
+
+            var completed = awaitItem()
+            while (completed.latestRoutineDayCompletion == null) {
+                completed = awaitItem()
+            }
+            assertThat(completed.activeRoutineProgress?.dayIndex).isEqualTo(1)
+            assertThat(completed.latestRoutineDayCompletion?.dayNumber).isEqualTo(1)
+            assertThat(completed.latestRoutineDayCompletion?.cycleNumber).isEqualTo(1)
+            assertThat(completed.nextRoutineDayUi?.dayNumber).isEqualTo(2)
+            assertThat(completed.isPlanExerciseCompleted(0, repository.plannedExercise(0))).isTrue()
+            assertThat(completed.isPlanExerciseCompleted(1, repository.plannedExercise(1))).isFalse()
+            assertThat(completed.recordablePlannedExerciseFor(repository.plannedExercise(0).exercise.id)).isNull()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -196,6 +330,8 @@ class RoutineViewModelTest {
             template = null,
             dayIndex = 0,
             cycleNumber = 1,
+            routineDayDate = null,
+            previousRoutineDayDate = null,
             completedIds = emptySet()
         )
 
@@ -228,6 +364,8 @@ class RoutineViewModelTest {
             template = template,
             dayIndex = 0,
             cycleNumber = 1,
+            routineDayDate = null,
+            previousRoutineDayDate = null,
             completedIds = emptySet()
         )
 
@@ -261,6 +399,8 @@ class RoutineViewModelTest {
             template = emptyTemplate,
             dayIndex = 0,
             cycleNumber = 1,
+            routineDayDate = null,
+            previousRoutineDayDate = null,
             completedIds = emptySet()
         )
 
@@ -329,6 +469,7 @@ class RoutineViewModelTest {
     @Test
     fun requestCompleteCurrentRoutineDay_showsConfirmationForSkippedOrUnrecordedExercises() = runTest {
         val skipped = repository.plannedExercise(dayIndex = 0, exerciseIndex = 0)
+        repository.assignCurrentRoutineDayDate(LocalDate.of(2026, 5, 24))
         val viewModel = viewModel()
 
         viewModel.uiState.test {
@@ -355,9 +496,47 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun selectRoutineDayDate_continuesPendingCompleteDayRequest() = runTest {
+        val selectedDate = LocalDate.of(2026, 5, 24)
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi == null) {
+                state = awaitItem()
+            }
+
+            viewModel.requestCompleteCurrentRoutineDay(
+                skippedPlannedExerciseIds = emptySet(),
+                justRecordedPlannedExerciseIds = emptySet()
+            )
+            advanceUntilIdle()
+            assertThat(viewModel.uiState.value.routineDayDatePicker?.reason)
+                .isEqualTo(RoutineDayDatePickerReason.COMPLETE_DAY)
+
+            viewModel.selectRoutineDayDate(
+                date = selectedDate,
+                onWorkoutStarted = {},
+                onRecordSelected = {}
+            )
+            advanceUntilIdle()
+
+            var updated = awaitItem()
+            while (updated.routineCompletionConfirm == null) {
+                updated = awaitItem()
+            }
+            assertThat(updated.routineDayDatePicker).isNull()
+            assertThat(updated.routineCompletionConfirm?.unrecordedExercises)
+                .hasSize(2)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun requestCompleteCurrentRoutineDay_excludesSessionRecordedExercisesFromConfirmation() = runTest {
         val recorded = repository.plannedExercise(dayIndex = 0, exerciseIndex = 0)
         val unrecorded = repository.plannedExercise(dayIndex = 0, exerciseIndex = 1)
+        repository.assignCurrentRoutineDayDate(LocalDate.of(2026, 5, 24))
         val viewModel = viewModel()
 
         viewModel.uiState.test {
@@ -1197,11 +1376,13 @@ class RoutineViewModelTest {
         observeRoutineProgress = ObserveRoutineProgressUseCase(repository),
         observeTrainingExperience = ObserveTrainingExperienceUseCase(sessionRepository),
         observeWorkoutLogs = ObserveWorkoutLogsUseCase(repository),
+        observeAllWorkoutLogs = ObserveAllWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
         recommendExercisePrescription = RecommendExercisePrescriptionUseCase(),
         recommendRoutine = RecommendRoutineUseCase(),
         resolveRoutineCycleCompletion = ResolveRoutineCycleCompletionUseCase(),
         switchRoutineTemplate = SwitchRoutineTemplateUseCase(repository),
+        setRoutineDayDate = SetRoutineDayDateUseCase(repository),
         completeRoutineDay = CompleteRoutineDayUseCase(repository, AdvanceRoutineDayUseCase()),
         cancelLatestRoutineDayCompletion = CancelLatestRoutineDayCompletionUseCase(repository),
         saveCustomRoutineUseCase = SaveCustomRoutineUseCase(repository, ValidateCustomRoutineUseCase()),
@@ -1404,6 +1585,31 @@ private class FakeTrainingRepository :
 
     fun currentLogs(): List<WorkoutLog> = logs.value
 
+    fun assignCurrentRoutineDayDate(date: LocalDate) {
+        val current = progress.value
+        assignRoutineDayDate(
+            dayIndex = current.dayIndex,
+            cycleNumber = current.cycleNumber,
+            date = date
+        )
+    }
+
+    fun assignRoutineDayDate(
+        dayIndex: Int,
+        cycleNumber: Int,
+        date: LocalDate
+    ) {
+        val current = progress.value
+        val instanceId = routineDayInstanceId(
+            templateId = current.templateId,
+            cycleNumber = cycleNumber,
+            dayNumber = dayIndex + 1
+        )
+        progress.value = current.copy(
+            routineDayDates = current.routineDayDates + (instanceId to date)
+        )
+    }
+
     fun setLatestLogs(value: List<WorkoutLog>) {
         latestLogs.value = value
     }
@@ -1536,17 +1742,42 @@ private class FakeTrainingRepository :
     ): Result<Unit> {
         val current = progress.value
         val startsNewCycle = newCycleStartedAt != null
-        progress.value = RoutineProgress(
-            templateId = current.templateId,
+        progress.value = current.copy(
             dayIndex = nextDayIndex,
             lastCompletedDayIndex = completedDayIndex,
             lastCompletedAt = completedAt,
             cycleNumber = if (startsNewCycle) current.cycleNumber + 1 else current.cycleNumber,
             lastCompletedCycleNumber = current.cycleNumber,
             lastCompletedPreviousCycleStartedAt = current.cycleStartedAt,
-            startedAt = current.startedAt,
             cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt
         )
+        return Result.success(Unit)
+    }
+
+    override suspend fun setRoutineDayDate(
+        routineDayInstanceId: String,
+        assignedDate: LocalDate,
+        cycleStartedAt: Instant?
+    ): Result<Unit> {
+        val current = progress.value
+        progress.value = current.copy(
+            cycleStartedAt = cycleStartedAt ?: current.cycleStartedAt,
+            routineDayDates = current.routineDayDates + (routineDayInstanceId to assignedDate)
+        )
+        logs.value = logs.value.map { log ->
+            if (log.routineDayInstanceId == routineDayInstanceId) {
+                log.copy(performedAt = assignedDate.atTime(12, 0))
+            } else {
+                log
+            }
+        }
+        latestLogs.value = latestLogs.value.map { log ->
+            if (log.routineDayInstanceId == routineDayInstanceId) {
+                log.copy(performedAt = assignedDate.atTime(12, 0))
+            } else {
+                log
+            }
+        }
         return Result.success(Unit)
     }
 

@@ -133,6 +133,15 @@
     <string name="routine_complete_day_confirm_return">돌아가기</string>
     <string name="routine_complete_day_confirm_title">기록하지 않은 운동이 있어요</string>
     <string name="routine_cycle_day_title">%1$d사이클 · %2$d일차</string>
+    <string name="routine_day_date_assigned">수행 날짜: %1$s</string>
+    <string name="routine_day_date_complete_title">이 일차를 수행한 날짜 선택</string>
+    <string name="routine_day_date_edit_title">수행 날짜 수정</string>
+    <string name="routine_day_date_error_after_previous">이 일차는 이전 일차보다 이후 날짜여야 해요. 같은 날 더 운동했다면 현재 일차에 운동을 추가해 기록해 주세요.</string>
+    <string name="routine_day_date_error_future">미래 날짜는 선택할 수 없어요.</string>
+    <string name="routine_day_date_error_required">이 일차를 기록하기 전에 수행 날짜를 선택해 주세요.</string>
+    <string name="routine_day_date_error_save">수행 날짜를 저장하지 못했어요. 다시 시도해 주세요.</string>
+    <string name="routine_day_date_start_title">이 일차를 언제 수행했나요?</string>
+    <string name="routine_day_date_unassigned">수행 날짜 선택</string>
     <string name="routine_delete_and_cancel_day">삭제하고 취소</string>
     <string name="routine_keep_day_completion">유지하기</string>
     <string name="routine_latest_completed_day_body">가장 최근 완료한 일차만 취소할 수 있습니다.</string>

@@ -245,6 +245,7 @@ class TrainingUiTest {
         continueFromLoginIfNeeded()
         composeRule.onNodeWithTag("training_tab_plan").performClick()
         clickPlanExercise("training_plan_exercise_leg_press")
+        confirmRoutineDayDateIfNeeded()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_record_dialog").fetchSemanticsNodes().isNotEmpty()
         }
@@ -274,6 +275,7 @@ class TrainingUiTest {
         waitForNodeWithTag("training_home_start_workout")
         scrollToNodeWithTag("training_home_start_workout")
         composeRule.onNodeWithTag("training_home_start_workout").performClick()
+        confirmRoutineDayDateIfNeeded()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_record_dialog").fetchSemanticsNodes().isNotEmpty()
         }
@@ -512,12 +514,26 @@ class TrainingUiTest {
     private fun completeRoutineDayWithConfirmation() {
         scrollToNodeWithTag("training_complete_routine_day")
         composeRule.onNodeWithTag("training_complete_routine_day").assertIsDisplayed().performClick()
+        confirmRoutineDayDateIfNeeded()
         waitForNodeWithTag("training_complete_day_confirmation_dialog")
         composeRule.onNodeWithTag("training_confirm_complete_routine_day").assertIsDisplayed().performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_complete_day_confirmation_dialog")
                 .fetchSemanticsNodes()
                 .isEmpty()
+        }
+    }
+
+    private fun confirmRoutineDayDateIfNeeded() {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithTag("training_routine_day_date_dialog").fetchSemanticsNodes().isNotEmpty() ||
+                composeRule.onAllNodesWithTag("training_record_dialog").fetchSemanticsNodes().isNotEmpty() ||
+                composeRule.onAllNodesWithTag("training_complete_day_confirmation_dialog").fetchSemanticsNodes().isNotEmpty()
+        }
+        if (composeRule.onAllNodesWithTag("training_routine_day_date_dialog").fetchSemanticsNodes().isEmpty()) return
+        composeRule.onNodeWithTag("training_confirm_routine_day_date").assertIsDisplayed().performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithTag("training_routine_day_date_dialog").fetchSemanticsNodes().isEmpty()
         }
     }
 

@@ -24,6 +24,9 @@ import com.smarttrainner.core.network.RoutineProgressSyncStatus
 import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -73,7 +76,10 @@ class DefaultRoutineProgressRepository @Inject constructor(
                         lastCompletedCycleNumber = preference.lastCompletedCycleNumber,
                         lastCompletedPreviousCycleStartedAt = preference.lastCompletedPreviousCycleStartedAt.toInstantOrNull(),
                         startedAt = startedAt,
-                        cycleStartedAt = preference.cycleStartedAt.toInstantOrNull() ?: startedAt
+                        cycleStartedAt = preference.effectiveCycleStartedAt().toInstantOrNull() ?: startedAt,
+                        routineDayDates = preference.routineDayDates.mapNotNull { (instanceId, rawDate) ->
+                            rawDate.toLocalDateOrNull()?.let { instanceId to it }
+                        }.toMap()
                     )
                 }.collect { send(it) }
             }
@@ -126,8 +132,10 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedPreviousCycleStartedAt = null,
+            routineDayDates = emptyMap()
         )
+        preferences.clearRoutineDayDates(sessionId)
         preferences.setRoutineProgress(sessionId, switchedProgress)
         val serverProgress = pushServerProgress(sessionId, writeToPreferences = false) {
             routineProgressNetworkApi.switchRoutineTemplate(
@@ -152,6 +160,27 @@ class DefaultRoutineProgressRepository @Inject constructor(
         Unit
     }
 
+    override suspend fun setRoutineDayDate(
+        routineDayInstanceId: String,
+        assignedDate: LocalDate,
+        cycleStartedAt: Instant?
+    ): Result<Unit> = runCatching {
+        val sessionId = activeSessionResolver.sessionId()
+        val performedAt = assignedDate.atTime(LocalTime.NOON)
+        preferences.setRoutineDayDate(
+            sessionId = sessionId,
+            routineDayInstanceId = routineDayInstanceId,
+            assignedDate = assignedDate.toString(),
+            cycleStartedAt = cycleStartedAt?.toString()
+        )
+        workoutLogDao.updateRoutineDayLogDate(
+            sessionId = sessionId,
+            routineDayInstanceId = routineDayInstanceId,
+            performedDate = assignedDate.toString(),
+            performedAt = performedAt.toString()
+        )
+    }
+
     override suspend fun markRoutineDayCompleted(
         completedDayIndex: Int,
         nextDayIndex: Int,
@@ -162,7 +191,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
         val localProgress = preferences.activeRoutineProgress(sessionId).first()
         val cycleDurationDays = if (newCycleStartedAt != null) {
             calculateCompletedCycleDurationDays(
-                cycleStartedAt = localProgress.cycleStartedAt.toInstantOrNull(),
+                cycleStartedAt = localProgress.effectiveCycleStartedAt().toInstantOrNull(),
                 completedAt = completedAt
             )
         } else {
@@ -265,9 +294,13 @@ class DefaultRoutineProgressRepository @Inject constructor(
         writeToPreferences: Boolean = true,
         request: suspend () -> RoutineProgressDto
     ): RoutineProgressDto? = try {
+        val localProgress = preferences.activeRoutineProgress(sessionId).first()
         request().also {
             if (writeToPreferences) {
-                preferences.setRoutineProgress(sessionId, it.toPreference())
+                preferences.setRoutineProgress(
+                    sessionId = sessionId,
+                    progress = it.toPreference().withLocalRoutineDayDateState(localProgress)
+                )
             }
         }
     } catch (error: CancellationException) {
@@ -321,6 +354,18 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt
         )
 
+    private fun RoutineProgressPreference.withLocalRoutineDayDateState(
+        localProgress: RoutineProgressPreference
+    ): RoutineProgressPreference =
+        if (templateId == localProgress.templateId && cycleNumber == localProgress.cycleNumber) {
+            copy(
+                cycleStartedAt = localProgress.effectiveCycleStartedAt() ?: cycleStartedAt,
+                routineDayDates = localProgress.routineDayDates
+            )
+        } else {
+            this
+        }
+
     private fun RoutineCycleCompletionDto.toModel(): RoutineCycleCompletion? {
         val parsedStartedAt = startedAt.toInstantOrNull() ?: return null
         val parsedCompletedAt = completedAt.toInstantOrNull() ?: return null
@@ -352,6 +397,28 @@ class DefaultRoutineProgressRepository @Inject constructor(
 
     private fun String?.toInstantOrNull(): Instant? =
         this?.let { raw -> runCatching { Instant.parse(raw) }.getOrNull() }
+
+    private fun String.toLocalDateOrNull(): LocalDate? =
+        runCatching { LocalDate.parse(this) }.getOrNull()
+
+    private fun RoutineProgressPreference.effectiveCycleStartedAt(): String? =
+        effectiveCycleStartedAt(ZoneId.systemDefault())
+}
+
+internal fun RoutineProgressPreference.effectiveCycleStartedAt(zoneId: ZoneId): String? {
+    val assignedDayOneStart = routineDayDates["routine-day|$templateId|cycle$cycleNumber|day1"]
+        ?.let { rawDate -> runCatching { LocalDate.parse(rawDate) }.getOrNull() }
+        ?.atStartOfDay(zoneId)
+        ?.toInstant()
+        ?: return cycleStartedAt
+    val storedCycleStartedAt = cycleStartedAt?.let { rawInstant ->
+        runCatching { Instant.parse(rawInstant) }.getOrNull()
+    }
+    return if (storedCycleStartedAt == null || storedCycleStartedAt.isAfter(assignedDayOneStart)) {
+        assignedDayOneStart.toString()
+    } else {
+        cycleStartedAt
+    }
 }
 
 private data class RoutineCycleCompletionRefreshKey(

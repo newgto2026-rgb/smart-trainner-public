@@ -37,5 +37,7 @@ interface RoutineRouteState {
 
     fun requestAdditionalExercise(anchorExercise: PlannedExercise?)
 
+    fun requestRecordSelected(plannedExercise: PlannedExercise)
+
     fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise?
 }

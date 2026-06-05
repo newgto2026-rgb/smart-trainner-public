@@ -54,6 +54,10 @@ internal fun LazyListScope.planContent(
 ) {
     val weeklyLogsByPlannedExerciseId = state.logs.firstByPlannedExerciseId()
     val latestLogsByExerciseId = state.latestWorkoutLogs.latestByExerciseId()
+    val currentDayExercisesById = state.nextRoutineDayUi
+        ?.previewExercises
+        ?.associateBy { it.id }
+        .orEmpty()
 
     item {
         Text(
@@ -105,7 +109,7 @@ internal fun LazyListScope.planContent(
             fontWeight = FontWeight.Bold
         )
     }
-    state.plan?.days.orEmpty().forEach { day ->
+    state.plan?.days.orEmpty().forEachIndexed { dayIndex, day ->
         item(
             key = "routine-day-${day.date}-header",
             contentType = "routine-day-header"
@@ -122,13 +126,16 @@ internal fun LazyListScope.planContent(
             key = { it.id.value },
             contentType = { "routine-plan-exercise" }
         ) { exercise ->
+            val recordableExercise = currentDayExercisesById[exercise.id]
+            val completed = state.isPlanExerciseCompleted(dayIndex, exercise)
             PlanExerciseRow(
-                exercise = exercise,
+                exercise = recordableExercise ?: exercise,
                 displayLog = weeklyLogsByPlannedExerciseId[exercise.id]
                     ?: latestLogsByExerciseId[exercise.exercise.id],
-                completed = exercise.id in state.completedPlannedExerciseIds,
+                completed = completed,
+                recordable = recordableExercise != null && !completed,
                 exerciseMediaRenderer = exerciseMediaRenderer,
-                onClick = { actions.onRecordSelected(exercise) }
+                onClick = { recordableExercise?.let(actions.onRecordSelected) }
             )
         }
     }
@@ -216,14 +223,22 @@ internal fun PlanExerciseRow(
     exercise: PlannedExercise,
     displayLog: com.smarttrainner.core.model.WorkoutLog?,
     completed: Boolean,
+    recordable: Boolean,
     exerciseMediaRenderer: ExerciseMediaRenderer,
     onClick: () -> Unit
 ) {
+    val cardModifier = Modifier
+        .fillMaxWidth()
+        .testTag("training_plan_exercise_${exercise.exercise.id.value}")
+        .let { modifier ->
+            if (recordable) {
+                modifier.clickable(onClick = onClick)
+            } else {
+                modifier
+            }
+        }
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("training_plan_exercise_${exercise.exercise.id.value}")
-            .clickable(onClick = onClick),
+        modifier = cardModifier,
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, SmartTrainnerColors.Line),
         colors = CardDefaults.cardColors(containerColor = SmartTrainnerColors.SurfaceRaised)
@@ -269,7 +284,7 @@ internal fun PlanExerciseRow(
             }
             if (completed) {
                 StatusIcon(completed = true)
-            } else {
+            } else if (recordable) {
                 OutlinedButton(
                     onClick = onClick,
                     shape = RoundedCornerShape(8.dp),

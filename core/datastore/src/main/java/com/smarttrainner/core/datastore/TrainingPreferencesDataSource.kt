@@ -92,7 +92,8 @@ class TrainingPreferencesDataSource @Inject constructor(
                 lastCompletedDayIndex = preferences[lastCompletedRoutineDayKey(sessionId)],
                 lastCompletedAt = preferences[lastCompletedAtKey(sessionId)],
                 lastCompletedCycleNumber = preferences[lastCompletedRoutineCycleKey(sessionId)],
-                lastCompletedPreviousCycleStartedAt = preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)]
+                lastCompletedPreviousCycleStartedAt = preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)],
+                routineDayDates = decodeRoutineDayDates(preferences[routineDayDatesKey(sessionId)])
             )
         }
 
@@ -137,12 +138,35 @@ class TrainingPreferencesDataSource @Inject constructor(
             preferences.remove(lastCompletedAtKey(sessionId))
             preferences.remove(lastCompletedRoutineCycleKey(sessionId))
             preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
+            preferences.remove(routineDayDatesKey(sessionId))
         }
     }
 
     suspend fun setActiveRoutineDayIndex(sessionId: String, dayIndex: Int) {
         context.trainingDataStore.edit { preferences ->
             preferences[activeRoutineDayIndexKey(sessionId)] = dayIndex
+        }
+    }
+
+    suspend fun setRoutineDayDate(
+        sessionId: String,
+        routineDayInstanceId: String,
+        assignedDate: String,
+        cycleStartedAt: String? = null
+    ) {
+        context.trainingDataStore.edit { preferences ->
+            val dateKey = routineDayDatesKey(sessionId)
+            val dates = decodeRoutineDayDates(preferences[dateKey]) + (routineDayInstanceId to assignedDate)
+            preferences[dateKey] = encodeRoutineDayDates(dates)
+            if (cycleStartedAt != null) {
+                preferences[activeRoutineCycleStartedAtKey(sessionId)] = cycleStartedAt
+            }
+        }
+    }
+
+    suspend fun clearRoutineDayDates(sessionId: String) {
+        context.trainingDataStore.edit { preferences ->
+            preferences.remove(routineDayDatesKey(sessionId))
         }
     }
 
@@ -236,6 +260,9 @@ class TrainingPreferencesDataSource @Inject constructor(
             progress.lastCompletedPreviousCycleStartedAt?.let {
                 preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)] = it
             } ?: preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
+            if (progress.routineDayDates.isNotEmpty()) {
+                preferences[routineDayDatesKey(sessionId)] = encodeRoutineDayDates(progress.routineDayDates)
+            }
         }
     }
 
@@ -374,6 +401,9 @@ class TrainingPreferencesDataSource @Inject constructor(
         fun lastCompletedPreviousCycleStartedAtKey(sessionId: String) =
             stringPreferencesKey("last_completed_previous_cycle_started_at_$sessionId")
 
+        fun routineDayDatesKey(sessionId: String) =
+            stringPreferencesKey("routine_day_dates_$sessionId")
+
         fun sessionDisplayNameKey(sessionId: String) =
             stringPreferencesKey("session_display_name_$sessionId")
 
@@ -487,6 +517,28 @@ class TrainingPreferencesDataSource @Inject constructor(
                 )
             }
         )
+
+    private fun decodeRoutineDayDates(raw: String?): Map<String, String> =
+        raw
+            ?.let {
+                runCatching {
+                    Json.decodeFromString<List<RoutineDayDatePreferenceDto>>(it)
+                        .associate { dto -> dto.routineDayInstanceId to dto.assignedDate }
+                }.getOrNull()
+            }
+            ?: emptyMap()
+
+    private fun encodeRoutineDayDates(dates: Map<String, String>): String =
+        Json.encodeToString(
+            dates.entries
+                .sortedBy { it.key }
+                .map { (routineDayInstanceId, assignedDate) ->
+                    RoutineDayDatePreferenceDto(
+                        routineDayInstanceId = routineDayInstanceId,
+                        assignedDate = assignedDate
+                    )
+                }
+        )
 }
 
 internal fun String?.toTrainingExperience(): TrainingExperience =
@@ -498,4 +550,10 @@ private data class BodyMeasurementPreferenceDto(
     val recordedDate: String,
     val heightCm: Int,
     val weightKg: Double
+)
+
+@Serializable
+private data class RoutineDayDatePreferenceDto(
+    val routineDayInstanceId: String,
+    val assignedDate: String
 )

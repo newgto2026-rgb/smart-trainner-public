@@ -258,6 +258,128 @@ class WeeklySummaryCalculatorTest {
         assertThat(result.muscleBalance[MuscleGroup.BACK]).isEqualTo(1)
     }
 
+    @Test
+    fun calculateCycle_includesCurrentCycleRoutineDayLogsWhenCycleStartWasOverwrittenLater() {
+        val first = plannedExercise(id = "deadlift", muscleGroup = MuscleGroup.BACK)
+        val second = plannedExercise(id = "lat_pulldown", muscleGroup = MuscleGroup.BACK)
+        val plan = WeeklyPlan(
+            id = PlanId("plan"),
+            templateId = "custom-template",
+            name = "내 마음대로",
+            weekStartDate = LocalDate.of(2026, 6, 1),
+            days = listOf(
+                WorkoutDayPlan(
+                    date = LocalDate.of(2026, 6, 1),
+                    title = "1일차",
+                    focus = "당기는 날",
+                    exercises = listOf(first, second)
+                )
+            )
+        )
+        val progress = RoutineProgress(
+            templateId = "custom-template",
+            dayIndex = 1,
+            lastCompletedDayIndex = 0,
+            lastCompletedAt = Instant.parse("2026-06-01T12:00:00Z"),
+            cycleNumber = 1,
+            lastCompletedCycleNumber = 1,
+            startedAt = Instant.parse("2026-06-03T04:02:20.308Z"),
+            cycleStartedAt = Instant.parse("2026-06-03T04:02:20.308Z")
+        )
+        val routineDayInstanceId = "routine-day|custom-template|cycle1|day1"
+        val logs = listOf(
+            completedLog(
+                id = 1,
+                planned = first,
+                performedAt = LocalDateTime.of(2026, 6, 1, 12, 0),
+                routineDayInstanceId = routineDayInstanceId
+            ),
+            completedLog(
+                id = 2,
+                planned = second,
+                performedAt = LocalDateTime.of(2026, 6, 1, 12, 0),
+                routineDayInstanceId = routineDayInstanceId
+            )
+        )
+
+        val result = calculator.calculateCycle(
+            weekStartDate = LocalDate.of(2026, 6, 1),
+            plan = plan,
+            logs = logs,
+            progress = progress,
+            zone = ZoneOffset.UTC
+        )
+
+        assertThat(result.completedExerciseCount).isEqualTo(2)
+        assertThat(result.totalSets).isEqualTo(6)
+        assertThat(result.completionRate).isEqualTo(100)
+    }
+
+    @Test
+    fun calculateCycle_excludesRoutineLogsFromOtherTemplatesOrCycles() {
+        val first = plannedExercise(id = "deadlift", muscleGroup = MuscleGroup.BACK)
+        val second = plannedExercise(id = "lat_pulldown", muscleGroup = MuscleGroup.BACK)
+        val extra = plannedExercise(id = "cable_row", muscleGroup = MuscleGroup.BACK)
+        val plan = WeeklyPlan(
+            id = PlanId("plan"),
+            templateId = "custom-template",
+            name = "내 마음대로",
+            weekStartDate = LocalDate.of(2026, 6, 1),
+            days = listOf(
+                WorkoutDayPlan(
+                    date = LocalDate.of(2026, 6, 1),
+                    title = "1일차",
+                    focus = "당기는 날",
+                    exercises = listOf(first, second)
+                )
+            )
+        )
+        val progress = RoutineProgress(
+            templateId = "custom-template",
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            cycleNumber = 2,
+            startedAt = Instant.parse("2026-06-01T00:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-06-01T00:00:00Z")
+        )
+
+        val result = calculator.calculateCycle(
+            weekStartDate = LocalDate.of(2026, 6, 1),
+            plan = plan,
+            logs = listOf(
+                completedLog(
+                    id = 1,
+                    planned = first,
+                    performedAt = LocalDateTime.of(2026, 6, 1, 12, 0),
+                    routineDayInstanceId = "routine-day|custom-template|cycle2|day1"
+                ),
+                completedLog(
+                    id = 2,
+                    planned = second,
+                    performedAt = LocalDateTime.of(2026, 6, 1, 13, 0),
+                    routineDayInstanceId = "routine-day|custom-template|cycle1|day1"
+                ),
+                completedLog(
+                    id = 3,
+                    planned = second,
+                    performedAt = LocalDateTime.of(2026, 6, 1, 14, 0),
+                    routineDayInstanceId = "routine-day|other-template|cycle2|day1"
+                ),
+                completedLog(
+                    id = 4,
+                    planned = extra,
+                    performedAt = LocalDateTime.of(2026, 6, 1, 15, 0)
+                )
+            ),
+            progress = progress,
+            zone = ZoneOffset.UTC
+        )
+
+        assertThat(result.completedExerciseCount).isEqualTo(2)
+        assertThat(result.totalSets).isEqualTo(6)
+    }
+
     private fun plannedExercise(
         id: String,
         muscleGroup: MuscleGroup
@@ -274,7 +396,8 @@ class WeeklySummaryCalculatorTest {
     private fun completedLog(
         id: Long,
         planned: PlannedExercise,
-        performedAt: LocalDateTime = LocalDateTime.of(2026, 5, 18, 20, 0)
+        performedAt: LocalDateTime = LocalDateTime.of(2026, 5, 18, 20, 0),
+        routineDayInstanceId: String? = null
     ): WorkoutLog = WorkoutLog(
         id = WorkoutLogId(id),
         sessionId = UserSessionId("local-default"),
@@ -286,7 +409,8 @@ class WeeklySummaryCalculatorTest {
         weightKg = 10.0,
         durationMinutes = null,
         memo = "",
-        completed = true
+        completed = true,
+        routineDayInstanceId = routineDayInstanceId
     )
 
     private fun exercise(

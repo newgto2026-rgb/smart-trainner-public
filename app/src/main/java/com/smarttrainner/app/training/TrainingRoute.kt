@@ -143,7 +143,7 @@ private fun TrainingScreen(
             showRecordAction = selectedPlannedExercise != null,
             onDismiss = onExerciseDetailDismiss,
             onRecordRequested = {
-                selectedPlannedExercise?.let(onRecordSelected)
+                selectedPlannedExercise?.let(routineRouteState::requestRecordSelected)
             }
         )
     }

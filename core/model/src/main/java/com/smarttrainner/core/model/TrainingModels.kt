@@ -367,7 +367,8 @@ data class RoutineProgressPreference(
     val lastCompletedDayIndex: Int?,
     val lastCompletedAt: String?,
     val lastCompletedCycleNumber: Int?,
-    val lastCompletedPreviousCycleStartedAt: String?
+    val lastCompletedPreviousCycleStartedAt: String?,
+    val routineDayDates: Map<String, String> = emptyMap()
 )
 
 data class RoutineProgress(
@@ -379,7 +380,8 @@ data class RoutineProgress(
     val lastCompletedCycleNumber: Int? = null,
     val lastCompletedPreviousCycleStartedAt: Instant? = null,
     val startedAt: Instant? = null,
-    val cycleStartedAt: Instant? = startedAt
+    val cycleStartedAt: Instant? = startedAt,
+    val routineDayDates: Map<String, LocalDate> = emptyMap()
 )
 
 data class RoutineCycleCompletion(
@@ -420,7 +422,8 @@ data class PlannedExercise(
     val durationMinutes: Int?,
     val restSeconds: Int,
     val note: String,
-    val routineDayInstanceId: String? = null
+    val routineDayInstanceId: String? = null,
+    val routineDayDate: LocalDate? = null
 ) {
     val targetText: String
         get() = if (repRange != null) {

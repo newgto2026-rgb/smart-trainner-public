@@ -10,6 +10,7 @@ import com.smarttrainner.core.model.PlanId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineFocus
+import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import java.time.LocalDate
@@ -95,24 +96,101 @@ class RoutineContinuationPolicyTest {
     }
 
     @Test
-    fun recordablePlannedExerciseFor_returnsMatchingPlannedExerciseWhenBuilderIsHidden() {
+    fun recordablePlannedExerciseFor_returnsMatchingCurrentDayExerciseWhenBuilderIsHidden() {
         val planned = plannedExercise("back_pull")
+        val day = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 18),
+            title = "Day 1",
+            focus = "Back",
+            exercises = listOf(planned),
+            dayNumber = 1,
+            primaryFocus = RoutineFocus.BACK,
+            secondaryFocuses = emptyList(),
+            minRecoveryHours = 24
+        )
+        val state = RoutineUiState(
+            plan = weeklyPlan(day),
+            nextRoutineDayUi = day.toNextRoutineDayUiModel(
+                template = null,
+                dayIndex = 0,
+                cycleNumber = 1,
+                routineDayDate = null,
+                previousRoutineDayDate = null,
+                completedIds = emptySet()
+            )
+        )
+
+        assertThat(state.recordablePlannedExerciseFor(planned.exercise.id)?.id).isEqualTo(planned.id)
+    }
+
+    @Test
+    fun recordablePlannedExerciseFor_returnsNullForCompletedCurrentDayExercise() {
+        val planned = plannedExercise("back_pull")
+        val day = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 18),
+            title = "Day 1",
+            focus = "Back",
+            exercises = listOf(planned),
+            dayNumber = 1,
+            primaryFocus = RoutineFocus.BACK,
+            secondaryFocuses = emptyList(),
+            minRecoveryHours = 24
+        )
+        val state = RoutineUiState(
+            plan = weeklyPlan(day),
+            nextRoutineDayUi = day.toNextRoutineDayUiModel(
+                template = null,
+                dayIndex = 0,
+                cycleNumber = 1,
+                routineDayDate = null,
+                previousRoutineDayDate = null,
+                completedIds = setOf(planned.id)
+            ),
+            completedPlannedExerciseIds = setOf(planned.id)
+        )
+
+        assertThat(state.recordablePlannedExerciseFor(planned.exercise.id)).isNull()
+    }
+
+    @Test
+    fun isPlanExerciseCompleted_returnsTrueForCompletedPreviousRoutineDay() {
+        val completed = plannedExercise("back_pull")
+        val current = plannedExercise("chest_press")
         val state = RoutineUiState(
             plan = weeklyPlan(
                 WorkoutDayPlan(
                     date = LocalDate.of(2026, 5, 18),
                     title = "Day 1",
                     focus = "Back",
-                    exercises = listOf(planned),
+                    exercises = listOf(completed),
                     dayNumber = 1,
                     primaryFocus = RoutineFocus.BACK,
                     secondaryFocuses = emptyList(),
                     minRecoveryHours = 24
+                ),
+                WorkoutDayPlan(
+                    date = LocalDate.of(2026, 5, 19),
+                    title = "Day 2",
+                    focus = "Chest",
+                    exercises = listOf(current),
+                    dayNumber = 2,
+                    primaryFocus = RoutineFocus.CHEST,
+                    secondaryFocuses = emptyList(),
+                    minRecoveryHours = 24
                 )
+            ),
+            activeRoutineProgress = RoutineProgress(
+                templateId = "template",
+                dayIndex = 1,
+                lastCompletedDayIndex = 0,
+                lastCompletedAt = null,
+                cycleNumber = 1,
+                lastCompletedCycleNumber = 1
             )
         )
 
-        assertThat(state.recordablePlannedExerciseFor(planned.exercise.id)?.id).isEqualTo(planned.id)
+        assertThat(state.isPlanExerciseCompleted(dayIndex = 0, plannedExercise = completed)).isTrue()
+        assertThat(state.isPlanExerciseCompleted(dayIndex = 1, plannedExercise = current)).isFalse()
     }
 }
 

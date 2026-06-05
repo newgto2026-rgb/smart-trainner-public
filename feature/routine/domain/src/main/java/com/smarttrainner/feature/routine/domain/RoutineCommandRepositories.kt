@@ -4,6 +4,7 @@ import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExerciseId
 import java.time.Instant
+import java.time.LocalDate
 
 data class RoutineCompletionSnapshot(
     val dayIndex: Int,
@@ -21,6 +22,12 @@ interface RoutinePlanCommandRepository {
 interface RoutineProgressCommandRepository {
     suspend fun startRoutine(templateId: String): Result<Unit>
     suspend fun switchRoutineTemplate(templateId: String): Result<Unit>
+    suspend fun setRoutineDayDate(
+        routineDayInstanceId: String,
+        assignedDate: LocalDate,
+        cycleStartedAt: Instant?
+    ): Result<Unit>
+
     suspend fun markRoutineDayCompleted(
         completedDayIndex: Int,
         nextDayIndex: Int,

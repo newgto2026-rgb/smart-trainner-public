@@ -70,6 +70,15 @@ class RoutineFeatureEntryImpl @Inject constructor(
                     viewModel.confirmCompleteCurrentRoutineDay(callbacks.onRoutineDayCompleted)
                 },
                 onDismissCompleteRoutineDay = viewModel::dismissCompleteRoutineDayConfirmation,
+                onRoutineDayDateSelected = { date ->
+                    viewModel.selectRoutineDayDate(
+                        date = date,
+                        onWorkoutStarted = callbacks.onWorkoutStarted,
+                        onRecordSelected = callbacks.onRecordSelected
+                    )
+                },
+                onDismissRoutineDayDatePicker = viewModel::dismissRoutineDayDatePicker,
+                onEditRoutineDayDate = viewModel::requestEditRoutineDayDate,
                 onRequestCancelLatestRoutineDay = viewModel::requestCancelLatestRoutineDay,
                 onConfirmCancelLatestRoutineDay = {
                     viewModel.confirmCancelLatestRoutineDay(callbacks.onRoutineDayCompleted)
@@ -82,21 +91,29 @@ class RoutineFeatureEntryImpl @Inject constructor(
                     if (result != null) {
                         when (result.mode) {
                             RoutineExercisePickerMode.SUBSTITUTE -> {
-                                callbacks.onSubstituteExerciseSelected(result.plannedExercise)
+                                viewModel.requestRecordSelected(
+                                    plannedExercise = result.plannedExercise,
+                                    onSelected = callbacks.onSubstituteExerciseSelected
+                                )
                             }
                             RoutineExercisePickerMode.ADD -> {
-                                callbacks.onAdditionalExerciseSelected(result.plannedExercise)
+                                viewModel.requestRecordSelected(
+                                    plannedExercise = result.plannedExercise,
+                                    onSelected = callbacks.onAdditionalExerciseSelected
+                                )
                             }
                         }
                     }
                 },
                 onDismissRoutineExercisePicker = viewModel::dismissRoutineExercisePicker,
-                onWorkoutStarted = callbacks.onWorkoutStarted,
+                onWorkoutStarted = { viewModel.requestStartWorkout(callbacks.onWorkoutStarted) },
                 onSubstituteExerciseSelected = callbacks.onSubstituteExerciseSelected,
                 onAdditionalExerciseSelected = callbacks.onAdditionalExerciseSelected,
                 onCompleteRoutineDay = { viewModel.requestCompleteCurrentRoutineDay(emptySet(), emptySet()) },
                 onExerciseMethodSelected = callbacks.onExerciseMethodSelected,
-                onRecordSelected = callbacks.onRecordSelected
+                onRecordSelected = { planned ->
+                    viewModel.requestRecordSelected(planned, callbacks.onRecordSelected)
+                }
             )
         }
         return remember(state, actions, currentRoutineName) {
@@ -193,6 +210,13 @@ class RoutineFeatureEntryImpl @Inject constructor(
                 onDismissRequest = actions.onDismissCompleteRoutineDay
             )
         }
+        state.routineDayDatePicker?.let { picker ->
+            RoutineDayDatePickerDialog(
+                picker = picker,
+                onDateSelected = actions.onRoutineDayDateSelected,
+                onDismissRequest = actions.onDismissRoutineDayDatePicker
+            )
+        }
         state.routineExercisePicker?.let { picker ->
             RoutineExercisePickerDialog(
                 picker = picker,
@@ -263,6 +287,10 @@ internal class DefaultRoutineRouteState(
 
     override fun requestAdditionalExercise(anchorExercise: PlannedExercise?) {
         actions.onRequestAdditionalExercise(anchorExercise)
+    }
+
+    override fun requestRecordSelected(plannedExercise: PlannedExercise) {
+        actions.onRecordSelected(plannedExercise)
     }
 
     override fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =

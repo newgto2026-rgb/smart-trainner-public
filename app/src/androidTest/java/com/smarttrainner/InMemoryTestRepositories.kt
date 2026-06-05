@@ -297,6 +297,25 @@ internal class InMemoryTrainingRepository :
         )
     }
 
+    override suspend fun setRoutineDayDate(
+        routineDayInstanceId: String,
+        assignedDate: LocalDate,
+        cycleStartedAt: Instant?
+    ): Result<Unit> = runCatching {
+        val current = progress.value
+        progress.value = current.copy(
+            cycleStartedAt = cycleStartedAt ?: current.cycleStartedAt,
+            routineDayDates = current.routineDayDates + (routineDayInstanceId to assignedDate)
+        )
+        logs.value = logs.value.map { log ->
+            if (log.routineDayInstanceId == routineDayInstanceId) {
+                log.copy(performedAt = assignedDate.atTime(12, 0))
+            } else {
+                log
+            }
+        }
+    }
+
     override suspend fun cancelLatestRoutineDayCompletion(
         restoredDayIndex: Int,
         restoredCycleNumber: Int,

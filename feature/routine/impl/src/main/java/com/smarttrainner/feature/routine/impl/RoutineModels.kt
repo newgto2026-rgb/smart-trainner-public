@@ -85,6 +85,9 @@ internal data class CustomRoutineExerciseFormState(
 internal data class NextRoutineDayUiModel(
     val day: WorkoutDayPlan,
     val routineTemplate: PlanTemplate?,
+    val routineDayInstanceId: String?,
+    val routineDayDate: LocalDate?,
+    val previousRoutineDayDate: LocalDate?,
     val primaryFocus: RoutineFocus?,
     val secondaryFocuses: List<RoutineFocus>,
     val cycleNumber: Int,
@@ -98,6 +101,26 @@ internal data class NextRoutineDayUiModel(
     val totalExerciseCount: Int,
     val minRecoveryHours: Int
 )
+
+internal enum class RoutineDayDatePickerReason {
+    START_WORKOUT,
+    COMPLETE_DAY,
+    EDIT
+}
+
+internal data class RoutineDayDatePickerState(
+    val reason: RoutineDayDatePickerReason,
+    val initialDate: LocalDate,
+    val minDateExclusive: LocalDate?,
+    val maxDateInclusive: LocalDate
+)
+
+internal enum class RoutineDayDateError {
+    REQUIRED,
+    BEFORE_PREVIOUS_DAY,
+    FUTURE,
+    SAVE_FAILED
+}
 
 internal data class LatestRoutineDayCompletionUiModel(
     val day: WorkoutDayPlan,
@@ -154,6 +177,7 @@ internal data class RoutineUiState(
     val showRoutineSettingsDialog: Boolean = false,
     val showRoutineRecommendationsDialog: Boolean = false,
     val routineCompletionConfirm: RoutineCompletionConfirmState? = null,
+    val routineDayDatePicker: RoutineDayDatePickerState? = null,
     val routineExercisePicker: RoutineExercisePickerState? = null,
     val showCancelLatestRoutineDayDialog: Boolean = false,
     val customRoutineBuilder: CustomRoutineBuilderState = CustomRoutineBuilderState(),
@@ -161,7 +185,8 @@ internal data class RoutineUiState(
     val logs: List<WorkoutLog> = emptyList(),
     val latestWorkoutLogs: List<WorkoutLog> = emptyList(),
     val completedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
-    val completeDayError: Boolean = false
+    val completeDayError: Boolean = false,
+    val routineDayDateError: RoutineDayDateError? = null
 ) {
     val customTemplates: List<PlanTemplate>
         get() = templates.filter { it.source == RoutineSource.CUSTOM }
@@ -202,6 +227,9 @@ internal data class RoutineActions(
     val onRequestCompleteRoutineDay: (Set<PlannedExerciseId>, Set<PlannedExerciseId>) -> Unit = { _, _ -> },
     val onConfirmCompleteRoutineDay: () -> Unit = {},
     val onDismissCompleteRoutineDay: () -> Unit = {},
+    val onRoutineDayDateSelected: (LocalDate) -> Unit = {},
+    val onDismissRoutineDayDatePicker: () -> Unit = {},
+    val onEditRoutineDayDate: () -> Unit = {},
     val onRequestCancelLatestRoutineDay: () -> Unit = {},
     val onConfirmCancelLatestRoutineDay: () -> Unit = {},
     val onDismissCancelLatestRoutineDay: () -> Unit = {},
