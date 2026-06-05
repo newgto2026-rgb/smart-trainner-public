@@ -2,6 +2,9 @@ package com.smarttrainner.feature.workout.impl
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +29,6 @@ import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,9 +52,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
@@ -69,6 +76,7 @@ private val recordRepsOptions = (MIN_RECORD_REPS..MAX_RECORD_REPS).map { it.toSt
 private val recordWeightKgOptions = (0..800).map { (it * 0.5).toRecordInput() }
 private val recordDurationMinuteOptions = (1..240).map { it.toString() }
 private val recordRestSecondOptions = (0..600 step 30).map { it.toString() }
+private const val LAZY_RECORD_OPTION_THRESHOLD = 300
 
 @Composable
 internal fun WorkoutRecordDialog(
@@ -412,8 +420,10 @@ private fun RecordValueSelector(
     var expanded by remember { mutableStateOf(false) }
     val menuOptions = remember(options, value) { options.withCurrentValue(value) }
     val displayValue = value.ifBlank { emptyOptionLabel.orEmpty() }
-    val menuScrollState = rememberScrollState()
+    var anchorSize by remember { mutableStateOf(IntSize.Zero) }
     val density = LocalDensity.current
+    val useLazyMenu = menuOptions.size > LAZY_RECORD_OPTION_THRESHOLD
+    val menuScrollState = rememberScrollState()
     val selectedMenuIndex = remember(menuOptions, value, emptyOptionLabel) {
         when {
             value.isBlank() && emptyOptionLabel != null -> 0
@@ -423,12 +433,17 @@ private fun RecordValueSelector(
             }
         }
     }
-    LaunchedEffect(expanded, selectedMenuIndex, density) {
+    val lazyMenuState = rememberLazyListState()
+    LaunchedEffect(expanded, selectedMenuIndex, useLazyMenu, density) {
         if (expanded) {
-            val itemHeightPx = with(density) { 48.dp.roundToPx() }
-            val menuHeightPx = with(density) { 280.dp.roundToPx() }
-            val centeredScrollOffset = selectedMenuIndex * itemHeightPx - (menuHeightPx - itemHeightPx) / 2
-            menuScrollState.scrollTo(centeredScrollOffset.coerceAtLeast(0))
+            if (useLazyMenu) {
+                lazyMenuState.scrollToItem((selectedMenuIndex - 2).coerceAtLeast(0))
+            } else {
+                val itemHeightPx = with(density) { 48.dp.roundToPx() }
+                val menuHeightPx = with(density) { 280.dp.roundToPx() }
+                val centeredScrollOffset = selectedMenuIndex * itemHeightPx - (menuHeightPx - itemHeightPx) / 2
+                menuScrollState.scrollTo(centeredScrollOffset.coerceAtLeast(0))
+            }
         }
     }
     BoxWithConstraints(modifier = modifier) {
@@ -436,6 +451,7 @@ private fun RecordValueSelector(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 58.dp)
+                .onGloballyPositioned { anchorSize = it.size }
                 .clickable { expanded = true }
                 .testTag(testTag),
             shape = RoundedCornerShape(8.dp),
@@ -478,51 +494,118 @@ private fun RecordValueSelector(
                 }
             }
         }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            scrollState = menuScrollState,
-            modifier = Modifier
-                .heightIn(max = 280.dp)
-                .width(maxWidth)
-                .testTag("${testTag}_menu")
-        ) {
-            emptyOptionLabel?.let { labelText ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = labelText,
-                            color = SmartTrainnerColors.Muted,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    },
-                    onClick = {
-                        onValueChange("")
-                        expanded = false
-                    },
-                    modifier = Modifier.testTag("${optionTestTagPrefix}_none")
-                )
-            }
-            menuOptions.forEach { option ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = option,
-                            fontWeight = if (option == value) FontWeight.Bold else FontWeight.Normal,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    },
-                    onClick = {
-                        onValueChange(option)
-                        expanded = false
-                    },
-                    modifier = Modifier.testTag("${optionTestTagPrefix}_${option.toOptionTestTagValue()}")
-                )
+        if (expanded) {
+            val menuWidth = if (anchorSize.width > 0) with(density) { anchorSize.width.toDp() } else maxWidth
+            Popup(
+                alignment = Alignment.TopStart,
+                offset = IntOffset(0, anchorSize.height),
+                onDismissRequest = { expanded = false },
+                properties = PopupProperties(focusable = true)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = SmartTrainnerColors.Surface,
+                    border = BorderStroke(width = 1.dp, color = SmartTrainnerColors.Line),
+                    shadowElevation = 8.dp,
+                    modifier = Modifier
+                        .width(menuWidth)
+                        .testTag("${testTag}_menu")
+                ) {
+                    if (useLazyMenu) {
+                        LazyColumn(
+                            state = lazyMenuState,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 280.dp)
+                        ) {
+                            emptyOptionLabel?.let { labelText ->
+                                item(key = "${optionTestTagPrefix}_none") {
+                                    RecordMenuItem(
+                                        text = labelText,
+                                        selected = value.isBlank(),
+                                        muted = true,
+                                        testTag = "${optionTestTagPrefix}_none",
+                                        onClick = {
+                                            onValueChange("")
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                            items(
+                                items = menuOptions,
+                                key = { option -> "${optionTestTagPrefix}_${option.toOptionTestTagValue()}" }
+                            ) { option ->
+                                RecordMenuItem(
+                                    text = option,
+                                    selected = option == value,
+                                    testTag = "${optionTestTagPrefix}_${option.toOptionTestTagValue()}",
+                                    onClick = {
+                                        onValueChange(option)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 280.dp)
+                                .verticalScroll(menuScrollState)
+                        ) {
+                            emptyOptionLabel?.let { labelText ->
+                                RecordMenuItem(
+                                    text = labelText,
+                                    selected = value.isBlank(),
+                                    muted = true,
+                                    testTag = "${optionTestTagPrefix}_none",
+                                    onClick = {
+                                        onValueChange("")
+                                        expanded = false
+                                    }
+                                )
+                            }
+                            menuOptions.forEach { option ->
+                                RecordMenuItem(
+                                    text = option,
+                                    selected = option == value,
+                                    testTag = "${optionTestTagPrefix}_${option.toOptionTestTagValue()}",
+                                    onClick = {
+                                        onValueChange(option)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+}
+
+@Composable
+private fun RecordMenuItem(
+    text: String,
+    selected: Boolean,
+    testTag: String,
+    onClick: () -> Unit,
+    muted: Boolean = false
+) {
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = text,
+                color = if (muted) SmartTrainnerColors.Muted else SmartTrainnerColors.Ink,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        onClick = onClick,
+        modifier = Modifier.testTag(testTag)
+    )
 }
 
 @Composable
