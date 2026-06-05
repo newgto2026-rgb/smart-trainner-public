@@ -4,7 +4,7 @@ import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SeedTrainingContent
 import com.smarttrainner.core.domain.SessionRepository
-import com.smarttrainner.core.domain.WeeklyPlanRepository
+import com.smarttrainner.core.domain.CyclePlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.AuthProvider
 import com.smarttrainner.core.model.CustomRoutineInput
@@ -27,13 +27,13 @@ import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserProfile
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
-import com.smarttrainner.core.model.WeeklyPlan
-import com.smarttrainner.core.model.WeeklySummary
+import com.smarttrainner.core.model.CyclePlan
+import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
-import com.smarttrainner.feature.analysis.domain.WeeklySummaryCalculator
-import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
+import com.smarttrainner.feature.analysis.domain.CycleSummaryCalculator
+import com.smarttrainner.feature.analysis.domain.CycleSummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
@@ -151,14 +151,14 @@ private fun ProfileSetup.toUserProfile(): UserProfile =
 
 internal class InMemoryTrainingRepository :
     ExerciseRepository,
-    WeeklyPlanRepository,
+    CyclePlanRepository,
     RoutinePlanCatalogRepository,
     RoutineProgressRepository,
     RoutinePlanCommandRepository,
     RoutineProgressCommandRepository,
     WorkoutRecordingRepository,
     WorkoutLogRepository,
-    WeeklySummaryRepository {
+    CycleSummaryRepository {
     private val exercises = MutableStateFlow(SeedTrainingContent.exercises)
     private val exerciseById = SeedTrainingContent.exercises.associateBy { it.id }
     private val systemTemplates = SeedTrainingContent.templates
@@ -166,7 +166,7 @@ internal class InMemoryTrainingRepository :
     private val customTemplates = MutableStateFlow<List<PlanTemplate>>(emptyList())
     private val progress = MutableStateFlow(defaultProgress())
     private val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
-    private val summaryCalculator = WeeklySummaryCalculator()
+    private val summaryCalculator = CycleSummaryCalculator()
 
     fun reset() {
         selectedTemplateId.value = DEFAULT_TEMPLATE_ID
@@ -175,19 +175,23 @@ internal class InMemoryTrainingRepository :
         logs.value = emptyList()
     }
 
+    fun routineDayDatesForTest(): Map<String, LocalDate> = progress.value.routineDayDates
+
+    fun workoutLogsForTest(): List<WorkoutLog> = logs.value
+
+    fun progressForTest(): RoutineProgress = progress.value
+
     override fun observeExercises(): Flow<List<Exercise>> = exercises
 
     override fun observePlanTemplates(): Flow<List<PlanTemplate>> =
         customTemplates.map { custom -> systemTemplates + custom }
 
-    override fun observeCurrentWeeklyPlan(weekStartDate: LocalDate): Flow<WeeklyPlan> =
+    override fun observeCurrentCyclePlan(cycleStartDate: LocalDate): Flow<CyclePlan> =
         combine(selectedTemplateId, customTemplates) { templateId, custom ->
-            buildWeeklyPlan(templateById(templateId, custom), weekStartDate)
+            buildCyclePlan(templateById(templateId, custom), cycleStartDate)
         }
 
     override fun observeRoutineProgress(): Flow<RoutineProgress> = progress
-
-    override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = logs
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs.map { currentLogs ->
         currentLogs
@@ -199,19 +203,12 @@ internal class InMemoryTrainingRepository :
         currentLogs.sortedByDescending { it.performedAt }
     }
 
-    override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> =
-        combine(observeCurrentWeeklyPlan(weekStartDate), logs) { plan, logs ->
-            summaryCalculator.calculate(weekStartDate, plan, logs)
-        }
-
     override fun observeCycleSummary(
-        weekStartDate: LocalDate,
         progress: RoutineProgress,
         zone: ZoneId
-    ): Flow<WeeklySummary> =
-        combine(observeCurrentWeeklyPlan(weekStartDate), logs) { plan, logs ->
-            summaryCalculator.calculateCycle(
-                weekStartDate = weekStartDate,
+    ): Flow<CycleSummary> =
+        combine(observeCurrentCyclePlan(progress.cycleStartDate(zone)), logs) { plan, logs ->
+            summaryCalculator.calculate(
                 plan = plan,
                 logs = logs,
                 progress = progress,
@@ -371,7 +368,7 @@ internal class InMemoryTrainingRepository :
             id = routineId,
             name = name,
             level = PlanLevel.INTERMEDIATE,
-            daysPerWeek = days.size,
+            cycleLength = days.size,
             description = description,
             days = days.mapIndexed { dayIndex, day ->
                 PlanTemplateDay(
@@ -400,20 +397,23 @@ internal class InMemoryTrainingRepository :
                     minRecoveryHours = day.minRecoveryHours
                 )
             },
-            cycleLength = days.size,
             focusSummary = days.mapNotNull { it.primaryFocus }.distinct(),
             source = RoutineSource.CUSTOM
         )
     }
 
-    private fun buildWeeklyPlan(template: PlanTemplate, weekStartDate: LocalDate): WeeklyPlan =
-        WeeklyPlan(
-            id = PlanId("${template.id}_$weekStartDate"),
+    private fun RoutineProgress.cycleStartDate(zone: ZoneId): LocalDate =
+        (cycleStartedAt ?: startedAt)?.atZone(zone)?.toLocalDate()
+            ?: LocalDate.now(zone)
+
+    private fun buildCyclePlan(template: PlanTemplate, cycleStartDate: LocalDate): CyclePlan =
+        CyclePlan(
+            id = PlanId("${template.id}_$cycleStartDate"),
             templateId = template.id,
             name = template.name,
-            weekStartDate = weekStartDate,
+            cycleStartDate = cycleStartDate,
             days = template.days.map { day ->
-                val date = weekStartDate.plusDays(day.dayOffset.toLong())
+                val date = cycleStartDate.plusDays(day.dayOffset.toLong())
                 com.smarttrainner.core.model.WorkoutDayPlan(
                     date = date,
                     title = day.title,

@@ -9,21 +9,21 @@ class TrainingSeedStoreTest {
     private val store = TrainingSeedStore()
 
     @Test
-    fun buildWeeklyPlanKeepsSystemPlannedExerciseIdsStable() {
+    fun buildCyclePlanKeepsSystemPlannedExerciseIdsStable() {
         val template = store.templates.first { it.source == RoutineSource.SYSTEM }
-        val weekStartDate = LocalDate.parse("2026-05-25")
-        val plan = store.buildWeeklyPlan(template, weekStartDate)
+        val cycleStartDate = LocalDate.parse("2026-05-25")
+        val plan = store.buildCyclePlan(template, cycleStartDate)
         val firstTemplateDay = template.days.first()
         val firstTemplateExercise = firstTemplateDay.exercises.first()
         val firstPlannedExercise = plan.days.first().exercises.first()
 
-        assertThat(plan.id.value).isEqualTo("${template.id}_$weekStartDate")
+        assertThat(plan.id.value).isEqualTo("${template.id}_$cycleStartDate")
         assertThat(firstPlannedExercise.id.value)
-            .isEqualTo("${weekStartDate}_${firstTemplateExercise.exerciseId.value}")
+            .isEqualTo("${cycleStartDate}_${firstTemplateExercise.exerciseId.value}")
     }
 
     @Test
-    fun buildWeeklyPlanKeepsCustomPlannedExerciseIdsStable() {
+    fun buildCyclePlanKeepsCustomPlannedExerciseIdsStable() {
         val systemTemplate = store.templates.first { it.days.isNotEmpty() }
         val customDay = systemTemplate.days.first().copy(
             dayOffset = 2,
@@ -35,9 +35,9 @@ class TrainingSeedStoreTest {
             days = listOf(customDay),
             source = RoutineSource.CUSTOM
         )
-        val weekStartDate = LocalDate.parse("2026-05-25")
-        val plan = store.buildWeeklyPlan(customTemplate, weekStartDate)
-        val plannedDate = weekStartDate.plusDays(customDay.dayOffset.toLong())
+        val cycleStartDate = LocalDate.parse("2026-05-25")
+        val plan = store.buildCyclePlan(customTemplate, cycleStartDate)
+        val plannedDate = cycleStartDate.plusDays(customDay.dayOffset.toLong())
         val exerciseId = customDay.exercises.first().exerciseId.value
 
         assertThat(plan.days.single().exercises.single().id.value)

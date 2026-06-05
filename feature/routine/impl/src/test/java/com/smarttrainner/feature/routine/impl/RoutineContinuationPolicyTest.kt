@@ -11,7 +11,7 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineProgress
-import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import java.time.LocalDate
 import org.junit.Test
@@ -23,7 +23,7 @@ class RoutineContinuationPolicyTest {
         val skippedCompleted = plannedExercise("back_row")
         val next = plannedExercise("lat_pulldown")
         val state = RoutineUiState(
-            plan = weeklyPlan(
+            plan = cyclePlan(
                 WorkoutDayPlan(
                     date = LocalDate.of(2026, 5, 18),
                     title = "Day 1",
@@ -46,7 +46,7 @@ class RoutineContinuationPolicyTest {
         val current = plannedExercise("back_pull")
         val nextDayExercise = plannedExercise("leg_press")
         val state = RoutineUiState(
-            plan = weeklyPlan(
+            plan = cyclePlan(
                 WorkoutDayPlan(
                     date = LocalDate.of(2026, 5, 18),
                     title = "Day 1",
@@ -77,7 +77,7 @@ class RoutineContinuationPolicyTest {
     fun recordablePlannedExerciseFor_returnsNullWhenCustomBuilderIsVisible() {
         val planned = plannedExercise("back_pull")
         val state = RoutineUiState(
-            plan = weeklyPlan(
+            plan = cyclePlan(
                 WorkoutDayPlan(
                     date = LocalDate.of(2026, 5, 18),
                     title = "Day 1",
@@ -109,7 +109,7 @@ class RoutineContinuationPolicyTest {
             minRecoveryHours = 24
         )
         val state = RoutineUiState(
-            plan = weeklyPlan(day),
+            plan = cyclePlan(day),
             nextRoutineDayUi = day.toNextRoutineDayUiModel(
                 template = null,
                 dayIndex = 0,
@@ -137,7 +137,7 @@ class RoutineContinuationPolicyTest {
             minRecoveryHours = 24
         )
         val state = RoutineUiState(
-            plan = weeklyPlan(day),
+            plan = cyclePlan(day),
             nextRoutineDayUi = day.toNextRoutineDayUiModel(
                 template = null,
                 dayIndex = 0,
@@ -157,7 +157,7 @@ class RoutineContinuationPolicyTest {
         val completed = plannedExercise("back_pull")
         val current = plannedExercise("chest_press")
         val state = RoutineUiState(
-            plan = weeklyPlan(
+            plan = cyclePlan(
                 WorkoutDayPlan(
                     date = LocalDate.of(2026, 5, 18),
                     title = "Day 1",
@@ -194,11 +194,11 @@ class RoutineContinuationPolicyTest {
     }
 }
 
-private fun weeklyPlan(vararg days: WorkoutDayPlan) = WeeklyPlan(
+private fun cyclePlan(vararg days: WorkoutDayPlan) = CyclePlan(
     id = PlanId("plan"),
     templateId = "template",
     name = "Template",
-    weekStartDate = LocalDate.of(2026, 5, 18),
+    cycleStartDate = LocalDate.of(2026, 5, 18),
     days = days.toList()
 )
 

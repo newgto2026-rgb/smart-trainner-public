@@ -9,7 +9,7 @@ import com.smarttrainner.core.model.estimatedSessionMinutes
 
 internal data class RoutineRecommendationFilterAvailability(
     val experiences: Set<TrainingExperience> = TrainingExperience.entries.toSet(),
-    val daysPerWeek: Set<Int> = SUPPORTED_DAYS_PER_WEEK.toSet(),
+    val cycleLength: Set<Int> = SUPPORTED_CYCLE_LENGTHS.toSet(),
     val sessionMinutes: Set<Int> = SUPPORTED_SESSION_MINUTES.toSet(),
     val feelings: Set<RoutineFeeling> = SUPPORTED_ROUTINE_FEELINGS.toSet()
 )
@@ -32,11 +32,11 @@ internal fun RoutineRecommendationFormState.availableFilterOptions(
             systemTemplates.any { it.recommendedExperience == experience }
         }
         .toSet()
-    val enabledDays = SUPPORTED_DAYS_PER_WEEK
+    val enabledDays = SUPPORTED_CYCLE_LENGTHS
         .filter { days ->
             systemTemplates.any {
                 it.recommendedExperience == experience &&
-                    it.daysPerWeek == days &&
+                    it.cycleLength == days &&
                     it.matchesDirection(feeling)
             }
         }
@@ -45,7 +45,7 @@ internal fun RoutineRecommendationFormState.availableFilterOptions(
         .filter { minutes ->
             systemTemplates.any {
                 it.recommendedExperience == experience &&
-                    it.daysPerWeek == daysPerWeek &&
+                    it.cycleLength == cycleLength &&
                     it.sessionMinutes == minutes &&
                     it.matchesDirection(feeling) &&
                     it.isWithinSessionTolerance(minutes)
@@ -56,7 +56,7 @@ internal fun RoutineRecommendationFormState.availableFilterOptions(
         .filter { routineFeeling ->
             systemTemplates.any {
                 it.recommendedExperience == experience &&
-                    it.daysPerWeek == daysPerWeek &&
+                    it.cycleLength == cycleLength &&
                     it.sessionMinutes == sessionMinutes &&
                     it.matchesDirection(routineFeeling) &&
                     it.isWithinSessionTolerance(sessionMinutes)
@@ -66,7 +66,7 @@ internal fun RoutineRecommendationFormState.availableFilterOptions(
 
     return RoutineRecommendationFilterAvailability(
         experiences = enabledExperiences,
-        daysPerWeek = enabledDays,
+        cycleLength = enabledDays,
         sessionMinutes = enabledSessionMinutes,
         feelings = enabledFeelings
     )
@@ -99,11 +99,11 @@ internal fun RoutineRecommendationFormState.normalizedFor(
         ?: feeling
     val directionForm = experienceForm.copy(feeling = nextInitialFeeling)
 
-    val enabledDays = directionForm.availableFilterOptions(templates).daysPerWeek
-    val nextDays = daysPerWeek.takeIf { it in enabledDays }
-        ?: enabledDays.nearestTo(daysPerWeek)
-        ?: daysPerWeek
-    val daysForm = directionForm.copy(daysPerWeek = nextDays)
+    val enabledDays = directionForm.availableFilterOptions(templates).cycleLength
+    val nextDays = cycleLength.takeIf { it in enabledDays }
+        ?: enabledDays.nearestTo(cycleLength)
+        ?: cycleLength
+    val daysForm = directionForm.copy(cycleLength = nextDays)
 
     val enabledSessionMinutes = daysForm.availableFilterOptions(templates).sessionMinutes
     val nextSessionMinutes = sessionMinutes.takeIf { it in enabledSessionMinutes }
@@ -135,7 +135,7 @@ private fun PlanTemplate.matchesDirection(feeling: RoutineFeeling): Boolean = wh
 private fun PlanTemplate.isWithinSessionTolerance(sessionMinutes: Int): Boolean =
     kotlin.math.abs(estimatedSessionMinutes - sessionMinutes) <= SESSION_TOLERANCE_MINUTES
 
-private val SUPPORTED_DAYS_PER_WEEK = 2..5
+private val SUPPORTED_CYCLE_LENGTHS = 2..5
 private val SUPPORTED_SESSION_MINUTES = listOf(30, 45, 60)
 private val SUPPORTED_ROUTINE_FEELINGS = listOf(
     RoutineFeeling.APP_RECOMMENDED,

@@ -30,7 +30,7 @@ internal data class WorkoutRecordingUiState(
     val recordingPlannedExercise: PlannedExercise? = null,
     val showRoutineSessionActions: Boolean = false,
     val hasNextPlannedExercise: Boolean = false,
-    val weeklyLogs: List<WorkoutLog> = emptyList(),
+    val cycleLogs: List<WorkoutLog> = emptyList(),
     val latestWorkoutLogs: List<WorkoutLog> = emptyList(),
     val recordForm: RecordFormState = RecordFormState(),
     val formError: RecordFormError? = null,

@@ -253,7 +253,7 @@ object SeedTrainingContent {
             id = "beginner-full-body-2day",
             name = "초보자 전신 2일 루틴",
             level = PlanLevel.INTRO,
-            daysPerWeek = 2,
+            cycleLength = 2,
             description = "기구 사용이 낯선 사용자가 요일에 묶이지 않고 전신 A/B를 이어가는 보수적 루틴입니다.",
             days = listOf(
                 day(
@@ -290,7 +290,7 @@ object SeedTrainingContent {
             id = "beginner-full-body-3day",
             name = "초보자 전신 3일 루틴",
             level = PlanLevel.BEGINNER,
-            daysPerWeek = 3,
+            cycleLength = 3,
             description = "전신 주요 근육을 반복해서 익히면서 과한 피로를 피하는 기본 루틴입니다.",
             days = listOf(
                 day(
@@ -356,7 +356,7 @@ object SeedTrainingContent {
             id = "intermediate-balanced-4day",
             name = "균형 분할 4일 루틴",
             level = PlanLevel.INTERMEDIATE,
-            daysPerWeek = 4,
+            cycleLength = 4,
             description = "상체/하체를 번갈아 나누어 빈도와 회복 균형을 유지하는 루틴입니다.",
             days = listOf(
                 day(
@@ -437,7 +437,7 @@ object SeedTrainingContent {
             id = "intermediate-body-part-4day-30",
             name = "부위 집중 4일 30분 루틴",
             level = PlanLevel.INTERMEDIATE,
-            daysPerWeek = 4,
+            cycleLength = 4,
             description = "핵심 운동 4개로 등(당기기), 가슴(밀기), 하체, 어깨+팔 집중감을 짧게 이어가는 루틴입니다.",
             days = listOf(
                 day(
@@ -507,7 +507,7 @@ object SeedTrainingContent {
             id = "intermediate-body-part-4day",
             name = "부위 집중 4일 루틴",
             level = PlanLevel.INTERMEDIATE,
-            daysPerWeek = 4,
+            cycleLength = 4,
             description = "등(당기기), 가슴(밀기), 하체, 어깨+팔을 하루씩 집중하되 이두와 삼두를 명확히 노출하는 루틴입니다.",
             days = listOf(
                 day(
@@ -581,7 +581,7 @@ object SeedTrainingContent {
             id = "intermediate-body-part-4day-60",
             name = "부위 집중 4일 60분 루틴",
             level = PlanLevel.INTERMEDIATE,
-            daysPerWeek = 4,
+            cycleLength = 4,
             description = "등(당기기)과 가슴(밀기)을 포함해 집중 부위를 5개 안팎의 핵심·보조 운동으로 채우는 60분 루틴입니다.",
             days = listOf(
                 day(
@@ -666,7 +666,7 @@ object SeedTrainingContent {
             id = "intermediate-body-part-5day",
             name = "부위 집중 5일 루틴",
             level = PlanLevel.INTERMEDIATE,
-            daysPerWeek = 5,
+            cycleLength = 5,
             description = "가슴(밀기), 등(당기기), 하체, 어깨, 팔+유산소를 분리하되 이두와 삼두를 명확히 나누는 루틴입니다.",
             days = listOf(
                 day(
@@ -769,22 +769,22 @@ object SeedTrainingContent {
 
     private val generatedCoverageTemplates: List<PlanTemplate> by lazy {
         TrainingExperience.entries.flatMap { experience ->
-            SUPPORTED_DAYS_PER_WEEK.flatMap { daysPerWeek ->
+            SUPPORTED_CYCLE_LENGTHS.flatMap { cycleLength ->
                 allowedSessionMinutes(
                     experience = experience,
-                    daysPerWeek = daysPerWeek
+                    cycleLength = cycleLength
                 ).flatMap { sessionMinutes ->
                     listOf(
                         generatedTemplate(
                             experience = experience,
                             structure = RoutineStructure.FULL_BODY,
-                            daysPerWeek = daysPerWeek,
+                            cycleLength = cycleLength,
                             sessionMinutes = sessionMinutes
                         ),
                         generatedTemplate(
                             experience = experience,
                             structure = RoutineStructure.BODY_PART_SPLIT,
-                            daysPerWeek = daysPerWeek,
+                            cycleLength = cycleLength,
                             sessionMinutes = sessionMinutes
                         )
                     )
@@ -795,18 +795,18 @@ object SeedTrainingContent {
 
     private fun allowedSessionMinutes(
         experience: TrainingExperience,
-        daysPerWeek: Int
+        cycleLength: Int
     ): List<Int> = when (experience) {
-        TrainingExperience.BEGINNER -> when (daysPerWeek) {
+        TrainingExperience.BEGINNER -> when (cycleLength) {
             2, 3 -> listOf(30, 45, 60)
             else -> listOf(30, 45)
         }
-        TrainingExperience.INTERMEDIATE -> when (daysPerWeek) {
+        TrainingExperience.INTERMEDIATE -> when (cycleLength) {
             2 -> listOf(45, 60)
             3, 4 -> listOf(30, 45, 60)
             else -> listOf(30, 45, 60)
         }
-        TrainingExperience.ADVANCED -> when (daysPerWeek) {
+        TrainingExperience.ADVANCED -> when (cycleLength) {
             2 -> listOf(45, 60)
             else -> listOf(45, 60)
         }
@@ -815,7 +815,7 @@ object SeedTrainingContent {
     private fun generatedTemplate(
         experience: TrainingExperience,
         structure: RoutineStructure,
-        daysPerWeek: Int,
+        cycleLength: Int,
         sessionMinutes: Int
     ): PlanTemplate {
         val structureLabel = when (structure) {
@@ -826,24 +826,23 @@ object SeedTrainingContent {
         val id = listOf(
             experience.slug,
             structure.slug,
-            "${daysPerWeek}day",
+            "${cycleLength}day",
             "${sessionMinutes}m"
         ).joinToString("-")
         return PlanTemplate(
             id = id,
-            name = "${experience.label} $structureLabel ${daysPerWeek}일 ${sessionMinutes}분 루틴",
+            name = "${experience.label} $structureLabel ${cycleLength}일 ${sessionMinutes}분 루틴",
             level = experience.planLevel,
-            daysPerWeek = daysPerWeek,
-            description = "${experience.label} 사용자가 주 ${daysPerWeek}회, 회당 ${sessionMinutes}분 안에서 수행하도록 구성한 $structureLabel 루틴입니다.",
+            cycleLength = cycleLength,
+            description = "${experience.label} 사용자가 ${cycleLength}일 사이클로 회당 ${sessionMinutes}분 안에서 수행하도록 구성한 $structureLabel 루틴입니다.",
             days = generatedDays(
                 experience = experience,
                 structure = structure,
-                daysPerWeek = daysPerWeek,
+                cycleLength = cycleLength,
                 sessionMinutes = sessionMinutes
             ),
             structure = structure,
             recommendedExperience = experience,
-            cycleLength = daysPerWeek,
             sessionMinutes = sessionMinutes,
             focusSummary = if (structure == RoutineStructure.FULL_BODY) {
                 listOf(RoutineFocus.FULL_BODY)
@@ -856,15 +855,15 @@ object SeedTrainingContent {
     private fun generatedDays(
         experience: TrainingExperience,
         structure: RoutineStructure,
-        daysPerWeek: Int,
+        cycleLength: Int,
         sessionMinutes: Int
     ): List<PlanTemplateDay> {
         val seeds = when (structure) {
             RoutineStructure.FULL_BODY -> fullBodyDaySeeds(experience)
             RoutineStructure.BALANCED_SPLIT -> fullBodyDaySeeds(experience)
-            RoutineStructure.BODY_PART_SPLIT -> bodyPartDaySeeds(experience, daysPerWeek)
+            RoutineStructure.BODY_PART_SPLIT -> bodyPartDaySeeds(experience, cycleLength)
         }
-        return seeds.take(daysPerWeek).mapIndexed { index, seed ->
+        return seeds.take(cycleLength).mapIndexed { index, seed ->
             timedDay(
                 dayOffset = index,
                 seed = seed,
@@ -1173,10 +1172,10 @@ object SeedTrainingContent {
 
     private fun bodyPartDaySeeds(
         experience: TrainingExperience,
-        daysPerWeek: Int
+        cycleLength: Int
     ): List<RoutineDaySeed> {
         val library = bodyPartLibrary(experience)
-        return when (daysPerWeek) {
+        return when (cycleLength) {
             2 -> listOf(library.upper, library.lower)
             3 -> listOf(library.push, library.pull, library.lower)
             4 -> listOf(library.back, library.chest, library.lower, library.shouldersArms)
@@ -1730,7 +1729,7 @@ object SeedTrainingContent {
         RoutineFocus.PULL
     )
 
-    private val SUPPORTED_DAYS_PER_WEEK = 2..5
+    private val SUPPORTED_CYCLE_LENGTHS = 2..5
     private const val SECONDS_PER_MINUTE = 60
     private const val SESSION_TARGET_TOLERANCE_SECONDS = 10 * SECONDS_PER_MINUTE
 
@@ -1931,7 +1930,7 @@ object SeedTrainingContent {
                 durationMinutes = exercise.defaultDurationMinutes,
                 restSeconds = exercise.restSeconds,
                 note = if (exercise.difficulty == DifficultyLevel.BEGINNER) {
-                    "자세가 안정되면 다음 주에 1-2회만 늘려보세요."
+                    "자세가 안정되면 다음 운동 때 1-2회만 늘려보세요."
                 } else {
                     "RPE 7-8 안에서 자세가 무너지지 않는 선까지만 진행하세요."
                 },

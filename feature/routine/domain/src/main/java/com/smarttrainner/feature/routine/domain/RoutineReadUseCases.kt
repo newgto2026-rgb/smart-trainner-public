@@ -1,13 +1,13 @@
 package com.smarttrainner.feature.routine.domain
 
-import com.smarttrainner.core.domain.WeeklyPlanRepository
+import com.smarttrainner.core.domain.CyclePlanRepository
 import java.time.LocalDate
 import javax.inject.Inject
 
-class ObserveCurrentWeeklyPlanUseCase @Inject constructor(
-    private val repository: WeeklyPlanRepository
+class ObserveCurrentCyclePlanUseCase @Inject constructor(
+    private val repository: CyclePlanRepository
 ) {
-    operator fun invoke(weekStartDate: LocalDate) = repository.observeCurrentWeeklyPlan(weekStartDate)
+    operator fun invoke(cycleStartDate: LocalDate) = repository.observeCurrentCyclePlan(cycleStartDate)
 }
 
 class ObservePlanTemplatesUseCase @Inject constructor(

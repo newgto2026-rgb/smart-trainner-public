@@ -152,6 +152,7 @@ internal fun NextRoutineDayCard(
                         routineDay.cycleNumber,
                         routineDay.dayNumber
                     ),
+                    modifier = Modifier.testTag("training_next_routine_cycle_day"),
                     color = SmartTrainnerColors.Coral,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold

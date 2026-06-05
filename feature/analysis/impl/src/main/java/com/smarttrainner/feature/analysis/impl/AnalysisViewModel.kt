@@ -2,21 +2,17 @@ package com.smarttrainner.feature.analysis.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.feature.analysis.domain.ObserveCycleSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
@@ -28,13 +24,11 @@ class AnalysisViewModel @Inject constructor(
     observeRoutineProgress: ObserveRoutineProgressUseCase,
     clock: Clock
 ) : ViewModel() {
-    internal val uiState = flow {
-        emit(LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)))
-    }.flatMapLatest { weekStart ->
-        observeRoutineProgress().flatMapLatest { progress ->
+    internal val uiState = observeRoutineProgress()
+        .flatMapLatest { progress ->
             combine(
                 observeAllWorkoutLogs(),
-                observeCycleSummary(weekStart, progress, clock.zone),
+                observeCycleSummary(progress, clock.zone),
                 observeExercises()
             ) { logs, summary, exercises ->
                 val exercisesById = exercises.associateBy { it.id }
@@ -51,10 +45,9 @@ class AnalysisViewModel @Inject constructor(
                     cycleNumber = progress.cycleNumber
                 )
             }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = AnalysisUiState()
-    )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AnalysisUiState()
+        )
 }

@@ -155,7 +155,7 @@ internal fun Long.toUtcLocalDate(): LocalDate =
 internal fun RoutineRecommendationControls(
     form: RoutineRecommendationFormState,
     availability: RoutineRecommendationFilterAvailability,
-    onDaysPerWeekChanged: (Int) -> Unit,
+    onCycleLengthChanged: (Int) -> Unit,
     onSessionMinutesChanged: (Int) -> Unit,
     onExperienceChanged: (TrainingExperience) -> Unit,
     onFeelingChanged: (RoutineFeeling) -> Unit
@@ -166,12 +166,12 @@ internal fun RoutineRecommendationControls(
             options = listOf(2, 3, 4, 5).map {
                 RoutineFilterOption(
                     value = it,
-                    label = stringResource(R.string.routine_days_per_week_option, it),
-                    enabled = it in availability.daysPerWeek
+                    label = stringResource(R.string.routine_cycle_length_option, it),
+                    enabled = it in availability.cycleLength
                 )
             },
-            selected = form.daysPerWeek,
-            onSelected = onDaysPerWeekChanged
+            selected = form.cycleLength,
+            onSelected = onCycleLengthChanged
         )
         RoutineOptionRow(
             label = stringResource(R.string.routine_routine_minutes_question),
@@ -399,7 +399,7 @@ internal fun RoutineLibraryDialog(
 internal fun RoutineSettingsDialog(
     form: RoutineRecommendationFormState,
     availability: RoutineRecommendationFilterAvailability,
-    onDaysPerWeekChanged: (Int) -> Unit,
+    onCycleLengthChanged: (Int) -> Unit,
     onSessionMinutesChanged: (Int) -> Unit,
     onExperienceChanged: (TrainingExperience) -> Unit,
     onFeelingChanged: (RoutineFeeling) -> Unit,
@@ -443,7 +443,7 @@ internal fun RoutineSettingsDialog(
                     RoutineRecommendationControls(
                         form = form,
                         availability = availability,
-                        onDaysPerWeekChanged = onDaysPerWeekChanged,
+                        onCycleLengthChanged = onCycleLengthChanged,
                         onSessionMinutesChanged = onSessionMinutesChanged,
                         onExperienceChanged = onExperienceChanged,
                         onFeelingChanged = onFeelingChanged
@@ -599,7 +599,9 @@ internal fun RoutineCancelLatestDayDialog(
                 ) {
                     OutlinedButton(
                         onClick = onDismissRequest,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("training_keep_latest_day_completion"),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(stringResource(R.string.routine_keep_day_completion))
@@ -778,7 +780,7 @@ internal fun RoutineRecommendationsDialog(
                 Text(
                     text = stringResource(
                         R.string.routine_routine_recommendations_body,
-                        state.routineRecommendationInput.daysPerWeek,
+                        state.routineRecommendationInput.cycleLength,
                         state.routineRecommendationInput.sessionMinutes
                     ),
                     color = SmartTrainnerColors.Muted,
@@ -1041,7 +1043,7 @@ internal fun RoutineTemplateBadgeRow(template: PlanTemplate) {
                 contentColor = SmartTrainnerColors.Ink
             ),
             SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.routine_days_per_week_option, template.daysPerWeek),
+                text = stringResource(R.string.routine_cycle_length_option, template.cycleLength),
                 icon = Icons.Default.DateRange,
                 containerColor = SmartTrainnerColors.GreenSoft,
                 contentColor = SmartTrainnerColors.Ink
