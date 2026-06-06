@@ -3,7 +3,7 @@ package com.smarttrainner.feature.routine.impl
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
-import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.estimatedSessionMinutes
 import com.smarttrainner.feature.routine.domain.routineDayInstanceId
 import java.time.LocalDate
@@ -53,20 +53,20 @@ internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel
     )
 }
 
-fun WeeklyPlan.findPlannedExercise(id: PlannedExerciseId?): PlannedExercise? {
+fun CyclePlan.findPlannedExercise(id: PlannedExerciseId?): PlannedExercise? {
     if (id == null) return null
     return days.asSequence()
         .flatMap { it.exercises.asSequence() }
         .firstOrNull { it.id == id }
 }
 
-fun WeeklyPlan.firstIncomplete(completedIds: Set<PlannedExerciseId>): PlannedExercise? =
+fun CyclePlan.firstIncomplete(completedIds: Set<PlannedExerciseId>): PlannedExercise? =
     days.asSequence()
         .flatMap { it.exercises.asSequence() }
         .firstOrNull { it.id !in completedIds }
         ?: days.firstOrNull()?.exercises?.firstOrNull()
 
-fun WeeklyPlan.nextIncompleteInSameDay(
+fun CyclePlan.nextIncompleteInSameDay(
     currentId: PlannedExerciseId,
     completedIds: Set<PlannedExerciseId>
 ): PlannedExercise? {

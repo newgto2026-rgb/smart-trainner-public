@@ -1,11 +1,8 @@
 package com.smarttrainner.app.training
 
-import android.content.Context
-import android.content.ContextWrapper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,7 +17,7 @@ internal fun TrainingRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     routineSessionCoordinator: RoutineSessionCoordinator,
-    viewModel: TrainingViewModel = sharedTrainingViewModel(),
+    viewModel: TrainingViewModel,
     routineDialogs: @Composable () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -44,7 +41,7 @@ internal fun TrainingRoute(
             if (
                 savedResult.wasContinuous &&
                 nextPlannedExercise == null &&
-                !planned.id.value.startsWith("routine-added|")
+                !routineSessionCoordinator.isAdditionalRoutineExercise(planned)
             ) {
                 routineSessionCoordinator.requestCompleteRoutineDay(
                     skippedPlannedExerciseIds = skippedIds,
@@ -76,21 +73,8 @@ internal fun TrainingRoute(
 }
 
 @Composable
-internal fun sharedTrainingViewModel(): TrainingViewModel {
-    val context = LocalContext.current
-    val sharedOwner = remember(context) { context.findViewModelStoreOwner() }
-    return if (sharedOwner != null) {
-        hiltViewModel(sharedOwner)
-    } else {
-        hiltViewModel()
-    }
-}
-
-private tailrec fun Context.findViewModelStoreOwner(): ViewModelStoreOwner? = when (this) {
-    is ViewModelStoreOwner -> this
-    is ContextWrapper -> baseContext.findViewModelStoreOwner()
-    else -> null
-}
+internal fun sharedTrainingViewModel(viewModelStoreOwner: ViewModelStoreOwner): TrainingViewModel =
+    hiltViewModel(viewModelStoreOwner)
 
 @Composable
 private fun TrainingScreen(

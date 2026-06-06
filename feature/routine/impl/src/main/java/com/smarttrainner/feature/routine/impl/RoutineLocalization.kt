@@ -36,7 +36,7 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TrainingExperience
-import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.model.toRecommendedDisplayRepRange
@@ -45,7 +45,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-internal fun LocalDate.dayOfWeekShort(): String =
+internal fun LocalDate.dayNameShortLabel(): String =
     dayOfWeek.getDisplayName(TextStyle.SHORT, currentLocale())
 
 @Composable
@@ -165,7 +165,7 @@ internal fun List<WorkoutLog>.latestForExercise(exerciseId: ExerciseId): Workout
     filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
 
 @Composable
-internal fun WeeklyPlan.localizedName(): String =
+internal fun CyclePlan.localizedName(): String =
     routineTemplateNameResource(templateId)?.let { stringResource(it) } ?: name
 
 @Composable
@@ -361,7 +361,7 @@ internal fun PlanTemplate.localizedMeta(): String =
         stringResource(
             R.string.routine_template_meta,
             level.localizedLabel(),
-            daysPerWeek,
+            cycleLength,
             sessionMinutes
         )
     }

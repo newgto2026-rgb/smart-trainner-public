@@ -2,6 +2,7 @@ package com.smarttrainner.app.training
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttrainner.R
@@ -16,11 +17,13 @@ import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 fun TrainingHomeRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
-    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
+    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
+    viewModelStoreOwner: ViewModelStoreOwner
 ) {
-    val viewModel = sharedTrainingViewModel()
+    val viewModel = sharedTrainingViewModel(viewModelStoreOwner)
     val routineRouteState = rememberRoutineRouteState(
         routineFeatureEntry = routineFeatureEntry,
+        viewModelStoreOwner = viewModelStoreOwner,
         viewModel = viewModel
     )
     val routeChrome = trainingRouteChrome(routineRouteState)
@@ -44,12 +47,14 @@ fun TrainingRoutineRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
+    viewModelStoreOwner: ViewModelStoreOwner,
     routineLibraryOpenRequest: Int = 0,
     onRoutineLibraryOpenRequestConsumed: (Int) -> Unit = {}
 ) {
-    val viewModel = sharedTrainingViewModel()
+    val viewModel = sharedTrainingViewModel(viewModelStoreOwner)
     val routineRouteState = rememberRoutineRouteState(
         routineFeatureEntry = routineFeatureEntry,
+        viewModelStoreOwner = viewModelStoreOwner,
         viewModel = viewModel,
         routineLibraryOpenRequest = routineLibraryOpenRequest,
         onRoutineLibraryOpenRequestConsumed = onRoutineLibraryOpenRequestConsumed
@@ -75,12 +80,14 @@ fun TrainingExercisesRoute(
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
-    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry
+    workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
+    viewModelStoreOwner: ViewModelStoreOwner
 ) {
-    val viewModel = sharedTrainingViewModel()
+    val viewModel = sharedTrainingViewModel(viewModelStoreOwner)
     val trainingState by viewModel.uiState.collectAsStateWithLifecycle()
     val routineRouteState = rememberRoutineRouteState(
         routineFeatureEntry = routineFeatureEntry,
+        viewModelStoreOwner = viewModelStoreOwner,
         viewModel = viewModel
     )
     val routeChrome = trainingRouteChrome(routineRouteState)
@@ -115,10 +122,12 @@ private data class TrainingRouteChrome(
 @Composable
 private fun rememberRoutineRouteState(
     routineFeatureEntry: RoutineFeatureEntry,
+    viewModelStoreOwner: ViewModelStoreOwner,
     viewModel: TrainingViewModel,
     routineLibraryOpenRequest: Int = 0,
     onRoutineLibraryOpenRequestConsumed: (Int) -> Unit = {}
 ): RoutineRouteState = routineFeatureEntry.rememberRouteState(
+    viewModelStoreOwner = viewModelStoreOwner,
     callbacks = RoutineFeatureCallbacks(
         onWorkoutStarted = viewModel::startContinuousRecording,
         onRoutineDayCompleted = viewModel::clearRecordingFlow,

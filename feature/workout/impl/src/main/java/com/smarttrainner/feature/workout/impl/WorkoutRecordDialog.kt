@@ -132,6 +132,7 @@ internal fun WorkoutRecordDialog(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(4.dp)
+                        .testTag("training_close_record_dialog")
                 ) {
                     Icon(Icons.Default.Close, contentDescription = stringResource(R.string.workout_close_record))
                 }
@@ -150,7 +151,7 @@ private fun RecordForm(
     val showReps = planned.repRange != null
     val showDuration = planned.durationMinutes != null || !showReps
     val showWeight = showReps
-    val displayLog = state.weeklyLogs.firstOrNull { it.plannedExerciseId == planned.id }
+    val displayLog = state.cycleLogs.firstOrNull { it.plannedExerciseId == planned.id }
         ?: state.latestWorkoutLogs.latestForExercise(planned.exercise.id)
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(

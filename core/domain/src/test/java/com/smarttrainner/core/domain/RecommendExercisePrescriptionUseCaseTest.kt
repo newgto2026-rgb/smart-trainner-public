@@ -38,12 +38,29 @@ class RecommendExercisePrescriptionUseCaseTest {
         assertThat(useCase(cardio, TrainingExperience.INTERMEDIATE)).isEqualTo(expected)
         assertThat(useCase(cardio, TrainingExperience.ADVANCED)).isEqualTo(expected)
     }
+
+    @Test
+    fun durationExerciseRecommendationsUseFallbackAndClampSets() {
+        val cardio = exercise(
+            muscleGroup = MuscleGroup.CARDIO,
+            defaultRepRange = null,
+            defaultDurationMinutes = null,
+            defaultSets = 10
+        )
+
+        val result = useCase(cardio, TrainingExperience.BEGINNER)
+
+        assertThat(result).isEqualTo(
+            ExercisePrescription(sets = 6, repRange = null, durationMinutes = 10, restSeconds = 90)
+        )
+    }
 }
 
 private fun exercise(
     muscleGroup: MuscleGroup,
     defaultRepRange: IntRange? = 8..12,
-    defaultDurationMinutes: Int? = null
+    defaultDurationMinutes: Int? = null,
+    defaultSets: Int = 3
 ) = Exercise(
     id = ExerciseId("exercise"),
     name = "Exercise",
@@ -54,7 +71,7 @@ private fun exercise(
     summary = "",
     instructions = emptyList(),
     safetyCues = emptyList(),
-    defaultSets = 3,
+    defaultSets = defaultSets,
     defaultRepRange = defaultRepRange,
     defaultDurationMinutes = defaultDurationMinutes,
     restSeconds = 90

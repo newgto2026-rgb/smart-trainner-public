@@ -12,7 +12,7 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.TrainingExperience
-import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import java.time.LocalDate
@@ -26,7 +26,7 @@ internal enum class CustomRoutineFormError {
 }
 
 internal data class RoutineRecommendationFormState(
-    val daysPerWeek: Int = 4,
+    val cycleLength: Int = 4,
     val sessionMinutes: Int = 60,
     val experience: TrainingExperience = TrainingExperience.INTERMEDIATE,
     val feeling: RoutineFeeling = RoutineFeeling.APP_RECOMMENDED
@@ -34,19 +34,19 @@ internal data class RoutineRecommendationFormState(
     companion object {
         fun defaultFor(experience: TrainingExperience): RoutineRecommendationFormState = when (experience) {
             TrainingExperience.BEGINNER -> RoutineRecommendationFormState(
-                daysPerWeek = 3,
+                cycleLength = 3,
                 sessionMinutes = 45,
                 experience = experience,
                 feeling = RoutineFeeling.APP_RECOMMENDED
             )
             TrainingExperience.INTERMEDIATE -> RoutineRecommendationFormState(
-                daysPerWeek = 4,
+                cycleLength = 4,
                 sessionMinutes = 60,
                 experience = experience,
                 feeling = RoutineFeeling.APP_RECOMMENDED
             )
             TrainingExperience.ADVANCED -> RoutineRecommendationFormState(
-                daysPerWeek = 5,
+                cycleLength = 5,
                 sessionMinutes = 60,
                 experience = experience,
                 feeling = RoutineFeeling.FOCUSED_BODY_PART
@@ -160,7 +160,7 @@ internal data class RoutineUiState(
     val templates: List<PlanTemplate> = emptyList(),
     val selectedTemplateId: String = "",
     val today: LocalDate = LocalDate.ofEpochDay(0),
-    val plan: WeeklyPlan? = null,
+    val plan: CyclePlan? = null,
     val activeRoutineProgress: RoutineProgress? = null,
     val nextRoutineDay: WorkoutDayPlan? = null,
     val nextRoutineDayUi: NextRoutineDayUiModel? = null,
@@ -173,6 +173,7 @@ internal data class RoutineUiState(
     val recommendedTemplateId: String? = null,
     val alternativeTemplateIds: List<String> = emptyList(),
     val routinePreviewTemplateId: String? = null,
+    val routineSwitchConfirmTemplateId: String? = null,
     val showRoutineLibraryDialog: Boolean = false,
     val showRoutineSettingsDialog: Boolean = false,
     val showRoutineRecommendationsDialog: Boolean = false,
@@ -197,7 +198,9 @@ internal data class RoutineUiState(
 
 internal data class RoutineActions(
     val onTemplateSelected: (String) -> Unit = {},
-    val onDaysPerWeekChanged: (Int) -> Unit = {},
+    val onConfirmRoutineSwitch: () -> Unit = {},
+    val onDismissRoutineSwitch: () -> Unit = {},
+    val onCycleLengthChanged: (Int) -> Unit = {},
     val onSessionMinutesChanged: (Int) -> Unit = {},
     val onExperienceChanged: (TrainingExperience) -> Unit = {},
     val onFeelingChanged: (RoutineFeeling) -> Unit = {},

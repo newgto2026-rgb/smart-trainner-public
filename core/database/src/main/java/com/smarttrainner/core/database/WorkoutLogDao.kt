@@ -37,22 +37,16 @@ interface WorkoutLogDao {
     @Transaction
     @Query(
         """
-        SELECT * FROM workout_logs
-        WHERE sessionId = :sessionId
-        AND id IN (
-            SELECT (
-                SELECT latest.id FROM workout_logs AS latest
-                WHERE latest.sessionId = :sessionId
-                AND latest.exerciseId = grouped.exerciseId
-                ORDER BY latest.performedAt DESC, latest.id DESC
-                LIMIT 1
-            )
-            FROM (
-                SELECT DISTINCT exerciseId FROM workout_logs
-                WHERE sessionId = :sessionId
-            ) AS grouped
+        SELECT * FROM workout_logs AS wl
+        WHERE wl.sessionId = :sessionId
+        AND wl.id = (
+            SELECT id FROM workout_logs AS latest
+            WHERE latest.sessionId = :sessionId
+            AND latest.exerciseId = wl.exerciseId
+            ORDER BY latest.performedAt DESC, latest.id DESC
+            LIMIT 1
         )
-        ORDER BY performedAt DESC, id DESC
+        ORDER BY wl.performedAt DESC, wl.id DESC
         """
     )
     fun observeLatestByExerciseForSession(sessionId: String): Flow<List<WorkoutLogWithSets>>

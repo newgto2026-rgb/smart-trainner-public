@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -21,6 +22,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.smarttrainner.app.MainActivity
 import com.smarttrainner.app.di.AnalysisDataRepositoryBindingsModule
 import com.smarttrainner.app.di.CoreRepositoryBindingsModule
+import com.smarttrainner.app.di.PlatformTimeModule
 import com.smarttrainner.app.di.RoutineDataRepositoryBindingsModule
 import com.smarttrainner.app.di.WorkoutDataRepositoryBindingsModule
 import com.smarttrainner.core.domain.ExerciseRepository
@@ -28,12 +30,12 @@ import com.smarttrainner.core.domain.NetworkStatusRepository
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.TrainingDataSyncer
-import com.smarttrainner.core.domain.WeeklyPlanRepository
+import com.smarttrainner.core.domain.CyclePlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.ProfileGender
 import com.smarttrainner.core.model.ProfileSetup
 import com.smarttrainner.core.model.TrainingExperience
-import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
+import com.smarttrainner.feature.analysis.domain.CycleSummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
@@ -42,10 +44,18 @@ import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
+import java.time.Clock
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -55,6 +65,7 @@ import org.junit.runner.RunWith
 @UninstallModules(
     AnalysisDataRepositoryBindingsModule::class,
     CoreRepositoryBindingsModule::class,
+    PlatformTimeModule::class,
     RoutineDataRepositoryBindingsModule::class,
     WorkoutDataRepositoryBindingsModule::class
 )
@@ -74,7 +85,7 @@ class TrainingUiTest {
 
     @BindValue
     @JvmField
-    val weeklyPlanRepository: WeeklyPlanRepository = trainingRepository
+    val cyclePlanRepository: CyclePlanRepository = trainingRepository
 
     @BindValue
     @JvmField
@@ -102,7 +113,7 @@ class TrainingUiTest {
 
     @BindValue
     @JvmField
-    val weeklySummaryRepository: WeeklySummaryRepository = trainingRepository
+    val cycleSummaryRepository: CycleSummaryRepository = trainingRepository
 
     @BindValue
     @JvmField
@@ -117,6 +128,10 @@ class TrainingUiTest {
     @BindValue
     @JvmField
     val trainingDataSyncers: Set<@JvmSuppressWildcards TrainingDataSyncer> = emptySet()
+
+    @BindValue
+    @JvmField
+    val clock: Clock = Clock.fixed(Instant.parse("2026-05-24T12:00:00Z"), ZoneOffset.UTC)
 
     private lateinit var scenario: ActivityScenario<MainActivity>
 
@@ -176,7 +191,7 @@ class TrainingUiTest {
     }
 
     @Test
-    fun weeklySummaryOnlyAppearsOnAnalysisTab() {
+    fun cycleSummaryOnlyAppearsOnAnalysisTab() {
         continueFromLoginIfNeeded()
         composeRule.onAllNodesWithTag("training_summary_band").assertCountEquals(0)
 
@@ -325,6 +340,116 @@ class TrainingUiTest {
     }
 
     @Test
+    fun routineDayDateCancelKeepsScheduleUnassignedAndDoesNotStartWorkout() {
+        continueFromLoginIfNeeded()
+
+        openHomeStartWorkout()
+        waitForNodeWithTag("training_routine_day_date_dialog")
+        composeRule.onNodeWithTag("training_cancel_routine_day_date").performClick()
+        waitForNodeWithTagToDisappear("training_routine_day_date_dialog")
+
+        composeRule.onAllNodesWithTag("training_record_dialog").assertCountEquals(0)
+        assertTrue(trainingRepository.routineDayDatesForTest().isEmpty())
+        assertCurrentRoutineDateUnassigned()
+    }
+
+    @Test
+    fun routineDayDateSelectionIsRememberedAcrossHomeAndPlanTabs() {
+        continueFromLoginIfNeeded()
+
+        assignCurrentRoutineDayDate()
+
+        assertEquals(setOf(FIXED_UI_DATE), trainingRepository.routineDayDatesForTest().values.toSet())
+        assertCurrentRoutineDateAssigned()
+
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        scrollToNodeWithTag("training_plan_exercise_leg_press")
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        assertCurrentRoutineDateAssigned()
+    }
+
+    @Test
+    fun assignedDateSurvivesDismissedRecordDialogWithoutCreatingWorkoutLog() {
+        continueFromLoginIfNeeded()
+
+        openHomeStartWorkout()
+        confirmRoutineDayDateIfNeeded()
+        waitForNodeWithTag("training_record_dialog")
+        composeRule.onNodeWithTag("training_close_record_dialog").performClick()
+        waitForNodeWithTagToDisappear("training_record_dialog")
+
+        assertEquals(setOf(FIXED_UI_DATE), trainingRepository.routineDayDatesForTest().values.toSet())
+        assertTrue(trainingRepository.workoutLogsForTest().isEmpty())
+        assertCurrentRoutineDateAssigned()
+
+        openHomeStartWorkout()
+        waitForNodeWithTag("training_record_dialog")
+        composeRule.onAllNodesWithTag("training_routine_day_date_dialog").assertCountEquals(0)
+    }
+
+    @Test
+    fun analysisReflectsRecordedCycleExerciseWithAssignedDate() {
+        continueFromLoginIfNeeded()
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        clickPlanExercise("training_plan_exercise_leg_press")
+        confirmRoutineDayDateIfNeeded()
+        waitForNodeWithTag("training_record_dialog")
+
+        saveDefaultWeightedRecord()
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            trainingRepository.workoutLogsForTest().size == 1
+        }
+        val log = trainingRepository.workoutLogsForTest().single()
+        assertEquals(FIXED_UI_DATE, log.performedAt.toLocalDate())
+        assertNotNull(log.routineDayInstanceId)
+
+        composeRule.onNodeWithTag("training_tab_analysis").performClick()
+        waitForNodeWithTag("training_summary_band")
+        assertTextInsideTag("training_summary_completion_rate", "4%")
+        assertTextInsideTag("training_summary_total_sets", "3")
+        assertAnyTextInsideTag("training_summary_streak", "1일", "1 d")
+        composeRule.onNodeWithTag("training_recent_records_card").assertIsDisplayed()
+        composeRule.onNode(
+            hasText("레그 프레스", substring = true) or hasText("Leg Press", substring = true)
+        ).assertIsDisplayed()
+        composeRule.onNode(
+            hasText("5월 24일", substring = true) or hasText("5/24", substring = true)
+        ).assertIsDisplayed()
+    }
+
+    @Test
+    fun cancelLatestCompletionCanBeKeptThenConfirmedAndRestoresRoutineDay() {
+        continueFromLoginIfNeeded()
+
+        completeRoutineDayWithConfirmation()
+        waitForNodeWithTag("training_next_routine_day_2")
+        scrollToNodeWithTag("training_latest_routine_day_completion_card")
+        composeRule.onNodeWithTag("training_latest_routine_day_completion_card").assertIsDisplayed()
+        assertEquals(1, trainingRepository.progressForTest().dayIndex)
+        assertEquals(0, trainingRepository.progressForTest().lastCompletedDayIndex)
+
+        scrollToNodeWithTag("training_cancel_latest_routine_day")
+        composeRule.onNodeWithTag("training_cancel_latest_routine_day").performClick()
+        waitForNodeWithTag("training_cancel_latest_day_dialog")
+        composeRule.onNodeWithTag("training_keep_latest_day_completion").performClick()
+        waitForNodeWithTagToDisappear("training_cancel_latest_day_dialog")
+        scrollToNodeWithTag("training_next_routine_day_2")
+        composeRule.onNodeWithTag("training_next_routine_day_2").assertIsDisplayed()
+        assertEquals(1, trainingRepository.progressForTest().dayIndex)
+
+        scrollToNodeWithTag("training_cancel_latest_routine_day")
+        composeRule.onNodeWithTag("training_cancel_latest_routine_day").performClick()
+        waitForNodeWithTag("training_cancel_latest_day_dialog")
+        composeRule.onNodeWithTag("training_confirm_cancel_latest_day").performClick()
+        waitForNodeWithTagToDisappear("training_cancel_latest_day_dialog")
+        scrollToNodeWithTag("training_next_routine_day_1")
+        composeRule.onAllNodesWithTag("training_latest_routine_day_completion_card").assertCountEquals(0)
+        assertEquals(0, trainingRepository.progressForTest().dayIndex)
+        assertNull(trainingRepository.progressForTest().lastCompletedDayIndex)
+    }
+
+    @Test
     fun exerciseMethodDuringWorkoutHidesStartRecordAction() {
         continueFromLoginIfNeeded()
         waitForNodeWithTag("training_home_start_workout")
@@ -369,6 +494,7 @@ class TrainingUiTest {
         scrollToNodeWithTag("training_routine_preview_advanced-body-part-5day-60m")
         composeRule.onNodeWithTag("training_routine_preview_advanced-body-part-5day-60m").assertIsDisplayed()
         composeRule.onNodeWithTag("training_start_preview_routine").assertIsDisplayed().performClick()
+        confirmRoutineSwitchIfRequested()
 
         waitForNodeWithTag("training_tab_home")
         composeRule.onNodeWithTag("training_tab_home").performClick()
@@ -484,6 +610,7 @@ class TrainingUiTest {
             composeRule.onAllNodesWithTag("training_custom_template_card").fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.onNodeWithTag("training_custom_template_card").performClick()
+        confirmRoutineSwitchIfRequested()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_routine_library_dialog").fetchSemanticsNodes().isEmpty()
         }
@@ -525,6 +652,76 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_next_routine_badge_duration").assertIsDisplayed()
     }
 
+    @Test
+    fun switchingRoutineAfterCustomDayOneResetsCurrentScreensButKeepsWorkoutHistory() {
+        continueFromLoginIfNeeded()
+        createAndSelectTwoDayCustomRoutineForSwitch()
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_home_routine_source_custom")
+        waitForNodeWithTag("training_next_routine_day_1")
+        composeRule.onNodeWithTag("training_next_routine_focus_CHEST").assertIsDisplayed()
+
+        openHomeStartWorkout()
+        confirmRoutineDayDateIfNeeded()
+        waitForNodeWithTag("training_record_dialog")
+        saveDefaultWeightedRecord()
+        completeRoutineDayWithConfirmation()
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            trainingRepository.progressForTest().dayIndex == 1
+        }
+        waitForNodeWithTag("training_next_routine_day_2")
+        composeRule.onNodeWithTag("training_next_routine_focus_LOWER_BODY").assertIsDisplayed()
+        assertEquals("custom-test", trainingRepository.progressForTest().templateId)
+        assertEquals(1, trainingRepository.workoutLogsForTest().size)
+        assertEquals(setOf(FIXED_UI_DATE), trainingRepository.routineDayDatesForTest().values.toSet())
+        val customLog = trainingRepository.workoutLogsForTest().single()
+        assertNotNull(customLog.routineDayInstanceId)
+        assertTrue(customLog.routineDayInstanceId!!.contains("custom-test"))
+
+        composeRule.onNodeWithTag("training_tab_analysis").performClick()
+        waitForNodeWithTag("training_summary_band")
+        composeRule.onNodeWithTag("training_summary_scope").assertIsDisplayed()
+        assertTextInsideTag("training_summary_completion_rate", "50%")
+        assertTextInsideTag("training_summary_total_sets", "3")
+        composeRule.onNodeWithTag("training_recent_records_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("training_recent_records_scope").assertIsDisplayed()
+        assertChestPressRecordVisible()
+
+        switchToDefaultRoutineFromPlanTab()
+
+        val switchedProgress = trainingRepository.progressForTest()
+        assertEquals("beginner-full-body-3day", switchedProgress.templateId)
+        assertEquals(0, switchedProgress.dayIndex)
+        assertNull(switchedProgress.lastCompletedDayIndex)
+        assertTrue(trainingRepository.routineDayDatesForTest().isEmpty())
+        assertEquals(1, trainingRepository.workoutLogsForTest().size)
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_home_routine_source_default")
+        waitForNodeWithTag("training_next_routine_day_1")
+        composeRule.onAllNodesWithTag("training_latest_routine_day_completion_card").assertCountEquals(0)
+        assertCurrentRoutineDateUnassigned()
+
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        waitForNodeWithTag("training_current_routine_card")
+        scrollToNodeWithTag("training_current_routine_source_default")
+        composeRule.onNodeWithTag("training_current_routine_source_default").assertIsDisplayed()
+        scrollToNodeWithTag("training_plan_exercise_leg_press")
+        composeRule.onNodeWithTag("training_plan_exercise_leg_press").assertIsDisplayed()
+
+        composeRule.onNodeWithTag("training_tab_analysis").performClick()
+        waitForNodeWithTag("training_summary_band")
+        composeRule.onNodeWithTag("training_summary_scope").assertIsDisplayed()
+        assertTextInsideTag("training_summary_completion_rate", "0%")
+        assertTextInsideTag("training_summary_total_sets", "0")
+        assertAnyTextInsideTag("training_summary_streak", "0일", "0 d")
+        composeRule.onNodeWithTag("training_recent_records_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("training_recent_records_scope").assertIsDisplayed()
+        assertChestPressRecordVisible()
+    }
+
     private fun resetTestState() {
         trainingRepository.reset()
         (sessionRepository as InMemorySessionRepository).reset()
@@ -546,6 +743,33 @@ class TrainingUiTest {
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag(testTag).fetchSemanticsNodes().isEmpty()
         }
+    }
+
+    private fun confirmRoutineSwitchIfRequested() {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            val confirmVisible =
+                composeRule.onAllNodesWithTag("training_routine_switch_confirm_dialog").fetchSemanticsNodes()
+                    .isNotEmpty()
+            val selectionDialogsClosed =
+                composeRule.onAllNodesWithTag("training_routine_library_dialog").fetchSemanticsNodes().isEmpty() &&
+                    composeRule.onAllNodesWithTag("training_routine_recommendations_dialog").fetchSemanticsNodes()
+                        .isEmpty()
+            confirmVisible || selectionDialogsClosed
+        }
+        if (composeRule.onAllNodesWithTag("training_routine_switch_confirm_dialog").fetchSemanticsNodes().isEmpty()) {
+            return
+        }
+        composeRule.onNodeWithTag("training_routine_switch_confirm_dialog").assertIsDisplayed()
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("training_routine_switch_confirm_dialog")) and
+                (hasText("초기화", substring = true) or hasText("reset", substring = true))
+        ).assertIsDisplayed()
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("training_routine_switch_confirm_dialog")) and
+                (hasText("기록", substring = true) or hasText("records", substring = true))
+        ).assertIsDisplayed()
+        composeRule.onNodeWithTag("training_confirm_routine_switch").performClick()
+        waitForNodeWithTagToDisappear("training_routine_switch_confirm_dialog")
     }
 
     private fun signInGoogleUserWithoutProfile(nickname: String) {
@@ -582,6 +806,121 @@ class TrainingUiTest {
     private fun assertLegPressRecordVisibleInPlan() {
         scrollToNodeWithTag("training_plan_exercise_leg_press")
         composeRule.onNodeWithTag("training_plan_exercise_leg_press").assertIsDisplayed()
+    }
+
+    private fun createAndSelectTwoDayCustomRoutineForSwitch() {
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        composeRule.onNodeWithTag("training_create_custom_routine_button").performClick()
+        waitForNodeWithTag("training_custom_routine_builder")
+        composeRule.onNodeWithTag("training_custom_routine_name")
+            .performTextReplacement("Switch Check Custom")
+        composeRule.onNodeWithTag("training_custom_routine_name").performImeAction()
+        composeRule.waitForIdle()
+
+        selectCustomFocus("training_custom_focus_CHEST")
+        scrollToNodeWithTag("training_custom_exercise_group_CHEST")
+        composeRule.onNodeWithTag("training_custom_exercise_group_CHEST").performClick()
+        scrollToNodeWithTag("training_custom_add_exercise_machine_chest_press")
+        composeRule.onNodeWithTag("training_custom_add_exercise_machine_chest_press").performClick()
+
+        composeRule.onNodeWithTag("training_add_custom_day").performScrollTo().performClick()
+        composeRule.onNodeWithTag("training_custom_day_tab_1").performClick()
+        selectCustomFocus("training_custom_focus_LOWER_BODY")
+        scrollToNodeWithTag("training_custom_exercise_group_LOWER_BODY")
+        composeRule.onNodeWithTag("training_custom_exercise_group_LOWER_BODY").performClick()
+        scrollToNodeWithTag("training_custom_add_exercise_leg_press")
+        composeRule.onNodeWithTag("training_custom_add_exercise_leg_press").performClick()
+        composeRule.onNodeWithTag("training_save_custom_routine").performClick()
+
+        waitForNodeWithTagToDisappear("training_custom_routine_builder")
+        scrollToNodeWithTag("training_find_routine_button")
+        composeRule.onNodeWithTag("training_find_routine_button").performClick()
+        waitForNodeWithTag("training_custom_template_card")
+        composeRule.onNodeWithTag("training_custom_template_card").performClick()
+        confirmRoutineSwitchIfRequested()
+        waitForNodeWithTagToDisappear("training_routine_library_dialog")
+    }
+
+    private fun switchToDefaultRoutineFromPlanTab() {
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        scrollToNodeWithTag("training_find_routine_button")
+        composeRule.onNodeWithTag("training_find_routine_button").performClick()
+        waitForNodeWithTag("training_routine_library_dialog")
+        scrollToNodeWithTag("training_template_card_beginner-full-body-3day")
+        composeRule.onNodeWithTag("training_template_card_beginner-full-body-3day").performClick()
+        confirmRoutineSwitchIfRequested()
+        waitForNodeWithTagToDisappear("training_routine_library_dialog")
+    }
+
+    private fun openHomeStartWorkout() {
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_home_start_workout")
+        scrollToNodeWithTag("training_home_start_workout")
+        composeRule.onNodeWithTag("training_home_start_workout").performClick()
+    }
+
+    private fun assignCurrentRoutineDayDate() {
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        scrollToNodeWithTag("training_routine_day_date")
+        composeRule.onNodeWithTag("training_routine_day_date").performClick()
+        waitForNodeWithTag("training_routine_day_date_dialog")
+        composeRule.onNodeWithTag("training_confirm_routine_day_date").performClick()
+        waitForNodeWithTagToDisappear("training_routine_day_date_dialog")
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            trainingRepository.routineDayDatesForTest().isNotEmpty()
+        }
+    }
+
+    private fun assertCurrentRoutineDateAssigned() {
+        scrollToNodeWithTag("training_routine_day_date")
+        composeRule.onNodeWithTag("training_routine_day_date")
+            .assert(hasText(FIXED_UI_DATE.toString(), substring = true))
+    }
+
+    private fun assertCurrentRoutineDateUnassigned() {
+        scrollToNodeWithTag("training_routine_day_date")
+        composeRule.onNodeWithTag("training_routine_day_date")
+            .assert(
+                hasText("수행 날짜 선택", substring = true) or
+                    hasText("Choose workout date", substring = true)
+            )
+    }
+
+    private fun saveDefaultWeightedRecord() {
+        selectSetWeight(index = 0, optionTagValue = "1")
+        selectSetWeight(index = 1, optionTagValue = "1_5")
+        selectSetWeight(index = 2, optionTagValue = "2")
+        composeRule.onNodeWithTag("training_save_record").performScrollTo().performClick()
+        waitForNodeWithTagToDisappear("training_record_dialog")
+    }
+
+    private fun selectSetWeight(index: Int, optionTagValue: String) {
+        composeRule.onNodeWithTag("training_set_weight_input_$index")
+            .performScrollTo()
+            .performClick()
+        val optionTag = "training_set_weight_option_${index}_$optionTagValue"
+        waitForNodeWithTag(optionTag)
+        composeRule.onNodeWithTag(optionTag).performClick()
+    }
+
+    private fun assertTextInsideTag(containerTag: String, text: String) {
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag(containerTag)) and hasText(text, substring = true)
+        ).assertIsDisplayed()
+    }
+
+    private fun assertAnyTextInsideTag(containerTag: String, vararg texts: String) {
+        val matcher = texts
+            .map { text -> hasText(text, substring = true) }
+            .reduce { left, right -> left or right }
+        composeRule.onNode(hasAnyAncestor(hasTestTag(containerTag)) and matcher)
+            .assertIsDisplayed()
+    }
+
+    private fun assertChestPressRecordVisible() {
+        composeRule.onNode(
+            hasText("체스트 프레스", substring = true) or hasText("Chest Press", substring = true)
+        ).assertIsDisplayed()
     }
 
     private fun selectCustomFocus(optionTag: String) {
@@ -662,3 +1001,5 @@ class TrainingUiTest {
         waitForNodeWithTag(testTag)
     }
 }
+
+private val FIXED_UI_DATE: LocalDate = LocalDate.of(2026, 5, 24)

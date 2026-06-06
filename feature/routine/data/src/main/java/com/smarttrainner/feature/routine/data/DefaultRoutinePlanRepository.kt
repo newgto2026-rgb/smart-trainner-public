@@ -152,9 +152,6 @@ class DefaultRoutinePlanRepository @Inject constructor(
                 )
             }
         }
-        response.data.firstOrNull { it.isSelected }?.let {
-            preferences.setSelectedTemplateId(sessionId, it.id)
-        }
     }
 
     private suspend fun syncSelectedCustomRoutine(sessionId: String) {

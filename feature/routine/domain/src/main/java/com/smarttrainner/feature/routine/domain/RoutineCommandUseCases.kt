@@ -3,6 +3,7 @@ package com.smarttrainner.feature.routine.domain
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlanTemplate
+import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WorkoutDayPlan
 import java.time.Instant
@@ -199,4 +200,9 @@ fun routineAdditionalExerciseIdPrefix(
     templateId: String,
     cycleNumber: Int,
     dayNumber: Int
-): String = "routine-added|$templateId|cycle$cycleNumber|day$dayNumber|"
+): String = "$RoutineAdditionalExerciseIdPrefix$templateId|cycle$cycleNumber|day$dayNumber|"
+
+fun PlannedExerciseId.isRoutineAdditionalExerciseId(): Boolean =
+    value.startsWith(RoutineAdditionalExerciseIdPrefix)
+
+private const val RoutineAdditionalExerciseIdPrefix = "routine-added|"

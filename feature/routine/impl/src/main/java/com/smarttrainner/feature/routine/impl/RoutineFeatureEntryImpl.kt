@@ -1,12 +1,9 @@
 package com.smarttrainner.feature.routine.impl
 
-import android.content.Context
-import android.content.ContextWrapper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,18 +17,19 @@ import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
 import com.smarttrainner.feature.routine.api.RoutineFeatureCallbacks
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineRouteState
+import com.smarttrainner.feature.routine.domain.isRoutineAdditionalExerciseId
 import javax.inject.Inject
 
 class RoutineFeatureEntryImpl @Inject constructor(
     private val exerciseMediaRenderer: ExerciseMediaRenderer
 ) : RoutineFeatureEntry {
     @Composable
-    override fun rememberRouteState(callbacks: RoutineFeatureCallbacks): RoutineRouteState {
-        val viewModel: RoutineViewModel = sharedRoutineViewModel()
+    override fun rememberRouteState(
+        viewModelStoreOwner: ViewModelStoreOwner,
+        callbacks: RoutineFeatureCallbacks
+    ): RoutineRouteState {
+        val viewModel: RoutineViewModel = hiltViewModel(viewModelStoreOwner)
         val state by viewModel.uiState.collectAsStateWithLifecycle()
-        LaunchedEffect(viewModel) {
-            viewModel.refreshWeekStartOnWeekBoundary()
-        }
         LaunchedEffect(callbacks.routineLibraryOpenRequest, viewModel) {
             val request = callbacks.routineLibraryOpenRequest
             if (request > 0) {
@@ -43,7 +41,9 @@ class RoutineFeatureEntryImpl @Inject constructor(
         val actions = remember(callbacks, viewModel) {
             RoutineActions(
                 onTemplateSelected = viewModel::selectTemplate,
-                onDaysPerWeekChanged = viewModel::updateRoutineDaysPerWeek,
+                onConfirmRoutineSwitch = viewModel::confirmRoutineSwitch,
+                onDismissRoutineSwitch = viewModel::dismissRoutineSwitchConfirmation,
+                onCycleLengthChanged = viewModel::updateRoutineCycleLength,
                 onSessionMinutesChanged = viewModel::updateRoutineSessionMinutes,
                 onExperienceChanged = viewModel::updateRoutineExperience,
                 onFeelingChanged = viewModel::updateRoutineFeeling,
@@ -191,11 +191,20 @@ class RoutineFeatureEntryImpl @Inject constructor(
                 onDismissRequest = actions.onLibraryDismiss
             )
         }
+        state.routineSwitchConfirmTemplateId
+            ?.let { templateId -> state.templates.firstOrNull { it.id == templateId } }
+            ?.let { template ->
+                RoutineSwitchConfirmDialog(
+                    template = template,
+                    onConfirm = actions.onConfirmRoutineSwitch,
+                    onDismissRequest = actions.onDismissRoutineSwitch
+                )
+            }
         if (state.showRoutineSettingsDialog) {
             RoutineSettingsDialog(
                 form = state.routineRecommendationInput,
                 availability = state.routineFilterAvailability,
-                onDaysPerWeekChanged = actions.onDaysPerWeekChanged,
+                onCycleLengthChanged = actions.onCycleLengthChanged,
                 onSessionMinutesChanged = actions.onSessionMinutesChanged,
                 onExperienceChanged = actions.onExperienceChanged,
                 onFeelingChanged = actions.onFeelingChanged,
@@ -268,23 +277,6 @@ class RoutineFeatureEntryImpl @Inject constructor(
     }
 }
 
-@Composable
-internal fun sharedRoutineViewModel(): RoutineViewModel {
-    val context = LocalContext.current
-    val sharedOwner = remember(context) { context.findViewModelStoreOwner() }
-    return if (sharedOwner != null) {
-        hiltViewModel(sharedOwner)
-    } else {
-        hiltViewModel()
-    }
-}
-
-private tailrec fun Context.findViewModelStoreOwner(): ViewModelStoreOwner? = when (this) {
-    is ViewModelStoreOwner -> this
-    is ContextWrapper -> baseContext.findViewModelStoreOwner()
-    else -> null
-}
-
 internal class DefaultRoutineRouteState(
     val state: RoutineUiState,
     val actions: RoutineActions,
@@ -327,6 +319,9 @@ private class DefaultRoutineSessionCoordinator(
 
     override fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =
         state.recordablePlannedExerciseFor(exerciseId)
+
+    override fun isAdditionalRoutineExercise(plannedExercise: PlannedExercise): Boolean =
+        plannedExercise.id.isRoutineAdditionalExerciseId()
 }
 
 internal fun RoutineRouteState.asDefaultRoutineRouteState(): DefaultRoutineRouteState =

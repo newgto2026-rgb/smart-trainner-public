@@ -27,4 +27,6 @@ interface RoutineSessionCoordinator {
     fun requestRecordSelected(plannedExercise: PlannedExercise)
 
     fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise?
+
+    fun isAdditionalRoutineExercise(plannedExercise: PlannedExercise): Boolean
 }

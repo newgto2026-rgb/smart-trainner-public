@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">스마트 트레이너</string>
     <string name="app_sync_in_progress">동기화 중</string>
-    <string name="login_subtitle">주간 플랜과 세트별 기록을 한 곳에서 관리하세요.</string>
+    <string name="login_subtitle">루틴 사이클과 세트별 기록을 한 곳에서 관리하세요.</string>
     <string name="login_start_title">Google 로그인</string>
     <string name="login_start_detail">홈으로 들어가기 전에 Google로 로그인하세요.</string>
     <string name="login_nickname_label">닉네임</string>
@@ -41,7 +41,7 @@
     <string name="profile_training_level_intermediate">중급</string>
     <string name="profile_training_level_advanced">고급</string>
     <string name="profile_routine_change_prompt_title">루틴도 변경하시겠어요?</string>
-    <string name="profile_routine_change_prompt_body">운동 수준은 추천 기준만 바꿉니다. 새 루틴을 고르면 현재 루틴은 교체되지만 사이클 정보는 유지되고 1일차부터 시작합니다.</string>
+    <string name="profile_routine_change_prompt_body">운동 수준은 추천 기준만 바꿉니다. 새 루틴을 고르면 현재 사이클 진행도와 배정 날짜는 초기화되고, 운동 기록은 히스토리에 유지됩니다.</string>
     <string name="profile_routine_change_prompt_confirm">루틴 변경하기</string>
     <string name="profile_routine_change_prompt_dismiss">현재 루틴 유지</string>
     <string name="profile_theme_title">테마</string>

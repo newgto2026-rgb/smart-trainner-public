@@ -7,7 +7,7 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineSource
-import com.smarttrainner.core.model.WeeklyPlan
+import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import java.time.LocalDate
 import javax.inject.Inject
@@ -27,16 +27,16 @@ class TrainingSeedStore @Inject constructor() {
     fun templateById(templateId: String, customTemplates: List<PlanTemplate> = emptyList()): PlanTemplate =
         (templates + customTemplates).firstOrNull { it.id == templateId } ?: templates.first()
 
-    fun buildWeeklyPlan(
+    fun buildCyclePlan(
         template: PlanTemplate,
-        weekStartDate: LocalDate
-    ): WeeklyPlan = WeeklyPlan(
-        id = PlanId("${template.id}_${weekStartDate}"),
+        cycleStartDate: LocalDate
+    ): CyclePlan = CyclePlan(
+        id = PlanId("${template.id}_${cycleStartDate}"),
         templateId = template.id,
         name = template.name,
-        weekStartDate = weekStartDate,
+        cycleStartDate = cycleStartDate,
         days = template.days.map { day ->
-            val date = weekStartDate.plusDays(day.dayOffset.toLong())
+            val date = cycleStartDate.plusDays(day.dayOffset.toLong())
             WorkoutDayPlan(
                 date = date,
                 title = day.title,

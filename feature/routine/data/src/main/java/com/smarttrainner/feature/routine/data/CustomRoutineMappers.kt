@@ -100,12 +100,11 @@ fun CustomRoutineWithDays.toPlanTemplate(exercises: List<Exercise> = emptyList()
         id = routine.id,
         name = routine.name,
         level = PlanLevel.INTERMEDIATE,
-        daysPerWeek = orderedDays.size,
+        cycleLength = orderedDays.size,
         description = routine.description,
         days = orderedDays.map { it.toPlanTemplateDay(repDurationSecondsByExerciseId) },
         structure = RoutineStructure.BALANCED_SPLIT,
         recommendedExperience = TrainingExperience.INTERMEDIATE,
-        cycleLength = orderedDays.size,
         sessionMinutes = orderedDays.maxOfOrNull { day ->
             day.exercises.estimateSessionMinutes(repDurationSecondsByExerciseId)
         } ?: 45,

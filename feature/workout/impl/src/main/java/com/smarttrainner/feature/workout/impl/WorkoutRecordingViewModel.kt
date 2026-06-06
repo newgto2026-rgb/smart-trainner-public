@@ -2,8 +2,8 @@ package com.smarttrainner.feature.workout.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
-import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogInput
@@ -11,9 +11,7 @@ import com.smarttrainner.feature.workout.domain.GetLatestWorkoutLogUseCase
 import com.smarttrainner.feature.workout.domain.SaveWorkoutLogUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
-import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,20 +22,19 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class WorkoutRecordingViewModel @Inject constructor(
-    observeWorkoutLogs: ObserveWorkoutLogsUseCase,
+    observeAllWorkoutLogs: ObserveAllWorkoutLogsUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
     private val getLatestWorkoutLog: GetLatestWorkoutLogUseCase,
     private val saveWorkoutLog: SaveWorkoutLogUseCase,
     private val clock: Clock
 ) : ViewModel() {
-    private val weekStart = LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     private val recordingPlannedExercise = MutableStateFlow<PlannedExercise?>(null)
     private val recordForm = MutableStateFlow(RecordFormState())
     private val formError = MutableStateFlow<RecordFormError?>(null)
     private val recordSaved = MutableStateFlow(false)
     private var recordPrefillToken = 0L
 
-    private val weeklyLogs = observeWorkoutLogs(weekStart).stateIn(
+    private val cycleLogs = observeAllWorkoutLogs().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList()
@@ -50,11 +47,11 @@ class WorkoutRecordingViewModel @Inject constructor(
     )
 
     private val logState = combine(
-        weeklyLogs,
+        cycleLogs,
         latestWorkoutLogs
-    ) { weeklyLogs, latestLogs ->
+    ) { cycleLogs, latestLogs ->
         WorkoutRecordingLogState(
-            weeklyLogs = weeklyLogs,
+            cycleLogs = cycleLogs,
             latestWorkoutLogs = latestLogs
         )
     }
@@ -78,7 +75,7 @@ class WorkoutRecordingViewModel @Inject constructor(
     ) { planned, logs, form ->
         WorkoutRecordingUiState(
             recordingPlannedExercise = planned,
-            weeklyLogs = logs.weeklyLogs,
+            cycleLogs = logs.cycleLogs,
             latestWorkoutLogs = logs.latestWorkoutLogs,
             recordForm = form.recordForm,
             formError = form.formError,
@@ -256,7 +253,7 @@ class WorkoutRecordingViewModel @Inject constructor(
 }
 
 private data class WorkoutRecordingLogState(
-    val weeklyLogs: List<WorkoutLog>,
+    val cycleLogs: List<WorkoutLog>,
     val latestWorkoutLogs: List<WorkoutLog>
 )
 

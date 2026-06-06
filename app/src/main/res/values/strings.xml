@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Smart Trainer</string>
     <string name="app_sync_in_progress">Syncing</string>
-    <string name="login_subtitle">Manage your weekly workout plan and set-by-set logs in one place.</string>
+    <string name="login_subtitle">Manage your routine cycle and set-by-set logs in one place.</string>
     <string name="login_start_title">Google sign-in</string>
     <string name="login_start_detail">Sign in before entering your workout home.</string>
     <string name="login_nickname_label">Nickname</string>
@@ -41,7 +41,7 @@
     <string name="profile_training_level_intermediate">Intermediate</string>
     <string name="profile_training_level_advanced">Advanced</string>
     <string name="profile_routine_change_prompt_title">Change routine too?</string>
-    <string name="profile_routine_change_prompt_body">Your training level now updates recommendation defaults only. If you choose a new routine, the current routine is replaced, cycle info is kept, and the new routine starts from Day 1.</string>
+    <string name="profile_routine_change_prompt_body">Your training level now updates recommendation defaults only. If you choose a new routine, current cycle progress and assigned dates reset, while workout records stay in history.</string>
     <string name="profile_routine_change_prompt_confirm">Change routine</string>
     <string name="profile_routine_change_prompt_dismiss">Keep current routine</string>
     <string name="profile_theme_title">Theme</string>
