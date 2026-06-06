@@ -173,6 +173,7 @@ internal data class RoutineUiState(
     val recommendedTemplateId: String? = null,
     val alternativeTemplateIds: List<String> = emptyList(),
     val routinePreviewTemplateId: String? = null,
+    val routineSwitchConfirmTemplateId: String? = null,
     val showRoutineLibraryDialog: Boolean = false,
     val showRoutineSettingsDialog: Boolean = false,
     val showRoutineRecommendationsDialog: Boolean = false,
@@ -197,6 +198,8 @@ internal data class RoutineUiState(
 
 internal data class RoutineActions(
     val onTemplateSelected: (String) -> Unit = {},
+    val onConfirmRoutineSwitch: () -> Unit = {},
+    val onDismissRoutineSwitch: () -> Unit = {},
     val onCycleLengthChanged: (Int) -> Unit = {},
     val onSessionMinutesChanged: (Int) -> Unit = {},
     val onExperienceChanged: (TrainingExperience) -> Unit = {},

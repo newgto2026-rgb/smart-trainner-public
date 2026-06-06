@@ -8,7 +8,7 @@
     <string name="routine_add_exercise_to_day">이 일차에 운동 추가</string>
     <string name="routine_alternative_routines">대안 루틴</string>
     <string name="routine_cancel">취소</string>
-    <string name="routine_change_routine">루틴 바꾸기</string>
+    <string name="routine_change_routine">루틴 변경</string>
     <string name="routine_close_detail">운동 상세 닫기</string>
     <string name="routine_completed">완료</string>
     <string name="routine_copy_to_custom_routine">내 루틴으로 복사</string>
@@ -175,6 +175,9 @@
     <string name="routine_selected">선택됨</string>
     <string name="routine_set_number">%1$d세트</string>
     <string name="routine_show_recommendations">추천 루틴 보기</string>
+    <string name="routine_switch_confirm_body">%1$s 루틴을 1일차부터 시작합니다. 현재 사이클 진행도와 배정한 수행 날짜는 초기화되고, 이미 남긴 운동 기록은 최근 기록과 분석 기록에 유지됩니다.</string>
+    <string name="routine_switch_confirm_dismiss">현재 루틴 유지</string>
+    <string name="routine_switch_confirm_title">루틴을 변경할까요?</string>
     <string name="routine_start_record">운동 시작</string>
     <string name="routine_start_routine">이 루틴 시작</string>
     <string name="routine_target_duration">%1$d세트 · %2$d분</string>

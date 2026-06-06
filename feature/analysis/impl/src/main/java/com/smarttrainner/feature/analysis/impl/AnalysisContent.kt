@@ -93,6 +93,12 @@ private fun RecentRecordsCard(
                     fontWeight = FontWeight.Bold
                 )
             }
+            Text(
+                text = stringResource(R.string.analysis_recent_records_scope),
+                modifier = Modifier.testTag("training_recent_records_scope"),
+                color = SmartTrainnerColors.Muted,
+                style = MaterialTheme.typography.bodySmall
+            )
             visibleRecords.forEach { record ->
                 RecentRecordItem(record = record)
             }
@@ -247,6 +253,12 @@ private fun SummaryBand(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AnalysisSectionHeader(title = stringResource(R.string.analysis_cycle_summary, cycleNumber))
+            Text(
+                text = stringResource(R.string.analysis_cycle_summary_scope),
+                modifier = Modifier.testTag("training_summary_scope"),
+                color = SmartTrainnerColors.Muted,
+                style = MaterialTheme.typography.bodySmall
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SmartTrainnerMetricTile(
                     label = stringResource(R.string.analysis_completion_rate),

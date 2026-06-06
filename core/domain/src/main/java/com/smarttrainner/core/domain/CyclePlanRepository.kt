@@ -5,5 +5,5 @@ import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
 interface CyclePlanRepository {
-    fun observeCurrentCyclePlan(cycleStartDate: LocalDate): Flow<CyclePlan>
+    fun observeCurrentCyclePlan(templateId: String, cycleStartDate: LocalDate): Flow<CyclePlan>
 }

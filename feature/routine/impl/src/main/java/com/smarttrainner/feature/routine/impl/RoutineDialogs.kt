@@ -396,6 +396,66 @@ internal fun RoutineLibraryDialog(
 }
 
 @Composable
+internal fun RoutineSwitchConfirmDialog(
+    template: PlanTemplate,
+    onConfirm: () -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+                .testTag("training_routine_switch_confirm_dialog"),
+            shape = RoundedCornerShape(8.dp),
+            color = SmartTrainnerColors.Surface,
+            shadowElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                DialogHeader(
+                    title = stringResource(R.string.routine_switch_confirm_title),
+                    onDismissRequest = onDismissRequest
+                )
+                Text(
+                    text = stringResource(R.string.routine_switch_confirm_body, template.localizedName()),
+                    color = SmartTrainnerColors.Muted,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismissRequest,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("training_cancel_routine_switch"),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(stringResource(R.string.routine_switch_confirm_dismiss))
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("training_confirm_routine_switch"),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(stringResource(R.string.routine_change_routine))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 internal fun RoutineSettingsDialog(
     form: RoutineRecommendationFormState,
     availability: RoutineRecommendationFilterAvailability,

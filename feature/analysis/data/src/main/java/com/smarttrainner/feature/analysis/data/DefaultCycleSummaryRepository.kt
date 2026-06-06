@@ -30,7 +30,7 @@ class DefaultCycleSummaryRepository @Inject constructor(
             ?.toLocalDate()
             ?: LocalDate.now(clock.withZone(zone))
         return combine(
-            cyclePlanRepository.observeCurrentCyclePlan(cycleStartDate),
+            cyclePlanRepository.observeCurrentCyclePlan(progress.templateId, cycleStartDate),
             workoutLogRepository.observeAllWorkoutLogs()
         ) { plan, logs ->
             summaryCalculator.calculate(

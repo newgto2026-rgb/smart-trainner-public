@@ -7,7 +7,8 @@ import javax.inject.Inject
 class ObserveCurrentCyclePlanUseCase @Inject constructor(
     private val repository: CyclePlanRepository
 ) {
-    operator fun invoke(cycleStartDate: LocalDate) = repository.observeCurrentCyclePlan(cycleStartDate)
+    operator fun invoke(templateId: String, cycleStartDate: LocalDate) =
+        repository.observeCurrentCyclePlan(templateId, cycleStartDate)
 }
 
 class ObservePlanTemplatesUseCase @Inject constructor(

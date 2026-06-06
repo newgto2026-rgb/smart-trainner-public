@@ -65,8 +65,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
@@ -116,6 +116,42 @@ class RoutineViewModelTest {
             assertThat(state.nextRoutineDayUi?.primaryFocus).isEqualTo(RoutineFocus.CHEST)
             assertThat(state.nextRoutineDayUi?.startExercise?.exercise?.id?.value).isEqualTo("chest_press")
             assertThat(state.today).isEqualTo(LocalDate.of(2026, 5, 24))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun uiState_usesActiveRoutineAsCurrentPlanWhenCatalogSelectionDiffers() = runTest {
+        val customTemplate = planTemplate(
+            id = "custom-selected-only",
+            name = "Selected custom",
+            source = RoutineSource.CUSTOM,
+            cycleLength = 1,
+            days = listOf(templateDay(0, "Custom Chest", RoutineFocus.CHEST, "chest_press"))
+        )
+        repository.setTemplates(repository.templatesForTest() + customTemplate)
+        repository.selectPlanTemplate(customTemplate.id)
+        repository.progress.value = RoutineProgress(
+            templateId = "intermediate-body-part-4day",
+            dayIndex = 2,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            var state = awaitItem()
+            while (state.nextRoutineDayUi?.dayNumber != 3) {
+                state = awaitItem()
+            }
+
+            assertThat(repository.requestedPlanTemplateIds).contains("intermediate-body-part-4day")
+            assertThat(state.selectedTemplateId).isEqualTo("intermediate-body-part-4day")
+            assertThat(state.plan?.templateId).isEqualTo("intermediate-body-part-4day")
+            assertThat(state.nextRoutineDayUi?.routineTemplate?.id)
+                .isEqualTo("intermediate-body-part-4day")
+            assertThat(state.nextRoutineDayUi?.startExercise?.exercise?.id?.value).isEqualTo("leg_press")
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -753,7 +789,10 @@ class RoutineViewModelTest {
             advanceUntilIdle()
 
             var updated = awaitItem()
-            while (updated.profileExperience != TrainingExperience.INTERMEDIATE) {
+            while (
+                updated.profileExperience != TrainingExperience.INTERMEDIATE ||
+                updated.routineRecommendationInput.experience != TrainingExperience.INTERMEDIATE
+            ) {
                 updated = awaitItem()
             }
             val progress = updated.activeRoutineProgress
@@ -873,6 +912,16 @@ class RoutineViewModelTest {
 
             viewModel.showRoutineLibrary()
             viewModel.selectTemplate(intermediateTemplate.id)
+            advanceUntilIdle()
+
+            var confirm = awaitItem()
+            while (confirm.routineSwitchConfirmTemplateId != intermediateTemplate.id) {
+                confirm = awaitItem()
+            }
+            assertThat(confirm.showRoutineLibraryDialog).isTrue()
+            assertThat(confirm.activeRoutineProgress?.templateId).isEqualTo(beginnerTemplate.id)
+
+            viewModel.confirmRoutineSwitch()
             advanceUntilIdle()
 
             var selected = awaitItem()
@@ -1521,11 +1570,14 @@ private class FakeTrainingRepository :
     private val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
     private val latestLogs = MutableStateFlow<List<WorkoutLog>>(emptyList())
     val requestedPlanCycleStartDates = mutableListOf<LocalDate>()
+    val requestedPlanTemplateIds = mutableListOf<String>()
     var switchRoutineResult: Result<Unit> = Result.success(Unit)
 
     fun setTemplates(nextTemplates: List<PlanTemplate>) {
         templates.value = nextTemplates
     }
+
+    fun templatesForTest(): List<PlanTemplate> = templates.value
 
     fun reset() {
         templates.value = listOf(template)
@@ -1534,6 +1586,7 @@ private class FakeTrainingRepository :
         logs.value = emptyList()
         latestLogs.value = emptyList()
         requestedPlanCycleStartDates.clear()
+        requestedPlanTemplateIds.clear()
         switchRoutineResult = Result.success(Unit)
     }
 
@@ -1602,9 +1655,10 @@ private class FakeTrainingRepository :
 
     override fun observePlanTemplates(): Flow<List<PlanTemplate>> = templates
 
-    override fun observeCurrentCyclePlan(cycleStartDate: LocalDate): Flow<CyclePlan> {
+    override fun observeCurrentCyclePlan(templateId: String, cycleStartDate: LocalDate): Flow<CyclePlan> {
+        requestedPlanTemplateIds += templateId
         requestedPlanCycleStartDates += cycleStartDate
-        return combine(selectedTemplateId, templates) { templateId, templates ->
+        return templates.map { templates ->
             val selectedTemplate = templates.firstOrNull { it.id == templateId } ?: template
             cyclePlan(selectedTemplate, cycleStartDate)
         }.distinctUntilChanged()
@@ -1871,6 +1925,26 @@ private fun filterTemplate(
             RoutineFocus.PULL
         )
     }
+)
+
+private fun planTemplate(
+    id: String,
+    name: String,
+    source: RoutineSource,
+    cycleLength: Int,
+    days: List<PlanTemplateDay>
+) = PlanTemplate(
+    id = id,
+    name = name,
+    level = PlanLevel.INTERMEDIATE,
+    cycleLength = cycleLength,
+    description = name,
+    days = days,
+    structure = RoutineStructure.BODY_PART_SPLIT,
+    recommendedExperience = TrainingExperience.INTERMEDIATE,
+    sessionMinutes = 45,
+    focusSummary = days.mapNotNull { it.primaryFocus },
+    source = source
 )
 
 private fun templateDay(

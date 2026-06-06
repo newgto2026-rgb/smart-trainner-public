@@ -76,6 +76,7 @@ class RoutineViewModel @Inject constructor(
     private val showRoutineLibraryDialog = MutableStateFlow(false)
     private val showRoutineSettingsDialog = MutableStateFlow(false)
     private val showRoutineRecommendationsDialog = MutableStateFlow(false)
+    private val routineSwitchConfirmTemplateId = MutableStateFlow<String?>(null)
     private val completionConfirm = MutableStateFlow<RoutineCompletionConfirmState?>(null)
     private val routineDayDatePicker = MutableStateFlow<RoutineDayDatePickerState?>(null)
     private val routineDayDateError = MutableStateFlow<RoutineDayDateError?>(null)
@@ -118,7 +119,7 @@ class RoutineViewModel @Inject constructor(
         )
     }
 
-    private val formControlState = combine(
+    private val formBaseState = combine(
         recommendationForm,
         customRoutineBuilder,
         completeDayFailed,
@@ -134,8 +135,15 @@ class RoutineViewModel @Inject constructor(
         )
     }
 
+    private val formControlState = combine(
+        formBaseState,
+        routineSwitchConfirmTemplateId
+    ) { control, switchTemplateId ->
+        control.copy(routineSwitchConfirmTemplateId = switchTemplateId)
+    }
+
     private val routinePlanState = observeRoutineProgress().flatMapLatest { progress ->
-        observeCurrentCyclePlan(progress.cycleStartDate()).map { plan ->
+        observeCurrentCyclePlan(progress.templateId, progress.cycleStartDate()).map { plan ->
             RoutinePlanState(plan = plan, routineProgress = progress)
         }
     }
@@ -261,6 +269,7 @@ class RoutineViewModel @Inject constructor(
             recommendedTemplateId = recommendation.primaryTemplateId,
             alternativeTemplateIds = recommendation.alternativeTemplateIds,
             routinePreviewTemplateId = previewTemplateId,
+            routineSwitchConfirmTemplateId = control.routineSwitchConfirmTemplateId,
             showRoutineLibraryDialog = control.routineDialogState.showLibrary,
             showRoutineSettingsDialog = control.routineDialogState.showSettings,
             showRoutineRecommendationsDialog = control.routineDialogState.showRecommendations,
@@ -293,16 +302,34 @@ class RoutineViewModel @Inject constructor(
     }
 
     fun selectTemplate(templateId: String) {
+        if (templateId == uiState.value.activeRoutineProgress?.templateId) {
+            showRoutineLibraryDialog.value = false
+            return
+        }
+        routineSwitchConfirmTemplateId.value = templateId
+    }
+
+    fun confirmRoutineSwitch() {
+        val templateId = routineSwitchConfirmTemplateId.value ?: return
         viewModelScope.launch {
             val result = switchRoutineTemplate(templateId)
             if (result.isSuccess) {
+                routineSwitchConfirmTemplateId.value = null
                 showRoutineLibraryDialog.value = false
+                showRoutineRecommendationsDialog.value = false
+                showRoutineSettingsDialog.value = false
+                routinePreviewTemplateId.value = null
             }
         }
     }
 
+    fun dismissRoutineSwitchConfirmation() {
+        routineSwitchConfirmTemplateId.value = null
+    }
+
     fun showRoutineLibrary() {
         routinePreviewTemplateId.value = null
+        routineSwitchConfirmTemplateId.value = null
         showRoutineSettingsDialog.value = false
         showRoutineRecommendationsDialog.value = false
         completionConfirm.value = null
@@ -312,11 +339,13 @@ class RoutineViewModel @Inject constructor(
     }
 
     fun dismissRoutineLibrary() {
+        routineSwitchConfirmTemplateId.value = null
         showRoutineLibraryDialog.value = false
     }
 
     fun showRoutineSettings() {
         routinePreviewTemplateId.value = null
+        routineSwitchConfirmTemplateId.value = null
         showRoutineLibraryDialog.value = false
         showRoutineRecommendationsDialog.value = false
         completionConfirm.value = null
@@ -331,6 +360,7 @@ class RoutineViewModel @Inject constructor(
 
     fun showRoutineRecommendations() {
         routinePreviewTemplateId.value = null
+        routineSwitchConfirmTemplateId.value = null
         showRoutineLibraryDialog.value = false
         showRoutineSettingsDialog.value = false
         completionConfirm.value = null
@@ -340,6 +370,7 @@ class RoutineViewModel @Inject constructor(
     }
 
     fun dismissRoutineRecommendations() {
+        routineSwitchConfirmTemplateId.value = null
         showRoutineRecommendationsDialog.value = false
         routinePreviewTemplateId.value = null
     }
@@ -351,17 +382,19 @@ class RoutineViewModel @Inject constructor(
     fun startPreviewRoutine() {
         val state = uiState.value
         val templateId = state.routinePreviewTemplateId ?: state.recommendedTemplateId ?: return
-        viewModelScope.launch {
-            switchRoutineTemplate(templateId)
+        if (templateId == state.activeRoutineProgress?.templateId) {
             showRoutineLibraryDialog.value = false
             showRoutineRecommendationsDialog.value = false
             showRoutineSettingsDialog.value = false
             routinePreviewTemplateId.value = null
+            return
         }
+        routineSwitchConfirmTemplateId.value = templateId
     }
 
     fun showCreateCustomRoutine() {
         showRoutineLibraryDialog.value = false
+        routineSwitchConfirmTemplateId.value = null
         completionConfirm.value = null
         routineExercisePicker.value = null
         showCancelLatestRoutineDayDialog.value = false
@@ -377,6 +410,7 @@ class RoutineViewModel @Inject constructor(
         val template = state.templates.firstOrNull { it.id == templateId } ?: return
         val exercisesById = state.exercises.associateBy { it.id }
         showRoutineLibraryDialog.value = false
+        routineSwitchConfirmTemplateId.value = null
         completionConfirm.value = null
         routineExercisePicker.value = null
         showCancelLatestRoutineDayDialog.value = false
@@ -410,6 +444,7 @@ class RoutineViewModel @Inject constructor(
         val template = state.customTemplates.firstOrNull { it.id == templateId } ?: return
         val exercisesById = state.exercises.associateBy { it.id }
         showRoutineLibraryDialog.value = false
+        routineSwitchConfirmTemplateId.value = null
         completionConfirm.value = null
         routineExercisePicker.value = null
         showCancelLatestRoutineDayDialog.value = false
@@ -1031,7 +1066,8 @@ class RoutineViewModel @Inject constructor(
         val customRoutineBuilder: CustomRoutineBuilderState,
         val completeDayFailed: Boolean,
         val routineDayDateError: RoutineDayDateError?,
-        val routineDialogState: RoutineDialogState
+        val routineDialogState: RoutineDialogState,
+        val routineSwitchConfirmTemplateId: String? = null
     )
 
     private data class RoutineModalState(

@@ -40,6 +40,7 @@ class DefaultCycleSummaryRepositoryTest {
 
         assertThat(cyclePlanRepository.requestedCycleStartDates)
             .containsExactly(LocalDate.of(2026, 5, 20))
+        assertThat(cyclePlanRepository.requestedTemplateIds).containsExactly("balanced")
         assertThat(summary.cycleStartDate).isEqualTo(LocalDate.of(2026, 5, 20))
     }
 
@@ -89,13 +90,15 @@ class DefaultCycleSummaryRepositoryTest {
 
 private class RecordingCyclePlanRepository : CyclePlanRepository {
     val requestedCycleStartDates = mutableListOf<LocalDate>()
+    val requestedTemplateIds = mutableListOf<String>()
 
-    override fun observeCurrentCyclePlan(cycleStartDate: LocalDate): Flow<CyclePlan> {
+    override fun observeCurrentCyclePlan(templateId: String, cycleStartDate: LocalDate): Flow<CyclePlan> {
+        requestedTemplateIds += templateId
         requestedCycleStartDates += cycleStartDate
         return flowOf(
             CyclePlan(
                 id = PlanId("plan"),
-                templateId = "balanced",
+                templateId = templateId,
                 name = "균형 루틴",
                 cycleStartDate = cycleStartDate,
                 days = emptyList()
