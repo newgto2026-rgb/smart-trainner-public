@@ -48,7 +48,7 @@ class RoutineProgressPreferenceMappingTest {
     @Test
     fun withLocalRoutineDayDateState_preservesAssignedDatesForSameCycleServerSnapshot() {
         val serverSnapshot = routineProgressPreference(
-            cycleStartedAt = "2026-06-03T04:02:20.308Z",
+            cycleStartedAt = "2026-06-08T04:02:20.308Z",
             routineDayDates = emptyMap()
         )
         val localProgress = routineProgressPreference(
@@ -68,6 +68,32 @@ class RoutineProgressPreferenceMappingTest {
             "2026-06-07"
         )
         assertThat(result.cycleStartedAt).isEqualTo("2026-06-06T15:00:00Z")
+    }
+
+    @Test
+    fun withLocalRoutineDayDateState_keepsServerCycleStartWhenLocalDayOneIsUnassigned() {
+        val serverCycleStartedAt = "2026-06-03T04:02:20.308Z"
+        val serverSnapshot = routineProgressPreference(
+            cycleStartedAt = serverCycleStartedAt,
+            routineDayDates = emptyMap()
+        )
+        val localProgress = routineProgressPreference(
+            cycleStartedAt = "2026-05-25T00:00:00Z",
+            routineDayDates = mapOf(
+                "routine-day|custom-template|cycle1|day2" to "2026-06-08"
+            )
+        )
+
+        val result = serverSnapshot.withLocalRoutineDayDateState(
+            localProgress = localProgress,
+            zoneId = ZoneId.of("Asia/Seoul")
+        )
+
+        assertThat(result.routineDayDates).containsExactly(
+            "routine-day|custom-template|cycle1|day2",
+            "2026-06-08"
+        )
+        assertThat(result.cycleStartedAt).isEqualTo(serverCycleStartedAt)
     }
 
     @Test

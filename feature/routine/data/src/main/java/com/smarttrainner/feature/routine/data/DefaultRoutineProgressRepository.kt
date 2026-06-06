@@ -460,9 +460,9 @@ internal fun RoutineProgressPreference.withLocalRoutineDayDateState(
     zoneId: ZoneId
 ): RoutineProgressPreference =
     if (templateId == localProgress.templateId && cycleNumber == localProgress.cycleNumber) {
-        copy(
-            cycleStartedAt = localProgress.effectiveCycleStartedAt(zoneId) ?: cycleStartedAt,
-            routineDayDates = localProgress.routineDayDates
+        val updated = copy(routineDayDates = localProgress.routineDayDates)
+        updated.copy(
+            cycleStartedAt = updated.effectiveCycleStartedAt(zoneId) ?: cycleStartedAt
         )
     } else {
         this
