@@ -4,7 +4,7 @@
     <string name="analysis_cycle_summary">%1$d사이클 요약</string>
     <string name="analysis_cycle_summary_scope">이 지표는 현재 루틴 사이클 기준이며 루틴을 바꾸면 새로 시작합니다.</string>
     <string name="analysis_recent_records">최근 기록</string>
-    <string name="analysis_recent_records_scope">운동 기록은 루틴을 바꿔도 이곳에 계속 남습니다.</string>
+    <string name="analysis_recent_records_scope">현재 루틴 사이클과 완료된 이전 사이클의 기록을 보여줍니다.</string>
     <plurals name="analysis_recent_records_show_more">
         <item quantity="other">%1$d개 더 보기</item>
     </plurals>

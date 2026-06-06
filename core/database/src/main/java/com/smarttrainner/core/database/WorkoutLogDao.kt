@@ -173,6 +173,32 @@ interface WorkoutLogDao {
         additionalExerciseIdPrefixPattern: String
     ): List<Long>
 
+    @Query(
+        """
+        SELECT id FROM workout_logs
+        WHERE sessionId = :sessionId
+        AND (
+            (
+                routineDayInstanceId IS NOT NULL
+                AND routineDayInstanceId LIKE :routineDayInstancePrefixPattern
+            )
+            OR (
+                routineDayInstanceId IS NULL
+                AND (
+                    plannedExerciseId IN (:plannedExerciseIds)
+                    OR plannedExerciseId LIKE :additionalExerciseIdPrefixPattern
+                )
+            )
+        )
+        """
+    )
+    suspend fun routineCycleWorkoutLogIds(
+        sessionId: String,
+        routineDayInstancePrefixPattern: String,
+        plannedExerciseIds: List<String>,
+        additionalExerciseIdPrefixPattern: String
+    ): List<Long>
+
     @Query("DELETE FROM workout_set_logs WHERE workoutLogId IN (:workoutLogIds)")
     suspend fun deleteSetLogsByWorkoutLogIds(workoutLogIds: List<Long>)
 
@@ -189,6 +215,25 @@ interface WorkoutLogDao {
         val workoutLogIds = routineDayWorkoutLogIds(
             sessionId = sessionId,
             routineDayInstanceId = routineDayInstanceId,
+            plannedExerciseIds = plannedExerciseIds,
+            additionalExerciseIdPrefixPattern = additionalExerciseIdPrefixPattern
+        )
+        if (workoutLogIds.isNotEmpty()) {
+            deleteSetLogsByWorkoutLogIds(workoutLogIds)
+            deleteWorkoutLogsByIds(workoutLogIds)
+        }
+    }
+
+    @Transaction
+    suspend fun deleteRoutineCycleLogs(
+        sessionId: String,
+        routineDayInstancePrefixPattern: String,
+        plannedExerciseIds: List<String>,
+        additionalExerciseIdPrefixPattern: String
+    ) {
+        val workoutLogIds = routineCycleWorkoutLogIds(
+            sessionId = sessionId,
+            routineDayInstancePrefixPattern = routineDayInstancePrefixPattern,
             plannedExerciseIds = plannedExerciseIds,
             additionalExerciseIdPrefixPattern = additionalExerciseIdPrefixPattern
         )

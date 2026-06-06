@@ -561,16 +561,11 @@ internal fun RoutineCompleteDayConfirmationDialog(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 DialogHeader(
-                    title = stringResource(R.string.routine_complete_day_confirm_title),
+                    title = stringResource(confirmation.titleRes()),
                     onDismissRequest = onDismissRequest
                 )
                 Text(
-                    text = stringResource(
-                        R.string.routine_complete_day_confirm_body,
-                        confirmation.unrecordedExercises.size,
-                        routineDay?.cycleNumber ?: 1,
-                        routineDay?.dayNumber ?: 1
-                    ),
+                    text = confirmation.bodyText(routineDay),
                     color = SmartTrainnerColors.Muted,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -616,6 +611,29 @@ internal fun RoutineCompleteDayConfirmationDialog(
         }
     }
 }
+
+@Composable
+private fun RoutineCompletionConfirmState.bodyText(routineDay: NextRoutineDayUiModel?): String =
+    when (reason) {
+        RoutineCompletionConfirmReason.CYCLE_COMPLETE -> stringResource(
+            R.string.routine_complete_cycle_confirm_body,
+            routineDay?.cycleNumber ?: 1
+        )
+        RoutineCompletionConfirmReason.MANUAL,
+        RoutineCompletionConfirmReason.SESSION_ENDED_WITH_SKIPS -> stringResource(
+            R.string.routine_complete_day_confirm_body,
+            unrecordedExercises.size,
+            routineDay?.cycleNumber ?: 1,
+            routineDay?.dayNumber ?: 1
+        )
+    }
+
+private fun RoutineCompletionConfirmState.titleRes(): Int =
+    when (reason) {
+        RoutineCompletionConfirmReason.CYCLE_COMPLETE -> R.string.routine_complete_cycle_confirm_title
+        RoutineCompletionConfirmReason.MANUAL,
+        RoutineCompletionConfirmReason.SESSION_ENDED_WITH_SKIPS -> R.string.routine_complete_day_confirm_title
+    }
 
 @Composable
 internal fun RoutineCancelLatestDayDialog(

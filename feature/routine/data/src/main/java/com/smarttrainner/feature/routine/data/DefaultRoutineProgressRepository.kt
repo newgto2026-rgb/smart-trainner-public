@@ -23,6 +23,7 @@ import com.smarttrainner.core.network.RoutineProgressSyncRequest
 import com.smarttrainner.core.network.RoutineProgressSyncStatus
 import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -50,7 +51,8 @@ class DefaultRoutineProgressRepository @Inject constructor(
     private val preferences: TrainingPreferencesDataSource,
     private val activeSessionResolver: ActiveSessionResolver,
     private val seedStore: TrainingSeedStore,
-    private val routineProgressNetworkApi: RoutineProgressNetworkApi
+    private val routineProgressNetworkApi: RoutineProgressNetworkApi,
+    private val clock: Clock
 ) : RoutineProgressRepository, RoutineProgressCommandRepository, TrainingDataSyncer {
     override fun observeRoutineProgress(): Flow<RoutineProgress> =
         activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
@@ -126,23 +128,51 @@ class DefaultRoutineProgressRepository @Inject constructor(
         val sessionId = activeSessionResolver.sessionId()
         templateFor(sessionId, templateId)
         val localProgress = preferences.activeRoutineProgress(sessionId).first()
+        val currentTemplate = templateFor(sessionId, localProgress.templateId)
+        val currentCycleNumber = localProgress.cycleNumber.coerceAtLeast(1)
+        val currentCycleStartedAt = localProgress.effectiveCycleStartedAt().toInstantOrNull()
+        val currentCycleStartDate = currentCycleStartedAt
+            ?.atZone(clock.zone)
+            ?.toLocalDate()
+            ?: LocalDate.now(clock)
+        val currentCyclePlannedExerciseIds = seedStore
+            .buildCyclePlan(currentTemplate, currentCycleStartDate)
+            .days
+            .flatMap { day -> day.exercises.map { it.id.value } }
+        val routineDayInstancePrefix = "routine-day|${localProgress.templateId}|cycle$currentCycleNumber|"
+        val additionalExercisePrefix = "routine-added|${localProgress.templateId}|cycle$currentCycleNumber|"
+        workoutLogDao.deleteRoutineCycleLogs(
+            sessionId = sessionId,
+            routineDayInstancePrefixPattern = "$routineDayInstancePrefix%",
+            plannedExerciseIds = currentCyclePlannedExerciseIds,
+            additionalExerciseIdPrefixPattern = "$additionalExercisePrefix%"
+        )
+        val switchedAt = clock.instant().toString()
         val switchedProgress = localProgress.copy(
             templateId = templateId,
             dayIndex = 0,
+            cycleNumber = currentCycleNumber,
+            startedAt = switchedAt,
+            cycleStartedAt = switchedAt,
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
             lastCompletedPreviousCycleStartedAt = null,
             routineDayDates = emptyMap()
         )
-        preferences.clearRoutineDayDates(sessionId)
         preferences.setRoutineProgress(sessionId, switchedProgress)
         val serverProgress = pushServerProgress(sessionId, writeToPreferences = false) {
             routineProgressNetworkApi.switchRoutineTemplate(
                 sessionId = sessionId,
                 request = RoutineProgressSwitchTemplateRequest(
                     templateId = templateId,
-                    dayIndex = switchedProgress.dayIndex
+                    dayIndex = switchedProgress.dayIndex,
+                    cycleNumber = switchedProgress.cycleNumber,
+                    startedAt = switchedProgress.startedAt,
+                    cycleStartedAt = switchedProgress.cycleStartedAt,
+                    discardedRoutineDayInstancePrefix = routineDayInstancePrefix,
+                    discardedPlannedExerciseIds = currentCyclePlannedExerciseIds,
+                    discardedAdditionalExerciseIdPrefix = additionalExercisePrefix
                 )
             ).data
         }
@@ -154,7 +184,8 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedPreviousCycleStartedAt = null,
+            routineDayDates = emptyMap()
         ) ?: switchedProgress
         preferences.setRoutineProgress(sessionId, syncedProgress)
         Unit

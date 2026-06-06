@@ -180,18 +180,23 @@ class TrainingPreferencesDataSource @Inject constructor(
         context.trainingDataStore.edit { preferences ->
             val currentCycleNumber = preferences[activeRoutineCycleNumberKey(sessionId)] ?: 1
             val currentCycleStartedAt = preferences[activeRoutineCycleStartedAtKey(sessionId)]
-            preferences[lastCompletedRoutineDayKey(sessionId)] = completedDayIndex
-            preferences[lastCompletedAtKey(sessionId)] = completedAt
-            preferences[lastCompletedRoutineCycleKey(sessionId)] = currentCycleNumber
-            if (currentCycleStartedAt != null) {
-                preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)] = currentCycleStartedAt
-            } else {
-                preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
-            }
             preferences[activeRoutineDayIndexKey(sessionId)] = nextDayIndex
             if (newCycleStartedAt != null) {
                 preferences[activeRoutineCycleNumberKey(sessionId)] = currentCycleNumber + 1
                 preferences[activeRoutineCycleStartedAtKey(sessionId)] = newCycleStartedAt
+                preferences.remove(lastCompletedRoutineDayKey(sessionId))
+                preferences.remove(lastCompletedAtKey(sessionId))
+                preferences.remove(lastCompletedRoutineCycleKey(sessionId))
+                preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
+            } else {
+                preferences[lastCompletedRoutineDayKey(sessionId)] = completedDayIndex
+                preferences[lastCompletedAtKey(sessionId)] = completedAt
+                preferences[lastCompletedRoutineCycleKey(sessionId)] = currentCycleNumber
+                if (currentCycleStartedAt != null) {
+                    preferences[lastCompletedPreviousCycleStartedAtKey(sessionId)] = currentCycleStartedAt
+                } else {
+                    preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
+                }
             }
         }
     }
@@ -262,6 +267,8 @@ class TrainingPreferencesDataSource @Inject constructor(
             } ?: preferences.remove(lastCompletedPreviousCycleStartedAtKey(sessionId))
             if (progress.routineDayDates.isNotEmpty()) {
                 preferences[routineDayDatesKey(sessionId)] = encodeRoutineDayDates(progress.routineDayDates)
+            } else {
+                preferences.remove(routineDayDatesKey(sessionId))
             }
         }
     }

@@ -285,6 +285,37 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun uiState_hidesStaleLatestCompletionWhenCurrentProgressIsNotAdvanced() = runTest {
+        repository.progress.value = RoutineProgress(
+            templateId = "intermediate-body-part-4day",
+            dayIndex = 0,
+            lastCompletedDayIndex = 0,
+            lastCompletedAt = Instant.parse("2026-06-01T12:00:00Z"),
+            cycleNumber = 1,
+            lastCompletedCycleNumber = 1,
+            startedAt = Instant.parse("2026-06-03T04:02:20.308Z"),
+            cycleStartedAt = Instant.parse("2026-06-03T04:02:20.308Z")
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi == null) {
+                state = awaitItem()
+            }
+
+            assertThat(state.nextRoutineDayUi?.dayNumber).isEqualTo(1)
+            assertThat(state.latestRoutineDayCompletion).isNull()
+
+            viewModel.requestCancelLatestRoutineDay()
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.showCancelLatestRoutineDayDialog).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun uiState_refreshesCyclePlanWhenProgressCycleStartChanges() = runTest {
         val viewModel = viewModel()
 
@@ -443,7 +474,7 @@ class RoutineViewModelTest {
     }
 
     @Test
-    fun completeCurrentRoutineDay_advancesProgressAndWrapsAfterLastDay() = runTest {
+    fun requestCompleteCurrentRoutineDay_requiresConfirmationBeforeWrappingAfterLastDay() = runTest {
         repository.progress.value = RoutineProgress(
             templateId = "intermediate-body-part-4day",
             dayIndex = 3,
@@ -452,19 +483,42 @@ class RoutineViewModelTest {
             startedAt = Instant.parse("2026-05-20T00:00:00Z"),
             cycleStartedAt = Instant.parse("2026-05-20T00:00:00Z")
         )
+        repository.assignCurrentRoutineDayDate(LocalDate.of(2026, 5, 24))
         val viewModel = viewModel()
 
         viewModel.uiState.test {
             skipItems(1)
             assertThat(awaitItem().nextRoutineDayUi?.dayNumber).isEqualTo(4)
 
-            viewModel.completeCurrentRoutineDay()
+            viewModel.requestCompleteCurrentRoutineDay(
+                skippedPlannedExerciseIds = emptySet(),
+                justRecordedPlannedExerciseIds = emptySet()
+            )
             advanceUntilIdle()
 
-            val advanced = awaitItem()
+            var confirm = awaitItem()
+            while (confirm.routineCompletionConfirm == null) {
+                confirm = awaitItem()
+            }
+            assertThat(confirm.activeRoutineProgress?.cycleNumber).isEqualTo(1)
+            assertThat(confirm.activeRoutineProgress?.dayIndex).isEqualTo(3)
+            assertThat(confirm.routineCompletionConfirm?.reason)
+                .isEqualTo(RoutineCompletionConfirmReason.CYCLE_COMPLETE)
+            assertThat(confirm.routineCompletionConfirm?.unrecordedExercises?.map { it.exercise.id.value })
+                .containsExactly("shoulder_raise")
+
+            viewModel.confirmCompleteCurrentRoutineDay()
+            advanceUntilIdle()
+
+            var advanced = awaitItem()
+            while (advanced.activeRoutineProgress?.cycleNumber != 2) {
+                advanced = awaitItem()
+            }
             assertThat(advanced.activeRoutineProgress?.dayIndex).isEqualTo(0)
-            assertThat(advanced.activeRoutineProgress?.lastCompletedAt).isEqualTo(fixedInstant)
             assertThat(advanced.activeRoutineProgress?.cycleStartedAt).isEqualTo(fixedInstant)
+            assertThat(advanced.activeRoutineProgress?.lastCompletedDayIndex).isNull()
+            assertThat(advanced.activeRoutineProgress?.lastCompletedAt).isNull()
+            assertThat(advanced.latestRoutineDayCompletion).isNull()
             assertThat(advanced.nextRoutineDayUi?.dayNumber).isEqualTo(1)
             cancelAndIgnoreRemainingEvents()
         }
@@ -928,10 +982,11 @@ class RoutineViewModelTest {
             val progress = selected.activeRoutineProgress
             assertThat(progress?.dayIndex).isEqualTo(0)
             assertThat(progress?.cycleNumber).isEqualTo(4)
-            assertThat(progress?.startedAt).isEqualTo(startedAt)
-            assertThat(progress?.cycleStartedAt).isEqualTo(cycleStartedAt)
+            assertThat(progress?.startedAt).isEqualTo(repository.switchStartedAt)
+            assertThat(progress?.cycleStartedAt).isEqualTo(repository.switchStartedAt)
             assertThat(progress?.lastCompletedDayIndex).isNull()
             assertThat(progress?.lastCompletedAt).isNull()
+            assertThat(progress?.routineDayDates).isEmpty()
             assertThat(selected.latestRoutineDayCompletion).isNull()
             assertThat(selected.nextRoutineDayUi?.dayNumber).isEqualTo(1)
             assertThat(selected.nextRoutineDayUi?.startExercise?.exercise?.id?.value).isEqualTo("back_row")
@@ -1554,6 +1609,7 @@ private class FakeTrainingRepository :
     val requestedPlanCycleStartDates = mutableListOf<LocalDate>()
     val requestedPlanTemplateIds = mutableListOf<String>()
     var switchRoutineResult: Result<Unit> = Result.success(Unit)
+    var switchStartedAt: Instant = Instant.parse("2026-05-24T12:00:00Z")
 
     fun setTemplates(nextTemplates: List<PlanTemplate>) {
         templates.value = nextTemplates
@@ -1570,6 +1626,7 @@ private class FakeTrainingRepository :
         requestedPlanCycleStartDates.clear()
         requestedPlanTemplateIds.clear()
         switchRoutineResult = Result.success(Unit)
+        switchStartedAt = Instant.parse("2026-05-24T12:00:00Z")
     }
 
     fun setLogs(value: List<WorkoutLog>) {
@@ -1668,13 +1725,24 @@ private class FakeTrainingRepository :
     override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> {
         switchRoutineResult.getOrNull() ?: return switchRoutineResult
         selectedTemplateId.value = templateId
+        val current = progress.value
+        val currentCyclePrefix = "routine-day|${current.templateId}|cycle${current.cycleNumber}|"
+        logs.value = logs.value.filterNot { log ->
+            log.routineDayInstanceId?.startsWith(currentCyclePrefix) == true
+        }
+        latestLogs.value = latestLogs.value.filterNot { log ->
+            log.routineDayInstanceId?.startsWith(currentCyclePrefix) == true
+        }
         progress.value = progress.value.copy(
             templateId = templateId,
             dayIndex = 0,
+            startedAt = switchStartedAt,
+            cycleStartedAt = switchStartedAt,
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedPreviousCycleStartedAt = null,
+            routineDayDates = emptyMap()
         )
         return Result.success(Unit)
     }
@@ -1745,11 +1813,11 @@ private class FakeTrainingRepository :
         val startsNewCycle = newCycleStartedAt != null
         progress.value = current.copy(
             dayIndex = nextDayIndex,
-            lastCompletedDayIndex = completedDayIndex,
-            lastCompletedAt = completedAt,
+            lastCompletedDayIndex = if (startsNewCycle) null else completedDayIndex,
+            lastCompletedAt = if (startsNewCycle) null else completedAt,
             cycleNumber = if (startsNewCycle) current.cycleNumber + 1 else current.cycleNumber,
-            lastCompletedCycleNumber = current.cycleNumber,
-            lastCompletedPreviousCycleStartedAt = current.cycleStartedAt,
+            lastCompletedCycleNumber = if (startsNewCycle) null else current.cycleNumber,
+            lastCompletedPreviousCycleStartedAt = if (startsNewCycle) null else current.cycleStartedAt,
             cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt
         )
         return Result.success(Unit)
