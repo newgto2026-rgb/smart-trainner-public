@@ -1,12 +1,28 @@
 package com.smarttrainner.core.domain
 
 import com.google.common.truth.Truth.assertThat
+import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.RoutineSource
 import java.time.LocalDate
 import org.junit.Test
 
 class TrainingSeedStoreTest {
     private val store = TrainingSeedStore()
+
+    @Test
+    fun lookupsReturnExercisesTemplatesCustomTemplatesAndFallbackTemplate() {
+        val exercise = store.exercises.first()
+        val systemTemplate = store.templates.first { it.source == RoutineSource.SYSTEM }
+        val customTemplate = systemTemplate.copy(id = "custom-template", source = RoutineSource.CUSTOM)
+
+        assertThat(store.exercise(exercise.id)).isEqualTo(exercise)
+        assertThat(store.exercise(ExerciseId("missing"))).isNull()
+        assertThat(store.hasTemplate(systemTemplate.id)).isTrue()
+        assertThat(store.hasTemplate("missing")).isFalse()
+        assertThat(store.templateById(customTemplate.id, customTemplates = listOf(customTemplate)))
+            .isEqualTo(customTemplate)
+        assertThat(store.templateById("missing")).isEqualTo(store.templates.first())
+    }
 
     @Test
     fun buildCyclePlanKeepsSystemPlannedExerciseIdsStable() {

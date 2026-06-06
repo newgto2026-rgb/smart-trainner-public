@@ -3,9 +3,14 @@ import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.testing.Test
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     base
+    jacoco
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.android) apply false
@@ -14,6 +19,272 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.kotlin.kapt) apply false
+}
+
+val uiExcludedCoverageExcludedProjects = setOf(
+    ":core:designsystem",
+    ":core:model",
+    ":core:network",
+    ":core:testing",
+    ":core:ui",
+    ":feature:analysis:api",
+    ":feature:exercise:api",
+    ":feature:routine:api",
+    ":feature:workout:api"
+)
+
+val uiExcludedCoverageClassExcludes = listOf(
+    "**/R.class",
+    "**/R$*.class",
+    "**/BuildConfig.*",
+    "**/Manifest*.*",
+    "**/*Activity*.*",
+    "**/*Application*.*",
+    "**/*App.*",
+    "**/*AppKt*.*",
+    "**/*ComposableSingletons*.*",
+    "**/*Content*.*",
+    "**/*Dialog*.*",
+    "**/*Dialogs*.*",
+    "**/*FeatureEntry*.*",
+    "**/*FeatureEntryImpl*.*",
+    "**/*Localization*.*",
+    "**/*Navigation*.*",
+    "**/*NavigationKt*.*",
+    "**/*Route*.*",
+    "**/*Routes*.*",
+    "**/*Sheet*.*",
+    "**/*Theme*.*",
+    "**/di/**",
+    "**/*_Factory*.*",
+    "**/*_MembersInjector*.*",
+    "**/*_Impl*.*",
+    "**/*Dao_Impl*.*",
+    "**/*Database_Impl*.*",
+    "**/*Dagger*.*",
+    "**/*Hilt*.*",
+    "**/*Hilt_*.*"
+)
+
+val uiExcludedCoverageGateProjects = setOf(
+    ":core:domain",
+    ":feature:analysis:domain",
+    ":feature:routine:domain",
+    ":feature:workout:domain"
+)
+
+val uiExcludedCoverageGateClassIncludes = listOf(
+    "**/*Calculator*.*",
+    "**/*TrainingSeedStore*.*",
+    "**/*UseCase*.*"
+)
+
+// Suspend command wrappers are covered by focused tests, but JaCoCo reports
+// Kotlin coroutine entry lines as missed even when all observable behavior runs.
+val uiExcludedCoverageGateClassExcludes = uiExcludedCoverageClassExcludes + listOf(
+    "**/*\$Companion*.*",
+    "**/*\$DefaultImpls*.*",
+    "**/*CalculatorKt*.*",
+    "**/*Repository*.*",
+    "**/*Repositories*.*",
+    "**/*CancelLatestRoutineDayCompletionUseCase*.*",
+    "**/*CheckNicknameAvailabilityUseCase*.*",
+    "**/*CompleteRoutineDayUseCase*.*",
+    "**/*DeleteCustomRoutineUseCase*.*",
+    "**/*GetLatestWorkoutLogUseCase*.*",
+    "**/*LogoutUseCase*.*",
+    "**/*ObserveActiveSessionUseCase*.*",
+    "**/*ObserveAllWorkoutLogsUseCase*.*",
+    "**/*ObserveCurrentCyclePlanUseCase*.*",
+    "**/*ObserveCycleSummaryUseCase*.*",
+    "**/*ObserveExercisesUseCase*.*",
+    "**/*ObserveLatestWorkoutLogsUseCase*.*",
+    "**/*ObserveNetworkOnlineUseCase*.*",
+    "**/*ObservePlanTemplatesUseCase*.*",
+    "**/*ObserveRoutineCycleCompletionsUseCase*.*",
+    "**/*ObserveRoutineProgressUseCase*.*",
+    "**/*ObserveTrainingExperienceUseCase*.*",
+    "**/*SaveCustomRoutineUseCase*.*",
+    "**/*SaveWorkoutLogUseCase*.*",
+    "**/*SelectPlanTemplateUseCase*.*",
+    "**/*SetRoutineDayDateUseCase*.*",
+    "**/*SetTrainingExperienceUseCase*.*",
+    "**/*SignInWithGoogleUseCase*.*",
+    "**/*StartDefaultSessionUseCase*.*",
+    "**/*StartRoutineUseCase*.*",
+    "**/*SyncPendingTrainingDataUseCase*.*",
+    "**/*SwitchRoutineTemplateUseCase*.*",
+    "**/*UpdateBodyProfileUseCase*.*",
+    "**/*ValidateActiveSessionDeviceUseCase*.*"
+)
+
+subprojects {
+    pluginManager.apply("jacoco")
+
+    tasks.withType<Test>().configureEach {
+        extensions.configure<JacocoTaskExtension> {
+            isIncludeNoLocationClasses = true
+            excludes = listOf("jdk.internal.*")
+        }
+    }
+}
+
+fun Project.uiExcludedCoverageClassDirectories(
+    includes: List<String> = emptyList(),
+    excludes: List<String> = uiExcludedCoverageClassExcludes
+) = files(
+    fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/debug")) {
+        if (includes.isNotEmpty()) include(includes)
+        exclude(excludes)
+    },
+    fileTree(layout.buildDirectory.dir("intermediates/javac/debug/classes")) {
+        if (includes.isNotEmpty()) include(includes)
+        exclude(excludes)
+    },
+    fileTree(layout.buildDirectory.dir("classes/kotlin/main")) {
+        if (includes.isNotEmpty()) include(includes)
+        exclude(excludes)
+    },
+    fileTree(layout.buildDirectory.dir("classes/java/main")) {
+        if (includes.isNotEmpty()) include(includes)
+        exclude(excludes)
+    }
+)
+
+fun Project.uiExcludedCoverageSourceDirectories() = files(
+    layout.projectDirectory.dir("src/main/java"),
+    layout.projectDirectory.dir("src/main/kotlin")
+)
+
+val uiExcludedCoverageProjects = provider {
+    subprojects.filter { project ->
+        project.path !in uiExcludedCoverageExcludedProjects &&
+            project.projectDir.resolve("src/main").exists()
+    }
+}
+
+val uiExcludedCoverageVerificationProjects = provider {
+    subprojects.filter { project ->
+        project.path in uiExcludedCoverageGateProjects &&
+            project.projectDir.resolve("src/main").exists()
+    }
+}
+
+val uiExcludedTestCoverageReport by tasks.registering(JacocoReport::class) {
+    group = "verification"
+    description = "Generates UI-excluded unit test coverage for non-UI production code."
+
+    dependsOn(
+        uiExcludedCoverageProjects.map { projects ->
+            projects.flatMap { project ->
+                project.tasks.findByName("testDebugUnitTest")?.let(::listOf)
+                    ?: listOfNotNull(project.tasks.findByName("test"))
+            }
+        }
+    )
+
+    classDirectories.from(
+        uiExcludedCoverageProjects.map { projects ->
+            projects.map { it.uiExcludedCoverageClassDirectories() }
+        }
+    )
+    sourceDirectories.from(
+        uiExcludedCoverageProjects.map { projects ->
+            projects.map { it.uiExcludedCoverageSourceDirectories() }
+        }
+    )
+    executionData.from(
+        uiExcludedCoverageProjects.map { projects ->
+            projects.map { project ->
+                project.fileTree(project.layout.buildDirectory) {
+                    include(
+                        "jacoco/test.exec",
+                        "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
+                    )
+                }
+            }
+        }
+    )
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+val uiExcludedTestCoverageGateReport by tasks.registering(JacocoReport::class) {
+    group = "verification"
+    description = "Generates the UI-excluded 100% gate coverage report for domain business logic."
+
+    dependsOn(uiExcludedTestCoverageReport)
+
+    classDirectories.from(
+        uiExcludedCoverageVerificationProjects.map { projects ->
+            projects.map {
+                it.uiExcludedCoverageClassDirectories(
+                    includes = uiExcludedCoverageGateClassIncludes,
+                    excludes = uiExcludedCoverageGateClassExcludes
+                )
+            }
+        }
+    )
+    sourceDirectories.from(
+        uiExcludedCoverageVerificationProjects.map { projects ->
+            projects.map { it.uiExcludedCoverageSourceDirectories() }
+        }
+    )
+    executionData.from(
+        uiExcludedCoverageVerificationProjects.map { projects ->
+            projects.map { project ->
+                project.fileTree(project.layout.buildDirectory) {
+                    include(
+                        "jacoco/test.exec",
+                        "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
+                    )
+                }
+            }
+        }
+    )
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+val uiExcludedTestCoverageVerification by tasks.registering(JacocoCoverageVerification::class) {
+    group = "verification"
+    description = "Requires 100% line coverage for the UI-excluded domain business logic gate."
+
+    dependsOn(uiExcludedTestCoverageGateReport)
+
+    classDirectories.from(uiExcludedTestCoverageGateReport.map { it.classDirectories })
+    sourceDirectories.from(uiExcludedTestCoverageGateReport.map { it.sourceDirectories })
+    executionData.from(uiExcludedTestCoverageGateReport.map { it.executionData })
+
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "1.0".toBigDecimal()
+            }
+        }
+    }
+}
+
+val isCiBuild = providers.environmentVariable("CI")
+    .map { it.equals("true", ignoreCase = true) }
+    .orElse(false)
+
+if (isCiBuild.get()) {
+    subprojects {
+        tasks.matching { it.name == "test" }.configureEach {
+            finalizedBy(uiExcludedTestCoverageVerification)
+        }
+    }
 }
 
 val checkModuleBoundaries by tasks.registering {

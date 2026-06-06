@@ -262,6 +262,349 @@ class RoutinePolicyUseCasesTest {
     }
 
     @Test
+    fun recommendRoutine_rejectsWhenNoSystemTemplatesExist() {
+        val customTemplate = templates.first().copy(source = RoutineSource.CUSTOM)
+
+        val result = runCatching {
+            recommendRoutine(
+                input = RoutineRecommendationInput(
+                    cycleLength = 3,
+                    sessionMinutes = 45,
+                    experience = TrainingExperience.BEGINNER,
+                    feeling = RoutineFeeling.APP_RECOMMENDED
+                ),
+                templates = listOf(customTemplate)
+            )
+        }
+
+        assertThat(result.exceptionOrNull()).isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
+    fun recommendRoutine_advancedExperienceUsesAdvancedEligibleTemplate() {
+        val advancedTemplate = template(
+            id = "advanced-balanced-5day",
+            cycleLength = 5,
+            sessionMinutes = 60,
+            structure = RoutineStructure.BALANCED_SPLIT,
+            experience = TrainingExperience.ADVANCED,
+            focusSummary = listOf(RoutineFocus.UPPER_BODY, RoutineFocus.LOWER_BODY)
+        )
+
+        val recommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                cycleLength = 5,
+                sessionMinutes = 60,
+                experience = TrainingExperience.ADVANCED,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            ),
+            templates = templates + advancedTemplate
+        )
+
+        assertThat(recommendation.primaryTemplateId).isEqualTo("advanced-balanced-5day")
+        assertThat(recommendation.reasonCode).isEqualTo("balanced_recovery")
+    }
+
+    @Test
+    fun recommendRoutine_focusedBodyPartFallsBackThroughBalancedAndFullBody() {
+        val balanced = template(
+            id = "balanced-without-body-part",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BALANCED_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.UPPER_BODY, RoutineFocus.LOWER_BODY)
+        )
+        val fullBody = template(
+            id = "full-body-fallback",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.FULL_BODY,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+
+        val balancedRecommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                cycleLength = 4,
+                sessionMinutes = 45,
+                experience = TrainingExperience.INTERMEDIATE,
+                feeling = RoutineFeeling.FOCUSED_BODY_PART
+            ),
+            templates = listOf(balanced, fullBody)
+        )
+        val fullBodyRecommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                cycleLength = 4,
+                sessionMinutes = 45,
+                experience = TrainingExperience.INTERMEDIATE,
+                feeling = RoutineFeeling.FOCUSED_BODY_PART
+            ),
+            templates = listOf(fullBody)
+        )
+
+        assertThat(balancedRecommendation.primaryTemplateId).isEqualTo("balanced-without-body-part")
+        assertThat(fullBodyRecommendation.primaryTemplateId).isEqualTo("full-body-fallback")
+    }
+
+    @Test
+    fun recommendRoutine_appRecommendedUsesCycleLengthFallbacks() {
+        val fullBody = template(
+            id = "short-cycle-full-body",
+            cycleLength = 2,
+            sessionMinutes = 45,
+            structure = RoutineStructure.FULL_BODY,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+        val balanced = template(
+            id = "longer-balanced",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BALANCED_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.UPPER_BODY, RoutineFocus.LOWER_BODY)
+        )
+        val bodyPartWithoutBaseFocus = template(
+            id = "body-part-without-base-focus",
+            cycleLength = 5,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.CHEST)
+        )
+
+        val longCycleRecommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                cycleLength = 5,
+                sessionMinutes = 45,
+                experience = TrainingExperience.INTERMEDIATE,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            ),
+            templates = listOf(fullBody, balanced, bodyPartWithoutBaseFocus)
+        )
+        val shortCycleRecommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                cycleLength = 2,
+                sessionMinutes = 45,
+                experience = TrainingExperience.INTERMEDIATE,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            ),
+            templates = listOf(fullBody, balanced)
+        )
+
+        assertThat(longCycleRecommendation.primaryTemplateId).isEqualTo("longer-balanced")
+        assertThat(shortCycleRecommendation.primaryTemplateId).isEqualTo("short-cycle-full-body")
+    }
+
+    @Test
+    fun recommendRoutine_fallsBackToSystemTemplatesWhenExperienceHasNoEligibleTemplate() {
+        val intermediateBalanced = templates.first { it.id == "intermediate-balanced-4day" }
+
+        val recommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                cycleLength = 4,
+                sessionMinutes = 45,
+                experience = TrainingExperience.ADVANCED,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            ),
+            templates = listOf(intermediateBalanced)
+        )
+
+        assertThat(recommendation.primaryTemplateId).isEqualTo("intermediate-balanced-4day")
+    }
+
+    @Test
+    fun recommendRoutine_focusedBodyPartUsesFallbackCandidatesWhenExactCycleHasNoFit() {
+        val exactUnfitBodyPart = template(
+            id = "exact-unfit-body-part",
+            cycleLength = 3,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.CHEST)
+        )
+        val fallbackBodyPart = template(
+            id = "fallback-body-part",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = bodyPartFocus
+        )
+        val fallbackBalanced = template(
+            id = "fallback-balanced",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BALANCED_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.UPPER_BODY, RoutineFocus.LOWER_BODY)
+        )
+        val fallbackFullBody = template(
+            id = "fallback-full-body",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.FULL_BODY,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+        val input = RoutineRecommendationInput(
+            cycleLength = 3,
+            sessionMinutes = 45,
+            experience = TrainingExperience.INTERMEDIATE,
+            feeling = RoutineFeeling.FOCUSED_BODY_PART
+        )
+
+        val bodyPartRecommendation = recommendRoutine(input, listOf(exactUnfitBodyPart, fallbackBodyPart))
+        val balancedRecommendation = recommendRoutine(input, listOf(exactUnfitBodyPart, fallbackBalanced))
+        val fullBodyRecommendation = recommendRoutine(input, listOf(exactUnfitBodyPart, fallbackFullBody))
+
+        assertThat(bodyPartRecommendation.primaryTemplateId).isEqualTo("fallback-body-part")
+        assertThat(balancedRecommendation.primaryTemplateId).isEqualTo("fallback-balanced")
+        assertThat(fullBodyRecommendation.primaryTemplateId).isEqualTo("fallback-full-body")
+    }
+
+    @Test
+    fun recommendRoutine_beginnerUsesBalancedBodyPartAndFallbackCandidates() {
+        val exactBalanced = template(
+            id = "beginner-exact-balanced",
+            cycleLength = 3,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BALANCED_SPLIT,
+            experience = TrainingExperience.BEGINNER,
+            focusSummary = listOf(RoutineFocus.UPPER_BODY, RoutineFocus.LOWER_BODY)
+        )
+        val exactBodyPart = template(
+            id = "beginner-exact-body-part",
+            cycleLength = 3,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.BEGINNER,
+            focusSummary = bodyPartFocus
+        )
+        val exactUnfitBodyPart = template(
+            id = "beginner-exact-unfit-body-part",
+            cycleLength = 3,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.BEGINNER,
+            focusSummary = listOf(RoutineFocus.CHEST)
+        )
+        val fallbackFullBody = template(
+            id = "beginner-fallback-full-body",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.FULL_BODY,
+            experience = TrainingExperience.BEGINNER,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+        val fallbackBalanced = exactBalanced.copy(id = "beginner-fallback-balanced", cycleLength = 4)
+        val fallbackBodyPart = exactBodyPart.copy(id = "beginner-fallback-body-part", cycleLength = 4)
+        val input = RoutineRecommendationInput(
+            cycleLength = 3,
+            sessionMinutes = 45,
+            experience = TrainingExperience.BEGINNER,
+            feeling = RoutineFeeling.APP_RECOMMENDED
+        )
+
+        val balancedRecommendation = recommendRoutine(input, listOf(exactBalanced))
+        val bodyPartRecommendation = recommendRoutine(input, listOf(exactBodyPart))
+        val fallbackFullBodyRecommendation = recommendRoutine(input, listOf(exactUnfitBodyPart, fallbackFullBody))
+        val fallbackBalancedRecommendation = recommendRoutine(input, listOf(exactUnfitBodyPart, fallbackBalanced))
+        val fallbackBodyPartRecommendation = recommendRoutine(input, listOf(exactUnfitBodyPart, fallbackBodyPart))
+
+        assertThat(balancedRecommendation.primaryTemplateId).isEqualTo("beginner-exact-balanced")
+        assertThat(bodyPartRecommendation.primaryTemplateId).isEqualTo("beginner-exact-body-part")
+        assertThat(fallbackFullBodyRecommendation.primaryTemplateId).isEqualTo("beginner-fallback-full-body")
+        assertThat(fallbackBalancedRecommendation.primaryTemplateId).isEqualTo("beginner-fallback-balanced")
+        assertThat(fallbackBodyPartRecommendation.primaryTemplateId).isEqualTo("beginner-fallback-body-part")
+    }
+
+    @Test
+    fun recommendRoutine_appRecommendedUsesFallbackCandidatesAndFirstCandidateWhenNoStructureFits() {
+        val exactUnfitBodyPart = template(
+            id = "app-exact-unfit-body-part",
+            cycleLength = 3,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BODY_PART_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.CHEST)
+        )
+        val fallbackBalanced = template(
+            id = "app-fallback-balanced",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BALANCED_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.UPPER_BODY, RoutineFocus.LOWER_BODY)
+        )
+        val fallbackFullBody = template(
+            id = "app-fallback-full-body",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.FULL_BODY,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+        val input = RoutineRecommendationInput(
+            cycleLength = 3,
+            sessionMinutes = 45,
+            experience = TrainingExperience.INTERMEDIATE,
+            feeling = RoutineFeeling.APP_RECOMMENDED
+        )
+
+        val balancedRecommendation = recommendRoutine(input, listOf(exactUnfitBodyPart, fallbackBalanced))
+        val fullBodyRecommendation = recommendRoutine(input, listOf(exactUnfitBodyPart, fallbackFullBody))
+        val firstCandidateRecommendation = recommendRoutine(input, listOf(exactUnfitBodyPart))
+
+        assertThat(balancedRecommendation.primaryTemplateId).isEqualTo("app-fallback-balanced")
+        assertThat(fullBodyRecommendation.primaryTemplateId).isEqualTo("app-fallback-full-body")
+        assertThat(firstCandidateRecommendation.primaryTemplateId).isEqualTo("app-exact-unfit-body-part")
+    }
+
+    @Test
+    fun recommendRoutine_usesFrequencyFallbackWhenExactCycleIsMissing() {
+        val shorterFullBody = template(
+            id = "shorter-full-body",
+            cycleLength = 2,
+            sessionMinutes = 45,
+            structure = RoutineStructure.FULL_BODY,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.FULL_BODY)
+        )
+        val longerBalanced = template(
+            id = "longer-balanced-only",
+            cycleLength = 4,
+            sessionMinutes = 45,
+            structure = RoutineStructure.BALANCED_SPLIT,
+            experience = TrainingExperience.INTERMEDIATE,
+            focusSummary = listOf(RoutineFocus.UPPER_BODY, RoutineFocus.LOWER_BODY)
+        )
+
+        val shorterFallbackRecommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                cycleLength = 3,
+                sessionMinutes = 45,
+                experience = TrainingExperience.INTERMEDIATE,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            ),
+            templates = listOf(shorterFullBody, longerBalanced)
+        )
+        val allCandidatesFallbackRecommendation = recommendRoutine(
+            input = RoutineRecommendationInput(
+                cycleLength = 1,
+                sessionMinutes = 45,
+                experience = TrainingExperience.INTERMEDIATE,
+                feeling = RoutineFeeling.APP_RECOMMENDED
+            ),
+            templates = listOf(longerBalanced)
+        )
+
+        assertThat(shorterFallbackRecommendation.primaryTemplateId).isEqualTo("shorter-full-body")
+        assertThat(allCandidatesFallbackRecommendation.primaryTemplateId).isEqualTo("longer-balanced-only")
+    }
+
+    @Test
     fun resolveRoutineCycleCompletion_excludesLogsBeforeCurrentCycle() {
         val currentCycleStart = Instant.parse("2026-05-24T12:00:00Z")
         val progress = RoutineProgress(
@@ -434,6 +777,26 @@ class RoutinePolicyUseCasesTest {
         assertThat(result.ready).isFalse()
         assertThat(result.remainingRecoveryHours).isEqualTo(13)
         assertThat(result.warningCode).isEqualTo("minimum_recovery_not_met")
+    }
+
+    @Test
+    fun evaluateReadiness_isReadyWithoutCompletionOrAfterRecovery() {
+        val noCompletion = evaluateReadiness(
+            lastCompletedAt = null,
+            now = Instant.parse("2026-05-24T20:00:00Z"),
+            minRecoveryHours = 24
+        )
+        val afterRecovery = evaluateReadiness(
+            lastCompletedAt = Instant.parse("2026-05-23T09:00:00Z"),
+            now = Instant.parse("2026-05-24T20:00:00Z"),
+            minRecoveryHours = 24
+        )
+
+        assertThat(noCompletion.ready).isTrue()
+        assertThat(noCompletion.warningCode).isNull()
+        assertThat(afterRecovery.ready).isTrue()
+        assertThat(afterRecovery.remainingRecoveryHours).isEqualTo(0)
+        assertThat(afterRecovery.warningCode).isNull()
     }
 
     private val bodyPartFocus = listOf(

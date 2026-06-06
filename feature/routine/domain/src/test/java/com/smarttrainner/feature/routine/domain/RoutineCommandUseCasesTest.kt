@@ -1,12 +1,17 @@
 package com.smarttrainner.feature.routine.domain
 
 import com.google.common.truth.Truth.assertThat
-import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.CustomRoutineDayInput
 import com.smarttrainner.core.model.CustomRoutineExerciseInput
 import com.smarttrainner.core.model.CustomRoutineInput
+import com.smarttrainner.core.model.DifficultyLevel
+import com.smarttrainner.core.model.EquipmentType
+import com.smarttrainner.core.model.Exercise
+import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanLevel
 import com.smarttrainner.core.model.PlanTemplate
+import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineFocus
@@ -70,10 +75,120 @@ class RoutineCommandUseCasesTest {
     }
 
     @Test
+    fun validateCustomRoutine_rejectsRoutineAndExerciseBoundaryViolations() {
+        val cases = listOf(
+            customRoutine(name = " ") to CustomRoutineValidationError.NAME,
+            customRoutine(name = "a".repeat(61)) to CustomRoutineValidationError.NAME,
+            customRoutine(days = emptyList()) to CustomRoutineValidationError.DAYS,
+            customRoutine(days = List(8) { customDay() }) to CustomRoutineValidationError.DAYS,
+            customRoutine(days = listOf(customDay(minRecoveryHours = -1))) to CustomRoutineValidationError.REST,
+            customRoutine(exercises = listOf(customExercise("squat", sets = 0))) to CustomRoutineValidationError.SETS,
+            customRoutine(exercises = listOf(customExercise("squat", restSeconds = 601))) to CustomRoutineValidationError.REST,
+            customRoutine(
+                exercises = listOf(customExercise("squat", repRangeStart = null, repRangeEnd = null))
+            ) to CustomRoutineValidationError.REPS,
+            customRoutine(
+                exercises = listOf(customExercise("squat", repRangeStart = null, repRangeEnd = 12))
+            ) to CustomRoutineValidationError.REPS,
+            customRoutine(
+                exercises = listOf(customExercise("squat", repRangeStart = 8, repRangeEnd = null))
+            ) to CustomRoutineValidationError.REPS,
+            customRoutine(
+                exercises = listOf(
+                    customExercise(
+                        "squat",
+                        repRangeStart = null,
+                        repRangeEnd = null,
+                        durationMinutes = 241
+                    )
+                )
+            ) to CustomRoutineValidationError.DURATION
+        )
+
+        cases.forEach { (input, expected) ->
+            assertThat(validateCustomRoutine(input, setOf(ExerciseId("squat")))).isEqualTo(expected)
+        }
+    }
+
+    @Test
+    fun validateCustomRoutine_acceptsDurationOnlyExercise() {
+        val result = validateCustomRoutine(
+            input = customRoutine(
+                exercises = listOf(
+                    customExercise(
+                        "plank",
+                        repRangeStart = null,
+                        repRangeEnd = null,
+                        durationMinutes = 3
+                    )
+                )
+            ),
+            availableExerciseIds = setOf(ExerciseId("plank"))
+        )
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun saveCustomRoutine_returnsValidationFailureWithoutCallingRepository() = runTest {
+        val repository = CapturingRoutinePlanRepository()
+        val saveCustomRoutine = SaveCustomRoutineUseCase(repository, validateCustomRoutine)
+
+        val result = saveCustomRoutine(
+            input = customRoutine(exercises = emptyList()),
+            availableExerciseIds = setOf(ExerciseId("squat"))
+        )
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(result.exceptionOrNull()?.message).isEqualTo(CustomRoutineValidationError.EMPTY_DAY.name)
+        assertThat(repository.savedInput).isNull()
+    }
+
+    @Test
+    fun saveCustomRoutine_delegatesValidInputToRepository() = runTest {
+        val repository = CapturingRoutinePlanRepository()
+        val saveCustomRoutine = SaveCustomRoutineUseCase(repository, validateCustomRoutine)
+        val input = customRoutine(exercises = listOf(customExercise("squat")))
+
+        val result = saveCustomRoutine(
+            input = input,
+            availableExerciseIds = setOf(ExerciseId("squat"))
+        )
+
+        assertThat(result.getOrThrow().id).isEqualTo("saved-custom")
+        assertThat(repository.savedInput).isEqualTo(input)
+    }
+
+    @Test
+    fun saveCustomRoutine_propagatesRepositoryFailureForValidInput() = runTest {
+        val failure = IllegalStateException("save failed")
+        val repository = CapturingRoutinePlanRepository(saveResult = Result.failure(failure))
+        val saveCustomRoutine = SaveCustomRoutineUseCase(repository, validateCustomRoutine)
+        val input = customRoutine(exercises = listOf(customExercise("squat")))
+
+        val result = saveCustomRoutine(
+            input = input,
+            availableExerciseIds = setOf(ExerciseId("squat"))
+        )
+
+        assertThat(result.exceptionOrNull()).isSameInstanceAs(failure)
+        assertThat(repository.savedInput).isEqualTo(input)
+    }
+
+    @Test
     fun advanceRoutineDay_wrapsToFirstDayAfterLastDay() {
         val nextDayIndex = advanceRoutineDay(completedDayIndex = 3, cycleLength = 4)
 
         assertThat(nextDayIndex).isEqualTo(0)
+    }
+
+    @Test
+    fun advanceRoutineDay_rejectsInvalidCycleInputs() {
+        val invalidCycle = runCatching { advanceRoutineDay(completedDayIndex = 0, cycleLength = 0) }
+        val invalidDay = runCatching { advanceRoutineDay(completedDayIndex = 2, cycleLength = 2) }
+
+        assertThat(invalidCycle.exceptionOrNull()).isInstanceOf(IllegalArgumentException::class.java)
+        assertThat(invalidDay.exceptionOrNull()).isInstanceOf(IllegalArgumentException::class.java)
     }
 
     @Test
@@ -90,6 +205,7 @@ class RoutineCommandUseCasesTest {
 
         assertThat(repository.nextDayIndex).isEqualTo(0)
         assertThat(repository.newCycleStartedAt).isEqualTo(completedAt)
+        assertThat(repository.markCompletedResult?.isSuccess).isTrue()
     }
 
     @Test
@@ -106,6 +222,112 @@ class RoutineCommandUseCasesTest {
 
         assertThat(repository.nextDayIndex).isEqualTo(2)
         assertThat(repository.newCycleStartedAt).isNull()
+    }
+
+    @Test
+    fun completeRoutineDay_propagatesRepositoryFailureAfterComputingNextDay() = runTest {
+        val failure = IllegalStateException("completion failed")
+        val repository = CapturingRoutineProgressRepository(
+            markCompletedResultToReturn = Result.failure(failure)
+        )
+        val completedAt = Instant.parse("2026-05-24T12:00:00Z")
+        val completeRoutineDay = CompleteRoutineDayUseCase(repository, advanceRoutineDay)
+
+        val result = completeRoutineDay(
+            template = templates.first { it.id == "intermediate-body-part-4day" },
+            completedDayIndex = 0,
+            completedAt = completedAt
+        )
+
+        assertThat(result.exceptionOrNull()).isSameInstanceAs(failure)
+        assertThat(repository.nextDayIndex).isEqualTo(1)
+        assertThat(repository.newCycleStartedAt).isNull()
+    }
+
+    @Test
+    fun cancelLatestRoutineDayCompletion_failsWhenThereIsNoLatestCompletion() = runTest {
+        val repository = CapturingRoutineProgressRepository()
+        val cancelLatest = CancelLatestRoutineDayCompletionUseCase(repository)
+
+        val result = cancelLatest(
+            template = templates.first { it.id == "intermediate-body-part-4day" },
+            progress = RoutineProgress(
+                templateId = "intermediate-body-part-4day",
+                dayIndex = 0,
+                lastCompletedDayIndex = null,
+                lastCompletedAt = null,
+                startedAt = Instant.parse("2026-05-20T00:00:00Z")
+            ),
+            completedDay = WorkoutDayPlan(
+                date = LocalDate.of(2026, 5, 20),
+                title = "Day 1",
+                focus = "Chest",
+                exercises = emptyList(),
+                dayNumber = 1
+            )
+        )
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(repository.restoredDayIndex).isNull()
+    }
+
+    @Test
+    fun cancelLatestRoutineDayCompletion_rejectsMismatchedCompletedDay() = runTest {
+        val repository = CapturingRoutineProgressRepository()
+        val cancelLatest = CancelLatestRoutineDayCompletionUseCase(repository)
+
+        val result = runCatching {
+            cancelLatest(
+                template = templates.first { it.id == "intermediate-body-part-4day" },
+                progress = RoutineProgress(
+                    templateId = "intermediate-body-part-4day",
+                    dayIndex = 1,
+                    lastCompletedDayIndex = 0,
+                    lastCompletedAt = Instant.parse("2026-05-24T12:00:00Z"),
+                    startedAt = Instant.parse("2026-05-20T00:00:00Z")
+                ),
+                completedDay = WorkoutDayPlan(
+                    date = LocalDate.of(2026, 5, 20),
+                    title = "Day 2",
+                    focus = "Back",
+                    exercises = emptyList(),
+                    dayNumber = 2
+                )
+            )
+        }
+
+        assertThat(result.exceptionOrNull()).isInstanceOf(IllegalArgumentException::class.java)
+        assertThat(repository.restoredDayIndex).isNull()
+    }
+
+    @Test
+    fun cancelLatestRoutineDayCompletion_restoresFirstDayWithoutRemainingLatestCompletion() = runTest {
+        val repository = CapturingRoutineProgressRepository()
+        val cancelLatest = CancelLatestRoutineDayCompletionUseCase(repository)
+
+        cancelLatest(
+            template = templates.first { it.id == "intermediate-body-part-4day" },
+            progress = RoutineProgress(
+                templateId = "intermediate-body-part-4day",
+                dayIndex = 1,
+                lastCompletedDayIndex = 0,
+                lastCompletedAt = Instant.parse("2026-05-24T12:00:00Z"),
+                cycleNumber = 2,
+                lastCompletedCycleNumber = null,
+                startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+                cycleStartedAt = Instant.parse("2026-05-20T00:00:00Z")
+            ),
+            completedDay = WorkoutDayPlan(
+                date = LocalDate.of(2026, 5, 20),
+                title = "Day 1",
+                focus = "Chest",
+                exercises = emptyList(),
+                dayNumber = 1
+            )
+        )
+
+        assertThat(repository.restoredCycleNumber).isEqualTo(2)
+        assertThat(repository.remainingLatestCompletion).isNull()
     }
 
     @Test
@@ -143,6 +365,36 @@ class RoutineCommandUseCasesTest {
             .isEqualTo("routine-day|intermediate-body-part-4day|cycle1|day2")
         assertThat(repository.additionalExerciseIdPrefix)
             .isEqualTo("routine-added|intermediate-body-part-4day|cycle1|day2|")
+    }
+
+    @Test
+    fun cancelLatestRoutineDayCompletion_passesCompletedDayExerciseScope() = runTest {
+        val repository = CapturingRoutineProgressRepository()
+        val cancelLatest = CancelLatestRoutineDayCompletionUseCase(repository)
+        val planned = plannedExercise("bench-press")
+
+        cancelLatest(
+            template = templates.first { it.id == "intermediate-body-part-4day" },
+            progress = RoutineProgress(
+                templateId = "intermediate-body-part-4day",
+                dayIndex = 1,
+                lastCompletedDayIndex = 0,
+                lastCompletedAt = Instant.parse("2026-05-24T12:00:00Z"),
+                cycleNumber = 1,
+                lastCompletedCycleNumber = 1,
+                startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+                cycleStartedAt = Instant.parse("2026-05-20T00:00:00Z")
+            ),
+            completedDay = WorkoutDayPlan(
+                date = LocalDate.of(2026, 5, 20),
+                title = "Day 1",
+                focus = "Chest",
+                exercises = listOf(planned),
+                dayNumber = 1
+            )
+        )
+
+        assertThat(repository.plannedExerciseIds).containsExactly(planned.id)
     }
 
     @Test
@@ -306,40 +558,104 @@ class RoutineCommandUseCasesTest {
     }
 
     private fun customRoutine(
-        exercises: List<CustomRoutineExerciseInput>
+        name: String = "My routine",
+        days: List<CustomRoutineDayInput>? = null,
+        exercises: List<CustomRoutineExerciseInput> = listOf(customExercise("squat"))
     ) = CustomRoutineInput(
-        name = "My routine",
-        days = listOf(
-            CustomRoutineDayInput(
-                title = "1일차",
-                focus = "하체",
-                primaryFocus = RoutineFocus.LOWER_BODY,
-                exercises = exercises
-            )
-        )
+        name = name,
+        days = days ?: listOf(customDay(exercises = exercises))
+    )
+
+    private fun customDay(
+        exercises: List<CustomRoutineExerciseInput> = listOf(customExercise("squat")),
+        minRecoveryHours: Int = 24
+    ) = CustomRoutineDayInput(
+        title = "1일차",
+        focus = "하체",
+        primaryFocus = RoutineFocus.LOWER_BODY,
+        exercises = exercises,
+        minRecoveryHours = minRecoveryHours
     )
 
     private fun customExercise(
         exerciseId: String,
+        sets: Int = 3,
         repRangeStart: Int? = 8,
-        repRangeEnd: Int? = 12
+        repRangeEnd: Int? = 12,
+        durationMinutes: Int? = null,
+        restSeconds: Int = 90
     ) = CustomRoutineExerciseInput(
         exerciseId = ExerciseId(exerciseId),
-        sets = 3,
+        sets = sets,
         repRangeStart = repRangeStart,
         repRangeEnd = repRangeEnd,
+        durationMinutes = durationMinutes,
+        restSeconds = restSeconds
+    )
+
+    private fun plannedExercise(id: String) = PlannedExercise(
+        id = PlannedExerciseId(id),
+        exercise = Exercise(
+            id = ExerciseId(id),
+            name = id,
+            muscleGroup = MuscleGroup.CHEST,
+            equipment = EquipmentType.BARBELL,
+            difficulty = DifficultyLevel.BEGINNER,
+            imageKey = id,
+            summary = "",
+            instructions = emptyList(),
+            safetyCues = emptyList(),
+            defaultSets = 3,
+            defaultRepRange = 8..12,
+            defaultDurationMinutes = null,
+            restSeconds = 90
+        ),
+        sets = 3,
+        repRange = 8..12,
         durationMinutes = null,
-        restSeconds = 90
+        restSeconds = 90,
+        note = ""
     )
 }
 
-private class CapturingRoutineProgressRepository : RoutineProgressCommandRepository {
+private class CapturingRoutinePlanRepository(
+    private val saveResult: Result<PlanTemplate> = Result.success(
+        PlanTemplate(
+            id = "saved-custom",
+            name = "saved-custom",
+            level = PlanLevel.BEGINNER,
+            cycleLength = 1,
+            description = "saved-custom",
+            days = emptyList(),
+            structure = RoutineStructure.FULL_BODY,
+            recommendedExperience = TrainingExperience.BEGINNER,
+            sessionMinutes = 30
+        )
+    )
+) : RoutinePlanCommandRepository {
+    var savedInput: CustomRoutineInput? = null
+
+    override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = error("Not used")
+
+    override suspend fun saveCustomRoutine(input: CustomRoutineInput): Result<PlanTemplate> {
+        savedInput = input
+        return saveResult
+    }
+
+    override suspend fun deleteCustomRoutine(templateId: String): Result<Unit> = error("Not used")
+}
+
+private class CapturingRoutineProgressRepository(
+    private val markCompletedResultToReturn: Result<Unit> = Result.success(Unit)
+) : RoutineProgressCommandRepository {
     var nextDayIndex: Int? = null
     var newCycleStartedAt: Instant? = null
+    var markCompletedResult: Result<Unit>? = null
     var restoredDayIndex: Int? = null
     var restoredCycleNumber: Int? = null
     var remainingLatestCompletion: RoutineCompletionSnapshot? = null
     var routineDayInstanceId: String? = null
+    var plannedExerciseIds: Set<PlannedExerciseId>? = null
     var assignedDate: LocalDate? = null
     var additionalExerciseIdPrefix: String? = null
 
@@ -366,7 +682,7 @@ private class CapturingRoutineProgressRepository : RoutineProgressCommandReposit
     ): Result<Unit> {
         this.nextDayIndex = nextDayIndex
         this.newCycleStartedAt = newCycleStartedAt
-        return Result.success(Unit)
+        return markCompletedResultToReturn.also { markCompletedResult = it }
     }
 
     override suspend fun cancelLatestRoutineDayCompletion(
@@ -382,6 +698,7 @@ private class CapturingRoutineProgressRepository : RoutineProgressCommandReposit
         this.restoredCycleNumber = restoredCycleNumber
         this.remainingLatestCompletion = remainingLatestCompletion
         this.routineDayInstanceId = routineDayInstanceId
+        this.plannedExerciseIds = plannedExerciseIds
         this.additionalExerciseIdPrefix = additionalExerciseIdPrefix
         return Result.success(Unit)
     }
