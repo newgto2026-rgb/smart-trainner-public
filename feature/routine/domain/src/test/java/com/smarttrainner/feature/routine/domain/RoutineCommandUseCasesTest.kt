@@ -447,6 +447,39 @@ class RoutineCommandUseCasesTest {
         assertThat(repository.remainingLatestCompletion?.previousCycleStartedAt).isEqualTo(cycleStartedAt)
     }
 
+    @Test
+    fun cancelLatestRoutineDayCompletion_rejectsPreviousCycleCompletion() = runTest {
+        val repository = CapturingRoutineProgressRepository()
+        val cancelLatest = CancelLatestRoutineDayCompletionUseCase(repository)
+        val progress = RoutineProgress(
+            templateId = "beginner-full-body-3day",
+            dayIndex = 0,
+            lastCompletedDayIndex = 2,
+            lastCompletedAt = Instant.parse("2026-05-24T12:00:00Z"),
+            cycleNumber = 2,
+            lastCompletedCycleNumber = 1,
+            startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-05-24T12:00:00Z")
+        )
+        val completedDay = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 24),
+            title = "Day 3",
+            focus = "Full body",
+            exercises = emptyList(),
+            dayNumber = 3
+        )
+
+        val result = cancelLatest(
+            template = templates.first { it.id == "beginner-full-body-3day" },
+            progress = progress,
+            completedDay = completedDay
+        )
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(repository.restoredDayIndex).isNull()
+        assertThat(repository.routineDayInstanceId).isNull()
+    }
+
     private val templates = listOf(
         template(
             id = "beginner-full-body-2day",

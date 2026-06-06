@@ -316,6 +316,38 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun uiState_hidesPreviousCycleCompletionAfterCycleAdvances() = runTest {
+        repository.progress.value = RoutineProgress(
+            templateId = "beginner-full-body-3day",
+            dayIndex = 0,
+            lastCompletedDayIndex = 2,
+            lastCompletedAt = Instant.parse("2026-06-01T12:00:00Z"),
+            cycleNumber = 2,
+            lastCompletedCycleNumber = 1,
+            startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-06-01T12:00:00Z")
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi == null) {
+                state = awaitItem()
+            }
+
+            assertThat(state.nextRoutineDayUi?.cycleNumber).isEqualTo(2)
+            assertThat(state.nextRoutineDayUi?.dayNumber).isEqualTo(1)
+            assertThat(state.latestRoutineDayCompletion).isNull()
+
+            viewModel.requestCancelLatestRoutineDay()
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.showCancelLatestRoutineDayDialog).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun uiState_refreshesCyclePlanWhenProgressCycleStartChanges() = runTest {
         val viewModel = viewModel()
 

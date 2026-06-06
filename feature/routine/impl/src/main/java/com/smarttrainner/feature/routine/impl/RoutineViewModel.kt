@@ -978,8 +978,6 @@ class RoutineViewModel @Inject constructor(
         return when {
             sameCycleNextDay < cycleLength && completedCycleNumber == cycleNumber ->
                 dayIndex == sameCycleNextDay
-            completedDayIndex == cycleLength - 1 && completedCycleNumber == cycleNumber - 1 ->
-                dayIndex == 0
             else -> false
         }
     }
