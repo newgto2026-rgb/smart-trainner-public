@@ -12,5 +12,5 @@ import javax.inject.Singleton
 object PlatformTimeModule {
     @Provides
     @Singleton
-    fun provideClock(): Clock = Clock.systemUTC()
+    fun provideClock(): Clock = Clock.systemDefaultZone()
 }

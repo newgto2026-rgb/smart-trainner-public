@@ -45,13 +45,62 @@ class RoutineProgressPreferenceMappingTest {
         assertThat(result).isEqualTo(storedCycleStart)
     }
 
+    @Test
+    fun withLocalRoutineDayDateState_preservesAssignedDatesForSameCycleServerSnapshot() {
+        val serverSnapshot = routineProgressPreference(
+            cycleStartedAt = "2026-06-03T04:02:20.308Z",
+            routineDayDates = emptyMap()
+        )
+        val localProgress = routineProgressPreference(
+            cycleStartedAt = null,
+            routineDayDates = mapOf(
+                "routine-day|custom-template|cycle1|day1" to "2026-06-07"
+            )
+        )
+
+        val result = serverSnapshot.withLocalRoutineDayDateState(
+            localProgress = localProgress,
+            zoneId = ZoneId.of("Asia/Seoul")
+        )
+
+        assertThat(result.routineDayDates).containsExactly(
+            "routine-day|custom-template|cycle1|day1",
+            "2026-06-07"
+        )
+        assertThat(result.cycleStartedAt).isEqualTo("2026-06-06T15:00:00Z")
+    }
+
+    @Test
+    fun withLocalRoutineDayDateState_dropsAssignedDatesAcrossDifferentCycles() {
+        val serverSnapshot = routineProgressPreference(
+            cycleNumber = 2,
+            cycleStartedAt = "2026-06-03T04:02:20.308Z",
+            routineDayDates = emptyMap()
+        )
+        val localProgress = routineProgressPreference(
+            cycleNumber = 1,
+            cycleStartedAt = "2026-06-03T04:02:20.308Z",
+            routineDayDates = mapOf(
+                "routine-day|custom-template|cycle1|day1" to "2026-06-07"
+            )
+        )
+
+        val result = serverSnapshot.withLocalRoutineDayDateState(
+            localProgress = localProgress,
+            zoneId = ZoneId.of("Asia/Seoul")
+        )
+
+        assertThat(result.routineDayDates).isEmpty()
+    }
+
     private fun routineProgressPreference(
+        cycleNumber: Int = 1,
         cycleStartedAt: String?,
         routineDayDates: Map<String, String>
     ): RoutineProgressPreference = RoutineProgressPreference(
         templateId = "custom-template",
         dayIndex = 0,
-        cycleNumber = 1,
+        cycleNumber = cycleNumber,
         startedAt = "2026-06-03T04:02:20.308Z",
         cycleStartedAt = cycleStartedAt,
         lastCompletedDayIndex = null,
