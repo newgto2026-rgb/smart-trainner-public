@@ -181,6 +181,58 @@ internal class InMemoryTrainingRepository :
 
     fun progressForTest(): RoutineProgress = progress.value
 
+    fun assignCurrentRoutineDayDateForTest(date: LocalDate) {
+        val current = progress.value
+        val routineDayInstanceId = "routine-day|${current.templateId}|cycle${current.cycleNumber}|day${current.dayIndex + 1}"
+        progress.value = current.copy(
+            routineDayDates = current.routineDayDates + (routineDayInstanceId to date)
+        )
+    }
+
+    fun seedCompletedPastCycleAndCurrentCycleLogForSwitchTest() {
+        val templateId = DEFAULT_TEMPLATE_ID
+        val cycleThreeStart = Instant.parse("2026-05-18T00:00:00Z")
+        val cycleFourStart = Instant.parse("2026-05-24T12:00:00Z")
+        progress.value = RoutineProgress(
+            templateId = templateId,
+            dayIndex = 1,
+            cycleNumber = 4,
+            lastCompletedDayIndex = 0,
+            lastCompletedAt = Instant.parse("2026-05-24T13:00:00Z"),
+            lastCompletedCycleNumber = 4,
+            lastCompletedPreviousCycleStartedAt = cycleFourStart,
+            startedAt = Instant.EPOCH,
+            cycleStartedAt = cycleFourStart,
+            routineDayDates = mapOf(
+                "routine-day|$templateId|cycle4|day1" to LocalDate.of(2026, 5, 24),
+                "routine-day|$templateId|cycle4|day2" to LocalDate.of(2026, 5, 25)
+            )
+        )
+        val template = templateById(templateId, customTemplates.value)
+        val cycleThreePlan = buildCyclePlan(template, cycleThreeStart.atZone(ZoneId.of("UTC")).toLocalDate())
+        val cycleFourPlan = buildCyclePlan(template, cycleFourStart.atZone(ZoneId.of("UTC")).toLocalDate())
+        val pastCycleExercise = cycleThreePlan.days.first().exercises.first()
+        val currentCycleExercise = cycleFourPlan.days.first().exercises.first()
+        val currentCycleLegacyExercise = cycleFourPlan.days[1].exercises.first()
+        logs.value = listOf(
+            pastCycleExercise.toTestLog(
+                id = 1,
+                performedAt = LocalDate.of(2026, 5, 18).atTime(10, 0),
+                routineDayInstanceId = "routine-day|$templateId|cycle3|day1"
+            ),
+            currentCycleExercise.toTestLog(
+                id = 2,
+                performedAt = LocalDate.of(2026, 5, 24).atTime(10, 0),
+                routineDayInstanceId = "routine-day|$templateId|cycle4|day1"
+            ),
+            currentCycleLegacyExercise.toTestLog(
+                id = 3,
+                performedAt = LocalDate.of(2026, 5, 25).atTime(10, 0),
+                routineDayInstanceId = null
+            )
+        )
+    }
+
     override fun observeExercises(): Flow<List<Exercise>> = exercises
 
     override fun observePlanTemplates(): Flow<List<PlanTemplate>> =
@@ -249,9 +301,32 @@ internal class InMemoryTrainingRepository :
     override suspend fun switchRoutineTemplate(templateId: String): Result<Unit> = runCatching {
         require(templateExists(templateId)) { "Unknown plan template: $templateId" }
         selectedTemplateId.value = templateId
+        val current = progress.value
+        val currentTemplate = templateById(current.templateId, customTemplates.value)
+        val currentCyclePlan = buildCyclePlan(
+            currentTemplate,
+            current.cycleStartDate(ZoneId.of("UTC"))
+        )
+        val currentCyclePlannedExerciseIds = currentCyclePlan.days
+            .flatMap { day -> day.exercises.map { it.id } }
+            .toSet()
+        val currentCyclePrefix = "routine-day|${current.templateId}|cycle${current.cycleNumber}|"
+        val currentAdditionalPrefix = "routine-added|${current.templateId}|cycle${current.cycleNumber}|"
+        logs.value = logs.value.filterNot { log ->
+            log.routineDayInstanceId?.startsWith(currentCyclePrefix) == true ||
+                (
+                    log.routineDayInstanceId == null &&
+                        (
+                            log.plannedExerciseId in currentCyclePlannedExerciseIds ||
+                                log.plannedExerciseId.value.startsWith(currentAdditionalPrefix)
+                            )
+                    )
+        }
         progress.value = progress.value.copy(
             templateId = templateId,
             dayIndex = 0,
+            startedAt = Instant.parse("2026-05-24T12:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-05-24T12:00:00Z"),
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
@@ -287,10 +362,10 @@ internal class InMemoryTrainingRepository :
         progress.value = current.copy(
             dayIndex = nextDayIndex,
             cycleNumber = if (startsNewCycle) current.cycleNumber + 1 else current.cycleNumber,
-            lastCompletedDayIndex = completedDayIndex,
-            lastCompletedAt = completedAt,
-            lastCompletedCycleNumber = current.cycleNumber,
-            lastCompletedPreviousCycleStartedAt = current.cycleStartedAt,
+            lastCompletedDayIndex = if (startsNewCycle) null else completedDayIndex,
+            lastCompletedAt = if (startsNewCycle) null else completedAt,
+            lastCompletedCycleNumber = if (startsNewCycle) null else current.cycleNumber,
+            lastCompletedPreviousCycleStartedAt = if (startsNewCycle) null else current.cycleStartedAt,
             cycleStartedAt = newCycleStartedAt ?: current.cycleStartedAt
         )
     }
@@ -462,6 +537,25 @@ internal class InMemoryTrainingRepository :
     } else {
         "${date}_${exerciseId.value}"
     }
+
+    private fun PlannedExercise.toTestLog(
+        id: Long,
+        performedAt: java.time.LocalDateTime,
+        routineDayInstanceId: String?
+    ): WorkoutLog = WorkoutLog(
+        id = WorkoutLogId(id),
+        sessionId = UserSessionId(TEST_SESSION_ID),
+        plannedExerciseId = this.id,
+        exerciseId = exercise.id,
+        performedAt = performedAt,
+        sets = sets,
+        reps = repRange?.first,
+        weightKg = 1.0,
+        durationMinutes = durationMinutes,
+        memo = "",
+        completed = true,
+        routineDayInstanceId = routineDayInstanceId
+    )
 
     private fun defaultProgress(): RoutineProgress =
         RoutineProgress(

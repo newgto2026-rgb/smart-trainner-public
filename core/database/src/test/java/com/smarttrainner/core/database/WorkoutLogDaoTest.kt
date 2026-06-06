@@ -313,4 +313,56 @@ class WorkoutLogDaoTest {
 
         assertThat(result.map { it.log.clientLogId }).containsExactly("client-log-2")
     }
+
+    @Test
+    fun deleteRoutineCycleLogsDeletesOnlyMatchingCurrentCycleScope() = runTest {
+        val currentCycleLog = WorkoutLogEntity(
+            clientLogId = "client-log-1",
+            sessionId = "local-default",
+            plannedExerciseId = "2026-05-24_leg_press",
+            routineDayInstanceId = "routine-day|template|cycle4|day1",
+            exerciseId = "leg_press",
+            performedDate = "2026-05-24",
+            performedAt = "2026-05-24T09:00:00",
+            sets = 1,
+            reps = 10,
+            weightKg = 20.0,
+            durationMinutes = null,
+            memo = "",
+            completed = true
+        )
+        val completedPastCycleLog = currentCycleLog.copy(
+            clientLogId = "client-log-2",
+            routineDayInstanceId = "routine-day|template|cycle3|day1",
+            performedAt = "2026-05-18T09:00:00"
+        )
+        val legacyCurrentCycleLog = currentCycleLog.copy(
+            clientLogId = "client-log-3",
+            routineDayInstanceId = null,
+            plannedExerciseId = "2026-05-24_legacy_press",
+            performedAt = "2026-05-24T10:00:00"
+        )
+        val otherSessionLog = currentCycleLog.copy(
+            clientLogId = "client-log-4",
+            sessionId = "other-session",
+            performedAt = "2026-05-24T11:00:00"
+        )
+        database.workoutLogDao().upsertWithSets(currentCycleLog, emptyList())
+        database.workoutLogDao().upsertWithSets(completedPastCycleLog, emptyList())
+        database.workoutLogDao().upsertWithSets(legacyCurrentCycleLog, emptyList())
+        database.workoutLogDao().upsertWithSets(otherSessionLog, emptyList())
+
+        database.workoutLogDao().deleteRoutineCycleLogs(
+            sessionId = "local-default",
+            routineDayInstancePrefixPattern = "routine-day|template|cycle4|%",
+            plannedExerciseIds = listOf("2026-05-24_legacy_press"),
+            additionalExerciseIdPrefixPattern = "routine-added|template|cycle4|%"
+        )
+
+        val result = database.workoutLogDao()
+            .observeAll(sessionId = "local-default")
+            .first()
+
+        assertThat(result.map { it.log.clientLogId }).containsExactly("client-log-2")
+    }
 }

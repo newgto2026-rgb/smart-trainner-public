@@ -132,7 +132,8 @@ internal data class LatestRoutineDayCompletionUiModel(
 
 internal enum class RoutineCompletionConfirmReason {
     MANUAL,
-    SESSION_ENDED_WITH_SKIPS
+    SESSION_ENDED_WITH_SKIPS,
+    CYCLE_COMPLETE
 }
 
 internal data class RoutineCompletionConfirmState(

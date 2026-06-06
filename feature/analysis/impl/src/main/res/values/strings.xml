@@ -4,7 +4,7 @@
     <string name="analysis_cycle_summary">Summary: Cycle %1$d</string>
     <string name="analysis_cycle_summary_scope">These numbers reset with the current routine cycle.</string>
     <string name="analysis_recent_records">Recent records</string>
-    <string name="analysis_recent_records_scope">Workout records stay here even after you change routines.</string>
+    <string name="analysis_recent_records_scope">Shows records kept for the current routine cycle and completed past cycles.</string>
     <plurals name="analysis_recent_records_show_more">
         <item quantity="one">Show %1$d more</item>
         <item quantity="other">Show %1$d more</item>

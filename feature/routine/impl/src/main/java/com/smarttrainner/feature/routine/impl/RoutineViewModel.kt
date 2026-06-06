@@ -235,18 +235,22 @@ class RoutineViewModel @Inject constructor(
         val exercisePrescriptions = data.exercises.associate { exercise ->
             exercise.id to recommendExercisePrescription(exercise, data.profileExperience)
         }
-        val latestCompletion = data.routineProgress.lastCompletedDayIndex
-            ?.let { data.plan.days.getOrNull(it) }
-            ?.let { completedDay ->
-                LatestRoutineDayCompletionUiModel(
-                    day = completedDay,
-                    routineTemplate = activeTemplate,
-                    cycleNumber = data.routineProgress.lastCompletedCycleNumber
-                        ?: data.routineProgress.cycleNumber,
-                    dayNumber = completedDay.dayNumber,
-                    completedAtText = data.routineProgress.lastCompletedAt?.toString()
-                )
-            }
+        val latestCompletion = activeTemplate?.let { template ->
+            data.routineProgress
+                .takeIf { it.hasCoherentLatestCompletion(template.cycleLength) }
+                ?.lastCompletedDayIndex
+                ?.let { data.plan.days.getOrNull(it) }
+                ?.let { completedDay ->
+                    LatestRoutineDayCompletionUiModel(
+                        day = completedDay,
+                        routineTemplate = template,
+                        cycleNumber = data.routineProgress.lastCompletedCycleNumber
+                            ?: data.routineProgress.cycleNumber,
+                        dayNumber = completedDay.dayNumber,
+                        completedAtText = data.routineProgress.lastCompletedAt?.toString()
+                    )
+                }
+        }
         val recommendation = recommendRoutine(
             input = normalizedRecommendationForm.toInput(),
             templates = data.templates
@@ -700,15 +704,14 @@ class RoutineViewModel @Inject constructor(
         val unrecordedExercises = routineDay.previewExercises.filter { exercise ->
             exercise.id !in effectiveCompletedIds || exercise.id in skippedPlannedExerciseIds
         }
-        if (unrecordedExercises.isEmpty()) {
+        if (unrecordedExercises.isEmpty() && !routineDay.completesCurrentCycle()) {
             completeCurrentRoutineDay(completedAtOverride = completedAtOverride)
         } else {
             completionConfirm.value = RoutineCompletionConfirmState(
-                reason = if (skippedPlannedExerciseIds.isEmpty()) {
-                    RoutineCompletionConfirmReason.MANUAL
-                } else {
-                    RoutineCompletionConfirmReason.SESSION_ENDED_WITH_SKIPS
-                },
+                reason = routineDay.completionConfirmReason(
+                    skippedPlannedExerciseIds = skippedPlannedExerciseIds,
+                    unrecordedExercises = unrecordedExercises
+                ),
                 skippedExerciseIds = skippedPlannedExerciseIds,
                 unrecordedExercises = unrecordedExercises
             )
@@ -947,9 +950,39 @@ class RoutineViewModel @Inject constructor(
     private fun routineDayCompletedAt(date: LocalDate): Instant =
         date.atTime(LocalTime.NOON).atZone(clock.zone).toInstant()
 
+    private fun NextRoutineDayUiModel.completesCurrentCycle(): Boolean =
+        dayNumber == routineTemplate?.cycleLength
+
+    private fun NextRoutineDayUiModel.completionConfirmReason(
+        skippedPlannedExerciseIds: Set<PlannedExerciseId>,
+        unrecordedExercises: List<PlannedExercise>
+    ): RoutineCompletionConfirmReason =
+        when {
+            completesCurrentCycle() -> RoutineCompletionConfirmReason.CYCLE_COMPLETE
+            skippedPlannedExerciseIds.isEmpty() ->
+                RoutineCompletionConfirmReason.MANUAL
+            else ->
+                RoutineCompletionConfirmReason.SESSION_ENDED_WITH_SKIPS
+        }
+
     private fun RoutineProgress.cycleStartDate(): LocalDate =
         (cycleStartedAt ?: startedAt)?.atZone(clock.zone)?.toLocalDate()
             ?: LocalDate.now(clock)
+
+    private fun RoutineProgress.hasCoherentLatestCompletion(cycleLength: Int): Boolean {
+        val completedDayIndex = lastCompletedDayIndex ?: return false
+        val completedCycleNumber = lastCompletedCycleNumber ?: return false
+        if (cycleLength <= 0 || completedDayIndex !in 0 until cycleLength) return false
+
+        val sameCycleNextDay = completedDayIndex + 1
+        return when {
+            sameCycleNextDay < cycleLength && completedCycleNumber == cycleNumber ->
+                dayIndex == sameCycleNextDay
+            completedDayIndex == cycleLength - 1 && completedCycleNumber == cycleNumber - 1 ->
+                dayIndex == 0
+            else -> false
+        }
+    }
 
     private fun updateRecommendationForm(
         transform: (RoutineRecommendationFormState) -> RoutineRecommendationFormState

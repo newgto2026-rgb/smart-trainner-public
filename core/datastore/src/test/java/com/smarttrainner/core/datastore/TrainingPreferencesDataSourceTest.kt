@@ -91,7 +91,7 @@ class TrainingPreferencesDataSourceTest {
     }
 
     @Test
-    fun markRoutineDayCompleted_withNewCycleStartUpdatesOnlyCycleBoundary() = runTest {
+    fun markRoutineDayCompleted_withNewCycleStartClearsLatestCompletionCursor() = runTest {
         dataSource.setActiveRoutineTemplate(sessionId = "session", templateId = "template")
 
         dataSource.markRoutineDayCompleted(
@@ -106,10 +106,10 @@ class TrainingPreferencesDataSourceTest {
 
         assertThat(progress.dayIndex).isEqualTo(0)
         assertThat(progress.cycleNumber).isEqualTo(2)
-        assertThat(progress.lastCompletedDayIndex).isEqualTo(3)
-        assertThat(progress.lastCompletedAt).isEqualTo(cycleInstant.toString())
-        assertThat(progress.lastCompletedCycleNumber).isEqualTo(1)
-        assertThat(progress.lastCompletedPreviousCycleStartedAt).isEqualTo(initialInstant.toString())
+        assertThat(progress.lastCompletedDayIndex).isNull()
+        assertThat(progress.lastCompletedAt).isNull()
+        assertThat(progress.lastCompletedCycleNumber).isNull()
+        assertThat(progress.lastCompletedPreviousCycleStartedAt).isNull()
         assertThat(progress.startedAt).isEqualTo(initialInstant.toString())
         assertThat(progress.cycleStartedAt).isEqualTo(cycleInstant.toString())
     }

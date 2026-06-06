@@ -146,7 +146,13 @@ data class RoutineProgressStartRequest(
 @Serializable
 data class RoutineProgressSwitchTemplateRequest(
     val templateId: String,
-    val dayIndex: Int
+    val dayIndex: Int,
+    val cycleNumber: Int? = null,
+    val startedAt: String? = null,
+    val cycleStartedAt: String? = null,
+    val discardedRoutineDayInstancePrefix: String? = null,
+    val discardedPlannedExerciseIds: List<String> = emptyList(),
+    val discardedAdditionalExerciseIdPrefix: String? = null
 )
 
 @Serializable
