@@ -5,7 +5,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttrainner.core.domain.RoutineSessionCoordinator
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
@@ -15,14 +17,18 @@ import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
 import com.smarttrainner.feature.routine.api.RoutineFeatureCallbacks
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineRouteState
+import com.smarttrainner.feature.routine.domain.isRoutineAdditionalExerciseId
 import javax.inject.Inject
 
 class RoutineFeatureEntryImpl @Inject constructor(
     private val exerciseMediaRenderer: ExerciseMediaRenderer
 ) : RoutineFeatureEntry {
     @Composable
-    override fun rememberRouteState(callbacks: RoutineFeatureCallbacks): RoutineRouteState {
-        val viewModel: RoutineViewModel = hiltViewModel()
+    override fun rememberRouteState(
+        viewModelStoreOwner: ViewModelStoreOwner,
+        callbacks: RoutineFeatureCallbacks
+    ): RoutineRouteState {
+        val viewModel: RoutineViewModel = hiltViewModel(viewModelStoreOwner)
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         LaunchedEffect(callbacks.routineLibraryOpenRequest, viewModel) {
             val request = callbacks.routineLibraryOpenRequest
@@ -119,7 +125,11 @@ class RoutineFeatureEntryImpl @Inject constructor(
             DefaultRoutineRouteState(
                 state = state,
                 actions = actions,
-                currentRoutineName = currentRoutineName
+                currentRoutineName = currentRoutineName,
+                sessionCoordinator = DefaultRoutineSessionCoordinator(
+                    state = state,
+                    actions = actions
+                )
             )
         }
     }
@@ -270,8 +280,14 @@ class RoutineFeatureEntryImpl @Inject constructor(
 internal class DefaultRoutineRouteState(
     val state: RoutineUiState,
     val actions: RoutineActions,
-    override val currentRoutineName: String
-) : RoutineRouteState {
+    override val currentRoutineName: String,
+    override val sessionCoordinator: RoutineSessionCoordinator
+) : RoutineRouteState
+
+private class DefaultRoutineSessionCoordinator(
+    private val state: RoutineUiState,
+    private val actions: RoutineActions
+) : RoutineSessionCoordinator {
     override fun nextPlannedExerciseAfterSaved(
         plannedExercise: PlannedExercise,
         skippedPlannedExerciseIds: Set<PlannedExerciseId>
@@ -303,6 +319,9 @@ internal class DefaultRoutineRouteState(
 
     override fun recordablePlannedExerciseFor(exerciseId: ExerciseId): PlannedExercise? =
         state.recordablePlannedExerciseFor(exerciseId)
+
+    override fun isAdditionalRoutineExercise(plannedExercise: PlannedExercise): Boolean =
+        plannedExercise.id.isRoutineAdditionalExerciseId()
 }
 
 internal fun RoutineRouteState.asDefaultRoutineRouteState(): DefaultRoutineRouteState =

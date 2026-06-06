@@ -52,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -69,6 +70,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
@@ -86,6 +88,8 @@ import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
+
+private const val TrainingGraphRoute = "training_graph"
 
 @Composable
 fun SmartTrainnerMainScreen(
@@ -147,36 +151,52 @@ fun SmartTrainnerMainScreen(
                 ) {
                     NavHost(
                         navController = navController,
-                        startDestination = SmartTrainnerDestination.Home.route
+                        startDestination = TrainingGraphRoute
                     ) {
-                        destinations.forEach { destination ->
-                            composable(destination.route) {
-                                when (destination) {
-                                    SmartTrainnerDestination.Home -> TrainingHomeRoute(
-                                        exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                                        routineFeatureEntry = routineFeatureEntry,
-                                        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-                                    )
-                                    SmartTrainnerDestination.Routine -> TrainingRoutineRoute(
-                                        exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                                        routineFeatureEntry = routineFeatureEntry,
-                                        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-                                        routineLibraryOpenRequest = routineLibraryOpenRequest,
-                                        onRoutineLibraryOpenRequestConsumed = { request ->
-                                            if (routineLibraryOpenRequest == request) {
-                                                routineLibraryOpenRequest = 0
-                                            }
+                        navigation(
+                            startDestination = SmartTrainnerDestination.Home.route,
+                            route = TrainingGraphRoute
+                        ) {
+                            destinations
+                                .filterNot { it == SmartTrainnerDestination.Analysis }
+                                .forEach { destination ->
+                                    composable(destination.route) { backStackEntry ->
+                                        val trainingViewModelStoreOwner = remember(backStackEntry) {
+                                            navController.getBackStackEntry(TrainingGraphRoute)
                                         }
-                                    )
-                                    SmartTrainnerDestination.Exercises -> TrainingExercisesRoute(
-                                        exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
-                                        exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
-                                        routineFeatureEntry = routineFeatureEntry,
-                                        workoutRecordingFeatureEntry = workoutRecordingFeatureEntry
-                                    )
-                                    SmartTrainnerDestination.Analysis -> analysisFeatureEntry.Route()
+                                        when (destination) {
+                                            SmartTrainnerDestination.Home -> TrainingHomeRoute(
+                                                exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                                                routineFeatureEntry = routineFeatureEntry,
+                                                workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+                                                viewModelStoreOwner = trainingViewModelStoreOwner
+                                            )
+                                            SmartTrainnerDestination.Routine -> TrainingRoutineRoute(
+                                                exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                                                routineFeatureEntry = routineFeatureEntry,
+                                                workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+                                                viewModelStoreOwner = trainingViewModelStoreOwner,
+                                                routineLibraryOpenRequest = routineLibraryOpenRequest,
+                                                onRoutineLibraryOpenRequestConsumed = { request ->
+                                                    if (routineLibraryOpenRequest == request) {
+                                                        routineLibraryOpenRequest = 0
+                                                    }
+                                                }
+                                            )
+                                            SmartTrainnerDestination.Exercises -> TrainingExercisesRoute(
+                                                exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
+                                                exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                                                routineFeatureEntry = routineFeatureEntry,
+                                                workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
+                                                viewModelStoreOwner = trainingViewModelStoreOwner
+                                            )
+                                            SmartTrainnerDestination.Analysis -> Unit
+                                        }
+                                    }
                                 }
-                            }
+                        }
+                        composable(SmartTrainnerDestination.Analysis.route) {
+                            analysisFeatureEntry.Route()
                         }
                     }
                 }

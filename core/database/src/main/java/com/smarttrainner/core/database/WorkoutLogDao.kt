@@ -37,6 +37,23 @@ interface WorkoutLogDao {
     @Transaction
     @Query(
         """
+        SELECT * FROM workout_logs AS wl
+        WHERE wl.sessionId = :sessionId
+        AND wl.id = (
+            SELECT id FROM workout_logs AS latest
+            WHERE latest.sessionId = :sessionId
+            AND latest.exerciseId = wl.exerciseId
+            ORDER BY latest.performedAt DESC, latest.id DESC
+            LIMIT 1
+        )
+        ORDER BY wl.performedAt DESC, wl.id DESC
+        """
+    )
+    fun observeLatestByExerciseForSession(sessionId: String): Flow<List<WorkoutLogWithSets>>
+
+    @Transaction
+    @Query(
+        """
         SELECT * FROM workout_logs
         WHERE sessionId = :sessionId
         AND syncPending = 1

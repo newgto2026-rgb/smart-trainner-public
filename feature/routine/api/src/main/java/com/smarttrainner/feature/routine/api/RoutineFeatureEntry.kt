@@ -1,10 +1,14 @@
 package com.smarttrainner.feature.routine.api
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.ViewModelStoreOwner
 
 interface RoutineFeatureEntry {
     @Composable
-    fun rememberRouteState(callbacks: RoutineFeatureCallbacks): RoutineRouteState
+    fun rememberRouteState(
+        viewModelStoreOwner: ViewModelStoreOwner,
+        callbacks: RoutineFeatureCallbacks
+    ): RoutineRouteState
 
     @Composable
     fun HomeSummaryRoute(

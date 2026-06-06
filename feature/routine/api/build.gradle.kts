@@ -27,7 +27,9 @@ android {
 }
 
 dependencies {
+    api(project(":core:domain"))
     api(project(":core:model"))
     api(platform(libs.androidx.compose.bom))
     api(libs.androidx.compose.runtime)
+    api(libs.androidx.lifecycle.viewmodel.ktx)
 }

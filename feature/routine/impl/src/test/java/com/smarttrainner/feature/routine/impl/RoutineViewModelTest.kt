@@ -59,7 +59,6 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -67,10 +66,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.resetMain
@@ -1406,21 +1403,6 @@ class RoutineViewModelTest {
         saveCustomRoutineUseCase = SaveCustomRoutineUseCase(repository, ValidateCustomRoutineUseCase()),
         clock = clock
     )
-}
-
-private class MutableClock(
-    private var currentInstant: Instant,
-    private val currentZone: ZoneId
-) : Clock() {
-    fun setInstant(instant: Instant) {
-        currentInstant = instant
-    }
-
-    override fun getZone(): ZoneId = currentZone
-
-    override fun withZone(zone: ZoneId): Clock = MutableClock(currentInstant, zone)
-
-    override fun instant(): Instant = currentInstant
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
