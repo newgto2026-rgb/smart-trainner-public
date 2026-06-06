@@ -338,7 +338,10 @@ class DefaultRoutineProgressRepository @Inject constructor(
             if (writeToPreferences) {
                 preferences.setRoutineProgress(
                     sessionId = sessionId,
-                    progress = it.toPreference().withLocalRoutineDayDateState(localProgress)
+                    progress = it.toPreference().withLocalRoutineDayDateState(
+                        localProgress = localProgress,
+                        zoneId = clock.zone
+                    )
                 )
             }
         }
@@ -361,7 +364,13 @@ class DefaultRoutineProgressRepository @Inject constructor(
             request = localProgress.toSyncRequest()
         ).data
         if (result.status == RoutineProgressSyncStatus.SERVER_WINS) {
-            preferences.setRoutineProgress(sessionId, result.progress.toPreference())
+            preferences.setRoutineProgress(
+                sessionId = sessionId,
+                progress = result.progress.toPreference().withLocalRoutineDayDateState(
+                    localProgress = localProgress,
+                    zoneId = clock.zone
+                )
+            )
         }
     }
 
@@ -392,18 +401,6 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedCycleNumber = lastCompletedCycleNumber,
             lastCompletedPreviousCycleStartedAt = lastCompletedPreviousCycleStartedAt
         )
-
-    private fun RoutineProgressPreference.withLocalRoutineDayDateState(
-        localProgress: RoutineProgressPreference
-    ): RoutineProgressPreference =
-        if (templateId == localProgress.templateId && cycleNumber == localProgress.cycleNumber) {
-            copy(
-                cycleStartedAt = localProgress.effectiveCycleStartedAt(clock.zone) ?: cycleStartedAt,
-                routineDayDates = localProgress.routineDayDates
-            )
-        } else {
-            this
-        }
 
     private fun RoutineCycleCompletionDto.toModel(): RoutineCycleCompletion? {
         val parsedStartedAt = startedAt.toInstantOrNull() ?: return null
@@ -457,6 +454,19 @@ internal fun RoutineProgressPreference.effectiveCycleStartedAt(zoneId: ZoneId): 
         cycleStartedAt
     }
 }
+
+internal fun RoutineProgressPreference.withLocalRoutineDayDateState(
+    localProgress: RoutineProgressPreference,
+    zoneId: ZoneId
+): RoutineProgressPreference =
+    if (templateId == localProgress.templateId && cycleNumber == localProgress.cycleNumber) {
+        copy(
+            cycleStartedAt = localProgress.effectiveCycleStartedAt(zoneId) ?: cycleStartedAt,
+            routineDayDates = localProgress.routineDayDates
+        )
+    } else {
+        this
+    }
 
 private data class RoutineCycleCompletionRefreshKey(
     val cycleNumber: Int,
