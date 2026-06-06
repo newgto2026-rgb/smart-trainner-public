@@ -155,6 +155,11 @@ class CancelLatestRoutineDayCompletionUseCase @Inject constructor(
             ?: return Result.failure(IllegalStateException("No completed routine day can be canceled."))
         val completedCycleNumber = progress.lastCompletedCycleNumber
             ?: progress.cycleNumber
+        if (completedCycleNumber != progress.cycleNumber) {
+            return Result.failure(
+                IllegalStateException("Completed routine days from previous cycles cannot be canceled.")
+            )
+        }
         val expectedDayNumber = completedDayIndex + 1
         require(completedDay.dayNumber == expectedDayNumber) {
             "Completed routine day does not match the latest completion."
