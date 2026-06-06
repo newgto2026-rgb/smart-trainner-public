@@ -78,7 +78,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
                         lastCompletedCycleNumber = preference.lastCompletedCycleNumber,
                         lastCompletedPreviousCycleStartedAt = preference.lastCompletedPreviousCycleStartedAt.toInstantOrNull(),
                         startedAt = startedAt,
-                        cycleStartedAt = preference.effectiveCycleStartedAt().toInstantOrNull() ?: startedAt,
+                        cycleStartedAt = preference.effectiveCycleStartedAt(clock.zone).toInstantOrNull() ?: startedAt,
                         routineDayDates = preference.routineDayDates.mapNotNull { (instanceId, rawDate) ->
                             rawDate.toLocalDateOrNull()?.let { instanceId to it }
                         }.toMap()
@@ -130,7 +130,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
         val localProgress = preferences.activeRoutineProgress(sessionId).first()
         val currentTemplate = templateFor(sessionId, localProgress.templateId)
         val currentCycleNumber = localProgress.cycleNumber.coerceAtLeast(1)
-        val currentCycleStartedAt = localProgress.effectiveCycleStartedAt().toInstantOrNull()
+        val currentCycleStartedAt = localProgress.effectiveCycleStartedAt(clock.zone).toInstantOrNull()
         val currentCycleStartDate = currentCycleStartedAt
             ?.atZone(clock.zone)
             ?.toLocalDate()
@@ -141,12 +141,6 @@ class DefaultRoutineProgressRepository @Inject constructor(
             .flatMap { day -> day.exercises.map { it.id.value } }
         val routineDayInstancePrefix = "routine-day|${localProgress.templateId}|cycle$currentCycleNumber|"
         val additionalExercisePrefix = "routine-added|${localProgress.templateId}|cycle$currentCycleNumber|"
-        workoutLogDao.deleteRoutineCycleLogs(
-            sessionId = sessionId,
-            routineDayInstancePrefixPattern = "$routineDayInstancePrefix%",
-            plannedExerciseIds = currentCyclePlannedExerciseIds,
-            additionalExerciseIdPrefixPattern = "$additionalExercisePrefix%"
-        )
         val switchedAt = clock.instant().toString()
         val switchedProgress = localProgress.copy(
             templateId = templateId,
@@ -160,8 +154,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedPreviousCycleStartedAt = null,
             routineDayDates = emptyMap()
         )
-        preferences.setRoutineProgress(sessionId, switchedProgress)
-        val serverProgress = pushServerProgress(sessionId, writeToPreferences = false) {
+        val serverProgress = try {
             routineProgressNetworkApi.switchRoutineTemplate(
                 sessionId = sessionId,
                 request = RoutineProgressSwitchTemplateRequest(
@@ -175,8 +168,23 @@ class DefaultRoutineProgressRepository @Inject constructor(
                     discardedAdditionalExerciseIdPrefix = additionalExercisePrefix
                 )
             ).data
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: HttpException) {
+            if (error.code() in 400..499) {
+                runCatching { syncLocalProgressWithServer(sessionId) }
+            }
+            throw error
+        } catch (error: Exception) {
+            throw IllegalStateException("Server confirmation is required before switching routines.", error)
         }
-        val syncedProgress = serverProgress?.toPreference()?.copy(
+        workoutLogDao.deleteRoutineCycleLogs(
+            sessionId = sessionId,
+            routineDayInstancePrefixPattern = "$routineDayInstancePrefix%",
+            plannedExerciseIds = currentCyclePlannedExerciseIds,
+            additionalExerciseIdPrefixPattern = "$additionalExercisePrefix%"
+        )
+        val syncedProgress = serverProgress.toPreference().copy(
             dayIndex = switchedProgress.dayIndex,
             cycleNumber = switchedProgress.cycleNumber,
             startedAt = switchedProgress.startedAt,
@@ -186,7 +194,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
             lastCompletedCycleNumber = null,
             lastCompletedPreviousCycleStartedAt = null,
             routineDayDates = emptyMap()
-        ) ?: switchedProgress
+        )
         preferences.setRoutineProgress(sessionId, syncedProgress)
         Unit
     }
@@ -222,7 +230,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
         val localProgress = preferences.activeRoutineProgress(sessionId).first()
         val cycleDurationDays = if (newCycleStartedAt != null) {
             calculateCompletedCycleDurationDays(
-                cycleStartedAt = localProgress.effectiveCycleStartedAt().toInstantOrNull(),
+                cycleStartedAt = localProgress.effectiveCycleStartedAt(clock.zone).toInstantOrNull(),
                 completedAt = completedAt
             )
         } else {
@@ -390,7 +398,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
     ): RoutineProgressPreference =
         if (templateId == localProgress.templateId && cycleNumber == localProgress.cycleNumber) {
             copy(
-                cycleStartedAt = localProgress.effectiveCycleStartedAt() ?: cycleStartedAt,
+                cycleStartedAt = localProgress.effectiveCycleStartedAt(clock.zone) ?: cycleStartedAt,
                 routineDayDates = localProgress.routineDayDates
             )
         } else {
@@ -432,8 +440,6 @@ class DefaultRoutineProgressRepository @Inject constructor(
     private fun String.toLocalDateOrNull(): LocalDate? =
         runCatching { LocalDate.parse(this) }.getOrNull()
 
-    private fun RoutineProgressPreference.effectiveCycleStartedAt(): String? =
-        effectiveCycleStartedAt(ZoneId.systemDefault())
 }
 
 internal fun RoutineProgressPreference.effectiveCycleStartedAt(zoneId: ZoneId): String? {
