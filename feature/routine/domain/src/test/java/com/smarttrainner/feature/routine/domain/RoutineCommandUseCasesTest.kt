@@ -398,6 +398,21 @@ class RoutineCommandUseCasesTest {
     }
 
     @Test
+    fun isRoutineAdditionalExerciseId_matchesOnlyRoutineAdditionalExerciseIds() {
+        val additionalId = PlannedExerciseId(
+            routineAdditionalExerciseIdPrefix(
+                templateId = "intermediate-body-part-4day",
+                cycleNumber = 1,
+                dayNumber = 2
+            ) + "bench-press"
+        )
+        val plannedId = PlannedExerciseId("intermediate-body-part-4day-day2-bench-press")
+
+        assertThat(additionalId.isRoutineAdditionalExerciseId()).isTrue()
+        assertThat(plannedId.isRoutineAdditionalExerciseId()).isFalse()
+    }
+
+    @Test
     fun cancelLatestRoutineDayCompletion_keepsPreviousSameCycleDayCancelable() = runTest {
         val repository = CapturingRoutineProgressRepository()
         val cancelLatest = CancelLatestRoutineDayCompletionUseCase(repository)
