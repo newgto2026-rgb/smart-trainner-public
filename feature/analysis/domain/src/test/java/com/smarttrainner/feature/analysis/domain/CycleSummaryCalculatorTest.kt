@@ -110,6 +110,36 @@ class CycleSummaryCalculatorTest {
     }
 
     @Test
+    fun calculate_promptsForFirstRecordWhenPlanHasExercises() {
+        val planned = plannedExercise(id = "leg_press", muscleGroup = MuscleGroup.LOWER_BODY)
+        val plan = CyclePlan(
+            id = PlanId("plan"),
+            templateId = "intro",
+            name = "입문",
+            cycleStartDate = cycleStart,
+            days = listOf(
+                WorkoutDayPlan(
+                    date = cycleStart,
+                    title = "전신",
+                    focus = "전신",
+                    exercises = listOf(planned)
+                )
+            )
+        )
+
+        val result = calculator.calculate(
+            plan = plan,
+            logs = emptyList(),
+            progress = progress(templateId = "intro"),
+            zone = ZoneOffset.UTC
+        )
+
+        assertThat(result.plannedExerciseCount).isEqualTo(1)
+        assertThat(result.completedExerciseCount).isEqualTo(0)
+        assertThat(result.insight).contains("첫 기록")
+    }
+
+    @Test
     fun calculate_countsSecondaryMusclesInMuscleBalance() {
         val exercise = exercise(
             id = "conventional_deadlift",
@@ -443,17 +473,151 @@ class CycleSummaryCalculatorTest {
         assertThat(result.totalSets).isEqualTo(6)
     }
 
+    @Test
+    fun calculate_usesPlanStartWhenProgressStartIsMissingAndIgnoresIncompleteLogs() {
+        val plank = plannedExercise(id = "plank", muscleGroup = MuscleGroup.CORE)
+        val plan = CyclePlan(
+            id = PlanId("plan"),
+            templateId = "bodyweight",
+            name = "맨몸",
+            cycleStartDate = cycleStart,
+            days = listOf(
+                WorkoutDayPlan(
+                    date = cycleStart,
+                    title = "코어",
+                    focus = "코어",
+                    exercises = listOf(plank)
+                )
+            )
+        )
+        val completed = completedLog(
+            id = 1,
+            planned = plank,
+            performedAt = LocalDateTime.of(2026, 5, 18, 20, 0)
+        ).copy(
+            setEntries = emptyList(),
+            durationMinutes = 12
+        )
+        val incomplete = completedLog(
+            id = 2,
+            planned = plank,
+            performedAt = LocalDateTime.of(2026, 5, 18, 21, 0)
+        ).copy(completed = false)
+
+        val result = calculator.calculate(
+            plan = plan,
+            logs = listOf(completed, incomplete),
+            progress = progress(
+                templateId = "bodyweight",
+                cycleStartedAt = null,
+                startedAt = null
+            ),
+            zone = ZoneOffset.UTC
+        )
+
+        assertThat(result.completedExerciseCount).isEqualTo(1)
+        assertThat(result.totalSets).isEqualTo(3)
+        assertThat(result.totalMinutes).isEqualTo(12)
+    }
+
+    @Test
+    fun calculate_countsDurationSetEntriesAndFallsBackToPrimaryMuscleWhenSecondaryGroupsAreEmpty() {
+        val plank = PlannedExercise(
+            id = PlannedExerciseId("2026-05-18_plank"),
+            exercise = exercise(
+                id = "plank",
+                muscleGroup = MuscleGroup.CORE,
+                muscleGroups = emptyList()
+            ),
+            sets = 2,
+            repRange = null,
+            durationMinutes = 5,
+            restSeconds = 60,
+            note = ""
+        )
+        val squat = plannedExercise(id = "squat", muscleGroup = MuscleGroup.LOWER_BODY)
+        val plan = CyclePlan(
+            id = PlanId("plan"),
+            templateId = "bodyweight",
+            name = "맨몸",
+            cycleStartDate = cycleStart,
+            days = listOf(
+                WorkoutDayPlan(
+                    date = cycleStart,
+                    title = "전신",
+                    focus = "전신",
+                    exercises = listOf(plank, squat)
+                )
+            )
+        )
+        val completed = completedLog(id = 1, planned = plank).copy(
+            reps = null,
+            weightKg = null,
+            setEntries = listOf(
+                WorkoutSetLog(order = 1, reps = null, weightKg = null, durationMinutes = 4),
+                WorkoutSetLog(order = 2, reps = null, weightKg = null, durationMinutes = 5)
+            )
+        )
+
+        val result = calculator.calculate(
+            plan = plan,
+            logs = listOf(completed),
+            progress = progress(templateId = "bodyweight"),
+            zone = ZoneOffset.UTC
+        )
+
+        assertThat(result.completionRate).isEqualTo(50)
+        assertThat(result.totalMinutes).isEqualTo(9)
+        assertThat(result.totalVolumeKg).isEqualTo(0.0)
+        assertThat(result.muscleBalance[MuscleGroup.CORE]).isEqualTo(1)
+        assertThat(result.insight).contains("꾸준히")
+    }
+
+    @Test
+    fun calculate_usesPlanStartAsStreakAnchorWhenProgressDatesAreMissing() {
+        val plank = plannedExercise(id = "plank", muscleGroup = MuscleGroup.CORE)
+        val plan = CyclePlan(
+            id = PlanId("plan"),
+            templateId = "bodyweight",
+            name = "맨몸",
+            cycleStartDate = cycleStart,
+            days = listOf(
+                WorkoutDayPlan(
+                    date = cycleStart,
+                    title = "코어",
+                    focus = "코어",
+                    exercises = listOf(plank)
+                )
+            )
+        )
+
+        val result = calculator.calculate(
+            plan = plan,
+            logs = emptyList(),
+            progress = progress(
+                templateId = "bodyweight",
+                cycleStartedAt = null,
+                startedAt = null
+            ),
+            zone = ZoneOffset.UTC
+        )
+
+        assertThat(result.streakDays).isEqualTo(0)
+        assertThat(result.insight).contains("첫 기록")
+    }
+
     private fun progress(
         templateId: String,
         cycleNumber: Int = 1,
-        cycleStartedAt: Instant = cycleStart.atStartOfDay().toInstant(ZoneOffset.UTC)
+        cycleStartedAt: Instant? = cycleStart.atStartOfDay().toInstant(ZoneOffset.UTC),
+        startedAt: Instant? = cycleStartedAt
     ): RoutineProgress = RoutineProgress(
         templateId = templateId,
         dayIndex = 0,
         lastCompletedDayIndex = null,
         lastCompletedAt = null,
         cycleNumber = cycleNumber,
-        startedAt = cycleStartedAt,
+        startedAt = startedAt,
         cycleStartedAt = cycleStartedAt
     )
 
