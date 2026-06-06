@@ -6,6 +6,7 @@ import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.feature.analysis.domain.CycleSummaryCalculator
 import com.smarttrainner.feature.analysis.domain.CycleSummaryRepository
+import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
@@ -17,7 +18,8 @@ import kotlinx.coroutines.flow.combine
 class DefaultCycleSummaryRepository @Inject constructor(
     private val cyclePlanRepository: CyclePlanRepository,
     private val workoutLogRepository: WorkoutLogRepository,
-    private val summaryCalculator: CycleSummaryCalculator
+    private val summaryCalculator: CycleSummaryCalculator,
+    private val clock: Clock
 ) : CycleSummaryRepository {
     override fun observeCycleSummary(
         progress: RoutineProgress,
@@ -26,7 +28,7 @@ class DefaultCycleSummaryRepository @Inject constructor(
         val cycleStartDate = (progress.cycleStartedAt ?: progress.startedAt)
             ?.atZone(zone)
             ?.toLocalDate()
-            ?: LocalDate.now(zone)
+            ?: LocalDate.now(clock.withZone(zone))
         return combine(
             cyclePlanRepository.observeCurrentCyclePlan(cycleStartDate),
             workoutLogRepository.observeAllWorkoutLogs()

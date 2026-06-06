@@ -8,6 +8,7 @@ import com.smarttrainner.core.model.PlanId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.feature.analysis.domain.CycleSummaryCalculator
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -23,7 +24,8 @@ class DefaultCycleSummaryRepositoryTest {
     private val repository = DefaultCycleSummaryRepository(
         cyclePlanRepository = cyclePlanRepository,
         workoutLogRepository = workoutLogRepository,
-        summaryCalculator = CycleSummaryCalculator()
+        summaryCalculator = CycleSummaryCalculator(),
+        clock = Clock.fixed(Instant.parse("2026-06-02T00:00:00Z"), ZoneOffset.UTC)
     )
 
     @Test
@@ -54,6 +56,21 @@ class DefaultCycleSummaryRepositoryTest {
         assertThat(cyclePlanRepository.requestedCycleStartDates)
             .containsExactly(LocalDate.of(2026, 5, 25))
         assertThat(summary.cycleStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
+    }
+
+    @Test
+    fun observeCycleSummary_usesClockWhenCycleAndRoutineStartAreMissing() = runTest {
+        val summary = repository.observeCycleSummary(
+            progress = progress(
+                startedAt = null,
+                cycleStartedAt = null
+            ),
+            zone = ZoneOffset.UTC
+        ).first()
+
+        assertThat(cyclePlanRepository.requestedCycleStartDates)
+            .containsExactly(LocalDate.of(2026, 6, 2))
+        assertThat(summary.cycleStartDate).isEqualTo(LocalDate.of(2026, 6, 2))
     }
 
     private fun progress(

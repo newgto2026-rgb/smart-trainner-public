@@ -363,7 +363,7 @@ class TrainingUiTest {
         assertCurrentRoutineDateAssigned()
 
         composeRule.onNodeWithTag("training_tab_plan").performClick()
-        waitForNodeWithTag("training_plan_exercise_leg_press")
+        scrollToNodeWithTag("training_plan_exercise_leg_press")
         composeRule.onNodeWithTag("training_tab_home").performClick()
         assertCurrentRoutineDateAssigned()
     }
@@ -429,6 +429,7 @@ class TrainingUiTest {
         assertEquals(1, trainingRepository.progressForTest().dayIndex)
         assertEquals(0, trainingRepository.progressForTest().lastCompletedDayIndex)
 
+        scrollToNodeWithTag("training_cancel_latest_routine_day")
         composeRule.onNodeWithTag("training_cancel_latest_routine_day").performClick()
         waitForNodeWithTag("training_cancel_latest_day_dialog")
         composeRule.onNodeWithTag("training_keep_latest_day_completion").performClick()
@@ -437,6 +438,7 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_next_routine_day_2").assertIsDisplayed()
         assertEquals(1, trainingRepository.progressForTest().dayIndex)
 
+        scrollToNodeWithTag("training_cancel_latest_routine_day")
         composeRule.onNodeWithTag("training_cancel_latest_routine_day").performClick()
         waitForNodeWithTag("training_cancel_latest_day_dialog")
         composeRule.onNodeWithTag("training_confirm_cancel_latest_day").performClick()
