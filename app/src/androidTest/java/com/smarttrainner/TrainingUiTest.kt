@@ -494,6 +494,7 @@ class TrainingUiTest {
         scrollToNodeWithTag("training_routine_preview_advanced-body-part-5day-60m")
         composeRule.onNodeWithTag("training_routine_preview_advanced-body-part-5day-60m").assertIsDisplayed()
         composeRule.onNodeWithTag("training_start_preview_routine").assertIsDisplayed().performClick()
+        confirmRoutineSwitchIfRequested()
 
         waitForNodeWithTag("training_tab_home")
         composeRule.onNodeWithTag("training_tab_home").performClick()
@@ -609,6 +610,7 @@ class TrainingUiTest {
             composeRule.onAllNodesWithTag("training_custom_template_card").fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.onNodeWithTag("training_custom_template_card").performClick()
+        confirmRoutineSwitchIfRequested()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag("training_routine_library_dialog").fetchSemanticsNodes().isEmpty()
         }
@@ -650,6 +652,76 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_next_routine_badge_duration").assertIsDisplayed()
     }
 
+    @Test
+    fun switchingRoutineAfterCustomDayOneResetsCurrentScreensButKeepsWorkoutHistory() {
+        continueFromLoginIfNeeded()
+        createAndSelectTwoDayCustomRoutineForSwitch()
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_home_routine_source_custom")
+        waitForNodeWithTag("training_next_routine_day_1")
+        composeRule.onNodeWithTag("training_next_routine_focus_CHEST").assertIsDisplayed()
+
+        openHomeStartWorkout()
+        confirmRoutineDayDateIfNeeded()
+        waitForNodeWithTag("training_record_dialog")
+        saveDefaultWeightedRecord()
+        completeRoutineDayWithConfirmation()
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            trainingRepository.progressForTest().dayIndex == 1
+        }
+        waitForNodeWithTag("training_next_routine_day_2")
+        composeRule.onNodeWithTag("training_next_routine_focus_LOWER_BODY").assertIsDisplayed()
+        assertEquals("custom-test", trainingRepository.progressForTest().templateId)
+        assertEquals(1, trainingRepository.workoutLogsForTest().size)
+        assertEquals(setOf(FIXED_UI_DATE), trainingRepository.routineDayDatesForTest().values.toSet())
+        val customLog = trainingRepository.workoutLogsForTest().single()
+        assertNotNull(customLog.routineDayInstanceId)
+        assertTrue(customLog.routineDayInstanceId!!.contains("custom-test"))
+
+        composeRule.onNodeWithTag("training_tab_analysis").performClick()
+        waitForNodeWithTag("training_summary_band")
+        composeRule.onNodeWithTag("training_summary_scope").assertIsDisplayed()
+        assertTextInsideTag("training_summary_completion_rate", "50%")
+        assertTextInsideTag("training_summary_total_sets", "3")
+        composeRule.onNodeWithTag("training_recent_records_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("training_recent_records_scope").assertIsDisplayed()
+        assertChestPressRecordVisible()
+
+        switchToDefaultRoutineFromPlanTab()
+
+        val switchedProgress = trainingRepository.progressForTest()
+        assertEquals("beginner-full-body-3day", switchedProgress.templateId)
+        assertEquals(0, switchedProgress.dayIndex)
+        assertNull(switchedProgress.lastCompletedDayIndex)
+        assertTrue(trainingRepository.routineDayDatesForTest().isEmpty())
+        assertEquals(1, trainingRepository.workoutLogsForTest().size)
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_home_routine_source_default")
+        waitForNodeWithTag("training_next_routine_day_1")
+        composeRule.onAllNodesWithTag("training_latest_routine_day_completion_card").assertCountEquals(0)
+        assertCurrentRoutineDateUnassigned()
+
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        waitForNodeWithTag("training_current_routine_card")
+        scrollToNodeWithTag("training_current_routine_source_default")
+        composeRule.onNodeWithTag("training_current_routine_source_default").assertIsDisplayed()
+        scrollToNodeWithTag("training_plan_exercise_leg_press")
+        composeRule.onNodeWithTag("training_plan_exercise_leg_press").assertIsDisplayed()
+
+        composeRule.onNodeWithTag("training_tab_analysis").performClick()
+        waitForNodeWithTag("training_summary_band")
+        composeRule.onNodeWithTag("training_summary_scope").assertIsDisplayed()
+        assertTextInsideTag("training_summary_completion_rate", "0%")
+        assertTextInsideTag("training_summary_total_sets", "0")
+        assertAnyTextInsideTag("training_summary_streak", "0일", "0 d")
+        composeRule.onNodeWithTag("training_recent_records_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("training_recent_records_scope").assertIsDisplayed()
+        assertChestPressRecordVisible()
+    }
+
     private fun resetTestState() {
         trainingRepository.reset()
         (sessionRepository as InMemorySessionRepository).reset()
@@ -671,6 +743,33 @@ class TrainingUiTest {
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodesWithTag(testTag).fetchSemanticsNodes().isEmpty()
         }
+    }
+
+    private fun confirmRoutineSwitchIfRequested() {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            val confirmVisible =
+                composeRule.onAllNodesWithTag("training_routine_switch_confirm_dialog").fetchSemanticsNodes()
+                    .isNotEmpty()
+            val selectionDialogsClosed =
+                composeRule.onAllNodesWithTag("training_routine_library_dialog").fetchSemanticsNodes().isEmpty() &&
+                    composeRule.onAllNodesWithTag("training_routine_recommendations_dialog").fetchSemanticsNodes()
+                        .isEmpty()
+            confirmVisible || selectionDialogsClosed
+        }
+        if (composeRule.onAllNodesWithTag("training_routine_switch_confirm_dialog").fetchSemanticsNodes().isEmpty()) {
+            return
+        }
+        composeRule.onNodeWithTag("training_routine_switch_confirm_dialog").assertIsDisplayed()
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("training_routine_switch_confirm_dialog")) and
+                (hasText("초기화", substring = true) or hasText("reset", substring = true))
+        ).assertIsDisplayed()
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("training_routine_switch_confirm_dialog")) and
+                (hasText("기록", substring = true) or hasText("records", substring = true))
+        ).assertIsDisplayed()
+        composeRule.onNodeWithTag("training_confirm_routine_switch").performClick()
+        waitForNodeWithTagToDisappear("training_routine_switch_confirm_dialog")
     }
 
     private fun signInGoogleUserWithoutProfile(nickname: String) {
@@ -707,6 +806,50 @@ class TrainingUiTest {
     private fun assertLegPressRecordVisibleInPlan() {
         scrollToNodeWithTag("training_plan_exercise_leg_press")
         composeRule.onNodeWithTag("training_plan_exercise_leg_press").assertIsDisplayed()
+    }
+
+    private fun createAndSelectTwoDayCustomRoutineForSwitch() {
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        composeRule.onNodeWithTag("training_create_custom_routine_button").performClick()
+        waitForNodeWithTag("training_custom_routine_builder")
+        composeRule.onNodeWithTag("training_custom_routine_name")
+            .performTextReplacement("Switch Check Custom")
+        composeRule.onNodeWithTag("training_custom_routine_name").performImeAction()
+        composeRule.waitForIdle()
+
+        selectCustomFocus("training_custom_focus_CHEST")
+        scrollToNodeWithTag("training_custom_exercise_group_CHEST")
+        composeRule.onNodeWithTag("training_custom_exercise_group_CHEST").performClick()
+        scrollToNodeWithTag("training_custom_add_exercise_machine_chest_press")
+        composeRule.onNodeWithTag("training_custom_add_exercise_machine_chest_press").performClick()
+
+        composeRule.onNodeWithTag("training_add_custom_day").performScrollTo().performClick()
+        composeRule.onNodeWithTag("training_custom_day_tab_1").performClick()
+        selectCustomFocus("training_custom_focus_LOWER_BODY")
+        scrollToNodeWithTag("training_custom_exercise_group_LOWER_BODY")
+        composeRule.onNodeWithTag("training_custom_exercise_group_LOWER_BODY").performClick()
+        scrollToNodeWithTag("training_custom_add_exercise_leg_press")
+        composeRule.onNodeWithTag("training_custom_add_exercise_leg_press").performClick()
+        composeRule.onNodeWithTag("training_save_custom_routine").performClick()
+
+        waitForNodeWithTagToDisappear("training_custom_routine_builder")
+        scrollToNodeWithTag("training_find_routine_button")
+        composeRule.onNodeWithTag("training_find_routine_button").performClick()
+        waitForNodeWithTag("training_custom_template_card")
+        composeRule.onNodeWithTag("training_custom_template_card").performClick()
+        confirmRoutineSwitchIfRequested()
+        waitForNodeWithTagToDisappear("training_routine_library_dialog")
+    }
+
+    private fun switchToDefaultRoutineFromPlanTab() {
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        scrollToNodeWithTag("training_find_routine_button")
+        composeRule.onNodeWithTag("training_find_routine_button").performClick()
+        waitForNodeWithTag("training_routine_library_dialog")
+        scrollToNodeWithTag("training_template_card_beginner-full-body-3day")
+        composeRule.onNodeWithTag("training_template_card_beginner-full-body-3day").performClick()
+        confirmRoutineSwitchIfRequested()
+        waitForNodeWithTagToDisappear("training_routine_library_dialog")
     }
 
     private fun openHomeStartWorkout() {
@@ -772,6 +915,12 @@ class TrainingUiTest {
             .reduce { left, right -> left or right }
         composeRule.onNode(hasAnyAncestor(hasTestTag(containerTag)) and matcher)
             .assertIsDisplayed()
+    }
+
+    private fun assertChestPressRecordVisible() {
+        composeRule.onNode(
+            hasText("체스트 프레스", substring = true) or hasText("Chest Press", substring = true)
+        ).assertIsDisplayed()
     }
 
     private fun selectCustomFocus(optionTag: String) {

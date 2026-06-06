@@ -35,6 +35,8 @@ class RoutineFeatureEntryImpl @Inject constructor(
         val actions = remember(callbacks, viewModel) {
             RoutineActions(
                 onTemplateSelected = viewModel::selectTemplate,
+                onConfirmRoutineSwitch = viewModel::confirmRoutineSwitch,
+                onDismissRoutineSwitch = viewModel::dismissRoutineSwitchConfirmation,
                 onCycleLengthChanged = viewModel::updateRoutineCycleLength,
                 onSessionMinutesChanged = viewModel::updateRoutineSessionMinutes,
                 onExperienceChanged = viewModel::updateRoutineExperience,
@@ -179,6 +181,15 @@ class RoutineFeatureEntryImpl @Inject constructor(
                 onDismissRequest = actions.onLibraryDismiss
             )
         }
+        state.routineSwitchConfirmTemplateId
+            ?.let { templateId -> state.templates.firstOrNull { it.id == templateId } }
+            ?.let { template ->
+                RoutineSwitchConfirmDialog(
+                    template = template,
+                    onConfirm = actions.onConfirmRoutineSwitch,
+                    onDismissRequest = actions.onDismissRoutineSwitch
+                )
+            }
         if (state.showRoutineSettingsDialog) {
             RoutineSettingsDialog(
                 form = state.routineRecommendationInput,

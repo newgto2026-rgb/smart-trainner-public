@@ -151,6 +151,9 @@
     <string name="routine_selected">Selected</string>
     <string name="routine_set_number">Set %1$d</string>
     <string name="routine_show_recommendations">Show recommendations</string>
+    <string name="routine_switch_confirm_body">Changing to %1$s starts that routine from Day 1. Current cycle progress and assigned workout dates reset, while workout records you already logged stay in recent records and analysis history.</string>
+    <string name="routine_switch_confirm_dismiss">Keep current routine</string>
+    <string name="routine_switch_confirm_title">Change routine?</string>
     <string name="routine_complete_routine_day">Complete Today</string>
     <string name="routine_add_exercise_title">Add exercise</string>
     <string name="routine_cancel_latest_day_action">Cancel latest completion</string>

@@ -186,8 +186,8 @@ internal class InMemoryTrainingRepository :
     override fun observePlanTemplates(): Flow<List<PlanTemplate>> =
         customTemplates.map { custom -> systemTemplates + custom }
 
-    override fun observeCurrentCyclePlan(cycleStartDate: LocalDate): Flow<CyclePlan> =
-        combine(selectedTemplateId, customTemplates) { templateId, custom ->
+    override fun observeCurrentCyclePlan(templateId: String, cycleStartDate: LocalDate): Flow<CyclePlan> =
+        customTemplates.map { custom ->
             buildCyclePlan(templateById(templateId, custom), cycleStartDate)
         }
 
@@ -207,7 +207,7 @@ internal class InMemoryTrainingRepository :
         progress: RoutineProgress,
         zone: ZoneId
     ): Flow<CycleSummary> =
-        combine(observeCurrentCyclePlan(progress.cycleStartDate(zone)), logs) { plan, logs ->
+        combine(observeCurrentCyclePlan(progress.templateId, progress.cycleStartDate(zone)), logs) { plan, logs ->
             summaryCalculator.calculate(
                 plan = plan,
                 logs = logs,
@@ -255,7 +255,8 @@ internal class InMemoryTrainingRepository :
             lastCompletedDayIndex = null,
             lastCompletedAt = null,
             lastCompletedCycleNumber = null,
-            lastCompletedPreviousCycleStartedAt = null
+            lastCompletedPreviousCycleStartedAt = null,
+            routineDayDates = emptyMap()
         )
     }
 
