@@ -4,7 +4,7 @@ import com.smarttrainner.app.DefaultNetworkStatusRepository
 import com.smarttrainner.core.data.DefaultExerciseRepository
 import com.smarttrainner.core.data.DefaultDeviceSessionStore
 import com.smarttrainner.core.data.DefaultSessionRepository
-import com.smarttrainner.core.data.DefaultWeeklyPlanRepository
+import com.smarttrainner.core.data.DefaultCyclePlanRepository
 import com.smarttrainner.core.data.DefaultWorkoutLogRepository
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.domain.ExerciseRepository
@@ -12,7 +12,7 @@ import com.smarttrainner.core.domain.DeviceSessionStore
 import com.smarttrainner.core.domain.NetworkStatusRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.TrainingDataSyncer
-import com.smarttrainner.core.domain.WeeklyPlanRepository
+import com.smarttrainner.core.domain.CyclePlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import dagger.Binds
@@ -33,9 +33,9 @@ abstract class CoreRepositoryBindingsModule {
     ): ExerciseRepository
 
     @Binds
-    abstract fun bindWeeklyPlanRepository(
-        repository: DefaultWeeklyPlanRepository
-    ): WeeklyPlanRepository
+    abstract fun bindCyclePlanRepository(
+        repository: DefaultCyclePlanRepository
+    ): CyclePlanRepository
 
     @Binds
     abstract fun bindWorkoutLogRepository(

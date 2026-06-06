@@ -18,12 +18,12 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.UserSessionId
-import com.smarttrainner.core.model.WeeklyPlan
-import com.smarttrainner.core.model.WeeklySummary
+import com.smarttrainner.core.model.CyclePlan
+import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.feature.analysis.domain.ObserveCycleSummaryUseCase
-import com.smarttrainner.feature.analysis.domain.WeeklySummaryRepository
+import com.smarttrainner.feature.analysis.domain.CycleSummaryRepository
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -36,8 +36,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -118,8 +116,8 @@ class AnalysisViewModelTest {
             skipItems(1)
             val state = awaitItem()
 
-            assertThat(repository.requestedWeekStartDates).containsExactly(LocalDate.of(2026, 5, 18))
-            assertThat(state.summary?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+            assertThat(repository.requestedCycleStartDates).containsExactly(LocalDate.of(2026, 5, 18))
+            assertThat(state.summary?.cycleStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
             assertThat(repository.requestedCycleNumbers).containsExactly(4)
             assertThat(state.cycleNumber).isEqualTo(4)
             cancelAndIgnoreRemainingEvents()
@@ -127,24 +125,39 @@ class AnalysisViewModelTest {
     }
 
     @Test
-    fun uiState_recomputesWeekStartWhenCollectionRestarts() = runTest {
-        val clock = MutableClock(fixedClock.instant(), fixedClock.zone)
-        val viewModel = viewModel(clock)
+    fun uiState_requestsCycleSummaryFromRoutineStartWhenCycleStartIsMissing() = runTest {
+        repository.progress.value = repository.progress.value.copy(
+            startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            cycleStartedAt = null
+        )
+        val viewModel = viewModel()
 
         viewModel.uiState.test {
             skipItems(1)
-            assertThat(awaitItem().summary?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+            val state = awaitItem()
+
+            assertThat(repository.requestedCycleStartDates).containsExactly(LocalDate.of(2026, 5, 20))
+            assertThat(state.summary?.cycleStartDate).isEqualTo(LocalDate.of(2026, 5, 20))
             cancelAndIgnoreRemainingEvents()
         }
+    }
 
-        clock.setInstant(Instant.parse("2026-05-25T12:00:00Z"))
-        advanceTimeBy(5_001)
-        runCurrent()
+    @Test
+    fun uiState_requestsNewCycleSummaryWhenProgressCycleStartChanges() = runTest {
+        val viewModel = viewModel()
 
         viewModel.uiState.test {
-            assertThat(awaitItem().summary?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
-            assertThat(awaitItem().summary?.weekStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
-            assertThat(repository.requestedWeekStartDates)
+            skipItems(1)
+            assertThat(awaitItem().summary?.cycleStartDate).isEqualTo(LocalDate.of(2026, 5, 18))
+
+            repository.progress.value = repository.progress.value.copy(
+                cycleNumber = 2,
+                cycleStartedAt = Instant.parse("2026-05-25T00:00:00Z")
+            )
+            val state = awaitItem()
+            assertThat(state.summary?.cycleStartDate).isEqualTo(LocalDate.of(2026, 5, 25))
+            assertThat(state.cycleNumber).isEqualTo(2)
+            assertThat(repository.requestedCycleStartDates)
                 .containsAtLeast(LocalDate.of(2026, 5, 18), LocalDate.of(2026, 5, 25))
             cancelAndIgnoreRemainingEvents()
         }
@@ -157,21 +170,6 @@ class AnalysisViewModelTest {
         observeRoutineProgress = ObserveRoutineProgressUseCase(repository),
         clock = clock
     )
-}
-
-private class MutableClock(
-    private var currentInstant: Instant,
-    private val currentZone: ZoneId
-) : Clock() {
-    fun setInstant(instant: Instant) {
-        currentInstant = instant
-    }
-
-    override fun getZone(): ZoneId = currentZone
-
-    override fun withZone(zone: ZoneId): Clock = MutableClock(currentInstant, zone)
-
-    override fun instant(): Instant = currentInstant
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -190,7 +188,7 @@ class MainDispatcherRule(
 private class FakeAnalysisRepository :
     ExerciseRepository,
     RoutineProgressRepository,
-    WeeklySummaryRepository,
+    CycleSummaryRepository,
     WorkoutLogRepository {
     val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
     val progress = MutableStateFlow(
@@ -204,7 +202,7 @@ private class FakeAnalysisRepository :
             cycleStartedAt = Instant.parse("2026-05-18T00:00:00Z")
         )
     )
-    val requestedWeekStartDates = mutableListOf<LocalDate>()
+    val requestedCycleStartDates = mutableListOf<LocalDate>()
     val requestedCycleNumbers = mutableListOf<Int>()
 
     private val exercises = MutableStateFlow(
@@ -220,7 +218,7 @@ private class FakeAnalysisRepository :
     fun reset() {
         logs.value = emptyList()
         progress.value = progress.value.copy(cycleNumber = 1)
-        requestedWeekStartDates.clear()
+        requestedCycleStartDates.clear()
         requestedCycleNumbers.clear()
         summary.value = summary(LocalDate.of(2026, 5, 18))
     }
@@ -233,22 +231,17 @@ private class FakeAnalysisRepository :
 
     override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
-    override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = unused()
-
-    override fun observeWeeklySummary(weekStartDate: LocalDate): Flow<WeeklySummary> {
-        requestedWeekStartDates += weekStartDate
-        summary.value = summary(weekStartDate)
-        return summary
-    }
-
     override fun observeCycleSummary(
-        weekStartDate: LocalDate,
         progress: RoutineProgress,
         zone: ZoneId
-    ): Flow<WeeklySummary> {
-        requestedWeekStartDates += weekStartDate
+    ): Flow<CycleSummary> {
+        val cycleStartDate = (progress.cycleStartedAt ?: progress.startedAt)
+            ?.atZone(zone)
+            ?.toLocalDate()
+            ?: LocalDate.now(zone)
+        requestedCycleStartDates += cycleStartDate
         requestedCycleNumbers += progress.cycleNumber
-        summary.value = summary(weekStartDate)
+        summary.value = summary(cycleStartDate)
         return summary
     }
 
@@ -292,8 +285,8 @@ private fun exercise(id: String, muscleGroup: MuscleGroup) = Exercise(
     restSeconds = 90
 )
 
-private fun summary(weekStartDate: LocalDate) = WeeklySummary(
-    weekStartDate = weekStartDate,
+private fun summary(cycleStartDate: LocalDate) = CycleSummary(
+    cycleStartDate = cycleStartDate,
     plannedExerciseCount = 4,
     completedExerciseCount = 0,
     totalSets = 0,

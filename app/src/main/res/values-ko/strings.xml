@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">스마트 트레이너</string>
     <string name="app_sync_in_progress">동기화 중</string>
-    <string name="login_subtitle">주간 플랜과 세트별 기록을 한 곳에서 관리하세요.</string>
+    <string name="login_subtitle">루틴 사이클과 세트별 기록을 한 곳에서 관리하세요.</string>
     <string name="login_start_title">Google 로그인</string>
     <string name="login_start_detail">홈으로 들어가기 전에 Google로 로그인하세요.</string>
     <string name="login_nickname_label">닉네임</string>

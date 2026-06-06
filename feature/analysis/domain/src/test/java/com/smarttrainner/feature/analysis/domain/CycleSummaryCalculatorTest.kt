@@ -9,8 +9,8 @@ import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.RoutineProgress
-import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
@@ -22,9 +22,9 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import org.junit.Test
 
-class WeeklySummaryCalculatorTest {
-    private val calculator = WeeklySummaryCalculator()
-    private val weekStart = LocalDate.of(2026, 5, 18)
+class CycleSummaryCalculatorTest {
+    private val calculator = CycleSummaryCalculator()
+    private val cycleStart = LocalDate.of(2026, 5, 18)
 
     @Test
     fun calculate_countsCompletionVolumeAndMuscleBalance() {
@@ -38,14 +38,14 @@ class WeeklySummaryCalculatorTest {
             restSeconds = 90,
             note = ""
         )
-        val plan = WeeklyPlan(
+        val plan = CyclePlan(
             id = PlanId("plan"),
             templateId = "beginner",
-            name = "초보 주 3회",
-            weekStartDate = weekStart,
+            name = "초보 3일 사이클",
+            cycleStartDate = cycleStart,
             days = listOf(
                 WorkoutDayPlan(
-                    date = weekStart,
+                    date = cycleStart,
                     title = "전신 A",
                     focus = "전신",
                     exercises = listOf(planned)
@@ -74,7 +74,12 @@ class WeeklySummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculate(weekStart, plan, logs)
+        val result = calculator.calculate(
+            plan = plan,
+            logs = logs,
+            progress = progress(templateId = "beginner"),
+            zone = ZoneOffset.UTC
+        )
 
         assertThat(result.plannedExerciseCount).isEqualTo(1)
         assertThat(result.completedExerciseCount).isEqualTo(1)
@@ -86,20 +91,22 @@ class WeeklySummaryCalculatorTest {
 
     @Test
     fun calculate_emptyLogsReturnsCoachingPrompt() {
-        val result = calculator.calculate(
-            weekStartDate = weekStart,
-            plan = WeeklyPlan(
+        val plan = CyclePlan(
                 id = PlanId("plan"),
                 templateId = "intro",
                 name = "입문",
-                weekStartDate = weekStart,
+                cycleStartDate = cycleStart,
                 days = emptyList()
-            ),
-            logs = emptyList()
+        )
+        val result = calculator.calculate(
+            plan = plan,
+            logs = emptyList(),
+            progress = progress(templateId = "intro"),
+            zone = ZoneOffset.UTC
         )
 
         assertThat(result.completionRate).isEqualTo(0)
-        assertThat(result.insight).contains("플랜")
+        assertThat(result.insight).contains("사이클")
     }
 
     @Test
@@ -123,14 +130,14 @@ class WeeklySummaryCalculatorTest {
             restSeconds = 150,
             note = ""
         )
-        val plan = WeeklyPlan(
+        val plan = CyclePlan(
             id = PlanId("plan"),
             templateId = "custom",
             name = "전신 루틴",
-            weekStartDate = weekStart,
+            cycleStartDate = cycleStart,
             days = listOf(
                 WorkoutDayPlan(
-                    date = weekStart,
+                    date = cycleStart,
                     title = "전신",
                     focus = "전신",
                     exercises = listOf(planned)
@@ -139,9 +146,10 @@ class WeeklySummaryCalculatorTest {
         )
 
         val result = calculator.calculate(
-            weekStartDate = weekStart,
             plan = plan,
-            logs = listOf(completedLog(id = 1, planned = planned))
+            logs = listOf(completedLog(id = 1, planned = planned)),
+            progress = progress(templateId = "custom"),
+            zone = ZoneOffset.UTC
         )
 
         assertThat(result.muscleBalance[MuscleGroup.FULL_BODY]).isEqualTo(1)
@@ -168,14 +176,14 @@ class WeeklySummaryCalculatorTest {
         val extraExercises = (1..4).map { index ->
             plannedExercise(id = "extra_lower_$index", muscleGroup = MuscleGroup.LOWER_BODY)
         }
-        val plan = WeeklyPlan(
+        val plan = CyclePlan(
             id = PlanId("plan"),
             templateId = "balanced",
             name = "균형 루틴",
-            weekStartDate = weekStart,
+            cycleStartDate = cycleStart,
             days = listOf(
                 WorkoutDayPlan(
-                    date = weekStart,
+                    date = cycleStart,
                     title = "균형",
                     focus = "전신",
                     exercises = completedExercises + extraExercises
@@ -186,7 +194,12 @@ class WeeklySummaryCalculatorTest {
             completedLog(id = index.toLong() + 1, planned = planned)
         }
 
-        val result = calculator.calculate(weekStart, plan, logs)
+        val result = calculator.calculate(
+            plan = plan,
+            logs = logs,
+            progress = progress(templateId = "balanced"),
+            zone = ZoneOffset.UTC
+        )
 
         assertThat(result.completionRate).isLessThan(80)
         assertThat(result.insight).doesNotContain(MuscleGroup.FULL_BODY.displayName)
@@ -194,17 +207,17 @@ class WeeklySummaryCalculatorTest {
     }
 
     @Test
-    fun calculateCycle_usesLogsSinceCycleStartAndCapsCompletionToPlanSize() {
+    fun calculate_usesLogsSinceCycleStartAndCapsCompletionToPlanSize() {
         val first = plannedExercise(id = "leg_press", muscleGroup = MuscleGroup.LOWER_BODY)
         val second = plannedExercise(id = "row", muscleGroup = MuscleGroup.BACK)
-        val plan = WeeklyPlan(
+        val plan = CyclePlan(
             id = PlanId("plan"),
             templateId = "balanced",
             name = "균형 루틴",
-            weekStartDate = weekStart,
+            cycleStartDate = cycleStart,
             days = listOf(
                 WorkoutDayPlan(
-                    date = weekStart,
+                    date = cycleStart,
                     title = "1일차",
                     focus = "전신",
                     exercises = listOf(first, second)
@@ -243,8 +256,7 @@ class WeeklySummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculateCycle(
-            weekStartDate = weekStart,
+        val result = calculator.calculate(
             plan = plan,
             logs = logs,
             progress = progress,
@@ -259,14 +271,67 @@ class WeeklySummaryCalculatorTest {
     }
 
     @Test
-    fun calculateCycle_includesCurrentCycleRoutineDayLogsWhenCycleStartWasOverwrittenLater() {
+    fun calculate_fallsBackToRoutineStartWhenCycleStartIsMissing() {
+        val first = plannedExercise(id = "leg_press", muscleGroup = MuscleGroup.LOWER_BODY)
+        val second = plannedExercise(id = "row", muscleGroup = MuscleGroup.BACK)
+        val plan = CyclePlan(
+            id = PlanId("plan"),
+            templateId = "balanced",
+            name = "균형 루틴",
+            cycleStartDate = LocalDate.of(2026, 5, 20),
+            days = listOf(
+                WorkoutDayPlan(
+                    date = LocalDate.of(2026, 5, 20),
+                    title = "1일차",
+                    focus = "전신",
+                    exercises = listOf(first, second)
+                )
+            )
+        )
+        val progress = RoutineProgress(
+            templateId = "balanced",
+            dayIndex = 0,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            cycleNumber = 1,
+            startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            cycleStartedAt = null
+        )
+        val logs = listOf(
+            completedLog(
+                id = 1,
+                planned = first,
+                performedAt = LocalDateTime.of(2026, 5, 19, 20, 0)
+            ),
+            completedLog(
+                id = 2,
+                planned = second,
+                performedAt = LocalDateTime.of(2026, 5, 20, 20, 0)
+            )
+        )
+
+        val result = calculator.calculate(
+            plan = plan,
+            logs = logs,
+            progress = progress,
+            zone = ZoneOffset.UTC
+        )
+
+        assertThat(result.completedExerciseCount).isEqualTo(1)
+        assertThat(result.totalSets).isEqualTo(3)
+        assertThat(result.muscleBalance[MuscleGroup.LOWER_BODY]).isNull()
+        assertThat(result.muscleBalance[MuscleGroup.BACK]).isEqualTo(1)
+    }
+
+    @Test
+    fun calculate_includesCurrentCycleRoutineDayLogsWhenCycleStartWasOverwrittenLater() {
         val first = plannedExercise(id = "deadlift", muscleGroup = MuscleGroup.BACK)
         val second = plannedExercise(id = "lat_pulldown", muscleGroup = MuscleGroup.BACK)
-        val plan = WeeklyPlan(
+        val plan = CyclePlan(
             id = PlanId("plan"),
             templateId = "custom-template",
             name = "내 마음대로",
-            weekStartDate = LocalDate.of(2026, 6, 1),
+            cycleStartDate = LocalDate.of(2026, 6, 1),
             days = listOf(
                 WorkoutDayPlan(
                     date = LocalDate.of(2026, 6, 1),
@@ -302,8 +367,7 @@ class WeeklySummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculateCycle(
-            weekStartDate = LocalDate.of(2026, 6, 1),
+        val result = calculator.calculate(
             plan = plan,
             logs = logs,
             progress = progress,
@@ -316,15 +380,15 @@ class WeeklySummaryCalculatorTest {
     }
 
     @Test
-    fun calculateCycle_excludesRoutineLogsFromOtherTemplatesOrCycles() {
+    fun calculate_excludesRoutineLogsFromOtherTemplatesOrCycles() {
         val first = plannedExercise(id = "deadlift", muscleGroup = MuscleGroup.BACK)
         val second = plannedExercise(id = "lat_pulldown", muscleGroup = MuscleGroup.BACK)
         val extra = plannedExercise(id = "cable_row", muscleGroup = MuscleGroup.BACK)
-        val plan = WeeklyPlan(
+        val plan = CyclePlan(
             id = PlanId("plan"),
             templateId = "custom-template",
             name = "내 마음대로",
-            weekStartDate = LocalDate.of(2026, 6, 1),
+            cycleStartDate = LocalDate.of(2026, 6, 1),
             days = listOf(
                 WorkoutDayPlan(
                     date = LocalDate.of(2026, 6, 1),
@@ -344,8 +408,7 @@ class WeeklySummaryCalculatorTest {
             cycleStartedAt = Instant.parse("2026-06-01T00:00:00Z")
         )
 
-        val result = calculator.calculateCycle(
-            weekStartDate = LocalDate.of(2026, 6, 1),
+        val result = calculator.calculate(
             plan = plan,
             logs = listOf(
                 completedLog(
@@ -379,6 +442,20 @@ class WeeklySummaryCalculatorTest {
         assertThat(result.completedExerciseCount).isEqualTo(2)
         assertThat(result.totalSets).isEqualTo(6)
     }
+
+    private fun progress(
+        templateId: String,
+        cycleNumber: Int = 1,
+        cycleStartedAt: Instant = cycleStart.atStartOfDay().toInstant(ZoneOffset.UTC)
+    ): RoutineProgress = RoutineProgress(
+        templateId = templateId,
+        dayIndex = 0,
+        lastCompletedDayIndex = null,
+        lastCompletedAt = null,
+        cycleNumber = cycleNumber,
+        startedAt = cycleStartedAt,
+        cycleStartedAt = cycleStartedAt
+    )
 
     private fun plannedExercise(
         id: String,

@@ -3,7 +3,7 @@ package com.smarttrainner.feature.workout.impl
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
-import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.DifficultyLevel
@@ -16,8 +16,8 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.UserSessionId
-import com.smarttrainner.core.model.WeeklyPlan
-import com.smarttrainner.core.model.WeeklySummary
+import com.smarttrainner.core.model.CyclePlan
+import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
@@ -289,7 +289,7 @@ class WorkoutRecordingViewModelTest {
     }
 
     private fun viewModel() = WorkoutRecordingViewModel(
-        observeWorkoutLogs = ObserveWorkoutLogsUseCase(repository),
+        observeAllWorkoutLogs = ObserveAllWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
         getLatestWorkoutLog = GetLatestWorkoutLogUseCase(repository),
         saveWorkoutLog = SaveWorkoutLogUseCase(repository),
@@ -375,8 +375,6 @@ private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRep
         completed = true,
         setEntries = setEntries
     )
-
-    override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = logs
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 

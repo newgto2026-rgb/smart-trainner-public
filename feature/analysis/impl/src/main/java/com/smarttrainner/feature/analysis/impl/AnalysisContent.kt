@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.MuscleGroup
-import com.smarttrainner.core.model.WeeklySummary
+import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
@@ -231,7 +231,7 @@ private fun WorkoutLog.metricBadges(): List<SmartTrainnerBadgeSpec> = buildList 
 
 @Composable
 private fun SummaryBand(
-    summary: WeeklySummary?,
+    summary: CycleSummary?,
     cycleNumber: Int
 ) {
     Card(
@@ -252,19 +252,25 @@ private fun SummaryBand(
                     label = stringResource(R.string.analysis_completion_rate),
                     value = "${summary?.completionRate ?: 0}%",
                     accent = SmartTrainnerColors.Coral,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("training_summary_completion_rate")
                 )
                 SmartTrainnerMetricTile(
                     label = stringResource(R.string.analysis_total_sets),
                     value = "${summary?.totalSets ?: 0}",
                     accent = SmartTrainnerColors.Green,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("training_summary_total_sets")
                 )
                 SmartTrainnerMetricTile(
                     label = stringResource(R.string.analysis_streak),
                     value = stringResource(R.string.analysis_days_value, summary?.streakDays ?: 0),
                     accent = SmartTrainnerColors.Amber,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("training_summary_streak")
                 )
             }
             val insightText = summary?.insightText() ?: stringResource(R.string.analysis_insight_no_logs)
@@ -281,7 +287,7 @@ private const val RECENT_RECORD_PREVIEW_LIMIT = 3
 private const val RECENT_RECORD_INCREMENT = 10
 
 @Composable
-private fun MuscleBalanceCard(summary: WeeklySummary?) {
+private fun MuscleBalanceCard(summary: CycleSummary?) {
     AnalysisSectionCard {
         AnalysisSectionHeader(title = stringResource(R.string.analysis_muscle_balance))
         if (summary == null || summary.muscleBalance.isEmpty()) {
@@ -367,7 +373,7 @@ private fun InsightCard(text: String) {
 }
 
 @Composable
-private fun WeeklySummary.insightText(): String {
+private fun CycleSummary.insightText(): String {
     if (isKoreanLocale()) return insight
     val weakestMuscle = remember(muscleBalance) {
         MuscleGroup.entries

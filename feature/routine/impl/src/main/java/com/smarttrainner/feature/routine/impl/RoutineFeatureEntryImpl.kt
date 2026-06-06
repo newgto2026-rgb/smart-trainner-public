@@ -24,9 +24,6 @@ class RoutineFeatureEntryImpl @Inject constructor(
     override fun rememberRouteState(callbacks: RoutineFeatureCallbacks): RoutineRouteState {
         val viewModel: RoutineViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsStateWithLifecycle()
-        LaunchedEffect(viewModel) {
-            viewModel.refreshWeekStartOnWeekBoundary()
-        }
         LaunchedEffect(callbacks.routineLibraryOpenRequest, viewModel) {
             val request = callbacks.routineLibraryOpenRequest
             if (request > 0) {
@@ -38,7 +35,7 @@ class RoutineFeatureEntryImpl @Inject constructor(
         val actions = remember(callbacks, viewModel) {
             RoutineActions(
                 onTemplateSelected = viewModel::selectTemplate,
-                onDaysPerWeekChanged = viewModel::updateRoutineDaysPerWeek,
+                onCycleLengthChanged = viewModel::updateRoutineCycleLength,
                 onSessionMinutesChanged = viewModel::updateRoutineSessionMinutes,
                 onExperienceChanged = viewModel::updateRoutineExperience,
                 onFeelingChanged = viewModel::updateRoutineFeeling,
@@ -186,7 +183,7 @@ class RoutineFeatureEntryImpl @Inject constructor(
             RoutineSettingsDialog(
                 form = state.routineRecommendationInput,
                 availability = state.routineFilterAvailability,
-                onDaysPerWeekChanged = actions.onDaysPerWeekChanged,
+                onCycleLengthChanged = actions.onCycleLengthChanged,
                 onSessionMinutesChanged = actions.onSessionMinutesChanged,
                 onExperienceChanged = actions.onExperienceChanged,
                 onFeelingChanged = actions.onFeelingChanged,

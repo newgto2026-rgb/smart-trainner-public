@@ -52,7 +52,7 @@ internal fun LazyListScope.planContent(
     actions: RoutineActions,
     exerciseMediaRenderer: ExerciseMediaRenderer
 ) {
-    val weeklyLogsByPlannedExerciseId = state.logs.firstByPlannedExerciseId()
+    val cycleLogsByPlannedExerciseId = state.logs.firstByPlannedExerciseId()
     val latestLogsByExerciseId = state.latestWorkoutLogs.latestByExerciseId()
     val currentDayExercisesById = state.nextRoutineDayUi
         ?.previewExercises
@@ -130,7 +130,7 @@ internal fun LazyListScope.planContent(
             val completed = state.isPlanExerciseCompleted(dayIndex, exercise)
             PlanExerciseRow(
                 exercise = recordableExercise ?: exercise,
-                displayLog = weeklyLogsByPlannedExerciseId[exercise.id]
+                displayLog = cycleLogsByPlannedExerciseId[exercise.id]
                     ?: latestLogsByExerciseId[exercise.exercise.id],
                 completed = completed,
                 recordable = recordableExercise != null && !completed,

@@ -2,13 +2,13 @@ package com.smarttrainner.feature.routine.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
-import com.smarttrainner.core.domain.ObserveWorkoutLogsUseCase
 import com.smarttrainner.core.domain.RecommendExercisePrescriptionUseCase
+import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
@@ -18,13 +18,12 @@ import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.TrainingExperience
-import com.smarttrainner.core.model.WeeklyPlan
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.targetsAnyMuscleGroup
 import com.smarttrainner.feature.routine.domain.CancelLatestRoutineDayCompletionUseCase
 import com.smarttrainner.feature.routine.domain.CompleteRoutineDayUseCase
-import com.smarttrainner.feature.routine.domain.ObserveCurrentWeeklyPlanUseCase
+import com.smarttrainner.feature.routine.domain.ObserveCurrentCyclePlanUseCase
 import com.smarttrainner.feature.routine.domain.ObservePlanTemplatesUseCase
 import com.smarttrainner.feature.routine.domain.RecommendRoutineUseCase
 import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
@@ -35,25 +34,19 @@ import com.smarttrainner.feature.routine.domain.routineAdditionalExerciseIdPrefi
 import com.smarttrainner.feature.routine.domain.routineDayInstanceId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
-import java.time.DayOfWeek
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -61,10 +54,9 @@ import kotlinx.coroutines.launch
 class RoutineViewModel @Inject constructor(
     observeExercises: ObserveExercisesUseCase,
     observePlanTemplates: ObservePlanTemplatesUseCase,
-    observeCurrentWeeklyPlan: ObserveCurrentWeeklyPlanUseCase,
+    observeCurrentCyclePlan: ObserveCurrentCyclePlanUseCase,
     observeRoutineProgress: ObserveRoutineProgressUseCase,
     observeTrainingExperience: ObserveTrainingExperienceUseCase,
-    observeWorkoutLogs: ObserveWorkoutLogsUseCase,
     observeAllWorkoutLogs: ObserveAllWorkoutLogsUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
     private val recommendExercisePrescription: RecommendExercisePrescriptionUseCase,
@@ -77,11 +69,6 @@ class RoutineViewModel @Inject constructor(
     private val saveCustomRoutineUseCase: SaveCustomRoutineUseCase,
     private val clock: Clock
 ) : ViewModel() {
-    private val weekStart = MutableStateFlow(currentWeekStart())
-    private val weekStartFlow = weekStart
-        .onStart { refreshWeekStartIfNeeded() }
-        .distinctUntilChanged()
-
     private val recommendationForm = MutableStateFlow(
         RoutineRecommendationFormState.defaultFor(TrainingExperience.BEGINNER)
     )
@@ -147,27 +134,20 @@ class RoutineViewModel @Inject constructor(
         )
     }
 
-    private val routinePlanState = weekStartFlow.flatMapLatest { weekStart ->
-        combine(
-            observeCurrentWeeklyPlan(weekStart),
-            observeRoutineProgress()
-        ) { plan, progress ->
+    private val routinePlanState = observeRoutineProgress().flatMapLatest { progress ->
+        observeCurrentCyclePlan(progress.cycleStartDate()).map { plan ->
             RoutinePlanState(plan = plan, routineProgress = progress)
         }
     }
 
-    private val logState = weekStartFlow.flatMapLatest { weekStart ->
-        combine(
-            observeWorkoutLogs(weekStart),
-            observeAllWorkoutLogs(),
-            observeLatestWorkoutLogs()
-        ) { weeklyLogs, allLogs, latestLogs ->
-            RoutineLogState(
-                weeklyLogs = weeklyLogs,
-                allLogs = allLogs,
-                latestLogs = latestLogs
-            )
-        }
+    private val logState = combine(
+        observeAllWorkoutLogs(),
+        observeLatestWorkoutLogs()
+    ) { allLogs, latestLogs ->
+        RoutineLogState(
+            allLogs = allLogs,
+            latestLogs = latestLogs
+        )
     }
 
     private val dataState = combine(
@@ -634,8 +614,8 @@ class RoutineViewModel @Inject constructor(
         }
     }
 
-    fun updateRoutineDaysPerWeek(daysPerWeek: Int) {
-        updateRecommendationForm { it.copy(daysPerWeek = daysPerWeek) }
+    fun updateRoutineCycleLength(cycleLength: Int) {
+        updateRecommendationForm { it.copy(cycleLength = cycleLength) }
     }
 
     fun updateRoutineSessionMinutes(sessionMinutes: Int) {
@@ -932,31 +912,9 @@ class RoutineViewModel @Inject constructor(
     private fun routineDayCompletedAt(date: LocalDate): Instant =
         date.atTime(LocalTime.NOON).atZone(clock.zone).toInstant()
 
-    fun refreshWeekStartIfNeeded() {
-        val currentWeekStart = currentWeekStart()
-        if (weekStart.value != currentWeekStart) {
-            weekStart.value = currentWeekStart
-        }
-    }
-
-    suspend fun refreshWeekStartOnWeekBoundary() {
-        while (currentCoroutineContext().isActive) {
-            refreshWeekStartIfNeeded()
-            delay(durationUntilNextWeek(weekStart.value))
-        }
-    }
-
-    private fun currentWeekStart(): LocalDate =
-        LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-
-    private fun durationUntilNextWeek(currentWeekStart: LocalDate): Long {
-        val nextWeekStart = currentWeekStart
-            .plusWeeks(1)
-            .atTime(LocalTime.MIDNIGHT)
-            .atZone(clock.zone)
-            .toInstant()
-        return Duration.between(clock.instant(), nextWeekStart).toMillis().coerceAtLeast(1L)
-    }
+    private fun RoutineProgress.cycleStartDate(): LocalDate =
+        (cycleStartedAt ?: startedAt)?.atZone(clock.zone)?.toLocalDate()
+            ?: LocalDate.now(clock)
 
     private fun updateRecommendationForm(
         transform: (RoutineRecommendationFormState) -> RoutineRecommendationFormState
@@ -1050,7 +1008,7 @@ class RoutineViewModel @Inject constructor(
 
     private data class RoutineDataState(
         val templates: List<PlanTemplate>,
-        val plan: WeeklyPlan,
+        val plan: CyclePlan,
         val routineProgress: RoutineProgress,
         val logs: List<WorkoutLog>,
         val latestLogs: List<WorkoutLog>,
@@ -1059,13 +1017,12 @@ class RoutineViewModel @Inject constructor(
     )
 
     private data class RoutineLogState(
-        val weeklyLogs: List<WorkoutLog>,
         val allLogs: List<WorkoutLog>,
         val latestLogs: List<WorkoutLog>
     )
 
     private data class RoutinePlanState(
-        val plan: WeeklyPlan,
+        val plan: CyclePlan,
         val routineProgress: RoutineProgress
     )
 

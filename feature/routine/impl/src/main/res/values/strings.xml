@@ -35,7 +35,7 @@
     <string name="routine_custom_routine_empty">No custom routines yet. Build one from your favorite exercises or copy a default routine.</string>
     <string name="routine_custom_routine_name">Routine name</string>
     <string name="routine_custom_routine_saved">Routine saved.</string>
-    <string name="routine_custom_template_meta">%1$d-day cycle</string>
+    <string name="routine_custom_template_meta">%1$d-day routine</string>
     <string name="routine_day_focus_arm_accessories_conditioning">Arm accessories and conditioning</string>
     <string name="routine_day_focus_balance_posterior_chain">Balance and posterior chain</string>
     <string name="routine_day_focus_biceps_triceps_conditioning">Biceps, triceps, and conditioning</string>
@@ -73,11 +73,11 @@
     <string name="routine_day_title_starter_full_body_b">Starter Full Body B</string>
     <string name="routine_day_title_upper_1">Upper 1</string>
     <string name="routine_day_title_upper_2">Upper 2</string>
-    <string name="routine_days_per_week_option">%1$d/wk</string>
+    <string name="routine_cycle_length_option">%1$d-day cycle</string>
     <string name="routine_default_routine_badge">Default routine</string>
     <string name="routine_default_routines">Default routines</string>
     <string name="routine_edit_custom_routine">Edit</string>
-    <string name="routine_empty_plan">No workouts are planned this week. Choose a starter routine to begin.</string>
+    <string name="routine_empty_plan">No workouts are planned in this cycle. Choose a starter routine to begin.</string>
     <string name="routine_error_complete_day">Could not complete this routine day.</string>
     <string name="routine_experience_beginner">Beginner</string>
     <string name="routine_experience_intermediate">Intermediate</string>
@@ -123,7 +123,7 @@
     <string name="routine_rest">Rest: %1$d s</string>
     <string name="routine_metric_recommended">Target</string>
     <string name="routine_metric_latest">Recent</string>
-    <string name="routine_routine_days_question">Weekly availability</string>
+    <string name="routine_routine_days_question">Cycle length</string>
     <string name="routine_routine_badge_duration">About %1$d min</string>
     <string name="routine_routine_badge_exercises">Moves: %1$d</string>
     <string name="routine_routine_completed_progress">Routine progress: %1$d/%2$d</string>
@@ -138,7 +138,7 @@
     <string name="routine_routine_minutes_question">Session length</string>
     <string name="routine_routine_preview_day_title">Day %1$d · %2$s · %3$s</string>
     <string name="routine_routine_preview_schedule">Schedule preview</string>
-    <string name="routine_routine_recommendations_body">Weekly sessions: %1$d · Session length: %2$d min</string>
+    <string name="routine_routine_recommendations_body">Cycle: %1$d-day · Session length: %2$d min</string>
     <string name="routine_routine_recommendations_title">Recommended routines</string>
     <string name="routine_routine_schedule">Routine schedule</string>
     <string name="routine_routine_schedule_day_title">Day %1$d · %2$s</string>
@@ -180,11 +180,11 @@
     <string name="routine_target_duration">Sets: %1$d · Min: %2$d</string>
     <string name="routine_target_reps_single">Sets: %1$d · Reps: %2$d</string>
     <string name="routine_target_reps">Sets: %1$d · Reps: %2$d-%3$d</string>
-    <string name="routine_template_beginner_full_body_2day_description">A conservative A/B full-body routine that keeps progress independent from weekdays.</string>
+    <string name="routine_template_beginner_full_body_2day_description">A conservative A/B full-body routine that keeps progress independent from calendar days.</string>
     <string name="routine_template_beginner_full_body_2day_name">Beginner 2-Day Full Body</string>
     <string name="routine_template_beginner_full_body_3day_description">A balanced full-body routine for practicing major patterns without excessive fatigue.</string>
     <string name="routine_template_beginner_full_body_3day_name">Beginner 3-Day Full Body</string>
-    <string name="routine_template_intermediate_balanced_4day_description">An upper/lower split that balances frequency, recovery, and weekly volume.</string>
+    <string name="routine_template_intermediate_balanced_4day_description">An upper/lower split that balances cycle density, recovery, and training volume.</string>
     <string name="routine_template_intermediate_balanced_4day_name">Balanced 4-Day Split</string>
     <string name="routine_template_intermediate_body_part_4day_30_description">A shorter focused split that marks back as pull and chest as push.</string>
     <string name="routine_template_intermediate_body_part_4day_30_name">Focused 4-Day Body-Part Split · 30 min</string>
@@ -194,7 +194,7 @@
     <string name="routine_template_intermediate_body_part_4day_name">Focused 4-Day Body-Part Split</string>
     <string name="routine_template_intermediate_body_part_5day_description">A focused split with chest/push, back/pull, and a separate arms day that calls out biceps and triceps.</string>
     <string name="routine_template_intermediate_body_part_5day_name">Focused 5-Day Body-Part Split</string>
-    <string name="routine_template_meta">%1$s · %2$d/wk · %3$d min</string>
+    <string name="routine_template_meta">%1$s · %2$d-day cycle · %3$d min</string>
     <string name="routine_today_title">Today Training</string>
     <string name="routine_today_focus_title">Today: %1$s</string>
     <string name="routine_today_focus_arms">arms focus</string>

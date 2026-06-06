@@ -16,8 +16,8 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.UserSessionId
-import com.smarttrainner.core.model.WeeklyPlan
-import com.smarttrainner.core.model.WeeklySummary
+import com.smarttrainner.core.model.CyclePlan
+import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import java.time.Instant
@@ -151,8 +151,6 @@ private class FakeExerciseCatalogRepository :
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
 
     override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
-
-    override fun observeWorkoutLogs(weekStartDate: LocalDate): Flow<List<WorkoutLog>> = unused()
 
     override suspend fun getExercise(id: ExerciseId): Exercise? = unused()
 

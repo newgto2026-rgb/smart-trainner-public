@@ -253,7 +253,7 @@ class SeedTrainingContentTest {
         val exerciseIds = SeedTrainingContent.exercises.map { it.id }.toSet()
 
         SeedTrainingContent.templates.forEach { template ->
-            assertThat(template.days).hasSize(template.daysPerWeek)
+            assertThat(template.days).hasSize(template.cycleLength)
             assertThat(template.cycleLength).isEqualTo(template.days.size)
             template.days.forEach { day ->
                 assertThat(day.exercises).isNotEmpty()
@@ -317,15 +317,15 @@ class SeedTrainingContentTest {
     fun generatedRoutineCatalogCoversSafeDynamicRecommendationOptions() {
         val templates = SeedTrainingContent.templates
 
-        assertThat(templates.hasOption(TrainingExperience.BEGINNER, daysPerWeek = 5, sessionMinutes = 45))
+        assertThat(templates.hasOption(TrainingExperience.BEGINNER, cycleLength = 5, sessionMinutes = 45))
             .isTrue()
-        assertThat(templates.hasOption(TrainingExperience.BEGINNER, daysPerWeek = 5, sessionMinutes = 60))
+        assertThat(templates.hasOption(TrainingExperience.BEGINNER, cycleLength = 5, sessionMinutes = 60))
             .isFalse()
-        assertThat(templates.hasOption(TrainingExperience.INTERMEDIATE, daysPerWeek = 2, sessionMinutes = 30))
+        assertThat(templates.hasOption(TrainingExperience.INTERMEDIATE, cycleLength = 2, sessionMinutes = 30))
             .isFalse()
-        assertThat(templates.hasOption(TrainingExperience.INTERMEDIATE, daysPerWeek = 2, sessionMinutes = 45))
+        assertThat(templates.hasOption(TrainingExperience.INTERMEDIATE, cycleLength = 2, sessionMinutes = 45))
             .isTrue()
-        assertThat(templates.hasOption(TrainingExperience.ADVANCED, daysPerWeek = 5, sessionMinutes = 60))
+        assertThat(templates.hasOption(TrainingExperience.ADVANCED, cycleLength = 5, sessionMinutes = 60))
             .isTrue()
     }
 
@@ -431,7 +431,7 @@ class SeedTrainingContentTest {
         val beginnerHighFrequencyBodyPartTemplates = SeedTrainingContent.templates.filter {
             it.recommendedExperience == TrainingExperience.BEGINNER &&
                 it.structure == RoutineStructure.BODY_PART_SPLIT &&
-                it.daysPerWeek >= 5
+                it.cycleLength >= 5
         }
 
         assertThat(beginnerHighFrequencyBodyPartTemplates).isNotEmpty()
@@ -448,11 +448,11 @@ class SeedTrainingContentTest {
 
     private fun List<PlanTemplate>.hasOption(
         experience: TrainingExperience,
-        daysPerWeek: Int,
+        cycleLength: Int,
         sessionMinutes: Int
     ): Boolean = any {
         it.recommendedExperience == experience &&
-            it.daysPerWeek == daysPerWeek &&
+            it.cycleLength == cycleLength &&
             it.sessionMinutes == sessionMinutes &&
             it.isWithinSessionTolerance()
     }

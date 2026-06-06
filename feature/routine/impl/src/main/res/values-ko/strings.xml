@@ -73,11 +73,11 @@
     <string name="routine_day_title_starter_full_body_b">입문 전신 B</string>
     <string name="routine_day_title_upper_1">상체 1</string>
     <string name="routine_day_title_upper_2">상체 2</string>
-    <string name="routine_days_per_week_option">주 %1$d회</string>
+    <string name="routine_cycle_length_option">%1$d일 사이클</string>
     <string name="routine_default_routine_badge">앱 기본 루틴</string>
     <string name="routine_default_routines">기본 루틴</string>
     <string name="routine_edit_custom_routine">수정</string>
-    <string name="routine_empty_plan">이번 주 운동이 없습니다. 입문 루틴을 선택해 시작해보세요.</string>
+    <string name="routine_empty_plan">이번 사이클에 계획된 운동이 없습니다. 입문 루틴을 선택해 시작해보세요.</string>
     <string name="routine_error_complete_day">오늘 루틴 완료 처리에 실패했습니다.</string>
     <string name="routine_experience_beginner">초보</string>
     <string name="routine_experience_intermediate">중급</string>
@@ -150,7 +150,7 @@
     <string name="routine_routine_badge_duration">약 %1$d분</string>
     <string name="routine_routine_badge_exercises">운동 %1$d개</string>
     <string name="routine_routine_completed_progress">루틴 진행: %2$d개 중 %1$d개 기록</string>
-    <string name="routine_routine_days_question">일주일 운동 가능 횟수</string>
+    <string name="routine_routine_days_question">사이클 길이</string>
     <string name="routine_routine_experience_question">운동 경험</string>
     <string name="routine_routine_examples">오늘 운동 계획</string>
     <string name="routine_routine_feeling_question">루틴 방향</string>
@@ -162,7 +162,7 @@
     <string name="routine_routine_minutes_question">한 번 운동 시간</string>
     <string name="routine_routine_preview_day_title">%1$d일차 · %2$s · %3$s</string>
     <string name="routine_routine_preview_schedule">스케줄 미리보기</string>
-    <string name="routine_routine_recommendations_body">주 %1$d회, 1회 약 %2$d분 기준으로 골랐습니다.</string>
+    <string name="routine_routine_recommendations_body">%1$d일 사이클, 1회 약 %2$d분 기준으로 골랐습니다.</string>
     <string name="routine_routine_recommendations_title">추천 루틴 선택</string>
     <string name="routine_routine_schedule">운동 스케줄</string>
     <string name="routine_routine_schedule_day_title">%1$d일차 · %2$s</string>
@@ -194,7 +194,7 @@
     <string name="routine_template_intermediate_body_part_4day_name">부위 집중 4일 루틴</string>
     <string name="routine_template_intermediate_body_part_5day_description">가슴/밀기, 등/당기기, 하체, 어깨, 팔+유산소를 분리해 이두와 삼두까지 나누는 루틴입니다.</string>
     <string name="routine_template_intermediate_body_part_5day_name">부위 집중 5일 루틴</string>
-    <string name="routine_template_meta">%1$s · 주 %2$d회 · %3$d분</string>
+    <string name="routine_template_meta">%1$s · %2$d일 사이클 · %3$d분</string>
     <string name="routine_today_focus_title">오늘은 %1$s</string>
     <string name="routine_today_title">오늘의 트레이닝</string>
     <string name="routine_today_focus_arms">팔 집중</string>

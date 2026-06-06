@@ -85,7 +85,7 @@ class RecommendRoutineUseCase @Inject constructor() {
                 ?: fallbackCandidates.bestBalanced(input)
                 ?: fallbackCandidates.bestBodyPart(input)
         }
-        input.daysPerWeek >= 4 -> {
+        input.cycleLength >= 4 -> {
             primaryCandidates.bestBodyPart(input)
                 ?: primaryCandidates.bestBalanced(input)
                 ?: fallbackCandidates.bestBodyPart(input)
@@ -117,11 +117,11 @@ class RecommendRoutineUseCase @Inject constructor() {
     private fun List<PlanTemplate>.preferRequestedFrequency(
         input: RoutineRecommendationInput
     ): List<PlanTemplate> {
-        val exactFrequency = filter { it.daysPerWeek == input.daysPerWeek }
+        val exactFrequency = filter { it.cycleLength == input.cycleLength }
         if (exactFrequency.isNotEmpty()) {
             return exactFrequency
         }
-        return filter { it.daysPerWeek <= input.daysPerWeek }.ifEmpty { this }
+        return filter { it.cycleLength <= input.cycleLength }.ifEmpty { this }
     }
 
     private fun PlanTemplate.isWithinSessionTolerance(sessionMinutes: Int): Boolean =
@@ -143,7 +143,7 @@ class RecommendRoutineUseCase @Inject constructor() {
 
     private fun templateFitComparator(input: RoutineRecommendationInput): Comparator<PlanTemplate> =
         compareBy<PlanTemplate> {
-            kotlin.math.abs(it.daysPerWeek - input.daysPerWeek)
+            kotlin.math.abs(it.cycleLength - input.cycleLength)
         }.thenBy {
             kotlin.math.abs(it.estimatedSessionMinutes - input.sessionMinutes)
         }.thenByDescending {
@@ -156,7 +156,7 @@ class RecommendRoutineUseCase @Inject constructor() {
     ): Comparator<PlanTemplate> = compareBy<PlanTemplate> {
         if (it.structure == primary.structure) 1 else 0
     }.thenBy {
-        kotlin.math.abs(it.daysPerWeek - input.daysPerWeek)
+        kotlin.math.abs(it.cycleLength - input.cycleLength)
     }.thenByDescending {
         it.isWithinSessionTolerance(input.sessionMinutes)
     }.thenBy {

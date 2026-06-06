@@ -4,7 +4,7 @@ import com.smarttrainner.core.model.RoutineRecommendationInput
 
 internal fun RoutineRecommendationFormState.toInput(): RoutineRecommendationInput =
     RoutineRecommendationInput(
-        daysPerWeek = daysPerWeek,
+        cycleLength = cycleLength,
         sessionMinutes = sessionMinutes,
         experience = experience,
         feeling = feeling

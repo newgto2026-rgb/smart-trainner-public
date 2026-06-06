@@ -183,7 +183,7 @@ class RoutineCommandUseCasesTest {
     private val templates = listOf(
         template(
             id = "beginner-full-body-2day",
-            daysPerWeek = 2,
+            cycleLength = 2,
             sessionMinutes = 30,
             structure = RoutineStructure.FULL_BODY,
             experience = TrainingExperience.BEGINNER,
@@ -191,7 +191,7 @@ class RoutineCommandUseCasesTest {
         ),
         template(
             id = "beginner-full-body-3day",
-            daysPerWeek = 3,
+            cycleLength = 3,
             sessionMinutes = 45,
             structure = RoutineStructure.FULL_BODY,
             experience = TrainingExperience.BEGINNER,
@@ -199,7 +199,7 @@ class RoutineCommandUseCasesTest {
         ),
         template(
             id = "intermediate-balanced-4day",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 45,
             structure = RoutineStructure.BALANCED_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -207,7 +207,7 @@ class RoutineCommandUseCasesTest {
         ),
         template(
             id = "intermediate-body-part-4day-30",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 30,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -225,7 +225,7 @@ class RoutineCommandUseCasesTest {
         ),
         template(
             id = "intermediate-body-part-4day",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 45,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -243,7 +243,7 @@ class RoutineCommandUseCasesTest {
         ),
         template(
             id = "intermediate-body-part-4day-60",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 60,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -261,7 +261,7 @@ class RoutineCommandUseCasesTest {
         ),
         template(
             id = "intermediate-body-part-5day",
-            daysPerWeek = 5,
+            cycleLength = 5,
             sessionMinutes = 60,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -281,7 +281,7 @@ class RoutineCommandUseCasesTest {
 
     private fun template(
         id: String,
-        daysPerWeek: Int,
+        cycleLength: Int,
         sessionMinutes: Int,
         structure: RoutineStructure,
         experience: TrainingExperience,
@@ -290,12 +290,11 @@ class RoutineCommandUseCasesTest {
         id = id,
         name = id,
         level = experience.toPlanLevel(),
-        daysPerWeek = daysPerWeek,
+        cycleLength = cycleLength,
         description = id,
         days = emptyList(),
         structure = structure,
         recommendedExperience = experience,
-        cycleLength = daysPerWeek,
         sessionMinutes = sessionMinutes,
         focusSummary = focusSummary
     )

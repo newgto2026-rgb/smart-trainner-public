@@ -111,7 +111,7 @@ data class CustomRoutineDto(
     val sessionId: String,
     val name: String,
     val description: String? = null,
-    val daysPerWeek: Int,
+    val cycleLength: Int,
     val days: List<CustomRoutineDayDto>,
     val isSelected: Boolean = false,
     val createdAt: String,

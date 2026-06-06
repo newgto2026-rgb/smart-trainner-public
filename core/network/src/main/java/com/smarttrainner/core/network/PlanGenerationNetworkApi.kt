@@ -12,22 +12,22 @@ interface PlanGenerationNetworkApi {
 @Serializable
 data class GeneratePlanRequest(
     val goal: String = "general",
-    val daysPerWeek: Int = 3,
+    val cycleLength: Int = 3,
     val level: String = "beginner"
 )
 
 @Serializable
 data class TrainingPlanResponse(
-    val data: WeeklyPlanDto
+    val data: CyclePlanDto
 )
 
 @Serializable
-data class WeeklyPlanDto(
+data class CyclePlanDto(
     val id: String? = null,
     val name: String? = null,
     val description: String? = null,
     val goal: String,
-    val daysPerWeek: Int,
+    val cycleLength: Int,
     val level: String,
     val days: List<PlanDayDto>
 )

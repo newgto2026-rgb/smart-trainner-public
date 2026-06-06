@@ -31,7 +31,7 @@ class RoutinePolicyUseCasesTest {
     fun recommendRoutine_beginnerTwoDaysRecommendsFullBody() {
         val recommendation = recommendRoutine(
             input = RoutineRecommendationInput(
-                daysPerWeek = 2,
+                cycleLength = 2,
                 sessionMinutes = 45,
                 experience = TrainingExperience.BEGINNER,
                 feeling = RoutineFeeling.APP_RECOMMENDED
@@ -46,7 +46,7 @@ class RoutinePolicyUseCasesTest {
     fun recommendRoutine_beginnerFiveDaysDoesNotDefaultToBodyPartSplit() {
         val recommendation = recommendRoutine(
             input = RoutineRecommendationInput(
-                daysPerWeek = 5,
+                cycleLength = 5,
                 sessionMinutes = 60,
                 experience = TrainingExperience.BEGINNER,
                 feeling = RoutineFeeling.FOCUSED_BODY_PART
@@ -63,7 +63,7 @@ class RoutinePolicyUseCasesTest {
     fun recommendRoutine_intermediateFocusedFourDaysRecommendsBodyPartSplit() {
         val recommendation = recommendRoutine(
             input = RoutineRecommendationInput(
-                daysPerWeek = 4,
+                cycleLength = 4,
                 sessionMinutes = 60,
                 experience = TrainingExperience.INTERMEDIATE,
                 feeling = RoutineFeeling.FOCUSED_BODY_PART
@@ -78,7 +78,7 @@ class RoutinePolicyUseCasesTest {
     fun recommendRoutine_balancedFullBodyKeepsIntermediateFourDayAwayFromBodyPartSplit() {
         val recommendation = recommendRoutine(
             input = RoutineRecommendationInput(
-                daysPerWeek = 4,
+                cycleLength = 4,
                 sessionMinutes = 60,
                 experience = TrainingExperience.INTERMEDIATE,
                 feeling = RoutineFeeling.BALANCED_FULL_BODY
@@ -93,7 +93,7 @@ class RoutinePolicyUseCasesTest {
     fun recommendRoutine_focusedBodyPartHonorsSessionLengthVariants() {
         val inputs = listOf(30, 45, 60).map { minutes ->
             RoutineRecommendationInput(
-                daysPerWeek = 4,
+                cycleLength = 4,
                 sessionMinutes = minutes,
                 experience = TrainingExperience.INTERMEDIATE,
                 feeling = RoutineFeeling.FOCUSED_BODY_PART
@@ -116,7 +116,7 @@ class RoutinePolicyUseCasesTest {
 
         val recommendation = recommendRoutine(
             input = RoutineRecommendationInput(
-                daysPerWeek = 4,
+                cycleLength = 4,
                 sessionMinutes = 60,
                 experience = TrainingExperience.INTERMEDIATE,
                 feeling = RoutineFeeling.FOCUSED_BODY_PART
@@ -132,7 +132,7 @@ class RoutinePolicyUseCasesTest {
     fun recommendRoutine_excludesTemplatesOverTargetByEstimatedSessionMinutes() {
         val overBudget = template(
             id = "over-budget-45-label",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 45,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -141,7 +141,7 @@ class RoutinePolicyUseCasesTest {
         )
         val withinBudget = template(
             id = "within-budget-45",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 45,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -151,7 +151,7 @@ class RoutinePolicyUseCasesTest {
 
         val recommendation = recommendRoutine(
             input = RoutineRecommendationInput(
-                daysPerWeek = 4,
+                cycleLength = 4,
                 sessionMinutes = 45,
                 experience = TrainingExperience.INTERMEDIATE,
                 feeling = RoutineFeeling.FOCUSED_BODY_PART
@@ -166,7 +166,7 @@ class RoutinePolicyUseCasesTest {
     fun recommendRoutine_usesTenMinuteToleranceForSessionCandidates() {
         val outsideTolerance = template(
             id = "outside-tolerance-45",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 45,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -175,7 +175,7 @@ class RoutinePolicyUseCasesTest {
         )
         val insideTolerance = template(
             id = "inside-tolerance-45",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 45,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -185,7 +185,7 @@ class RoutinePolicyUseCasesTest {
 
         val recommendation = recommendRoutine(
             input = RoutineRecommendationInput(
-                daysPerWeek = 4,
+                cycleLength = 4,
                 sessionMinutes = 45,
                 experience = TrainingExperience.INTERMEDIATE,
                 feeling = RoutineFeeling.FOCUSED_BODY_PART
@@ -200,7 +200,7 @@ class RoutinePolicyUseCasesTest {
     fun recommendRoutine_keepsRequestedFrequencyWhenExactMatchExceedsTargetMinutes() {
         val twoDayWithinBudget = template(
             id = "two-day-within-budget",
-            daysPerWeek = 2,
+            cycleLength = 2,
             sessionMinutes = 30,
             structure = RoutineStructure.FULL_BODY,
             experience = TrainingExperience.BEGINNER,
@@ -208,7 +208,7 @@ class RoutinePolicyUseCasesTest {
         )
         val threeDayOverBudget = template(
             id = "three-day-over-budget",
-            daysPerWeek = 3,
+            cycleLength = 3,
             sessionMinutes = 45,
             structure = RoutineStructure.FULL_BODY,
             experience = TrainingExperience.BEGINNER,
@@ -218,7 +218,7 @@ class RoutinePolicyUseCasesTest {
 
         val recommendation = recommendRoutine(
             input = RoutineRecommendationInput(
-                daysPerWeek = 3,
+                cycleLength = 3,
                 sessionMinutes = 45,
                 experience = TrainingExperience.BEGINNER,
                 feeling = RoutineFeeling.APP_RECOMMENDED
@@ -233,7 +233,7 @@ class RoutinePolicyUseCasesTest {
     fun recommendRoutine_appRecommendedPrefersRequestedFrequencyBeforeBroaderFallback() {
         val threeDayFullBody = template(
             id = "exact-three-day-full-body",
-            daysPerWeek = 3,
+            cycleLength = 3,
             sessionMinutes = 45,
             structure = RoutineStructure.FULL_BODY,
             experience = TrainingExperience.INTERMEDIATE,
@@ -241,7 +241,7 @@ class RoutinePolicyUseCasesTest {
         )
         val fourDayBalanced = template(
             id = "broader-four-day-balanced",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 45,
             structure = RoutineStructure.BALANCED_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -250,7 +250,7 @@ class RoutinePolicyUseCasesTest {
 
         val recommendation = recommendRoutine(
             input = RoutineRecommendationInput(
-                daysPerWeek = 3,
+                cycleLength = 3,
                 sessionMinutes = 45,
                 experience = TrainingExperience.INTERMEDIATE,
                 feeling = RoutineFeeling.APP_RECOMMENDED
@@ -451,7 +451,7 @@ class RoutinePolicyUseCasesTest {
     private val templates = listOf(
         template(
             id = "beginner-full-body-2day",
-            daysPerWeek = 2,
+            cycleLength = 2,
             sessionMinutes = 30,
             structure = RoutineStructure.FULL_BODY,
             experience = TrainingExperience.BEGINNER,
@@ -459,7 +459,7 @@ class RoutinePolicyUseCasesTest {
         ),
         template(
             id = "beginner-full-body-3day",
-            daysPerWeek = 3,
+            cycleLength = 3,
             sessionMinutes = 45,
             structure = RoutineStructure.FULL_BODY,
             experience = TrainingExperience.BEGINNER,
@@ -467,7 +467,7 @@ class RoutinePolicyUseCasesTest {
         ),
         template(
             id = "intermediate-balanced-4day",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 45,
             structure = RoutineStructure.BALANCED_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -475,7 +475,7 @@ class RoutinePolicyUseCasesTest {
         ),
         template(
             id = "intermediate-body-part-4day-30",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 30,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -483,7 +483,7 @@ class RoutinePolicyUseCasesTest {
         ),
         template(
             id = "intermediate-body-part-4day",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 45,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -491,7 +491,7 @@ class RoutinePolicyUseCasesTest {
         ),
         template(
             id = "intermediate-body-part-4day-60",
-            daysPerWeek = 4,
+            cycleLength = 4,
             sessionMinutes = 60,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -499,7 +499,7 @@ class RoutinePolicyUseCasesTest {
         ),
         template(
             id = "intermediate-body-part-5day",
-            daysPerWeek = 5,
+            cycleLength = 5,
             sessionMinutes = 60,
             structure = RoutineStructure.BODY_PART_SPLIT,
             experience = TrainingExperience.INTERMEDIATE,
@@ -509,7 +509,7 @@ class RoutinePolicyUseCasesTest {
 
     private fun template(
         id: String,
-        daysPerWeek: Int,
+        cycleLength: Int,
         sessionMinutes: Int,
         structure: RoutineStructure,
         experience: TrainingExperience,
@@ -519,12 +519,11 @@ class RoutinePolicyUseCasesTest {
         id = id,
         name = id,
         level = experience.toPlanLevel(),
-        daysPerWeek = daysPerWeek,
+        cycleLength = cycleLength,
         description = id,
         days = days.ifEmpty { listOf(estimatedDurationTemplateDay(minutes = sessionMinutes)) },
         structure = structure,
         recommendedExperience = experience,
-        cycleLength = daysPerWeek,
         sessionMinutes = sessionMinutes,
         focusSummary = focusSummary
     )
