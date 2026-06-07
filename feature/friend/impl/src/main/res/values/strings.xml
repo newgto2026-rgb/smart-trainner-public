@@ -1,0 +1,25 @@
+<resources>
+    <string name="friend_route_title">Friends</string>
+    <string name="friend_route_subtitle">Requests %1$d · Friends %2$d</string>
+    <string name="friend_add_title">Add by nickname</string>
+    <string name="friend_nickname_label">Friend nickname</string>
+    <string name="friend_nickname_placeholder">Enter nickname</string>
+    <string name="friend_add_helper">Use the nickname your friend set in profile.</string>
+    <string name="friend_send_request">Send</string>
+    <string name="friend_sending_request">Sending</string>
+    <string name="friend_request_sent">Request sent.</string>
+    <string name="friend_error_empty_nickname">Enter a nickname.</string>
+    <string name="friend_error_send_failed">Could not complete the request.</string>
+    <string name="friend_incoming_title">Requests</string>
+    <string name="friend_request_subtitle">Wants to connect</string>
+    <string name="friend_accept">Accept</string>
+    <string name="friend_decline">Decline</string>
+    <string name="friend_request_accepted">Friend request accepted.</string>
+    <string name="friend_request_declined">Friend request declined.</string>
+    <string name="friend_list_title">Connected friends</string>
+    <string name="friend_connected_subtitle">Connected</string>
+    <string name="friend_list_empty">No friends yet. Add someone by nickname to start.</string>
+    <string name="friend_loading">Loading friends…</string>
+    <string name="friend_load_error">Could not load friends.</string>
+    <string name="friend_retry">Retry</string>
+</resources>

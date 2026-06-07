@@ -56,4 +56,6 @@
     <string name="app_destination_exercises">Exercises</string>
     <string name="app_destination_calendar">Calendar</string>
     <string name="app_destination_analysis">Analysis</string>
+    <string name="app_destination_friends">Friends</string>
+    <string name="friend_notification_channel_name">Friend alerts</string>
 </resources>

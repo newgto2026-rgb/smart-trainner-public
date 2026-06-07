@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -51,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -88,6 +90,7 @@ import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.calendar.api.CalendarFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
+import com.smarttrainner.feature.friend.api.FriendFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 
@@ -99,11 +102,13 @@ fun SmartTrainnerMainScreen(
     calendarFeatureEntry: CalendarFeatureEntry,
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
+    friendFeatureEntry: FriendFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     activeSession: UserSession,
     trainingExperience: TrainingExperience,
     googleSignInInProgress: Boolean,
+    friendNavigationRequest: Int,
     selectedThemeTone: SmartTrainnerThemeTone,
     onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
     onTrainingExperienceSelected: (TrainingExperience) -> Unit,
@@ -118,6 +123,18 @@ fun SmartTrainnerMainScreen(
     var profileOpen by rememberSaveable { mutableStateOf(false) }
     var routineChangePromptOpen by rememberSaveable { mutableStateOf(false) }
     var routineLibraryOpenRequest by rememberSaveable { mutableStateOf(0) }
+
+    LaunchedEffect(friendNavigationRequest) {
+        if (friendNavigationRequest > 0) {
+            navController.navigate(SmartTrainnerDestination.Friends.route) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         CompositionLocalProvider(
@@ -194,6 +211,7 @@ fun SmartTrainnerMainScreen(
                                                 viewModelStoreOwner = trainingViewModelStoreOwner
                                             )
                                             SmartTrainnerDestination.Calendar,
+                                            SmartTrainnerDestination.Friends,
                                             SmartTrainnerDestination.Analysis -> Unit
                                         }
                                     }
@@ -204,6 +222,9 @@ fun SmartTrainnerMainScreen(
                         }
                         composable(SmartTrainnerDestination.Analysis.route) {
                             analysisFeatureEntry.Route()
+                        }
+                        composable(SmartTrainnerDestination.Friends.route) {
+                            friendFeatureEntry.Route()
                         }
                     }
                 }
@@ -975,6 +996,11 @@ private enum class SmartTrainnerDestination(
         route = "training/analysis",
         labelResId = R.string.app_destination_analysis,
         testTag = "training_tab_analysis"
+    ),
+    Friends(
+        route = "training/friends",
+        labelResId = R.string.app_destination_friends,
+        testTag = "training_tab_friends"
     )
 }
 
@@ -984,6 +1010,7 @@ private fun SmartTrainnerDestination.icon(): ImageVector = when (this) {
     SmartTrainnerDestination.Exercises -> Icons.Default.FitnessCenter
     SmartTrainnerDestination.Calendar -> Icons.Default.CalendarMonth
     SmartTrainnerDestination.Analysis -> Icons.Default.BarChart
+    SmartTrainnerDestination.Friends -> Icons.Default.Group
 }
 
 private val SmartTrainnerDestination.isTrainingDestination: Boolean
@@ -992,5 +1019,6 @@ private val SmartTrainnerDestination.isTrainingDestination: Boolean
         SmartTrainnerDestination.Routine,
         SmartTrainnerDestination.Exercises -> true
         SmartTrainnerDestination.Calendar,
+        SmartTrainnerDestination.Friends,
         SmartTrainnerDestination.Analysis -> false
     }

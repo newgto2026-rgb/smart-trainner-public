@@ -68,6 +68,7 @@ import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.calendar.api.CalendarFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
+import com.smarttrainner.feature.friend.api.FriendFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 import kotlinx.coroutines.delay
@@ -79,9 +80,11 @@ fun SmartTrainnerApp(
     calendarFeatureEntry: CalendarFeatureEntry,
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
+    friendFeatureEntry: FriendFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     selectedThemeTone: SmartTrainnerThemeTone,
+    friendNavigationRequest: Int,
     onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
     viewModel: SmartTrainnerAppViewModel = hiltViewModel()
 ) {
@@ -139,11 +142,13 @@ fun SmartTrainnerApp(
                 calendarFeatureEntry = calendarFeatureEntry,
                 exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
                 exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
+                friendFeatureEntry = friendFeatureEntry,
                 routineFeatureEntry = routineFeatureEntry,
                 workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
                 activeSession = requireNotNull(state.activeSession),
                 trainingExperience = state.trainingExperience,
                 googleSignInInProgress = state.googleSignInInProgress,
+                friendNavigationRequest = friendNavigationRequest,
                 selectedThemeTone = selectedThemeTone,
                 onThemeToneSelected = onThemeToneSelected,
                 onTrainingExperienceSelected = viewModel::updateTrainingExperience,

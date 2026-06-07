@@ -72,7 +72,8 @@ class SmartTrainnerAppViewModel @Inject constructor(
     private val syncPendingTrainingDataUseCase: SyncPendingTrainingDataUseCase,
     private val updateBodyProfileUseCase: UpdateBodyProfileUseCase,
     private val validateActiveSessionDeviceUseCase: ValidateActiveSessionDeviceUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val pushTokenRegistrar: PushTokenRegistrar
 ) : ViewModel() {
     private val loginState = MutableStateFlow(SmartTrainnerAppUiState(isLoading = false))
 
@@ -114,7 +115,10 @@ class SmartTrainnerAppViewModel @Inject constructor(
                         loginState.update { it.copy(syncInProgress = true) }
                         try {
                             validateActiveSessionDeviceUseCase()
-                                .onSuccess { syncPendingTrainingDataUseCase() }
+                                .onSuccess {
+                                    syncPendingTrainingDataUseCase()
+                                    pushTokenRegistrar.registerCurrentTokenIfConfigured()
+                                }
                         } finally {
                             loginState.update { it.copy(syncInProgress = false) }
                         }

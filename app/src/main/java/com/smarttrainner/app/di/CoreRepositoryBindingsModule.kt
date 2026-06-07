@@ -3,6 +3,7 @@ package com.smarttrainner.app.di
 import com.smarttrainner.app.DefaultNetworkStatusRepository
 import com.smarttrainner.core.data.DefaultExerciseRepository
 import com.smarttrainner.core.data.DefaultDeviceSessionStore
+import com.smarttrainner.core.data.DefaultPushTokenRepository
 import com.smarttrainner.core.data.DefaultSessionRepository
 import com.smarttrainner.core.data.DefaultCyclePlanRepository
 import com.smarttrainner.core.data.DefaultWorkoutLogRepository
@@ -10,6 +11,7 @@ import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.DeviceSessionStore
 import com.smarttrainner.core.domain.NetworkStatusRepository
+import com.smarttrainner.core.domain.PushTokenRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.TrainingDataSyncer
 import com.smarttrainner.core.domain.CyclePlanRepository
@@ -51,6 +53,11 @@ abstract class CoreRepositoryBindingsModule {
     abstract fun bindNetworkStatusRepository(
         repository: DefaultNetworkStatusRepository
     ): NetworkStatusRepository
+
+    @Binds
+    abstract fun bindPushTokenRepository(
+        repository: DefaultPushTokenRepository
+    ): PushTokenRepository
 
     @Binds
     @IntoSet

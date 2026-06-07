@@ -293,7 +293,8 @@ class SmartTrainnerAppViewModelTest {
     private fun viewModel(
         repository: SessionRepository,
         networkStatusRepository: NetworkStatusRepository = AlwaysOfflineNetworkStatusRepository,
-        syncer: TrainingDataSyncer = NoOpTrainingDataSyncer
+        syncer: TrainingDataSyncer = NoOpTrainingDataSyncer,
+        pushTokenRegistrar: PushTokenRegistrar = NoOpPushTokenRegistrar
     ) = SmartTrainnerAppViewModel(
         observeActiveSession = ObserveActiveSessionUseCase(repository),
         observeTrainingExperience = ObserveTrainingExperienceUseCase(repository),
@@ -304,7 +305,8 @@ class SmartTrainnerAppViewModelTest {
         syncPendingTrainingDataUseCase = SyncPendingTrainingDataUseCase(setOf(syncer)),
         updateBodyProfileUseCase = UpdateBodyProfileUseCase(repository),
         validateActiveSessionDeviceUseCase = ValidateActiveSessionDeviceUseCase(repository),
-        logoutUseCase = LogoutUseCase(repository)
+        logoutUseCase = LogoutUseCase(repository),
+        pushTokenRegistrar = pushTokenRegistrar
     )
 }
 
@@ -314,6 +316,12 @@ private object AlwaysOfflineNetworkStatusRepository : NetworkStatusRepository {
 
 private object NoOpTrainingDataSyncer : TrainingDataSyncer {
     override suspend fun syncPendingTrainingData(): Result<Unit> = Result.success(Unit)
+}
+
+private object NoOpPushTokenRegistrar : PushTokenRegistrar {
+    override suspend fun registerCurrentTokenIfConfigured(): Result<Boolean> = Result.success(false)
+
+    override suspend fun registerToken(token: String): Result<Boolean> = Result.success(true)
 }
 
 private class CountingTrainingDataSyncer : TrainingDataSyncer {
