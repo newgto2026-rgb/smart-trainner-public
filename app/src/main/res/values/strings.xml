@@ -54,5 +54,6 @@
     <string name="app_destination_home">Home</string>
     <string name="app_destination_routine">Routine</string>
     <string name="app_destination_exercises">Exercises</string>
+    <string name="app_destination_calendar">Calendar</string>
     <string name="app_destination_analysis">Analysis</string>
 </resources>

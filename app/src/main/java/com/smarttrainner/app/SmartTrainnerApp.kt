@@ -65,6 +65,7 @@ import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import com.smarttrainner.core.model.ProfileGender
 import com.smarttrainner.core.model.toProfileSetupOrNull
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
+import com.smarttrainner.feature.calendar.api.CalendarFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
@@ -75,6 +76,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SmartTrainnerApp(
     analysisFeatureEntry: AnalysisFeatureEntry,
+    calendarFeatureEntry: CalendarFeatureEntry,
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
@@ -134,6 +136,7 @@ fun SmartTrainnerApp(
             )
             else -> SmartTrainnerMainScreen(
                 analysisFeatureEntry = analysisFeatureEntry,
+                calendarFeatureEntry = calendarFeatureEntry,
                 exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
                 exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
                 routineFeatureEntry = routineFeatureEntry,

@@ -46,6 +46,19 @@ class TrainingPreferencesDataSourceTest {
     }
 
     @Test
+    fun calendarMonthExpandedPersists() = runTest {
+        assertThat(dataSource.calendarMonthExpanded.first()).isTrue()
+
+        dataSource.setCalendarMonthExpanded(false)
+
+        val restoredDataSource = TrainingPreferencesDataSource(
+            context = context,
+            clock = mutableClock
+        )
+        assertThat(restoredDataSource.calendarMonthExpanded.first()).isFalse()
+    }
+
+    @Test
     fun setActiveRoutineTemplate_writesRoutineAndCycleStartFromClock() = runTest {
         dataSource.setActiveRoutineTemplate(sessionId = "session", templateId = "template")
 

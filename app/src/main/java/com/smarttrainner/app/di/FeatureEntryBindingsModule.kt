@@ -4,6 +4,8 @@ import com.smarttrainner.core.exercisemedia.DefaultExerciseMediaRenderer
 import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.analysis.impl.AnalysisFeatureEntryImpl
+import com.smarttrainner.feature.calendar.api.CalendarFeatureEntry
+import com.smarttrainner.feature.calendar.impl.CalendarFeatureEntryImpl
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.impl.ExerciseFeatureEntryImpl
@@ -21,6 +23,9 @@ import dagger.hilt.components.SingletonComponent
 abstract class FeatureEntryBindingsModule {
     @Binds
     abstract fun bindAnalysisFeatureEntry(impl: AnalysisFeatureEntryImpl): AnalysisFeatureEntry
+
+    @Binds
+    abstract fun bindCalendarFeatureEntry(impl: CalendarFeatureEntryImpl): CalendarFeatureEntry
 
     @Binds
     abstract fun bindExerciseCatalogFeatureEntry(impl: ExerciseFeatureEntryImpl): ExerciseCatalogFeatureEntry

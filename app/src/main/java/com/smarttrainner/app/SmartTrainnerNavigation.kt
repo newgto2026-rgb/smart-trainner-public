@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -84,6 +85,7 @@ import com.smarttrainner.app.training.TrainingExercisesRoute
 import com.smarttrainner.app.training.TrainingHomeRoute
 import com.smarttrainner.app.training.TrainingRoutineRoute
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
+import com.smarttrainner.feature.calendar.api.CalendarFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
@@ -94,6 +96,7 @@ private const val TrainingGraphRoute = "training_graph"
 @Composable
 fun SmartTrainnerMainScreen(
     analysisFeatureEntry: AnalysisFeatureEntry,
+    calendarFeatureEntry: CalendarFeatureEntry,
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
@@ -158,7 +161,7 @@ fun SmartTrainnerMainScreen(
                             route = TrainingGraphRoute
                         ) {
                             destinations
-                                .filterNot { it == SmartTrainnerDestination.Analysis }
+                                .filter { it.isTrainingDestination }
                                 .forEach { destination ->
                                     composable(destination.route) { backStackEntry ->
                                         val trainingViewModelStoreOwner = remember(backStackEntry) {
@@ -190,10 +193,14 @@ fun SmartTrainnerMainScreen(
                                                 workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
                                                 viewModelStoreOwner = trainingViewModelStoreOwner
                                             )
+                                            SmartTrainnerDestination.Calendar,
                                             SmartTrainnerDestination.Analysis -> Unit
                                         }
                                     }
                                 }
+                        }
+                        composable(SmartTrainnerDestination.Calendar.route) {
+                            calendarFeatureEntry.Route()
                         }
                         composable(SmartTrainnerDestination.Analysis.route) {
                             analysisFeatureEntry.Route()
@@ -959,6 +966,11 @@ private enum class SmartTrainnerDestination(
         labelResId = R.string.app_destination_exercises,
         testTag = "training_tab_exercises"
     ),
+    Calendar(
+        route = "training/calendar",
+        labelResId = R.string.app_destination_calendar,
+        testTag = "training_tab_calendar"
+    ),
     Analysis(
         route = "training/analysis",
         labelResId = R.string.app_destination_analysis,
@@ -970,5 +982,15 @@ private fun SmartTrainnerDestination.icon(): ImageVector = when (this) {
     SmartTrainnerDestination.Home -> Icons.Default.Home
     SmartTrainnerDestination.Routine -> Icons.Default.DateRange
     SmartTrainnerDestination.Exercises -> Icons.Default.FitnessCenter
+    SmartTrainnerDestination.Calendar -> Icons.Default.CalendarMonth
     SmartTrainnerDestination.Analysis -> Icons.Default.BarChart
 }
+
+private val SmartTrainnerDestination.isTrainingDestination: Boolean
+    get() = when (this) {
+        SmartTrainnerDestination.Home,
+        SmartTrainnerDestination.Routine,
+        SmartTrainnerDestination.Exercises -> true
+        SmartTrainnerDestination.Calendar,
+        SmartTrainnerDestination.Analysis -> false
+    }
