@@ -54,7 +54,7 @@ class ObserveWorkoutCalendarMonthUseCase @Inject constructor(
             month = month,
             summariesByDate = summariesByDate,
             logsByDate = logsByDate.mapValues { (_, dateLogs) ->
-                dateLogs.sortedByDescending { it.performedAt }
+                dateLogs.sortedByDescending { it.id.value }
             },
             todayWorkoutCount = summariesByDate[today]?.workoutCount ?: 0
         )

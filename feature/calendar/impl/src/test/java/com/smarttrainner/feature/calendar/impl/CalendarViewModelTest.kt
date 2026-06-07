@@ -14,9 +14,13 @@ import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
+import com.smarttrainner.feature.calendar.domain.CalendarPreferencesRepository
+import com.smarttrainner.feature.calendar.domain.ObserveCalendarMonthExpandedUseCase
 import com.smarttrainner.feature.calendar.domain.ObserveWorkoutCalendarMonthUseCase
+import com.smarttrainner.feature.calendar.domain.UpdateCalendarMonthExpandedUseCase
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -126,12 +131,97 @@ class CalendarViewModelTest {
         }
     }
 
+    @Test
+    fun toggleMonthExpansionAction_collapsesAndExpandsSelectedWeek() = runTest {
+        val repository = FakeCalendarRepository()
+        val viewModel = viewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "calendar_month" to "2026-05",
+                    "calendar_selected_date" to "2026-05-24"
+                )
+            )
+        )
+
+        advanceUntilIdle()
+        val expandedState = viewModel.uiState.value
+
+        assertThat(expandedState.isMonthExpanded).isTrue()
+        assertThat(expandedState.days.size).isGreaterThan(7)
+        assertThat(expandedState.selectedWeekDays).hasSize(7)
+        assertThat(expandedState.selectedWeekDays.map { it.date }).contains(LocalDate.of(2026, 5, 24))
+
+        viewModel.onAction(CalendarAction.OnToggleMonthExpansion)
+        advanceUntilIdle()
+        val collapsedState = viewModel.uiState.value
+
+        assertThat(collapsedState.isMonthExpanded).isFalse()
+        assertThat(collapsedState.selectedWeekDays).hasSize(7)
+        assertThat(collapsedState.selectedWeekDays.map { it.date }).contains(LocalDate.of(2026, 5, 24))
+
+        viewModel.onAction(CalendarAction.OnToggleMonthExpansion)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.isMonthExpanded).isTrue()
+    }
+
+    @Test
+    fun toggleMonthExpansionAction_persistsCollapsedState() = runTest {
+        val repository = FakeCalendarRepository()
+        val preferencesRepository = FakeCalendarPreferencesRepository()
+        val viewModel = viewModel(
+            repository = repository,
+            preferencesRepository = preferencesRepository,
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "calendar_month" to "2026-05",
+                    "calendar_selected_date" to "2026-05-24"
+                )
+            )
+        )
+
+        advanceUntilIdle()
+
+        viewModel.onAction(CalendarAction.OnToggleMonthExpansion)
+        advanceUntilIdle()
+
+        assertThat(preferencesRepository.updates).containsExactly(false)
+        assertThat(preferencesRepository.monthExpanded.value).isFalse()
+    }
+
+    @Test
+    fun toggleMonthExpansionAction_restoresCollapsedSavedState() = runTest {
+        val repository = FakeCalendarRepository()
+        val viewModel = viewModel(
+            repository = repository,
+            preferencesRepository = FakeCalendarPreferencesRepository(initialMonthExpanded = false),
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "calendar_month" to "2026-05",
+                    "calendar_selected_date" to "2026-05-24",
+                    "calendar_is_month_expanded" to false
+                )
+            )
+        )
+
+        advanceUntilIdle()
+        val state = viewModel.uiState.value
+
+        assertThat(state.isMonthExpanded).isFalse()
+        assertThat(state.selectedWeekDays).hasSize(7)
+        assertThat(state.selectedWeekDays.map { it.date }).contains(LocalDate.of(2026, 5, 24))
+    }
+
     private fun viewModel(
         repository: FakeCalendarRepository,
+        preferencesRepository: FakeCalendarPreferencesRepository = FakeCalendarPreferencesRepository(),
         savedStateHandle: SavedStateHandle = SavedStateHandle()
     ) = CalendarViewModel(
         savedStateHandle = savedStateHandle,
         observeWorkoutCalendarMonth = ObserveWorkoutCalendarMonthUseCase(repository, repository),
+        observeCalendarMonthExpanded = ObserveCalendarMonthExpandedUseCase(preferencesRepository),
+        updateCalendarMonthExpanded = UpdateCalendarMonthExpandedUseCase(preferencesRepository),
         clock = fixedClock
     )
 }
@@ -166,6 +256,21 @@ private class FakeCalendarRepository : WorkoutLogRepository, ExerciseRepository 
 
     override suspend fun getExercise(id: ExerciseId): Exercise? =
         exercises.value.firstOrNull { it.id == id }
+}
+
+private class FakeCalendarPreferencesRepository(
+    initialMonthExpanded: Boolean = true
+) : CalendarPreferencesRepository {
+    val monthExpanded = MutableStateFlow(initialMonthExpanded)
+    val updates = mutableListOf<Boolean>()
+
+    override fun observeMonthExpanded(): Flow<Boolean> = monthExpanded
+
+    override suspend fun setMonthExpanded(isExpanded: Boolean): Result<Unit> {
+        updates += isExpanded
+        monthExpanded.value = isExpanded
+        return Result.success(Unit)
+    }
 }
 
 private fun workoutLog(

@@ -36,7 +36,7 @@ class ObserveWorkoutCalendarMonthUseCaseTest {
             workoutLog(
                 id = 2,
                 exerciseId = "row",
-                performedAt = LocalDateTime.of(2026, 5, 9, 19, 0),
+                performedAt = LocalDateTime.of(2026, 5, 9, 17, 0),
                 sets = 4,
                 reps = 8,
                 weightKg = 35.0

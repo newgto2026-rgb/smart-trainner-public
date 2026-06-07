@@ -67,6 +67,8 @@ dependencies {
     implementation(project(":feature:analysis:domain"))
     implementation(project(":feature:analysis:impl"))
     implementation(project(":feature:calendar:api"))
+    implementation(project(":feature:calendar:data"))
+    implementation(project(":feature:calendar:domain"))
     implementation(project(":feature:calendar:impl"))
     implementation(project(":feature:exercise:api"))
     implementation(project(":feature:exercise:impl"))

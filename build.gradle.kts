@@ -345,6 +345,7 @@ val checkModuleBoundaries by tasks.registering {
             ":feature:analysis:domain",
             ":feature:analysis:data",
             ":feature:calendar:domain",
+            ":feature:calendar:data",
             ":feature:exercise:domain",
             ":feature:routine:domain",
             ":feature:routine:data",
@@ -352,6 +353,7 @@ val checkModuleBoundaries by tasks.registering {
             ":feature:workout:data"
         )
         val allowedFeatureDataCoreInfrastructureDependencies = setOf(
+            ":feature:calendar:data" to ":core:datastore",
             ":feature:routine:data" to ":core:database",
             ":feature:routine:data" to ":core:datastore",
             ":feature:routine:data" to ":core:network",
@@ -368,11 +370,13 @@ val checkModuleBoundaries by tasks.registering {
         )
         val allowedAppFeatureDataDependencies = setOf(
             ":app" to ":feature:analysis:data",
+            ":app" to ":feature:calendar:data",
             ":app" to ":feature:routine:data",
             ":app" to ":feature:workout:data"
         )
         val allowedAppFeatureDomainDependencies = setOf(
             ":app" to ":feature:analysis:domain",
+            ":app" to ":feature:calendar:domain",
             ":app" to ":feature:routine:domain",
             ":app" to ":feature:workout:domain"
         )
@@ -504,6 +508,7 @@ val checkModuleBoundaries by tasks.registering {
         val appDiFeatureImplementationFiles = setOf("FeatureEntryBindingsModule.kt")
         val appDiFeatureDataFiles = setOf(
             "AnalysisDataRepositoryBindingsModule.kt",
+            "CalendarDataRepositoryBindingsModule.kt",
             "RoutineDataRepositoryBindingsModule.kt",
             "WorkoutDataRepositoryBindingsModule.kt"
         )

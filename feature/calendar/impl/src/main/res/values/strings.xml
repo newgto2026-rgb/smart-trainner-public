@@ -3,6 +3,10 @@
     <string name="calendar_route_subtitle">Review your workout history by date.</string>
     <string name="calendar_month_navigation_previous">Previous month</string>
     <string name="calendar_month_navigation_next">Next month</string>
+    <string name="calendar_collapse_to_selected_week">Collapse to selected week</string>
+    <string name="calendar_expand_to_month">Expand to month view</string>
+    <string name="calendar_month_toggle_week">Week view</string>
+    <string name="calendar_month_toggle_month">Month view</string>
     <string name="calendar_a11y_selected">Selected date</string>
     <string name="calendar_a11y_today">Today</string>
     <string name="calendar_agenda_title">Selected Date Workouts</string>
@@ -11,7 +15,6 @@
     <string name="calendar_bottom_sheet_empty">No workout records for this date.</string>
     <string name="calendar_workout_collapse">Collapse</string>
     <string name="calendar_record_metric_weight">%1$.1f kg</string>
-    <string name="calendar_record_metric_duration">%1$d min</string>
     <string name="calendar_record_metric_volume">%1$.0f kg volume</string>
 
     <plurals name="calendar_a11y_workout_count">
@@ -20,8 +23,8 @@
     </plurals>
 
     <plurals name="calendar_header_today_workout_count">
-        <item quantity="one">You have %d workout recorded today.</item>
-        <item quantity="other">You have %d workouts recorded today.</item>
+        <item quantity="one">Today: %d workout</item>
+        <item quantity="other">Today: %d workouts</item>
     </plurals>
 
     <plurals name="calendar_agenda_workout_count_badge">

@@ -3,7 +3,9 @@ package com.smarttrainner.feature.calendar.impl
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.smarttrainner.feature.calendar.domain.ObserveCalendarMonthExpandedUseCase
 import com.smarttrainner.feature.calendar.domain.ObserveWorkoutCalendarMonthUseCase
+import com.smarttrainner.feature.calendar.domain.UpdateCalendarMonthExpandedUseCase
 import com.smarttrainner.feature.calendar.domain.WorkoutCalendarLog
 import com.smarttrainner.feature.calendar.domain.WorkoutDateSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,19 +23,24 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 private const val STATE_MONTH_KEY = "calendar_month"
 private const val STATE_SELECTED_DATE_KEY = "calendar_selected_date"
+private const val STATE_IS_MONTH_EXPANDED_KEY = "calendar_is_month_expanded"
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalendarViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val observeWorkoutCalendarMonth: ObserveWorkoutCalendarMonthUseCase,
+    observeCalendarMonthExpanded: ObserveCalendarMonthExpandedUseCase,
+    private val updateCalendarMonthExpanded: UpdateCalendarMonthExpandedUseCase,
     private val clock: Clock
 ) : ViewModel() {
     private val monthState = MutableStateFlow(savedStateHandle.initialMonth(clock))
     private val selectedDateState = MutableStateFlow(savedStateHandle.initialSelectedDate(clock))
+    private val isMonthExpandedState = MutableStateFlow(savedStateHandle.initialIsMonthExpanded())
 
     private val calendarMonthState = monthState
         .flatMapLatest { month ->
@@ -46,19 +53,23 @@ class CalendarViewModel @Inject constructor(
     internal val uiState = combine(
         monthState,
         selectedDateState,
-        calendarMonthState
-    ) { month, selectedDate, calendarMonth ->
+        calendarMonthState,
+        isMonthExpandedState
+    ) { month, selectedDate, calendarMonth, isMonthExpanded ->
         val adjustedSelectedDate = selectedDate.normalizeToMonth(month)
         val isDataCurrent = calendarMonth.month == month
+        val days = buildMonthCells(
+            yearMonth = month,
+            selectedDate = adjustedSelectedDate,
+            today = LocalDate.now(clock),
+            summariesByDate = if (isDataCurrent) calendarMonth.summariesByDate else emptyMap()
+        )
         CalendarUiState(
             currentMonth = month,
             selectedDate = adjustedSelectedDate,
-            days = buildMonthCells(
-                yearMonth = month,
-                selectedDate = adjustedSelectedDate,
-                today = LocalDate.now(clock),
-                summariesByDate = if (isDataCurrent) calendarMonth.summariesByDate else emptyMap()
-            ),
+            isMonthExpanded = isMonthExpanded,
+            days = days,
+            selectedWeekDays = days.selectedWeekDays(adjustedSelectedDate),
             todayWorkoutCount = if (isDataCurrent) calendarMonth.todayWorkoutCount else 0,
             selectedDateWorkouts = if (isDataCurrent) {
                 calendarMonth.logsByDate[adjustedSelectedDate].orEmpty().map { it.toUiModel() }
@@ -69,18 +80,29 @@ class CalendarViewModel @Inject constructor(
     }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = SharingStarted.Eagerly,
             initialValue = initialCalendarUiState(
                 currentMonth = monthState.value,
                 selectedDate = selectedDateState.value,
-                today = LocalDate.now(clock)
+                today = LocalDate.now(clock),
+                isMonthExpanded = isMonthExpandedState.value
             )
         )
+
+    init {
+        viewModelScope.launch {
+            observeCalendarMonthExpanded().collect { isExpanded ->
+                savedStateHandle[STATE_IS_MONTH_EXPANDED_KEY] = isExpanded
+                isMonthExpandedState.value = isExpanded
+            }
+        }
+    }
 
     internal fun onAction(action: CalendarAction) {
         when (action) {
             CalendarAction.OnNextMonthClick -> moveMonthBy(1)
             CalendarAction.OnPreviousMonthClick -> moveMonthBy(-1)
+            CalendarAction.OnToggleMonthExpansion -> toggleMonthExpansion()
             is CalendarAction.OnDateClick -> updateSelectedDate(action.date)
         }
     }
@@ -109,6 +131,15 @@ class CalendarViewModel @Inject constructor(
         monthState.value = month
         selectedDateState.value = selectedDate
     }
+
+    private fun toggleMonthExpansion() {
+        val nextValue = !isMonthExpandedState.value
+        savedStateHandle[STATE_IS_MONTH_EXPANDED_KEY] = nextValue
+        isMonthExpandedState.value = nextValue
+        viewModelScope.launch {
+            updateCalendarMonthExpanded(nextValue)
+        }
+    }
 }
 
 internal fun SavedStateHandle.initialMonth(clock: Clock): YearMonth =
@@ -121,21 +152,28 @@ internal fun SavedStateHandle.initialSelectedDate(clock: Clock): LocalDate =
         ?.let { rawDate -> runCatching { LocalDate.parse(rawDate) }.getOrNull() }
         ?: LocalDate.now(clock)
 
+internal fun SavedStateHandle.initialIsMonthExpanded(): Boolean =
+    get<Boolean>(STATE_IS_MONTH_EXPANDED_KEY) ?: true
+
 internal fun initialCalendarUiState(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
-    today: LocalDate
+    today: LocalDate,
+    isMonthExpanded: Boolean = true
 ): CalendarUiState {
     val adjustedSelectedDate = selectedDate.normalizeToMonth(currentMonth)
+    val days = buildMonthCells(
+        yearMonth = currentMonth,
+        selectedDate = adjustedSelectedDate,
+        today = today,
+        summariesByDate = emptyMap()
+    )
     return CalendarUiState(
         currentMonth = currentMonth,
         selectedDate = adjustedSelectedDate,
-        days = buildMonthCells(
-            yearMonth = currentMonth,
-            selectedDate = adjustedSelectedDate,
-            today = today,
-            summariesByDate = emptyMap()
-        ),
+        isMonthExpanded = isMonthExpanded,
+        days = days,
+        selectedWeekDays = days.selectedWeekDays(adjustedSelectedDate),
         todayWorkoutCount = 0,
         selectedDateWorkouts = emptyList()
     )
@@ -176,6 +214,11 @@ internal fun buildMonthCells(
     }
 }
 
+internal fun List<CalendarDayUiModel>.selectedWeekDays(selectedDate: LocalDate): List<CalendarDayUiModel> =
+    chunked(7)
+        .firstOrNull { week -> week.any { it.date == selectedDate } }
+        ?: take(7)
+
 internal fun LocalDate.normalizeToMonth(targetMonth: YearMonth): LocalDate {
     val normalizedDay = min(dayOfMonth, targetMonth.lengthOfMonth())
     return targetMonth.atDay(normalizedDay)
@@ -189,11 +232,9 @@ internal fun WorkoutCalendarLog.toUiModel(): CalendarSelectedWorkoutUiModel =
         id = id,
         exerciseName = exerciseName,
         muscleGroup = muscleGroup,
-        performedAt = performedAt,
         sets = sets,
         reps = reps,
         weightKg = weightKg,
-        durationMinutes = durationMinutes,
         memo = memo,
         completed = completed,
         volumeKg = volumeKg

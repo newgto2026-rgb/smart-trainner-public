@@ -135,7 +135,7 @@ private fun RowScope.CalendarDayCell(
     Column(
         modifier = Modifier
             .weight(1f)
-            .height(42.dp)
+            .height(40.dp)
             .testTag("calendar_day_${day.date}")
             .clickable(enabled = day.isCurrentMonth) { onClick(day.date) }
             .semantics { contentDescription = a11yParts.joinToString(separator = ", ") }
@@ -177,10 +177,9 @@ private fun RowScope.CalendarDayCell(
             )
         }
         Spacer(modifier = Modifier.height(1.dp))
-        Row(
-            modifier = Modifier.height(5.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier.height(4.dp),
+            contentAlignment = Alignment.Center
         ) {
             if (hasItems) {
                 Box(
@@ -191,13 +190,6 @@ private fun RowScope.CalendarDayCell(
                             shape = CircleShape
                         )
                 )
-                if (day.workoutCount > 1) {
-                    Text(
-                        text = day.workoutCount.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = indicatorColor
-                    )
-                }
             }
         }
     }

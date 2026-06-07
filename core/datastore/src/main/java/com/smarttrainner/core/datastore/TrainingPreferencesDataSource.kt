@@ -65,6 +65,10 @@ class TrainingPreferencesDataSource @Inject constructor(
         preferences[SELECTED_THEME_TONE] ?: DEFAULT_THEME_TONE
     }
 
+    val calendarMonthExpanded: Flow<Boolean> = context.trainingDataStore.data.map { preferences ->
+        preferences[CALENDAR_MONTH_EXPANDED] ?: true
+    }
+
     val activeTrainingExperience: Flow<TrainingExperience> = context.trainingDataStore.data.map { preferences ->
         val sessionId = preferences[ACTIVE_SESSION_ID] ?: DEFAULT_USER_SESSION_ID
         preferences[trainingExperienceKey(sessionId)].toTrainingExperience()
@@ -366,6 +370,12 @@ class TrainingPreferencesDataSource @Inject constructor(
         }
     }
 
+    suspend fun setCalendarMonthExpanded(isExpanded: Boolean) {
+        context.trainingDataStore.edit { preferences ->
+            preferences[CALENDAR_MONTH_EXPANDED] = isExpanded
+        }
+    }
+
     private companion object {
         const val DEFAULT_TEMPLATE_ID = "beginner-full-body-3day"
         const val DEFAULT_THEME_TONE = "blue"
@@ -374,6 +384,7 @@ class TrainingPreferencesDataSource @Inject constructor(
         val ACTIVE_SESSION_ID = stringPreferencesKey("active_session_id")
         val INSTALLATION_DEVICE_ID = stringPreferencesKey("installation_device_id")
         val SELECTED_THEME_TONE = stringPreferencesKey("selected_theme_tone")
+        val CALENDAR_MONTH_EXPANDED = booleanPreferencesKey("calendar_month_expanded")
 
         fun selectedTemplateIdKey(sessionId: String) =
             stringPreferencesKey("selected_template_id_$sessionId")

@@ -19,7 +19,7 @@
 - Finding: Month filtering allocated extra date objects and sorted the full month list before per-date descending sorts.
 - Fix Scope: Calendar domain month filtering and redundant full-list sort removal.
 - Fix Size: Small
-- Rework Commit: `HEAD`
+- Rework Commit: `4df1381e`
 - Verification: `./gradlew :feature:calendar:domain:test :feature:calendar:impl:testDebugUnitTest`; `./gradlew :feature:calendar:api:lintDebug :feature:calendar:impl:lintDebug :app:lintDebug :app:assembleDebug`; `./gradlew :app:installDebug` on emulator-5556 with calendar tab smoke.
 - Lesson: Calendar aggregation should avoid whole-list ordering when each grouped date owns the final display order.
 
@@ -33,7 +33,7 @@
 - Finding: Month and selected-date state could update before the database-backed month flow emitted current data, briefly rendering a new month with old summaries.
 - Fix Scope: Calendar ViewModel stale-month guard and transition regression test.
 - Fix Size: Small
-- Rework Commit: `HEAD`
+- Rework Commit: `4df1381e`
 - Verification: `./gradlew :feature:calendar:domain:test :feature:calendar:impl:testDebugUnitTest`; `./gradlew :feature:calendar:api:lintDebug :feature:calendar:impl:lintDebug :app:lintDebug :app:assembleDebug`; `./gradlew :app:installDebug` on emulator-5556 with calendar tab smoke.
 - Lesson: Combined UI state that mixes immediate state and repository state needs an identity guard before rendering derived data.
 
@@ -47,7 +47,7 @@
 - Finding: Calendar day accessibility text used a hard-coded date pattern instead of localized full-date formatting.
 - Fix Scope: Calendar day accessibility date formatter.
 - Fix Size: Small
-- Rework Commit: `HEAD`
+- Rework Commit: `4df1381e`
 - Verification: `./gradlew :feature:calendar:domain:test :feature:calendar:impl:testDebugUnitTest`; `./gradlew :feature:calendar:api:lintDebug :feature:calendar:impl:lintDebug :app:lintDebug :app:assembleDebug`; `./gradlew :app:installDebug` on emulator-5556 with calendar tab smoke.
 - Lesson: Accessibility labels should use localized formatters instead of app-owned display shortcuts.
 
@@ -61,7 +61,7 @@
 - Finding: Calendar grid defined a redundant `DayOfWeek.plus` helper even though `java.time.DayOfWeek` already provides `plus`.
 - Fix Scope: Calendar grid helper cleanup.
 - Fix Size: Small
-- Rework Commit: `HEAD`
+- Rework Commit: `4df1381e`
 - Verification: `./gradlew :feature:calendar:domain:test :feature:calendar:impl:testDebugUnitTest`; `./gradlew :feature:calendar:api:lintDebug :feature:calendar:impl:lintDebug :app:lintDebug :app:assembleDebug`; `./gradlew :app:installDebug` on emulator-5556 with calendar tab smoke.
 - Lesson: Prefer standard library date helpers unless a custom policy is explicitly different.
 
@@ -75,7 +75,7 @@
 - Finding: Selected-date agenda labels hard-coded locale-specific date patterns in Kotlin.
 - Fix Scope: Resource-backed selected-date format pattern for agenda labels.
 - Fix Size: Small
-- Rework Commit: `HEAD`
+- Rework Commit: `4df1381e`
 - Verification: `./gradlew :feature:calendar:domain:test :feature:calendar:impl:testDebugUnitTest`; `./gradlew :feature:calendar:api:lintDebug :feature:calendar:impl:lintDebug :app:lintDebug :app:assembleDebug`; `./gradlew :app:installDebug` on emulator-5556 with calendar tab smoke.
 - Lesson: Locale-specific display patterns belong in resources so translation changes do not require Kotlin edits.
 
@@ -89,7 +89,7 @@
 - Finding: The agenda selected-date helper would become unnecessary after moving the pattern to resources.
 - Fix Scope: Agenda selected-date helper removal.
 - Fix Size: Small
-- Rework Commit: `HEAD`
+- Rework Commit: `4df1381e`
 - Verification: `./gradlew :feature:calendar:domain:test :feature:calendar:impl:testDebugUnitTest`; `./gradlew :feature:calendar:api:lintDebug :feature:calendar:impl:lintDebug :app:lintDebug :app:assembleDebug`; `./gradlew :app:installDebug` on emulator-5556 with calendar tab smoke.
 - Lesson: Once a formatting policy is resource-backed, keep Kotlin helpers limited to behavior that cannot live in resources.
 
@@ -103,9 +103,23 @@
 - Finding: Calendar header rendered month then year in a fixed order, producing incorrect ordering for Korean.
 - Fix Scope: Localized month/year header label using Android best-date pattern.
 - Fix Size: Small
-- Rework Commit: `HEAD`
+- Rework Commit: `4df1381e`
 - Verification: `./gradlew :feature:calendar:domain:test :feature:calendar:impl:testDebugUnitTest`; `./gradlew :feature:calendar:api:lintDebug :feature:calendar:impl:lintDebug :app:lintDebug :app:assembleDebug`; `./gradlew :app:installDebug` on emulator-5556 with calendar tab smoke.
 - Lesson: Month headers should be formatted as localized date strings, not assembled from separately ordered fragments.
+
+### USER-20260607-calendar-latest-main-collapse-ui
+- Source: User correction in Codex thread: latest MyFirstApp `origin/main` was not referenced, calendar tab/collapse/UI needed emulator-level verification, and workout time information should not be shown as meaningful history.
+- Severity: P1
+- Attribution: AI
+- Automation Possible: Partial
+- Automation Added: Yes
+- Status: verified
+- Finding: Calendar implementation missed MyFirstApp latest month/week collapse persistence, rendered cramped numeric day indicators, and exposed workout time/duration information that can imply real-time logging accuracy.
+- Fix Scope: Added feature-owned calendar preferences domain/data separation, persisted month/week expansion, MyFirstApp-style selected-week rendering, stable dot-only day indicators, shorter header copy, and removed time/duration display from calendar agenda items.
+- Fix Size: Medium
+- Rework Commit: `HEAD`
+- Verification: `./gradlew :feature:calendar:domain:test :feature:calendar:impl:testDebugUnitTest :core:datastore:testDebugUnitTest`; `./gradlew :feature:calendar:data:testDebugUnitTest :feature:calendar:api:lintDebug :feature:calendar:data:lintDebug :feature:calendar:impl:lintDebug :app:lintDebug :app:assembleDebug`; `./gradlew :feature:calendar:impl:lintDebug :app:assembleDebug`; guarded `./gradlew :app:installDebug` on emulator-5556 with screenshots `tmp/manual-shots/calendar_recheck_04_final_week.png` and `tmp/manual-shots/calendar_recheck_05_workout_item.png`; guarded `./gradlew connectedDebugAndroidTest`.
+- Lesson: Reference projects must be fetched and read from latest `origin/main`, and visual acceptance for tab/collapse work needs actual emulator smoke screenshots before PR updates.
 
 ## External Event Coverage
 - `PRRT_kwDOSsEQm86Ho7mt`: covered by rework event above
@@ -115,6 +129,7 @@
 - `PRRT_kwDOSsEQm86Ho7m2`: covered by rework event above
 - `PRRT_kwDOSsEQm86Ho7m4`: covered by rework event above
 - `PRRT_kwDOSsEQm86Ho7m5`: covered by rework event above
+- `USER-20260607-calendar-latest-main-collapse-ui`: covered by rework event above
 
 ## Non-Rework Follow-up Commits
 - None

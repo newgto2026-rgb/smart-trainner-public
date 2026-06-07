@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,8 +31,6 @@ import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.feature.calendar.impl.CalendarSelectedWorkoutUiModel
 import com.smarttrainner.feature.calendar.impl.R
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 @Composable
 internal fun CalendarAgendaItem(
@@ -69,12 +66,6 @@ internal fun CalendarAgendaItem(
                         color = SmartTrainnerColors.Ink,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = workout.performedAt.toLocalTime()
-                            .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = SmartTrainnerColors.Muted
                     )
                 }
                 workout.muscleGroup?.let { muscleGroup ->
@@ -144,16 +135,6 @@ private fun CalendarSelectedWorkoutUiModel.metricBadges(): List<SmartTrainnerBad
             SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.calendar_record_metric_weight, value),
                 containerColor = SmartTrainnerColors.SteelSoft,
-                contentColor = SmartTrainnerColors.Ink
-            )
-        )
-    }
-    durationMinutes?.let { value ->
-        add(
-            SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.calendar_record_metric_duration, value),
-                icon = Icons.Default.Timer,
-                containerColor = SmartTrainnerColors.AmberSoft,
                 contentColor = SmartTrainnerColors.Ink
             )
         )

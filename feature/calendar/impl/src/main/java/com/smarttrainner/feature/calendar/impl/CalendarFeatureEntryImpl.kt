@@ -28,13 +28,15 @@ class CalendarFeatureEntryImpl @Inject constructor() : CalendarFeatureEntry {
                 CalendarTopHeader(
                     currentMonth = state.currentMonth,
                     todayCount = state.todayWorkoutCount,
+                    isMonthExpanded = state.isMonthExpanded,
                     onPreviousMonthClick = { viewModel.onAction(CalendarAction.OnPreviousMonthClick) },
-                    onNextMonthClick = { viewModel.onAction(CalendarAction.OnNextMonthClick) }
+                    onNextMonthClick = { viewModel.onAction(CalendarAction.OnNextMonthClick) },
+                    onToggleMonthExpansion = { viewModel.onAction(CalendarAction.OnToggleMonthExpansion) }
                 )
             }
             item {
                 CalendarMonthGrid(
-                    days = state.days,
+                    days = if (state.isMonthExpanded) state.days else state.selectedWeekDays,
                     onDateClick = { date -> viewModel.onAction(CalendarAction.OnDateClick(date)) }
                 )
             }
