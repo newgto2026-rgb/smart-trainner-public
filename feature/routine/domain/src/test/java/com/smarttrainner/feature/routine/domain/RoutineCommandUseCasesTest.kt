@@ -18,6 +18,8 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WorkoutDayPlan
+import com.smarttrainner.core.model.isRoutineAdditionalExerciseId
+import com.smarttrainner.core.model.routineAdditionalExerciseIdPrefix
 import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.test.runTest

@@ -5,7 +5,7 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.estimatedSessionMinutes
-import com.smarttrainner.feature.routine.domain.routineDayInstanceId
+import com.smarttrainner.core.model.routineDayInstanceId
 import java.time.LocalDate
 
 internal fun com.smarttrainner.core.model.WorkoutDayPlan.toNextRoutineDayUiModel(

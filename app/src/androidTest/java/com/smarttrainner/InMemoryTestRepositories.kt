@@ -27,11 +27,15 @@ import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.UserProfile
 import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
+import com.smarttrainner.core.model.CurrentRoutineCycle
 import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
+import com.smarttrainner.core.model.routineAdditionalExerciseCyclePrefix
+import com.smarttrainner.core.model.routineDayInstanceId
+import com.smarttrainner.core.model.routineDayInstancePrefix
 import com.smarttrainner.feature.analysis.domain.CycleSummaryCalculator
 import com.smarttrainner.feature.analysis.domain.CycleSummaryRepository
 import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
@@ -45,7 +49,7 @@ import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 internal class InMemorySessionRepository : SessionRepository {
@@ -183,9 +187,13 @@ internal class InMemoryTrainingRepository :
 
     fun assignCurrentRoutineDayDateForTest(date: LocalDate) {
         val current = progress.value
-        val routineDayInstanceId = "routine-day|${current.templateId}|cycle${current.cycleNumber}|day${current.dayIndex + 1}"
+        val currentRoutineDayInstanceId = routineDayInstanceId(
+            templateId = current.templateId,
+            cycleNumber = current.cycleNumber,
+            dayNumber = current.dayIndex + 1
+        )
         progress.value = current.copy(
-            routineDayDates = current.routineDayDates + (routineDayInstanceId to date)
+            routineDayDates = current.routineDayDates + (currentRoutineDayInstanceId to date)
         )
     }
 
@@ -204,8 +212,8 @@ internal class InMemoryTrainingRepository :
             startedAt = Instant.EPOCH,
             cycleStartedAt = cycleFourStart,
             routineDayDates = mapOf(
-                "routine-day|$templateId|cycle4|day1" to LocalDate.of(2026, 5, 24),
-                "routine-day|$templateId|cycle4|day2" to LocalDate.of(2026, 5, 25)
+                routineDayInstanceId(templateId, 4, 1) to LocalDate.of(2026, 5, 24),
+                routineDayInstanceId(templateId, 4, 2) to LocalDate.of(2026, 5, 25)
             )
         )
         val template = templateById(templateId, customTemplates.value)
@@ -218,12 +226,12 @@ internal class InMemoryTrainingRepository :
             pastCycleExercise.toTestLog(
                 id = 1,
                 performedAt = LocalDate.of(2026, 5, 18).atTime(10, 0),
-                routineDayInstanceId = "routine-day|$templateId|cycle3|day1"
+                routineDayInstanceId = routineDayInstanceId(templateId, 3, 1)
             ),
             currentCycleExercise.toTestLog(
                 id = 2,
                 performedAt = LocalDate.of(2026, 5, 24).atTime(10, 0),
-                routineDayInstanceId = "routine-day|$templateId|cycle4|day1"
+                routineDayInstanceId = routineDayInstanceId(templateId, 4, 1)
             ),
             currentCycleLegacyExercise.toTestLog(
                 id = 3,
@@ -256,17 +264,11 @@ internal class InMemoryTrainingRepository :
     }
 
     override fun observeCycleSummary(
-        progress: RoutineProgress,
+        currentCycle: CurrentRoutineCycle,
         zone: ZoneId
-    ): Flow<CycleSummary> =
-        combine(observeCurrentCyclePlan(progress.templateId, progress.cycleStartDate(zone)), logs) { plan, logs ->
-            summaryCalculator.calculate(
-                plan = plan,
-                logs = logs,
-                progress = progress,
-                zone = zone
-            )
-        }
+    ): Flow<CycleSummary> = flowOf(
+        summaryCalculator.calculate(currentCycle, zone)
+    )
 
     override suspend fun getExercise(id: ExerciseId): Exercise? = exerciseById[id]
 
@@ -310,8 +312,14 @@ internal class InMemoryTrainingRepository :
         val currentCyclePlannedExerciseIds = currentCyclePlan.days
             .flatMap { day -> day.exercises.map { it.id } }
             .toSet()
-        val currentCyclePrefix = "routine-day|${current.templateId}|cycle${current.cycleNumber}|"
-        val currentAdditionalPrefix = "routine-added|${current.templateId}|cycle${current.cycleNumber}|"
+        val currentCyclePrefix = routineDayInstancePrefix(
+            templateId = current.templateId,
+            cycleNumber = current.cycleNumber
+        )
+        val currentAdditionalPrefix = routineAdditionalExerciseCyclePrefix(
+            templateId = current.templateId,
+            cycleNumber = current.cycleNumber
+        )
         logs.value = logs.value.filterNot { log ->
             log.routineDayInstanceId?.startsWith(currentCyclePrefix) == true ||
                 (

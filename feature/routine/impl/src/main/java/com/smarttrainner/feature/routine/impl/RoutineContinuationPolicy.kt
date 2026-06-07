@@ -37,7 +37,6 @@ internal fun RoutineUiState.isPlanExerciseCompleted(
 
 private fun RoutineUiState.currentDayFor(currentId: PlannedExerciseId): WorkoutDayPlan? =
     nextRoutineDayUi?.day?.takeIf { day -> day.exercises.any { it.id == currentId } }
-        ?: plan?.days?.firstOrNull { day -> day.exercises.any { it.id == currentId } }
 
 private fun RoutineUiState.isRoutineDayCompleted(dayIndex: Int): Boolean {
     val progress = activeRoutineProgress ?: return false

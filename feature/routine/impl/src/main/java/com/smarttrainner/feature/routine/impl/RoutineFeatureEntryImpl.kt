@@ -11,13 +11,13 @@ import com.smarttrainner.core.domain.RoutineSessionCoordinator
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.isRoutineAdditionalExerciseId
 import com.smarttrainner.core.exercisemedia.ExerciseMediaRenderer
 import com.smarttrainner.core.ui.SmartTrainnerScreenChrome
 import com.smarttrainner.core.ui.SmartTrainnerScreenScaffold
 import com.smarttrainner.feature.routine.api.RoutineFeatureCallbacks
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineRouteState
-import com.smarttrainner.feature.routine.domain.isRoutineAdditionalExerciseId
 import javax.inject.Inject
 
 class RoutineFeatureEntryImpl @Inject constructor(

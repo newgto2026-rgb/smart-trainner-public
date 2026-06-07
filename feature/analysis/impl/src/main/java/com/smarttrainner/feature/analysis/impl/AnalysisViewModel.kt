@@ -2,9 +2,8 @@ package com.smarttrainner.feature.analysis.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveCurrentRoutineCycleUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
-import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.feature.analysis.domain.ObserveCycleSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
@@ -18,22 +17,20 @@ import kotlinx.coroutines.flow.stateIn
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class AnalysisViewModel @Inject constructor(
-    observeAllWorkoutLogs: ObserveAllWorkoutLogsUseCase,
+    observeCurrentRoutineCycle: ObserveCurrentRoutineCycleUseCase,
     observeCycleSummary: ObserveCycleSummaryUseCase,
     observeExercises: ObserveExercisesUseCase,
-    observeRoutineProgress: ObserveRoutineProgressUseCase,
     clock: Clock
 ) : ViewModel() {
-    internal val uiState = observeRoutineProgress()
-        .flatMapLatest { progress ->
+    internal val uiState = observeCurrentRoutineCycle(clock.zone)
+        .flatMapLatest { currentCycle ->
             combine(
-                observeAllWorkoutLogs(),
-                observeCycleSummary(progress, clock.zone),
+                observeCycleSummary(currentCycle, clock.zone),
                 observeExercises()
-            ) { logs, summary, exercises ->
+            ) { summary, exercises ->
                 val exercisesById = exercises.associateBy { it.id }
                 AnalysisUiState(
-                    recentLogs = logs
+                    recentLogs = currentCycle.allLogs
                         .sortedByDescending { it.performedAt }
                         .map { log ->
                             RecentWorkoutLogUiModel(
@@ -42,7 +39,7 @@ class AnalysisViewModel @Inject constructor(
                             )
                         },
                     summary = summary,
-                    cycleNumber = progress.cycleNumber
+                    cycleNumber = currentCycle.progress.cycleNumber
                 )
             }
         }.stateIn(

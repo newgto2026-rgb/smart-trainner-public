@@ -151,7 +151,7 @@
     <string name="routine_selected">Selected</string>
     <string name="routine_set_number">Set %1$d</string>
     <string name="routine_show_recommendations">Show recommendations</string>
-    <string name="routine_switch_confirm_body">Changing to %1$s starts that routine from Day 1 of the current cycle. Workout records and assigned dates from the current in-progress cycle will be deleted; completed past cycles stay intact.</string>
+    <string name="routine_switch_confirm_body">Changing to %1$s replaces the current in-progress cycle from Day 1. Warning: all progress, assigned dates, and workout records in the unfinished current cycle will be permanently deleted; completed past cycles stay intact.</string>
     <string name="routine_switch_confirm_dismiss">Keep current routine</string>
     <string name="routine_switch_confirm_title">Change routine?</string>
     <string name="routine_complete_routine_day">Complete Today</string>

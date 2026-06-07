@@ -2,24 +2,27 @@ package com.smarttrainner.feature.analysis.impl
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.smarttrainner.core.domain.CyclePlanRepository
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.ObserveCurrentRoutineCycleUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
-import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
-import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
+import com.smarttrainner.core.domain.ResolveCurrentRoutineCycleUseCase
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
-import com.smarttrainner.core.model.CustomRoutineInput
+import com.smarttrainner.core.model.CurrentRoutineCycle
+import com.smarttrainner.core.model.CyclePlan
+import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
-import com.smarttrainner.core.model.PlanTemplate
+import com.smarttrainner.core.model.PlanId
+import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.UserSessionId
-import com.smarttrainner.core.model.CyclePlan
-import com.smarttrainner.core.model.CycleSummary
+import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.feature.analysis.domain.ObserveCycleSummaryUseCase
@@ -34,6 +37,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -164,10 +168,15 @@ class AnalysisViewModelTest {
     }
 
     private fun viewModel(clock: Clock = fixedClock) = AnalysisViewModel(
-        observeAllWorkoutLogs = ObserveAllWorkoutLogsUseCase(repository),
+        observeCurrentRoutineCycle = ObserveCurrentRoutineCycleUseCase(
+            routineProgressRepository = repository,
+            cyclePlanRepository = repository,
+            workoutLogRepository = repository,
+            resolveCurrentRoutineCycle = ResolveCurrentRoutineCycleUseCase(),
+            clock = clock
+        ),
         observeCycleSummary = ObserveCycleSummaryUseCase(repository),
         observeExercises = ObserveExercisesUseCase(repository),
-        observeRoutineProgress = ObserveRoutineProgressUseCase(repository),
         clock = clock
     )
 }
@@ -188,6 +197,7 @@ class MainDispatcherRule(
 private class FakeAnalysisRepository :
     ExerciseRepository,
     RoutineProgressRepository,
+    CyclePlanRepository,
     CycleSummaryRepository,
     WorkoutLogRepository {
     val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
@@ -231,16 +241,43 @@ private class FakeAnalysisRepository :
 
     override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
+    override fun observeCurrentCyclePlan(
+        templateId: String,
+        cycleStartDate: LocalDate
+    ): Flow<CyclePlan> = flowOf(
+        CyclePlan(
+            id = PlanId("$templateId-$cycleStartDate"),
+            templateId = templateId,
+            name = templateId,
+            cycleStartDate = cycleStartDate,
+            days = listOf(
+                WorkoutDayPlan(
+                    date = cycleStartDate,
+                    title = "Day 1",
+                    focus = "Full Body",
+                    exercises = exercises.value.map { exercise ->
+                        PlannedExercise(
+                            id = PlannedExerciseId("${cycleStartDate}_${exercise.id.value}"),
+                            exercise = exercise,
+                            sets = 3,
+                            repRange = 8..12,
+                            durationMinutes = null,
+                            restSeconds = 90,
+                            note = ""
+                        )
+                    }
+                )
+            )
+        )
+    )
+
     override fun observeCycleSummary(
-        progress: RoutineProgress,
+        currentCycle: CurrentRoutineCycle,
         zone: ZoneId
     ): Flow<CycleSummary> {
-        val cycleStartDate = (progress.cycleStartedAt ?: progress.startedAt)
-            ?.atZone(zone)
-            ?.toLocalDate()
-            ?: LocalDate.now(zone)
+        val cycleStartDate = currentCycle.plan.cycleStartDate
         requestedCycleStartDates += cycleStartDate
-        requestedCycleNumbers += progress.cycleNumber
+        requestedCycleNumbers += currentCycle.progress.cycleNumber
         summary.value = summary(cycleStartDate)
         return summary
     }

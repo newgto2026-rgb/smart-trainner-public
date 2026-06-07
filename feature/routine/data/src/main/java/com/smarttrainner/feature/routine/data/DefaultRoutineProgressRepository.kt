@@ -12,6 +12,9 @@ import com.smarttrainner.core.model.RoutineCycleCompletion
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineProgressPreference
 import com.smarttrainner.core.model.completedCycleDurationDays as calculateCompletedCycleDurationDays
+import com.smarttrainner.core.model.routineAdditionalExerciseCyclePrefix
+import com.smarttrainner.core.model.routineDayInstanceId
+import com.smarttrainner.core.model.routineDayInstancePrefix
 import com.smarttrainner.core.network.RoutineProgressCancelLatestRequest
 import com.smarttrainner.core.network.RoutineCycleCompletionDto
 import com.smarttrainner.core.network.RoutineProgressCompleteDayRequest
@@ -139,8 +142,14 @@ class DefaultRoutineProgressRepository @Inject constructor(
             .buildCyclePlan(currentTemplate, currentCycleStartDate)
             .days
             .flatMap { day -> day.exercises.map { it.id.value } }
-        val routineDayInstancePrefix = "routine-day|${localProgress.templateId}|cycle$currentCycleNumber|"
-        val additionalExercisePrefix = "routine-added|${localProgress.templateId}|cycle$currentCycleNumber|"
+        val routineDayInstancePrefixValue = routineDayInstancePrefix(
+            templateId = localProgress.templateId,
+            cycleNumber = currentCycleNumber
+        )
+        val additionalExercisePrefix = routineAdditionalExerciseCyclePrefix(
+            templateId = localProgress.templateId,
+            cycleNumber = currentCycleNumber
+        )
         val switchedAt = clock.instant().toString()
         val switchedProgress = localProgress.copy(
             templateId = templateId,
@@ -163,7 +172,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
                     cycleNumber = switchedProgress.cycleNumber,
                     startedAt = switchedProgress.startedAt,
                     cycleStartedAt = switchedProgress.cycleStartedAt,
-                    discardedRoutineDayInstancePrefix = routineDayInstancePrefix,
+                    discardedRoutineDayInstancePrefix = routineDayInstancePrefixValue,
                     discardedPlannedExerciseIds = currentCyclePlannedExerciseIds,
                     discardedAdditionalExerciseIdPrefix = additionalExercisePrefix
                 )
@@ -180,7 +189,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
         }
         workoutLogDao.deleteRoutineCycleLogs(
             sessionId = sessionId,
-            routineDayInstancePrefixPattern = "$routineDayInstancePrefix%",
+            routineDayInstancePrefixPattern = "$routineDayInstancePrefixValue%",
             plannedExerciseIds = currentCyclePlannedExerciseIds,
             additionalExerciseIdPrefixPattern = "$additionalExercisePrefix%"
         )
@@ -440,7 +449,13 @@ class DefaultRoutineProgressRepository @Inject constructor(
 }
 
 internal fun RoutineProgressPreference.effectiveCycleStartedAt(zoneId: ZoneId): String? {
-    val assignedDayOneStart = routineDayDates["routine-day|$templateId|cycle$cycleNumber|day1"]
+    val assignedDayOneStart = routineDayDates[
+        routineDayInstanceId(
+            templateId = templateId,
+            cycleNumber = cycleNumber,
+            dayNumber = 1
+        )
+    ]
         ?.let { rawDate -> runCatching { LocalDate.parse(rawDate) }.getOrNull() }
         ?.atStartOfDay(zoneId)
         ?.toInstant()

@@ -1,6 +1,7 @@
 package com.smarttrainner.feature.analysis.domain
 
 import com.google.common.truth.Truth.assertThat
+import com.smarttrainner.core.model.CurrentRoutineCycle
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
@@ -19,6 +20,7 @@ import com.smarttrainner.core.model.UserSessionId
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import org.junit.Test
 
@@ -74,7 +76,7 @@ class CycleSummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = logs,
             progress = progress(templateId = "beginner"),
@@ -98,7 +100,7 @@ class CycleSummaryCalculatorTest {
                 cycleStartDate = cycleStart,
                 days = emptyList()
         )
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = emptyList(),
             progress = progress(templateId = "intro"),
@@ -127,7 +129,7 @@ class CycleSummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = emptyList(),
             progress = progress(templateId = "intro"),
@@ -175,7 +177,7 @@ class CycleSummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = listOf(completedLog(id = 1, planned = planned)),
             progress = progress(templateId = "custom"),
@@ -224,7 +226,7 @@ class CycleSummaryCalculatorTest {
             completedLog(id = index.toLong() + 1, planned = planned)
         }
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = logs,
             progress = progress(templateId = "balanced"),
@@ -237,7 +239,7 @@ class CycleSummaryCalculatorTest {
     }
 
     @Test
-    fun calculate_usesLogsSinceCycleStartAndCapsCompletionToPlanSize() {
+    fun calculate_usesCurrentCycleLogsAndCapsCompletionToPlanSize() {
         val first = plannedExercise(id = "leg_press", muscleGroup = MuscleGroup.LOWER_BODY)
         val second = plannedExercise(id = "row", muscleGroup = MuscleGroup.BACK)
         val plan = CyclePlan(
@@ -265,11 +267,6 @@ class CycleSummaryCalculatorTest {
         )
         val logs = listOf(
             completedLog(
-                id = 1,
-                planned = first,
-                performedAt = LocalDateTime.of(2026, 5, 19, 20, 0)
-            ),
-            completedLog(
                 id = 2,
                 planned = first,
                 performedAt = LocalDateTime.of(2026, 5, 20, 20, 0)
@@ -286,7 +283,7 @@ class CycleSummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = logs,
             progress = progress,
@@ -301,7 +298,7 @@ class CycleSummaryCalculatorTest {
     }
 
     @Test
-    fun calculate_fallsBackToRoutineStartWhenCycleStartIsMissing() {
+    fun calculate_usesProvidedCurrentCycleLogsWhenCycleStartIsMissing() {
         val first = plannedExercise(id = "leg_press", muscleGroup = MuscleGroup.LOWER_BODY)
         val second = plannedExercise(id = "row", muscleGroup = MuscleGroup.BACK)
         val plan = CyclePlan(
@@ -329,18 +326,13 @@ class CycleSummaryCalculatorTest {
         )
         val logs = listOf(
             completedLog(
-                id = 1,
-                planned = first,
-                performedAt = LocalDateTime.of(2026, 5, 19, 20, 0)
-            ),
-            completedLog(
                 id = 2,
                 planned = second,
                 performedAt = LocalDateTime.of(2026, 5, 20, 20, 0)
             )
         )
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = logs,
             progress = progress,
@@ -397,7 +389,7 @@ class CycleSummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = logs,
             progress = progress,
@@ -410,10 +402,9 @@ class CycleSummaryCalculatorTest {
     }
 
     @Test
-    fun calculate_excludesRoutineLogsFromOtherTemplatesOrCycles() {
+    fun calculate_countsOnlyProvidedCurrentCycleSnapshotLogs() {
         val first = plannedExercise(id = "deadlift", muscleGroup = MuscleGroup.BACK)
         val second = plannedExercise(id = "lat_pulldown", muscleGroup = MuscleGroup.BACK)
-        val extra = plannedExercise(id = "cable_row", muscleGroup = MuscleGroup.BACK)
         val plan = CyclePlan(
             id = PlanId("plan"),
             templateId = "custom-template",
@@ -438,7 +429,7 @@ class CycleSummaryCalculatorTest {
             cycleStartedAt = Instant.parse("2026-06-01T00:00:00Z")
         )
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = listOf(
                 completedLog(
@@ -450,19 +441,7 @@ class CycleSummaryCalculatorTest {
                 completedLog(
                     id = 2,
                     planned = second,
-                    performedAt = LocalDateTime.of(2026, 6, 1, 13, 0),
-                    routineDayInstanceId = "routine-day|custom-template|cycle1|day1"
-                ),
-                completedLog(
-                    id = 3,
-                    planned = second,
-                    performedAt = LocalDateTime.of(2026, 6, 1, 14, 0),
-                    routineDayInstanceId = "routine-day|other-template|cycle2|day1"
-                ),
-                completedLog(
-                    id = 4,
-                    planned = extra,
-                    performedAt = LocalDateTime.of(2026, 6, 1, 15, 0)
+                    performedAt = LocalDateTime.of(2026, 6, 1, 13, 0)
                 )
             ),
             progress = progress,
@@ -504,7 +483,7 @@ class CycleSummaryCalculatorTest {
             performedAt = LocalDateTime.of(2026, 5, 18, 21, 0)
         ).copy(completed = false)
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = listOf(completed, incomplete),
             progress = progress(
@@ -559,7 +538,7 @@ class CycleSummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = listOf(completed),
             progress = progress(templateId = "bodyweight"),
@@ -591,7 +570,7 @@ class CycleSummaryCalculatorTest {
             )
         )
 
-        val result = calculator.calculate(
+        val result = calculate(
             plan = plan,
             logs = emptyList(),
             progress = progress(
@@ -620,6 +599,39 @@ class CycleSummaryCalculatorTest {
         startedAt = startedAt,
         cycleStartedAt = cycleStartedAt
     )
+
+    private fun calculate(
+        plan: CyclePlan,
+        logs: List<WorkoutLog>,
+        progress: RoutineProgress,
+        zone: ZoneId
+    ) = calculator.calculate(
+        currentCycle = CurrentRoutineCycle(
+            progress = progress,
+            plan = plan,
+            currentDayIndex = progress.dayIndex.coerceInPlan(plan),
+            currentDay = plan.days.getOrNull(progress.dayIndex.coerceInPlan(plan)),
+            currentRoutineDayInstanceId = null,
+            currentRoutineDayDate = null,
+            previousRoutineDayInstanceId = null,
+            previousRoutineDayDate = null,
+            currentCycleLogs = logs,
+            allLogs = logs,
+            currentCyclePlannedExerciseIds = plan.days
+                .flatMap { day -> day.exercises.map { it.id } }
+                .toSet(),
+            currentDayCompletedPlannedExerciseIds = emptySet(),
+            latestCompletion = null
+        ),
+        zone = zone
+    )
+
+    private fun Int.coerceInPlan(plan: CyclePlan): Int =
+        if (plan.days.isEmpty()) {
+            0
+        } else {
+            coerceIn(0, plan.days.lastIndex)
+        }
 
     private fun plannedExercise(
         id: String,

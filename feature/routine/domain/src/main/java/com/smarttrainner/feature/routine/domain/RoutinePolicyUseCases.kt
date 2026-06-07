@@ -1,22 +1,17 @@
 package com.smarttrainner.feature.routine.domain
 
 import com.smarttrainner.core.model.PlanTemplate
-import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
-import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.RoutineReadiness
 import com.smarttrainner.core.model.RoutineRecommendation
 import com.smarttrainner.core.model.RoutineRecommendationInput
 import com.smarttrainner.core.model.RoutineSource
 import com.smarttrainner.core.model.RoutineStructure
 import com.smarttrainner.core.model.TrainingExperience
-import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.estimatedSessionMinutes
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 import javax.inject.Inject
 
 class RecommendRoutineUseCase @Inject constructor() {
@@ -196,44 +191,5 @@ class EvaluateRoutineReadinessUseCase @Inject constructor() {
             remainingRecoveryHours = remaining,
             warningCode = if (remaining == 0L) null else "minimum_recovery_not_met"
         )
-    }
-}
-
-class ResolveRoutineCycleCompletionUseCase @Inject constructor() {
-    operator fun invoke(
-        logs: List<WorkoutLog>,
-        progress: RoutineProgress,
-        zone: ZoneId,
-        routineDayInstanceId: String? = null,
-        currentDayPlannedExerciseIds: Set<PlannedExerciseId> = emptySet()
-    ): Set<PlannedExerciseId> {
-        val cycleStartedAt = progress.cycleStartedAt?.let { LocalDateTime.ofInstant(it, zone) }
-        val currentRoutineDayInstancePrefix =
-            "routine-day|${progress.templateId}|cycle${progress.cycleNumber}|"
-        val eligibleLogs = logs.asSequence()
-            .filter { it.completed }
-            .filter { log ->
-                val routineDayInstanceId = log.routineDayInstanceId
-                if (routineDayInstanceId != null) {
-                    routineDayInstanceId.startsWith(currentRoutineDayInstancePrefix)
-                } else {
-                    cycleStartedAt == null ||
-                        !log.performedAt.isBefore(cycleStartedAt)
-                }
-            }
-            .toList()
-        val instanceLogs = routineDayInstanceId?.let { instanceId ->
-            eligibleLogs.filter { it.routineDayInstanceId == instanceId }
-        }.orEmpty()
-        val completionLogs = if (instanceLogs.isEmpty()) {
-            eligibleLogs
-        } else {
-            eligibleLogs.filter { log ->
-                log.routineDayInstanceId != null || log.plannedExerciseId !in currentDayPlannedExerciseIds
-            }
-        }
-        return completionLogs.asSequence()
-            .map { it.plannedExerciseId }
-            .toSet()
     }
 }

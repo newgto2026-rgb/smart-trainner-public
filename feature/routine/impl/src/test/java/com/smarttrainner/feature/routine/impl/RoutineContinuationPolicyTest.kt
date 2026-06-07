@@ -22,18 +22,25 @@ class RoutineContinuationPolicyTest {
         val first = plannedExercise("back_pull")
         val skippedCompleted = plannedExercise("back_row")
         val next = plannedExercise("lat_pulldown")
+        val day = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 18),
+            title = "Day 1",
+            focus = "Back",
+            exercises = listOf(first, skippedCompleted, next),
+            dayNumber = 1,
+            primaryFocus = RoutineFocus.BACK,
+            secondaryFocuses = emptyList(),
+            minRecoveryHours = 24
+        )
         val state = RoutineUiState(
-            plan = cyclePlan(
-                WorkoutDayPlan(
-                    date = LocalDate.of(2026, 5, 18),
-                    title = "Day 1",
-                    focus = "Back",
-                    exercises = listOf(first, skippedCompleted, next),
-                    dayNumber = 1,
-                    primaryFocus = RoutineFocus.BACK,
-                    secondaryFocuses = emptyList(),
-                    minRecoveryHours = 24
-                )
+            plan = cyclePlan(day),
+            nextRoutineDayUi = day.toNextRoutineDayUiModel(
+                template = null,
+                dayIndex = 0,
+                cycleNumber = 1,
+                routineDayDate = null,
+                previousRoutineDayDate = null,
+                completedIds = emptySet()
             ),
             completedPlannedExerciseIds = setOf(skippedCompleted.id)
         )
@@ -45,18 +52,19 @@ class RoutineContinuationPolicyTest {
     fun nextPlannedExerciseAfterSaved_doesNotContinueIntoAnotherDay() {
         val current = plannedExercise("back_pull")
         val nextDayExercise = plannedExercise("leg_press")
+        val currentDay = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 18),
+            title = "Day 1",
+            focus = "Back",
+            exercises = listOf(current),
+            dayNumber = 1,
+            primaryFocus = RoutineFocus.BACK,
+            secondaryFocuses = emptyList(),
+            minRecoveryHours = 24
+        )
         val state = RoutineUiState(
             plan = cyclePlan(
-                WorkoutDayPlan(
-                    date = LocalDate.of(2026, 5, 18),
-                    title = "Day 1",
-                    focus = "Back",
-                    exercises = listOf(current),
-                    dayNumber = 1,
-                    primaryFocus = RoutineFocus.BACK,
-                    secondaryFocuses = emptyList(),
-                    minRecoveryHours = 24
-                ),
+                currentDay,
                 WorkoutDayPlan(
                     date = LocalDate.of(2026, 5, 19),
                     title = "Day 2",
@@ -67,10 +75,59 @@ class RoutineContinuationPolicyTest {
                     secondaryFocuses = emptyList(),
                     minRecoveryHours = 24
                 )
+            ),
+            nextRoutineDayUi = currentDay.toNextRoutineDayUiModel(
+                template = null,
+                dayIndex = 0,
+                cycleNumber = 1,
+                routineDayDate = null,
+                previousRoutineDayDate = null,
+                completedIds = emptySet()
             )
         )
 
         assertThat(state.nextPlannedExerciseAfterSaved(current)).isNull()
+    }
+
+    @Test
+    fun nextPlannedExerciseAfterSaved_ignoresExerciseOutsideCurrentRoutineDay() {
+        val staleExercise = plannedExercise("back_pull")
+        val currentExercise = plannedExercise("leg_press")
+        val currentDay = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 19),
+            title = "Day 2",
+            focus = "Legs",
+            exercises = listOf(currentExercise),
+            dayNumber = 2,
+            primaryFocus = RoutineFocus.LOWER_BODY,
+            secondaryFocuses = emptyList(),
+            minRecoveryHours = 24
+        )
+        val state = RoutineUiState(
+            plan = cyclePlan(
+                WorkoutDayPlan(
+                    date = LocalDate.of(2026, 5, 18),
+                    title = "Day 1",
+                    focus = "Back",
+                    exercises = listOf(staleExercise),
+                    dayNumber = 1,
+                    primaryFocus = RoutineFocus.BACK,
+                    secondaryFocuses = emptyList(),
+                    minRecoveryHours = 24
+                ),
+                currentDay
+            ),
+            nextRoutineDayUi = currentDay.toNextRoutineDayUiModel(
+                template = null,
+                dayIndex = 1,
+                cycleNumber = 1,
+                routineDayDate = null,
+                previousRoutineDayDate = null,
+                completedIds = emptySet()
+            )
+        )
+
+        assertThat(state.nextPlannedExerciseAfterSaved(staleExercise)).isNull()
     }
 
     @Test
