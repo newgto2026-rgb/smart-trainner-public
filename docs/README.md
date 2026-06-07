@@ -11,6 +11,7 @@
 | [루트 README](../README.md) | 프로젝트 목적, 앱 개요, 아키텍처, 작업 정책 요약 |
 | [앱 구조 소개서](SMART-TRAINNER-APP-OVERVIEW.md) | 제품 경험, 모듈 구조, 데이터 흐름, 테스트 기반 설명 |
 | [AI 기반 개발 사례 소개서](SMART-TRAINNER-AI-DEVELOPMENT-STORY.md) | AI-assisted 작업 방식과 저장소 하네스 정리 |
+| [현재 사이클 데이터 구조 분석 PDF](cycle-data-structure-analysis.pdf) | Home/Routine/Analysis가 공유하는 현재 사이클 데이터 구조와 정책 분석 |
 | [품질 게이트](agent/quality-gates.md) | 로컬/CI 검증 명령과 언제 무엇을 돌릴지 |
 | [Agent 작업 가이드](../AGENTS.md) | Codex/agent가 따라야 할 저장소 규칙 |
 

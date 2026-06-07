@@ -97,6 +97,20 @@ Smart Trainner는 로컬 우선 경험을 기본으로 한다.
 
 운동 기록은 먼저 Room에 저장되고, 서버 저장이 성공하면 sync pending 상태가 정리된다. 네트워크가 실패해도 로컬 화면은 기록을 유지하고, `TrainingDataSyncer` 구현체가 이후 pending 데이터를 서버와 맞춘다.
 
+## 현재 사이클 데이터 구조
+
+홈, 루틴, 분석 화면은 현재 사이클을 각자 계산하지 않고 `core:domain`의 `ObserveCurrentRoutineCycleUseCase`가 만든 `CurrentRoutineCycle`을 함께 소비한다. 이 projection은 `RoutineProgress`, `CyclePlan`, `WorkoutLog`를 조합해 현재 template/cycle/day, 지정 날짜, 완료 운동, 현재 사이클 로그를 한 번에 계산한다.
+
+현재 사이클 식별은 `core:model`의 ID helper에 모여 있다.
+
+- 정규 루틴 일차: `routineDayInstanceId(templateId, cycleNumber, dayNumber)`
+- 루틴 도중 추가 운동: `routineAdditionalExerciseIdPrefix(templateId, cycleNumber, dayNumber)`
+- 현재 사이클 로그: 현재 `routineDayInstanceId` prefix 또는 현재 plan의 `plannedExerciseId`/추가 운동 사이클 prefix(`routineAdditionalExerciseCyclePrefix`)와 `cycleStartedAt` 기준으로 필터링
+
+정책적으로 삭제 가능한 것은 "완료되지 않은 현재 사이클"뿐이다. 루틴을 중간에 바꾸면 현재 사이클의 진행도, 배정 날짜, 운동 기록은 서버 확인 후 삭제되고 새 루틴으로 대체된다. 완료된 과거 사이클 기록은 삭제하지 않으며, 분석 화면은 현재 사이클 요약(`currentCycleLogs`)과 최근 기록(`allLogs`)을 분리해서 보여준다.
+
+자세한 구조도와 분석표는 [현재 사이클 데이터 구조 분석 PDF](docs/cycle-data-structure-analysis.pdf)에 정리돼 있다.
+
 ## 품질 게이트
 
 주요 검증 명령어:
@@ -120,6 +134,7 @@ GitHub Actions는 PR마다 Android unit test, JVM unit test, debug APK, androidT
 
 - [앱 구조 소개서](docs/SMART-TRAINNER-APP-OVERVIEW.md)
 - [AI 기반 개발 사례 소개서](docs/SMART-TRAINNER-AI-DEVELOPMENT-STORY.md)
+- [현재 사이클 데이터 구조 분석 PDF](docs/cycle-data-structure-analysis.pdf)
 - [문서 인덱스](docs/README.md)
 - [품질 게이트](docs/agent/quality-gates.md)
 
