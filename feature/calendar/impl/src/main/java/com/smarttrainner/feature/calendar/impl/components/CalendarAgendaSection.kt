@@ -45,7 +45,10 @@ internal fun CalendarAgendaSection(
     modifier: Modifier = Modifier
 ) {
     val locale = Locale.getDefault()
-    val selectedDateLabel = selectedDate.formatSelectedDateLabel(locale)
+    val selectedDatePattern = stringResource(R.string.calendar_selected_date_format)
+    val selectedDateLabel = remember(selectedDate, selectedDatePattern, locale) {
+        selectedDate.format(DateTimeFormatter.ofPattern(selectedDatePattern, locale))
+    }
     val workoutCount = selectedDateWorkouts.size
     var visibleWorkoutLimit by remember(selectedDate, selectedDateWorkouts) {
         mutableIntStateOf(WORKOUT_PREVIEW_LIMIT)
@@ -162,13 +165,4 @@ internal fun CalendarAgendaSection(
             }
         }
     }
-}
-
-private fun LocalDate.formatSelectedDateLabel(locale: Locale): String {
-    val pattern = if (locale.language == Locale.KOREAN.language) {
-        "yyyy년 M월 d일 (E)"
-    } else {
-        "yyyy MMM d (E)"
-    }
-    return format(DateTimeFormatter.ofPattern(pattern, locale))
 }

@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.feature.calendar.impl.CalendarDayUiModel
 import com.smarttrainner.feature.calendar.impl.R
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 import java.util.Locale
@@ -117,9 +117,10 @@ private fun RowScope.CalendarDayCell(
     }
     val dateFontWeight = if (day.isSelected || day.isToday) FontWeight.SemiBold else FontWeight.Medium
     val indicatorColor = if (day.isSelected) SmartTrainnerColors.SurfaceRaised else SmartTrainnerColors.Coral
+    val locale = Locale.getDefault()
 
     val a11yParts = buildList {
-        add(day.date.format(DateTimeFormatter.ofPattern("yyyy MMMM d EEEE", Locale.getDefault())))
+        add(day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale)))
         add(
             pluralStringResource(
                 id = R.plurals.calendar_a11y_workout_count,
@@ -200,9 +201,4 @@ private fun RowScope.CalendarDayCell(
             }
         }
     }
-}
-
-private fun DayOfWeek.plus(days: Long): DayOfWeek {
-    val normalized = ((value - 1 + days) % 7 + 7) % 7
-    return DayOfWeek.of(normalized.toInt() + 1)
 }

@@ -98,6 +98,34 @@ class CalendarViewModelTest {
         }
     }
 
+    @Test
+    fun monthTransition_doesNotExposePreviousMonthSummaryWhileNewMonthLoads() = runTest {
+        val repository = FakeCalendarRepository()
+        repository.logs.value = listOf(workoutLog(id = 1, exerciseId = "bench", day = 24))
+        val viewModel = viewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "calendar_month" to "2026-05",
+                    "calendar_selected_date" to "2026-05-24"
+                )
+            )
+        )
+
+        viewModel.uiState.test {
+            skipItems(1)
+            assertThat(awaitItem().todayWorkoutCount).isEqualTo(1)
+
+            viewModel.onAction(CalendarAction.OnNextMonthClick)
+            val transitionState = awaitItem()
+
+            assertThat(transitionState.currentMonth.toString()).isEqualTo("2026-06")
+            assertThat(transitionState.todayWorkoutCount).isEqualTo(0)
+            assertThat(transitionState.days.count { it.workoutCount > 0 }).isEqualTo(0)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun viewModel(
         repository: FakeCalendarRepository,
         savedStateHandle: SavedStateHandle = SavedStateHandle()

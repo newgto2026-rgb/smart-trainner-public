@@ -7,6 +7,7 @@
     <string name="calendar_a11y_today">오늘</string>
     <string name="calendar_agenda_title">선택한 날짜 운동 이력</string>
     <string name="calendar_agenda_date_label">%1$s</string>
+    <string name="calendar_selected_date_format">yyyy년 M월 d일 (E)</string>
     <string name="calendar_bottom_sheet_empty">선택한 날짜에 기록된 운동이 없습니다.</string>
     <string name="calendar_workout_collapse">접기</string>
     <string name="calendar_record_metric_weight">%1$.1f kg</string>

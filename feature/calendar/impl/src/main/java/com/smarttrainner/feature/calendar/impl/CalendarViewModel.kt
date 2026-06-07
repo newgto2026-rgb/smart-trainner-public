@@ -49,6 +49,7 @@ class CalendarViewModel @Inject constructor(
         calendarMonthState
     ) { month, selectedDate, calendarMonth ->
         val adjustedSelectedDate = selectedDate.normalizeToMonth(month)
+        val isDataCurrent = calendarMonth.month == month
         CalendarUiState(
             currentMonth = month,
             selectedDate = adjustedSelectedDate,
@@ -56,12 +57,14 @@ class CalendarViewModel @Inject constructor(
                 yearMonth = month,
                 selectedDate = adjustedSelectedDate,
                 today = LocalDate.now(clock),
-                summariesByDate = calendarMonth.summariesByDate
+                summariesByDate = if (isDataCurrent) calendarMonth.summariesByDate else emptyMap()
             ),
-            todayWorkoutCount = calendarMonth.todayWorkoutCount,
-            selectedDateWorkouts = calendarMonth.logsByDate[adjustedSelectedDate]
-                .orEmpty()
-                .map { it.toUiModel() }
+            todayWorkoutCount = if (isDataCurrent) calendarMonth.todayWorkoutCount else 0,
+            selectedDateWorkouts = if (isDataCurrent) {
+                calendarMonth.logsByDate[adjustedSelectedDate].orEmpty().map { it.toUiModel() }
+            } else {
+                emptyList()
+            }
         )
     }
         .stateIn(

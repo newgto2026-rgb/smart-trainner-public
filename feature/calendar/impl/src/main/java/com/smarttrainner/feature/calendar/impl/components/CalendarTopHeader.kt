@@ -1,5 +1,6 @@
 package com.smarttrainner.feature.calendar.impl.components
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -40,9 +42,9 @@ internal fun CalendarTopHeader(
     onNextMonthClick: () -> Unit
 ) {
     val locale = Locale.getDefault()
-    val monthFormatter = DateTimeFormatter.ofPattern("MMMM", locale)
-    val yearFormatter = DateTimeFormatter.ofPattern("yyyy", locale)
-    val monthLabel = "${currentMonth.format(monthFormatter)} ${currentMonth.format(yearFormatter)}"
+    val monthLabel = remember(currentMonth, locale) {
+        currentMonth.formatLocalizedMonthLabel(locale)
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -50,26 +52,15 @@ internal fun CalendarTopHeader(
         verticalAlignment = Alignment.Top
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
+            Text(
+                text = monthLabel,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = SmartTrainnerColors.Ink,
                 modifier = Modifier
                     .testTag("calendar_month_label")
                     .semantics { contentDescription = monthLabel }
-            ) {
-                Text(
-                    text = currentMonth.format(monthFormatter),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = SmartTrainnerColors.Ink
-                )
-                Text(
-                    text = currentMonth.format(yearFormatter),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = SmartTrainnerColors.Muted
-                )
-            }
+            )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = pluralStringResource(
@@ -120,4 +111,9 @@ internal fun CalendarTopHeader(
             }
         }
     }
+}
+
+private fun YearMonth.formatLocalizedMonthLabel(locale: Locale): String {
+    val pattern = DateFormat.getBestDateTimePattern(locale, "yMMMM")
+    return atDay(1).format(DateTimeFormatter.ofPattern(pattern, locale))
 }

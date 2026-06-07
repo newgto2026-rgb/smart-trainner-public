@@ -21,7 +21,7 @@ class ObserveWorkoutCalendarMonthUseCase @Inject constructor(
         val exercisesById = exercises.associateBy { it.id }
         val monthLogs = logs
             .asSequence()
-            .filter { YearMonth.from(it.performedAt.toLocalDate()) == month }
+            .filter { it.performedAt.year == month.year && it.performedAt.monthValue == month.monthValue }
             .map { log ->
                 val exercise = exercisesById[log.exerciseId]
                 WorkoutCalendarLog(
@@ -39,7 +39,6 @@ class ObserveWorkoutCalendarMonthUseCase @Inject constructor(
                     volumeKg = log.volumeKg
                 )
             }
-            .sortedBy { it.performedAt }
             .toList()
         val logsByDate = monthLogs.groupBy { it.performedAt.toLocalDate() }
         val summariesByDate = logsByDate.mapValues { (date, dateLogs) ->
