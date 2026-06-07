@@ -80,7 +80,8 @@ MVP 친구 DTO는 다음 공개 정보만 포함한다.
 
 실제 push 검증에 필요한 외부 입력:
 
-- `app/google-services.json`
+- Firebase Android app: project `weefit-48cd6`, package `com.smarttrainner`
+- `app/google-services.json` included for Android client Firebase configuration
 - Firebase project의 Cloud Messaging 활성화
 - 서버 실행 환경의 Firebase Admin credential
   - `GOOGLE_APPLICATION_CREDENTIALS` 또는

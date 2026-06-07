@@ -206,6 +206,7 @@ All friend/push endpoints use `{ error, code, details? }`. Required codes includ
 Android:
 
 - `app` applies `google-services` only when `app/google-services.json` exists.
+- Firebase Android app is registered in project `weefit-48cd6` with package `com.smarttrainner`; `app/google-services.json` is included for client-side Firebase configuration.
 - `FirebasePushTokenRegistrar` no-ops when `FirebaseApp` is not configured.
 - `SmartTrainnerAppViewModel` registers current token after Google session validation and data sync.
 - `SmartTrainnerFirebaseMessagingService` registers refreshed tokens from `onNewToken`.
@@ -287,7 +288,7 @@ Final gate:
 
 1. Deploy server schema and social/push endpoints first.
 2. Configure Firebase Admin credentials in server runtime. Without credentials, friend APIs still work and notification rows record `DISABLED`.
-3. Add `app/google-services.json` for Firebase-enabled Android builds. Without the file, app builds still pass and FCM token registration no-ops.
+3. Use the registered Firebase Android app (`weefit-48cd6` / `com.smarttrainner`) and included `app/google-services.json` for Firebase-enabled Android builds. Without the file, app builds still pass and FCM token registration no-ops.
 4. Smoke test nickname request, incoming list, accept, decline, friend list, friend removal, push-token registration, and notification tap to Friends.
 5. Keep Room migration `8 -> 9` non-destructive for existing installs.
 
