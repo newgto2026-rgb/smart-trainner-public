@@ -3,12 +3,12 @@ package com.smarttrainner.feature.routine.impl
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
-import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveCurrentRoutineCycleUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
-import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
 import com.smarttrainner.core.domain.RecommendExercisePrescriptionUseCase
+import com.smarttrainner.core.domain.ResolveCurrentRoutineCycleUseCase
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.CyclePlanRepository
@@ -39,22 +39,21 @@ import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.model.routineDayInstanceId
+import com.smarttrainner.core.model.routineDayInstancePrefix
 import com.smarttrainner.feature.routine.domain.AdvanceRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CompleteRoutineDayUseCase
 import com.smarttrainner.feature.routine.domain.CancelLatestRoutineDayCompletionUseCase
-import com.smarttrainner.feature.routine.domain.ObserveCurrentCyclePlanUseCase
 import com.smarttrainner.feature.routine.domain.ObservePlanTemplatesUseCase
 import com.smarttrainner.feature.routine.domain.RecommendRoutineUseCase
 import com.smarttrainner.feature.routine.domain.RoutineCompletionSnapshot
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
-import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
 import com.smarttrainner.feature.routine.domain.SetRoutineDayDateUseCase
 import com.smarttrainner.feature.routine.domain.SwitchRoutineTemplateUseCase
 import com.smarttrainner.feature.routine.domain.ValidateCustomRoutineUseCase
-import com.smarttrainner.feature.routine.domain.routineDayInstanceId
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -1515,14 +1514,17 @@ class RoutineViewModelTest {
     private fun viewModel(clock: Clock = fixedClock) = RoutineViewModel(
         observeExercises = ObserveExercisesUseCase(repository),
         observePlanTemplates = ObservePlanTemplatesUseCase(repository),
-        observeCurrentCyclePlan = ObserveCurrentCyclePlanUseCase(repository),
-        observeRoutineProgress = ObserveRoutineProgressUseCase(repository),
+        observeCurrentRoutineCycle = ObserveCurrentRoutineCycleUseCase(
+            routineProgressRepository = repository,
+            cyclePlanRepository = repository,
+            workoutLogRepository = repository,
+            resolveCurrentRoutineCycle = ResolveCurrentRoutineCycleUseCase(),
+            clock = clock
+        ),
         observeTrainingExperience = ObserveTrainingExperienceUseCase(sessionRepository),
-        observeAllWorkoutLogs = ObserveAllWorkoutLogsUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
         recommendExercisePrescription = RecommendExercisePrescriptionUseCase(),
         recommendRoutine = RecommendRoutineUseCase(),
-        resolveRoutineCycleCompletion = ResolveRoutineCycleCompletionUseCase(),
         switchRoutineTemplate = SwitchRoutineTemplateUseCase(repository),
         setRoutineDayDate = SetRoutineDayDateUseCase(repository),
         completeRoutineDay = CompleteRoutineDayUseCase(repository, AdvanceRoutineDayUseCase()),
@@ -1800,7 +1802,10 @@ private class FakeTrainingRepository :
         switchRoutineResult.getOrNull() ?: return switchRoutineResult
         selectedTemplateId.value = templateId
         val current = progress.value
-        val currentCyclePrefix = "routine-day|${current.templateId}|cycle${current.cycleNumber}|"
+        val currentCyclePrefix = routineDayInstancePrefix(
+            templateId = current.templateId,
+            cycleNumber = current.cycleNumber
+        )
         logs.value = logs.value.filterNot { log ->
             log.routineDayInstanceId?.startsWith(currentCyclePrefix) == true
         }

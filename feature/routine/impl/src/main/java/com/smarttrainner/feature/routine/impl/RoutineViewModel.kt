@@ -2,13 +2,12 @@ package com.smarttrainner.feature.routine.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smarttrainner.core.domain.ObserveAllWorkoutLogsUseCase
+import com.smarttrainner.core.domain.ObserveCurrentRoutineCycleUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
-import com.smarttrainner.core.domain.ObserveRoutineProgressUseCase
 import com.smarttrainner.core.domain.ObserveTrainingExperienceUseCase
 import com.smarttrainner.core.domain.RecommendExercisePrescriptionUseCase
-import com.smarttrainner.core.model.CyclePlan
+import com.smarttrainner.core.model.CurrentRoutineCycle
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
@@ -16,22 +15,18 @@ import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineFeeling
 import com.smarttrainner.core.model.RoutineFocus
-import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.targetsAnyMuscleGroup
+import com.smarttrainner.core.model.routineAdditionalExerciseIdPrefix
 import com.smarttrainner.feature.routine.domain.CancelLatestRoutineDayCompletionUseCase
 import com.smarttrainner.feature.routine.domain.CompleteRoutineDayUseCase
-import com.smarttrainner.feature.routine.domain.ObserveCurrentCyclePlanUseCase
 import com.smarttrainner.feature.routine.domain.ObservePlanTemplatesUseCase
 import com.smarttrainner.feature.routine.domain.RecommendRoutineUseCase
-import com.smarttrainner.feature.routine.domain.ResolveRoutineCycleCompletionUseCase
 import com.smarttrainner.feature.routine.domain.SaveCustomRoutineUseCase
 import com.smarttrainner.feature.routine.domain.SetRoutineDayDateUseCase
 import com.smarttrainner.feature.routine.domain.SwitchRoutineTemplateUseCase
-import com.smarttrainner.feature.routine.domain.routineAdditionalExerciseIdPrefix
-import com.smarttrainner.feature.routine.domain.routineDayInstanceId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.Instant
@@ -43,8 +38,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -54,14 +47,11 @@ import kotlinx.coroutines.launch
 class RoutineViewModel @Inject constructor(
     observeExercises: ObserveExercisesUseCase,
     observePlanTemplates: ObservePlanTemplatesUseCase,
-    observeCurrentCyclePlan: ObserveCurrentCyclePlanUseCase,
-    observeRoutineProgress: ObserveRoutineProgressUseCase,
+    observeCurrentRoutineCycle: ObserveCurrentRoutineCycleUseCase,
     observeTrainingExperience: ObserveTrainingExperienceUseCase,
-    observeAllWorkoutLogs: ObserveAllWorkoutLogsUseCase,
     observeLatestWorkoutLogs: ObserveLatestWorkoutLogsUseCase,
     private val recommendExercisePrescription: RecommendExercisePrescriptionUseCase,
     private val recommendRoutine: RecommendRoutineUseCase,
-    private val resolveRoutineCycleCompletion: ResolveRoutineCycleCompletionUseCase,
     private val switchRoutineTemplate: SwitchRoutineTemplateUseCase,
     private val completeRoutineDay: CompleteRoutineDayUseCase,
     private val cancelLatestRoutineDayCompletion: CancelLatestRoutineDayCompletionUseCase,
@@ -142,35 +132,17 @@ class RoutineViewModel @Inject constructor(
         control.copy(routineSwitchConfirmTemplateId = switchTemplateId)
     }
 
-    private val routinePlanState = observeRoutineProgress().flatMapLatest { progress ->
-        observeCurrentCyclePlan(progress.templateId, progress.cycleStartDate()).map { plan ->
-            RoutinePlanState(plan = plan, routineProgress = progress)
-        }
-    }
-
-    private val logState = combine(
-        observeAllWorkoutLogs(),
-        observeLatestWorkoutLogs()
-    ) { allLogs, latestLogs ->
-        RoutineLogState(
-            allLogs = allLogs,
-            latestLogs = latestLogs
-        )
-    }
-
     private val dataState = combine(
         observePlanTemplates(),
-        routinePlanState,
-        logState,
+        observeCurrentRoutineCycle(clock.zone),
+        observeLatestWorkoutLogs(),
         observeExercises(),
         observeTrainingExperience()
-    ) { templates, routinePlan, logState, exercises, profileExperience ->
+    ) { templates, currentCycle, latestLogs, exercises, profileExperience ->
         RoutineDataState(
             templates = templates,
-            plan = routinePlan.plan,
-            routineProgress = routinePlan.routineProgress,
-            logs = logState.allLogs,
-            latestLogs = logState.latestLogs,
+            currentCycle = currentCycle,
+            latestLogs = latestLogs,
             exercises = exercises,
             profileExperience = profileExperience
         )
@@ -180,54 +152,20 @@ class RoutineViewModel @Inject constructor(
         formControlState,
         dataState
     ) { control, data ->
-        val activeTemplate = data.templates.firstOrNull { it.id == data.routineProgress.templateId }
-            ?: data.templates.firstOrNull { it.id == data.plan.templateId }
-        val nextDayIndex = data.routineProgress.dayIndex.coerceIn(
-            0,
-            (data.plan.days.size - 1).coerceAtLeast(0)
-        )
-        val nextRoutineDay = data.plan.days.getOrNull(nextDayIndex) ?: data.plan.days.firstOrNull()
-        val nextRoutineDayInstanceId = activeTemplate?.let { template ->
-            nextRoutineDay?.let { day ->
-                routineDayInstanceId(
-                    templateId = template.id,
-                    cycleNumber = data.routineProgress.cycleNumber,
-                    dayNumber = day.dayNumber
-                )
-            }
-        }
-        val routineDayDate = nextRoutineDayInstanceId?.let { instanceId ->
-            data.routineProgress.routineDateFor(instanceId)
-        }
-        val previousRoutineDayDate = activeTemplate
-            ?.let { template ->
-                nextRoutineDay?.let { day ->
-                    previousRoutineDayInstanceId(
-                        template = template,
-                        cycleNumber = data.routineProgress.cycleNumber,
-                        dayNumber = day.dayNumber
-                    )
-                }
-            }
-            ?.let { instanceId -> data.routineProgress.routineDateFor(instanceId) }
-        val currentDayPlannedExerciseIds = nextRoutineDay
-            ?.exercises
-            ?.map { it.id }
-            ?.toSet()
-            .orEmpty()
-        val completedIds = resolveRoutineCycleCompletion(
-            logs = data.logs,
-            progress = data.routineProgress,
-            zone = clock.zone,
-            routineDayInstanceId = nextRoutineDayInstanceId,
-            currentDayPlannedExerciseIds = currentDayPlannedExerciseIds
-        )
+        val currentCycle = data.currentCycle
+        val progress = currentCycle.progress
+        val plan = currentCycle.plan
+        val activeTemplate = data.templates.firstOrNull { it.id == progress.templateId }
+            ?: data.templates.firstOrNull { it.id == plan.templateId }
+        val nextDayIndex = currentCycle.currentDayIndex
+        val nextRoutineDay = currentCycle.currentDay
+        val completedIds = currentCycle.currentDayCompletedPlannedExerciseIds
         val nextDayUi = nextRoutineDay?.toNextRoutineDayUiModel(
             template = activeTemplate,
             dayIndex = nextDayIndex,
-            cycleNumber = data.routineProgress.cycleNumber,
-            routineDayDate = routineDayDate,
-            previousRoutineDayDate = previousRoutineDayDate,
+            cycleNumber = progress.cycleNumber,
+            routineDayDate = currentCycle.currentRoutineDayDate,
+            previousRoutineDayDate = currentCycle.previousRoutineDayDate,
             completedIds = completedIds
         )
         val normalizedRecommendationForm = control.recommendationForm.normalizedFor(data.templates)
@@ -235,21 +173,14 @@ class RoutineViewModel @Inject constructor(
         val exercisePrescriptions = data.exercises.associate { exercise ->
             exercise.id to recommendExercisePrescription(exercise, data.profileExperience)
         }
-        val latestCompletion = activeTemplate?.let { template ->
-            data.routineProgress
-                .takeIf { it.hasCoherentLatestCompletion(template.cycleLength) }
-                ?.lastCompletedDayIndex
-                ?.let { data.plan.days.getOrNull(it) }
-                ?.let { completedDay ->
-                    LatestRoutineDayCompletionUiModel(
-                        day = completedDay,
-                        routineTemplate = template,
-                        cycleNumber = data.routineProgress.lastCompletedCycleNumber
-                            ?: data.routineProgress.cycleNumber,
-                        dayNumber = completedDay.dayNumber,
-                        completedAtText = data.routineProgress.lastCompletedAt?.toString()
-                    )
-                }
+        val latestCompletion = currentCycle.latestCompletion?.let { completion ->
+            LatestRoutineDayCompletionUiModel(
+                day = completion.day,
+                routineTemplate = activeTemplate,
+                cycleNumber = completion.cycleNumber,
+                dayNumber = completion.dayNumber,
+                completedAtText = completion.completedAt?.toString()
+            )
         }
         val recommendation = recommendRoutine(
             input = normalizedRecommendationForm.toInput(),
@@ -259,10 +190,10 @@ class RoutineViewModel @Inject constructor(
             ?: recommendation.primaryTemplateId
         RoutineUiState(
             templates = data.templates,
-            selectedTemplateId = data.plan.templateId,
+            selectedTemplateId = plan.templateId,
             today = LocalDate.now(clock),
-            plan = data.plan,
-            activeRoutineProgress = data.routineProgress,
+            plan = plan,
+            activeRoutineProgress = progress,
             nextRoutineDay = nextDayUi?.day ?: nextRoutineDay,
             nextRoutineDayUi = nextDayUi,
             latestRoutineDayCompletion = latestCompletion,
@@ -283,7 +214,7 @@ class RoutineViewModel @Inject constructor(
             showCancelLatestRoutineDayDialog = control.routineDialogState.showCancelLatest,
             customRoutineBuilder = control.customRoutineBuilder,
             exercises = data.exercises,
-            logs = data.logs,
+            logs = currentCycle.currentCycleLogs,
             latestWorkoutLogs = data.latestLogs,
             completedPlannedExerciseIds = completedIds,
             completeDayError = control.completeDayFailed,
@@ -965,23 +896,6 @@ class RoutineViewModel @Inject constructor(
                 RoutineCompletionConfirmReason.SESSION_ENDED_WITH_SKIPS
         }
 
-    private fun RoutineProgress.cycleStartDate(): LocalDate =
-        (cycleStartedAt ?: startedAt)?.atZone(clock.zone)?.toLocalDate()
-            ?: LocalDate.now(clock)
-
-    private fun RoutineProgress.hasCoherentLatestCompletion(cycleLength: Int): Boolean {
-        val completedDayIndex = lastCompletedDayIndex ?: return false
-        val completedCycleNumber = lastCompletedCycleNumber ?: return false
-        if (cycleLength <= 0 || completedDayIndex !in 0 until cycleLength) return false
-
-        val sameCycleNextDay = completedDayIndex + 1
-        return when {
-            sameCycleNextDay < cycleLength && completedCycleNumber == cycleNumber ->
-                dayIndex == sameCycleNextDay
-            else -> false
-        }
-    }
-
     private fun updateRecommendationForm(
         transform: (RoutineRecommendationFormState) -> RoutineRecommendationFormState
     ) {
@@ -1030,27 +944,6 @@ class RoutineViewModel @Inject constructor(
         else -> null
     }
 
-    private fun RoutineProgress.routineDateFor(routineDayInstanceId: String): LocalDate? =
-        routineDayDates[routineDayInstanceId]
-
-    private fun previousRoutineDayInstanceId(
-        template: PlanTemplate,
-        cycleNumber: Int,
-        dayNumber: Int
-    ): String? = when {
-        dayNumber > 1 -> routineDayInstanceId(
-            templateId = template.id,
-            cycleNumber = cycleNumber,
-            dayNumber = dayNumber - 1
-        )
-        cycleNumber > 1 -> routineDayInstanceId(
-            templateId = template.id,
-            cycleNumber = cycleNumber - 1,
-            dayNumber = template.cycleLength
-        )
-        else -> null
-    }
-
     private fun PlannedExercise.withRoutineDayDate(
         date: LocalDate,
         routineDayInstanceId: String
@@ -1068,22 +961,10 @@ class RoutineViewModel @Inject constructor(
 
     private data class RoutineDataState(
         val templates: List<PlanTemplate>,
-        val plan: CyclePlan,
-        val routineProgress: RoutineProgress,
-        val logs: List<WorkoutLog>,
+        val currentCycle: CurrentRoutineCycle,
         val latestLogs: List<WorkoutLog>,
         val exercises: List<com.smarttrainner.core.model.Exercise>,
         val profileExperience: TrainingExperience
-    )
-
-    private data class RoutineLogState(
-        val allLogs: List<WorkoutLog>,
-        val latestLogs: List<WorkoutLog>
-    )
-
-    private data class RoutinePlanState(
-        val plan: CyclePlan,
-        val routineProgress: RoutineProgress
     )
 
     private data class RoutineFormControlState(

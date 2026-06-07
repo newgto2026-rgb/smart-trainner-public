@@ -6,6 +6,8 @@ import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.WorkoutDayPlan
+import com.smarttrainner.core.model.routineAdditionalExerciseIdPrefix
+import com.smarttrainner.core.model.routineDayInstanceId
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
@@ -194,20 +196,3 @@ class CancelLatestRoutineDayCompletionUseCase @Inject constructor(
         )
     }
 }
-
-fun routineDayInstanceId(
-    templateId: String,
-    cycleNumber: Int,
-    dayNumber: Int
-): String = "routine-day|$templateId|cycle$cycleNumber|day$dayNumber"
-
-fun routineAdditionalExerciseIdPrefix(
-    templateId: String,
-    cycleNumber: Int,
-    dayNumber: Int
-): String = "$RoutineAdditionalExerciseIdPrefix$templateId|cycle$cycleNumber|day$dayNumber|"
-
-fun PlannedExerciseId.isRoutineAdditionalExerciseId(): Boolean =
-    value.startsWith(RoutineAdditionalExerciseIdPrefix)
-
-private const val RoutineAdditionalExerciseIdPrefix = "routine-added|"

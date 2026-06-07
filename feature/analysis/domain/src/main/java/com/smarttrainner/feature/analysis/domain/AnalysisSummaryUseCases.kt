@@ -1,6 +1,6 @@
 package com.smarttrainner.feature.analysis.domain
 
-import com.smarttrainner.core.model.RoutineProgress
+import com.smarttrainner.core.model.CurrentRoutineCycle
 import java.time.ZoneId
 import javax.inject.Inject
 
@@ -8,10 +8,10 @@ class ObserveCycleSummaryUseCase @Inject constructor(
     private val repository: CycleSummaryRepository
 ) {
     operator fun invoke(
-        progress: RoutineProgress,
+        currentCycle: CurrentRoutineCycle,
         zone: ZoneId
     ) = repository.observeCycleSummary(
-        progress = progress,
+        currentCycle = currentCycle,
         zone = zone
     )
 }

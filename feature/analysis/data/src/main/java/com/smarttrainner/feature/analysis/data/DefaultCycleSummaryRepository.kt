@@ -1,44 +1,21 @@
 package com.smarttrainner.feature.analysis.data
 
-import com.smarttrainner.core.domain.CyclePlanRepository
-import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.CurrentRoutineCycle
 import com.smarttrainner.core.model.CycleSummary
-import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.feature.analysis.domain.CycleSummaryCalculator
 import com.smarttrainner.feature.analysis.domain.CycleSummaryRepository
-import java.time.Clock
-import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 
 @Singleton
 class DefaultCycleSummaryRepository @Inject constructor(
-    private val cyclePlanRepository: CyclePlanRepository,
-    private val workoutLogRepository: WorkoutLogRepository,
-    private val summaryCalculator: CycleSummaryCalculator,
-    private val clock: Clock
+    private val summaryCalculator: CycleSummaryCalculator
 ) : CycleSummaryRepository {
     override fun observeCycleSummary(
-        progress: RoutineProgress,
+        currentCycle: CurrentRoutineCycle,
         zone: ZoneId
-    ): Flow<CycleSummary> {
-        val cycleStartDate = (progress.cycleStartedAt ?: progress.startedAt)
-            ?.atZone(zone)
-            ?.toLocalDate()
-            ?: LocalDate.now(clock.withZone(zone))
-        return combine(
-            cyclePlanRepository.observeCurrentCyclePlan(progress.templateId, cycleStartDate),
-            workoutLogRepository.observeAllWorkoutLogs()
-        ) { plan, logs ->
-            summaryCalculator.calculate(
-                plan = plan,
-                logs = logs,
-                progress = progress,
-                zone = zone
-            )
-        }
-    }
+    ): Flow<CycleSummary> = flowOf(summaryCalculator.calculate(currentCycle, zone))
 }

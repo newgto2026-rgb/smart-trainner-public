@@ -1,5 +1,6 @@
 package com.smarttrainner.feature.analysis.domain
 
+import com.smarttrainner.core.model.CurrentRoutineCycle
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.CyclePlan
@@ -12,26 +13,25 @@ import javax.inject.Inject
 
 class CycleSummaryCalculator @Inject constructor() {
     fun calculate(
-        plan: CyclePlan,
-        logs: List<WorkoutLog>,
-        progress: RoutineProgress,
+        currentCycle: CurrentRoutineCycle,
         zone: ZoneId
     ): CycleSummary {
-        val cycleStartedAt = (progress.cycleStartedAt ?: progress.startedAt)
-            ?.let { LocalDateTime.ofInstant(it, zone) }
-        val currentRoutineDayInstancePrefix =
-            "routine-day|${progress.templateId}|cycle${progress.cycleNumber}|"
+        val cycleStartedAt = currentCycle.progress.cycleStartedAtDateTime(zone)
+        return calculateFromCurrentCycleLogs(
+            plan = currentCycle.plan,
+            completedLogs = currentCycle.currentCycleLogs.filter { it.completed },
+            progress = currentCycle.progress,
+            cycleStartedAt = cycleStartedAt
+        )
+    }
+
+    private fun calculateFromCurrentCycleLogs(
+        plan: CyclePlan,
+        completedLogs: List<WorkoutLog>,
+        progress: RoutineProgress,
+        cycleStartedAt: LocalDateTime?
+    ): CycleSummary {
         val plannedCount = plan.days.sumOf { it.exercises.size }
-        val completedLogs = logs.filter { log ->
-            val routineDayInstanceId = log.routineDayInstanceId
-            log.completed &&
-                if (routineDayInstanceId != null) {
-                    routineDayInstanceId.startsWith(currentRoutineDayInstancePrefix)
-                } else {
-                    cycleStartedAt == null ||
-                        !log.performedAt.isBefore(cycleStartedAt)
-                }
-        }
         val completedCount = completedLogs
             .distinctBy { it.plannedExerciseId }
             .size
@@ -94,6 +94,9 @@ class CycleSummaryCalculator @Inject constructor() {
         )
     }
 }
+
+private fun RoutineProgress.cycleStartedAtDateTime(zone: ZoneId): LocalDateTime? =
+    (cycleStartedAt ?: startedAt)?.let { LocalDateTime.ofInstant(it, zone) }
 
 private fun List<LocalDate>.longestCurrentStreak(anchor: LocalDate): Int {
     if (isEmpty()) return 0

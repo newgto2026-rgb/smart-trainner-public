@@ -245,6 +245,7 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("profile_training_level_entry").performClick()
         composeRule.onNodeWithTag("profile_training_level_advanced").performClick()
         waitForNodeWithTag("profile_routine_change_prompt")
+        assertRoutineChangePolicyTextVisibleInProfilePrompt()
         composeRule.onNodeWithTag("profile_confirm_routine_change").performClick()
         waitForNodeWithTag("training_routine_library_dialog")
         composeRule.onNodeWithTag("training_routine_library_dialog").assertIsDisplayed()
@@ -792,7 +793,8 @@ class TrainingUiTest {
         assertAnalysisShowsRecordedExercise(
             koreanName = "체스트 프레스",
             englishName = "Chest Press",
-            totalSets = "3"
+            totalSets = "3",
+            completionRate = "50%"
         )
 
         switchToDefaultRoutineFromPlanTab()
@@ -827,7 +829,8 @@ class TrainingUiTest {
         assertAnalysisShowsRecordedExercise(
             koreanName = "레그 프레스",
             englishName = "Leg Press",
-            totalSets = "3"
+            totalSets = "3",
+            completionRate = "4%"
         )
 
         switchToDefaultRoutineFromPlanTab("intermediate-body-part-4day-60")
@@ -857,7 +860,8 @@ class TrainingUiTest {
         assertAnalysisShowsRecordedExercise(
             koreanName = "랫 풀다운",
             englishName = "Lat Pulldown",
-            totalSets = "3"
+            totalSets = "3",
+            completionRate = "3%"
         )
 
         switchToCustomRoutineFromPlanTab()
@@ -989,6 +993,24 @@ class TrainingUiTest {
         ).assertIsDisplayed()
         composeRule.onNodeWithTag("training_confirm_routine_switch").performClick()
         waitForNodeWithTagToDisappear("training_routine_switch_confirm_dialog")
+    }
+
+    private fun assertRoutineChangePolicyTextVisibleInProfilePrompt() {
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("profile_routine_change_prompt")) and
+                (hasText("완료되지 않은 현재 사이클", substring = true) or
+                    hasText("unfinished current cycle", substring = true))
+        ).assertIsDisplayed()
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("profile_routine_change_prompt")) and
+                (hasText("운동 기록은 삭제", substring = true) or
+                    hasText("workout records", substring = true))
+        ).assertIsDisplayed()
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("profile_routine_change_prompt")) and
+                (hasText("완료된 이전 사이클", substring = true) or
+                    hasText("completed past cycles", substring = true))
+        ).assertIsDisplayed()
     }
 
     private fun signInGoogleUserWithoutProfile(nickname: String) {
@@ -1236,10 +1258,16 @@ class TrainingUiTest {
         }
     }
 
-    private fun assertAnalysisShowsRecordedExercise(koreanName: String, englishName: String, totalSets: String) {
+    private fun assertAnalysisShowsRecordedExercise(
+        koreanName: String,
+        englishName: String,
+        totalSets: String,
+        completionRate: String
+    ) {
         composeRule.onNodeWithTag("training_tab_analysis").performClick()
         waitForNodeWithTag("training_summary_band")
         composeRule.onNodeWithTag("training_summary_scope").assertIsDisplayed()
+        assertTextInsideTag("training_summary_completion_rate", completionRate)
         assertTextInsideTag("training_summary_total_sets", totalSets)
         composeRule.onNodeWithTag("training_recent_records_card").assertIsDisplayed()
         composeRule.onNodeWithTag("training_recent_records_scope").assertIsDisplayed()
