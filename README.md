@@ -105,7 +105,7 @@ Smart Trainner는 로컬 우선 경험을 기본으로 한다.
 
 - 정규 루틴 일차: `routineDayInstanceId(templateId, cycleNumber, dayNumber)`
 - 루틴 도중 추가 운동: `routineAdditionalExerciseIdPrefix(templateId, cycleNumber, dayNumber)`
-- 현재 사이클 로그: 현재 `routineDayInstanceId` prefix 또는 현재 plan의 `plannedExerciseId`/추가 운동 prefix와 `cycleStartedAt` 기준으로 필터링
+- 현재 사이클 로그: 현재 `routineDayInstanceId` prefix 또는 현재 plan의 `plannedExerciseId`/추가 운동 사이클 prefix(`routineAdditionalExerciseCyclePrefix`)와 `cycleStartedAt` 기준으로 필터링
 
 정책적으로 삭제 가능한 것은 "완료되지 않은 현재 사이클"뿐이다. 루틴을 중간에 바꾸면 현재 사이클의 진행도, 배정 날짜, 운동 기록은 서버 확인 후 삭제되고 새 루틴으로 대체된다. 완료된 과거 사이클 기록은 삭제하지 않으며, 분석 화면은 현재 사이클 요약(`currentCycleLogs`)과 최근 기록(`allLogs`)을 분리해서 보여준다.
 
