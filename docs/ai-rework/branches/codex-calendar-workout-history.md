@@ -117,9 +117,23 @@
 - Finding: Calendar implementation missed MyFirstApp latest month/week collapse persistence, rendered cramped numeric day indicators, and exposed workout time/duration information that can imply real-time logging accuracy.
 - Fix Scope: Added feature-owned calendar preferences domain/data separation, persisted month/week expansion, MyFirstApp-style selected-week rendering, stable dot-only day indicators, shorter header copy, and removed time/duration display from calendar agenda items.
 - Fix Size: Medium
-- Rework Commit: `HEAD`
+- Rework Commit: `eeb5a1d0`
 - Verification: `./gradlew :feature:calendar:domain:test :feature:calendar:impl:testDebugUnitTest :core:datastore:testDebugUnitTest`; `./gradlew :feature:calendar:data:testDebugUnitTest :feature:calendar:api:lintDebug :feature:calendar:data:lintDebug :feature:calendar:impl:lintDebug :app:lintDebug :app:assembleDebug`; `./gradlew :feature:calendar:impl:lintDebug :app:assembleDebug`; guarded `./gradlew :app:installDebug` on emulator-5556 with screenshots `tmp/manual-shots/calendar_recheck_04_final_week.png` and `tmp/manual-shots/calendar_recheck_05_workout_item.png`; guarded `./gradlew connectedDebugAndroidTest`.
 - Lesson: Reference projects must be fetched and read from latest `origin/main`, and visual acceptance for tab/collapse work needs actual emulator smoke screenshots before PR updates.
+
+### GHA-27088507005-ui-excluded-coverage
+- Source: GitHub Actions run `27088507005`, check `Build, Unit Test, Lint`, step `Run JVM unit tests`.
+- Severity: P1
+- Attribution: AI
+- Automation Possible: Yes
+- Automation Added: Yes
+- Status: verified
+- Finding: The CI-only `uiExcludedTestCoverageVerification` gate failed because `UpdateCalendarMonthExpandedUseCase.invoke` was represented as an uncovered expression-body line in the JaCoCo gate report.
+- Fix Scope: Calendar preferences update use case coverage stabilization and repository failure delegation test.
+- Fix Size: Small
+- Rework Commit: `HEAD`
+- Verification: `./gradlew --stacktrace :feature:calendar:domain:test uiExcludedTestCoverageVerification -Psmarttrainner.serverBaseUrl=https://ci.smart-trainner.invalid/`; `CI=true ./gradlew --stacktrace test -Psmarttrainner.serverBaseUrl=https://ci.smart-trainner.invalid/`.
+- Lesson: New domain use cases included in the 100% UI-excluded coverage gate need the full CI `test` coverage gate, not only module tests, before push.
 
 ## External Event Coverage
 - `PRRT_kwDOSsEQm86Ho7mt`: covered by rework event above
@@ -130,6 +144,7 @@
 - `PRRT_kwDOSsEQm86Ho7m4`: covered by rework event above
 - `PRRT_kwDOSsEQm86Ho7m5`: covered by rework event above
 - `USER-20260607-calendar-latest-main-collapse-ui`: covered by rework event above
+- `GHA-27088507005-ui-excluded-coverage`: covered by rework event above
 
 ## Non-Rework Follow-up Commits
 - None

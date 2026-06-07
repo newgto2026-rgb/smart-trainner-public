@@ -34,6 +34,20 @@ class CalendarPreferencesUseCasesTest {
         assertThat(repository.monthExpanded.value).isFalse()
         assertThat(repository.updates).containsExactly(false)
     }
+
+    @Test
+    fun updateCalendarMonthExpandedUseCase_returnsRepositoryFailure() = runTest {
+        val failure = IllegalStateException("preferences unavailable")
+        val repository = FakeCalendarPreferencesRepository(initialMonthExpanded = true).apply {
+            nextUpdateResult = Result.failure(failure)
+        }
+        val useCase = UpdateCalendarMonthExpandedUseCase(repository)
+
+        val result = useCase(false)
+
+        assertThat(result.exceptionOrNull()).isSameInstanceAs(failure)
+        assertThat(repository.updates).containsExactly(false)
+    }
 }
 
 private class FakeCalendarPreferencesRepository(
@@ -41,12 +55,17 @@ private class FakeCalendarPreferencesRepository(
 ) : CalendarPreferencesRepository {
     val monthExpanded = MutableStateFlow(initialMonthExpanded)
     val updates = mutableListOf<Boolean>()
+    var nextUpdateResult: Result<Unit> = Result.success(Unit)
 
     override fun observeMonthExpanded(): Flow<Boolean> = monthExpanded
 
     override suspend fun setMonthExpanded(isExpanded: Boolean): Result<Unit> {
         updates += isExpanded
-        monthExpanded.value = isExpanded
-        return Result.success(Unit)
+        return nextUpdateResult.also { result ->
+            if (result.isSuccess) {
+                monthExpanded.value = isExpanded
+            }
+            nextUpdateResult = Result.success(Unit)
+        }
     }
 }

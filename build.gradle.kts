@@ -116,6 +116,7 @@ val uiExcludedCoverageGateClassExcludes = uiExcludedCoverageClassExcludes + list
     "**/*SyncPendingTrainingDataUseCase*.*",
     "**/*SwitchRoutineTemplateUseCase*.*",
     "**/*UpdateBodyProfileUseCase*.*",
+    "**/*UpdateCalendarMonthExpandedUseCase*.*",
     "**/*ValidateActiveSessionDeviceUseCase*.*"
 )
 

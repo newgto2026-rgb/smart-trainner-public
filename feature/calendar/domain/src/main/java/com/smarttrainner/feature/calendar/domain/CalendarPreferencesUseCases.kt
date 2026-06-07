@@ -12,6 +12,7 @@ class ObserveCalendarMonthExpandedUseCase @Inject constructor(
 class UpdateCalendarMonthExpandedUseCase @Inject constructor(
     private val repository: CalendarPreferencesRepository
 ) {
-    suspend operator fun invoke(isExpanded: Boolean): Result<Unit> =
-        repository.setMonthExpanded(isExpanded)
+    suspend operator fun invoke(isExpanded: Boolean): Result<Unit> {
+        return repository.setMonthExpanded(isExpanded)
+    }
 }
