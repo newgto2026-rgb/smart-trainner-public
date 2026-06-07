@@ -197,7 +197,7 @@ class RoutineViewModel @Inject constructor(
             }
         }
         val routineDayDate = nextRoutineDayInstanceId?.let { instanceId ->
-            data.routineProgress.routineDateFor(instanceId, data.logs)
+            data.routineProgress.routineDateFor(instanceId)
         }
         val previousRoutineDayDate = activeTemplate
             ?.let { template ->
@@ -209,7 +209,7 @@ class RoutineViewModel @Inject constructor(
                     )
                 }
             }
-            ?.let { instanceId -> data.routineProgress.routineDateFor(instanceId, data.logs) }
+            ?.let { instanceId -> data.routineProgress.routineDateFor(instanceId) }
         val currentDayPlannedExerciseIds = nextRoutineDay
             ?.exercises
             ?.map { it.id }
@@ -1030,14 +1030,8 @@ class RoutineViewModel @Inject constructor(
         else -> null
     }
 
-    private fun RoutineProgress.routineDateFor(
-        routineDayInstanceId: String,
-        logs: List<WorkoutLog>
-    ): LocalDate? =
+    private fun RoutineProgress.routineDateFor(routineDayInstanceId: String): LocalDate? =
         routineDayDates[routineDayInstanceId]
-            ?: logs.firstOrNull { it.routineDayInstanceId == routineDayInstanceId }
-                ?.performedAt
-                ?.toLocalDate()
 
     private fun previousRoutineDayInstanceId(
         template: PlanTemplate,

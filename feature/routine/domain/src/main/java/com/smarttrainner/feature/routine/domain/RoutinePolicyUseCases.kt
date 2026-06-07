@@ -225,11 +225,12 @@ class ResolveRoutineCycleCompletionUseCase @Inject constructor() {
         val instanceLogs = routineDayInstanceId?.let { instanceId ->
             eligibleLogs.filter { it.routineDayInstanceId == instanceId }
         }.orEmpty()
-        val completionLogs = if (instanceLogs.isEmpty()) {
-            eligibleLogs
-        } else {
-            eligibleLogs.filter { log ->
-                log.routineDayInstanceId != null || log.plannedExerciseId !in currentDayPlannedExerciseIds
+        val completionLogs = when {
+            routineDayInstanceId == null -> eligibleLogs
+            instanceLogs.isNotEmpty() -> instanceLogs
+            else -> eligibleLogs.filter { log ->
+                log.routineDayInstanceId == null &&
+                    log.plannedExerciseId in currentDayPlannedExerciseIds
             }
         }
         return completionLogs.asSequence()

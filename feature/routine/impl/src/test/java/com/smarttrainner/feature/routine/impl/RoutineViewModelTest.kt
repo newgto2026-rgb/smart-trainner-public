@@ -506,6 +506,46 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun uiState_doesNotRestoreCurrentScheduleDateFromWorkoutLog() = runTest {
+        val routineDayInstanceId = routineDayInstanceId(
+            templateId = "intermediate-body-part-4day",
+            cycleNumber = 1,
+            dayNumber = 1
+        )
+        repository.setLogs(
+            listOf(
+                repository.completedLog(
+                    dayIndex = 0,
+                    performedAt = LocalDateTime.of(2026, 5, 24, 12, 0),
+                    routineDayInstanceId = routineDayInstanceId
+                )
+            )
+        )
+        repository.progress.value = repository.progress.value.copy(
+            routineDayDates = emptyMap()
+        )
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi == null) {
+                state = awaitItem()
+            }
+
+            assertThat(state.nextRoutineDayUi?.routineDayInstanceId).isEqualTo(routineDayInstanceId)
+            assertThat(state.nextRoutineDayUi?.routineDayDate).isNull()
+            assertThat(state.routineDayDatePicker).isNull()
+
+            viewModel.requestStartWorkout {}
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.routineDayDatePicker?.reason)
+                .isEqualTo(RoutineDayDatePickerReason.START_WORKOUT)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun requestCompleteCurrentRoutineDay_requiresConfirmationBeforeWrappingAfterLastDay() = runTest {
         repository.progress.value = RoutineProgress(
             templateId = "intermediate-body-part-4day",
@@ -1703,7 +1743,8 @@ private class FakeTrainingRepository :
     fun completedLog(
         dayIndex: Int,
         performedAt: LocalDateTime,
-        setEntries: List<WorkoutSetLog> = emptyList()
+        setEntries: List<WorkoutSetLog> = emptyList(),
+        routineDayInstanceId: String? = null
     ): WorkoutLog {
         val planned = plannedExercise(dayIndex)
         return WorkoutLog(
@@ -1718,7 +1759,8 @@ private class FakeTrainingRepository :
             durationMinutes = planned.durationMinutes,
             memo = "",
             completed = true,
-            setEntries = setEntries
+            setEntries = setEntries,
+            routineDayInstanceId = routineDayInstanceId
         )
     }
 
