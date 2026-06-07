@@ -1,0 +1,179 @@
+package com.smarttrainner.feature.calendar.impl
+
+import androidx.lifecycle.SavedStateHandle
+import app.cash.turbine.test
+import com.google.common.truth.Truth.assertThat
+import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.DifficultyLevel
+import com.smarttrainner.core.model.EquipmentType
+import com.smarttrainner.core.model.Exercise
+import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.MuscleGroup
+import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.UserSessionId
+import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.core.model.WorkoutLogId
+import com.smarttrainner.feature.calendar.domain.ObserveWorkoutCalendarMonthUseCase
+import java.time.Clock
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class CalendarViewModelTest {
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val fixedClock = Clock.fixed(Instant.parse("2026-05-24T12:00:00Z"), ZoneOffset.UTC)
+
+    @Test
+    fun uiState_restoresMonthAndSelectedDateFromSavedState() = runTest {
+        val repository = FakeCalendarRepository()
+        repository.logs.value = listOf(workoutLog(id = 1, exerciseId = "bench", day = 9))
+        val viewModel = viewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "calendar_month" to "2026-05",
+                    "calendar_selected_date" to "2026-05-09"
+                )
+            )
+        )
+
+        viewModel.uiState.test {
+            skipItems(1)
+            val state = awaitItem()
+
+            assertThat(state.currentMonth.toString()).isEqualTo("2026-05")
+            assertThat(state.selectedDate.toString()).isEqualTo("2026-05-09")
+            assertThat(state.selectedDateWorkouts.map { it.exerciseName }).containsExactly("Bench press")
+            assertThat(state.days.single { it.date.toString() == "2026-05-09" }.workoutCount)
+                .isEqualTo(1)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun onDateClick_updatesSelectedDateWorkoutsWithinSameMonth() = runTest {
+        val repository = FakeCalendarRepository()
+        repository.logs.value = listOf(
+            workoutLog(id = 1, exerciseId = "bench", day = 9),
+            workoutLog(id = 2, exerciseId = "row", day = 10)
+        )
+        val viewModel = viewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "calendar_month" to "2026-05",
+                    "calendar_selected_date" to "2026-05-09"
+                )
+            )
+        )
+
+        viewModel.uiState.test {
+            skipItems(1)
+            assertThat(awaitItem().selectedDateWorkouts.map { it.exerciseName })
+                .containsExactly("Bench press")
+
+            viewModel.onAction(CalendarAction.OnDateClick(java.time.LocalDate.of(2026, 5, 10)))
+            val state = awaitItem()
+
+            assertThat(state.selectedDate.toString()).isEqualTo("2026-05-10")
+            assertThat(state.selectedDateWorkouts.map { it.exerciseName }).containsExactly("Row")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    private fun viewModel(
+        repository: FakeCalendarRepository,
+        savedStateHandle: SavedStateHandle = SavedStateHandle()
+    ) = CalendarViewModel(
+        savedStateHandle = savedStateHandle,
+        observeWorkoutCalendarMonth = ObserveWorkoutCalendarMonthUseCase(repository, repository),
+        clock = fixedClock
+    )
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class MainDispatcherRule(
+    private val dispatcher: TestDispatcher = StandardTestDispatcher()
+) : TestWatcher() {
+    override fun starting(description: Description) {
+        Dispatchers.setMain(dispatcher)
+    }
+
+    override fun finished(description: Description) {
+        Dispatchers.resetMain()
+    }
+}
+
+private class FakeCalendarRepository : WorkoutLogRepository, ExerciseRepository {
+    val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
+    private val exercises = MutableStateFlow(
+        listOf(
+            exercise("bench", "Bench press", MuscleGroup.CHEST),
+            exercise("row", "Row", MuscleGroup.BACK)
+        )
+    )
+
+    override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
+
+    override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs
+
+    override fun observeExercises(): Flow<List<Exercise>> = exercises
+
+    override suspend fun getExercise(id: ExerciseId): Exercise? =
+        exercises.value.firstOrNull { it.id == id }
+}
+
+private fun workoutLog(
+    id: Long,
+    exerciseId: String,
+    day: Int
+) = WorkoutLog(
+    id = WorkoutLogId(id),
+    sessionId = UserSessionId("session"),
+    plannedExerciseId = PlannedExerciseId("planned_$id"),
+    exerciseId = ExerciseId(exerciseId),
+    performedAt = LocalDateTime.of(2026, 5, day, 18, 0),
+    sets = 3,
+    reps = 10,
+    weightKg = 40.0,
+    durationMinutes = null,
+    memo = "",
+    completed = true
+)
+
+private fun exercise(
+    id: String,
+    name: String,
+    muscleGroup: MuscleGroup
+) = Exercise(
+    id = ExerciseId(id),
+    name = name,
+    muscleGroup = muscleGroup,
+    equipment = EquipmentType.MACHINE,
+    difficulty = DifficultyLevel.INTERMEDIATE,
+    imageKey = id,
+    summary = "",
+    instructions = emptyList(),
+    safetyCues = emptyList(),
+    defaultSets = 3,
+    defaultRepRange = 8..12,
+    defaultDurationMinutes = null,
+    restSeconds = 90
+)

@@ -14,6 +14,7 @@ import com.smarttrainner.app.di.ThemePreferenceStore
 import com.smarttrainner.core.designsystem.SmartTrainnerTheme
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
+import com.smarttrainner.feature.calendar.api.CalendarFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
@@ -26,6 +27,9 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var analysisFeatureEntry: AnalysisFeatureEntry
+
+    @Inject
+    lateinit var calendarFeatureEntry: CalendarFeatureEntry
 
     @Inject
     lateinit var exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry
@@ -66,6 +70,7 @@ class MainActivity : ComponentActivity() {
             SmartTrainnerTheme(themeTone = selectedThemeTone) {
                 SmartTrainnerApp(
                     analysisFeatureEntry = analysisFeatureEntry,
+                    calendarFeatureEntry = calendarFeatureEntry,
                     exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
                     exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
                     routineFeatureEntry = routineFeatureEntry,

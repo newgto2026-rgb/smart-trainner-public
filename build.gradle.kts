@@ -69,6 +69,7 @@ val uiExcludedCoverageClassExcludes = listOf(
 val uiExcludedCoverageGateProjects = setOf(
     ":core:domain",
     ":feature:analysis:domain",
+    ":feature:calendar:domain",
     ":feature:routine:domain",
     ":feature:workout:domain"
 )
@@ -343,6 +344,7 @@ val checkModuleBoundaries by tasks.registering {
         val allowedFeaturePrivateModules = setOf(
             ":feature:analysis:domain",
             ":feature:analysis:data",
+            ":feature:calendar:domain",
             ":feature:exercise:domain",
             ":feature:routine:domain",
             ":feature:routine:data",
@@ -359,6 +361,7 @@ val checkModuleBoundaries by tasks.registering {
         )
         val allowedAppFeatureImplDependencies = setOf(
             ":app" to ":feature:analysis:impl",
+            ":app" to ":feature:calendar:impl",
             ":app" to ":feature:exercise:impl",
             ":app" to ":feature:routine:impl",
             ":app" to ":feature:workout:impl"
