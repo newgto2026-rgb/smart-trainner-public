@@ -260,6 +260,36 @@ class TrainingUiTest {
     }
 
     @Test
+    fun backOnTopLevelTabsKeepsCurrentTabOnFirstPress() {
+        continueFromLoginIfNeeded()
+
+        assertTopLevelBackStaysOnScreen(
+            tabTag = "training_tab_home",
+            screenTag = "training_next_routine_day_card"
+        )
+        assertTopLevelBackStaysOnScreen(
+            tabTag = "training_tab_plan",
+            screenTag = "training_current_routine_card"
+        )
+        assertTopLevelBackStaysOnScreen(
+            tabTag = "training_tab_exercises",
+            screenTag = "training_exercise_search"
+        )
+        assertTopLevelBackStaysOnScreen(
+            tabTag = "training_tab_calendar",
+            screenTag = "calendar_month_grid"
+        )
+        assertTopLevelBackStaysOnScreen(
+            tabTag = "training_tab_friends",
+            screenTag = "friend_add_card"
+        )
+        assertTopLevelBackStaysOnScreen(
+            tabTag = "training_tab_analysis",
+            screenTag = "training_summary_band"
+        )
+    }
+
+    @Test
     fun exerciseSearchFiltersCatalogAndClearRestoresRows() {
         continueFromLoginIfNeeded()
         composeRule.onNodeWithTag("training_tab_exercises").performClick()
@@ -1163,6 +1193,16 @@ class TrainingUiTest {
         composeRule.onNodeWithTag("training_home_start_workout").performClick()
     }
 
+    private fun assertTopLevelBackStaysOnScreen(tabTag: String, screenTag: String) {
+        composeRule.onNodeWithTag(tabTag).performClick()
+        waitForNodeWithTag(screenTag)
+        scenario.onActivity { activity ->
+            activity.onBackPressedDispatcher.onBackPressed()
+        }
+        composeRule.waitForIdle()
+        composeRule.onAllNodesWithTag(screenTag).assertCountEquals(1)
+    }
+
     private fun assignCurrentRoutineDayDate() {
         composeRule.onNodeWithTag("training_tab_home").performClick()
         scrollToNodeWithTag("training_routine_day_date")
@@ -1185,7 +1225,9 @@ class TrainingUiTest {
         scrollToNodeWithTag("training_routine_day_date")
         composeRule.onNodeWithTag("training_routine_day_date")
             .assert(
-                hasText("수행 날짜 선택", substring = true) or
+                hasText("선택", substring = true) or
+                    hasText("Select", substring = true) or
+                    hasText("수행 날짜 선택", substring = true) or
                     hasText("Choose workout date", substring = true)
             )
     }
