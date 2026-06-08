@@ -1,6 +1,6 @@
 <resources>
     <string name="friend_route_title">Friends</string>
-    <string name="friend_route_subtitle">Requests %1$d · Friends %2$d</string>
+    <string name="friend_route_subtitle">Requests %1$s · Friends %2$s</string>
     <string name="friend_add_title">Add by nickname</string>
     <string name="friend_nickname_label">Friend nickname</string>
     <string name="friend_nickname_placeholder">Enter nickname</string>

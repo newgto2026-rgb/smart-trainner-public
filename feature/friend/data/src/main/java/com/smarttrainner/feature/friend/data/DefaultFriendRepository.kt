@@ -14,6 +14,8 @@ import com.smarttrainner.feature.friend.domain.FriendRequestStatus
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -55,39 +57,54 @@ class DefaultFriendRepository @Inject constructor(
             sessionId = sessionId,
             request = SendFriendRequestRequest(nickname = nickname.trim())
         ).data
-        refreshForSession(sessionId)
+        refreshAfterMutation(sessionId)
         request.toModel()
     }
 
     override suspend fun acceptRequest(id: FriendRequestId): Result<FriendConnection> = runCatching {
         val sessionId = activeSessionResolver.sessionId()
         val friend = friendNetworkApi.acceptFriendRequest(sessionId, id.value).data
-        refreshForSession(sessionId)
+        refreshAfterMutation(sessionId)
         friend.toEntity(sessionId).toModel()
     }
 
     override suspend fun declineRequest(id: FriendRequestId): Result<Unit> = runCatching {
         val sessionId = activeSessionResolver.sessionId()
         friendNetworkApi.declineFriendRequest(sessionId, id.value)
-        refreshForSession(sessionId)
+        refreshAfterMutation(sessionId)
+        Unit
     }
 
     override suspend fun removeFriend(friendSessionId: UserSessionId): Result<Unit> = runCatching {
         val sessionId = activeSessionResolver.sessionId()
         friendNetworkApi.removeFriend(sessionId, friendSessionId.value)
-        refreshForSession(sessionId)
+        refreshAfterMutation(sessionId)
+        Unit
     }
 
-    private suspend fun refreshForSession(sessionId: String) {
-        val friends = friendNetworkApi.getFriends(sessionId).data
-        val incoming = friendNetworkApi.getFriendRequests(
-            sessionId = sessionId,
-            box = FriendRequestDirection.Incoming.storageValue
-        ).data
-        val outgoing = friendNetworkApi.getFriendRequests(
-            sessionId = sessionId,
-            box = FriendRequestDirection.Outgoing.storageValue
-        ).data
+    private suspend fun refreshAfterMutation(sessionId: String) {
+        runCatching { refreshForSession(sessionId) }
+    }
+
+    private suspend fun refreshForSession(sessionId: String) = coroutineScope {
+        val friendsDeferred = async { friendNetworkApi.getFriends(sessionId).data }
+        val incomingDeferred = async {
+            friendNetworkApi.getFriendRequests(
+                sessionId = sessionId,
+                box = FriendRequestDirection.Incoming.storageValue
+            ).data
+        }
+        val outgoingDeferred = async {
+            friendNetworkApi.getFriendRequests(
+                sessionId = sessionId,
+                box = FriendRequestDirection.Outgoing.storageValue
+            ).data
+        }
+
+        val friends = friendsDeferred.await()
+        val incoming = incomingDeferred.await()
+        val outgoing = outgoingDeferred.await()
+
         friendDao.replaceConnections(
             ownerSessionId = sessionId,
             connections = friends.map { it.toEntity(sessionId) }

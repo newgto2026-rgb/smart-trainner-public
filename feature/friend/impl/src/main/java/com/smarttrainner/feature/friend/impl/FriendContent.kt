@@ -95,7 +95,7 @@ internal fun FriendAddCard(
                     placeholder = { Text(stringResource(R.string.friend_nickname_placeholder)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Words,
+                        capitalization = KeyboardCapitalization.None,
                         keyboardType = KeyboardType.Text
                     ),
                     trailingIcon = {
