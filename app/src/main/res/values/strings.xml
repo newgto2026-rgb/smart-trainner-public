@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Smart Trainer</string>
+    <string name="app_back_exit_prompt">Press Back again to exit.</string>
     <string name="app_sync_in_progress">Syncing</string>
     <string name="login_subtitle">Manage your routine cycle and set-by-set logs in one place.</string>
     <string name="login_start_title">Google sign-in</string>

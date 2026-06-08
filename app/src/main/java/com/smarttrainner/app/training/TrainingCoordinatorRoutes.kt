@@ -18,7 +18,9 @@ fun TrainingHomeRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
-    viewModelStoreOwner: ViewModelStoreOwner
+    viewModelStoreOwner: ViewModelStoreOwner,
+    topLevelBackEnabled: Boolean = false,
+    onTopLevelBack: () -> Unit = {}
 ) {
     val viewModel = sharedTrainingViewModel(viewModelStoreOwner)
     val routineRouteState = rememberRoutineRouteState(
@@ -32,6 +34,8 @@ fun TrainingHomeRoute(
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         routineSessionCoordinator = routineRouteState.sessionCoordinator,
         viewModel = viewModel,
+        topLevelBackEnabled = topLevelBackEnabled,
+        onTopLevelBack = onTopLevelBack,
         routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {
         routineFeatureEntry.HomeSummaryRoute(
@@ -49,7 +53,9 @@ fun TrainingRoutineRoute(
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     viewModelStoreOwner: ViewModelStoreOwner,
     routineLibraryOpenRequest: Int = 0,
-    onRoutineLibraryOpenRequestConsumed: (Int) -> Unit = {}
+    onRoutineLibraryOpenRequestConsumed: (Int) -> Unit = {},
+    topLevelBackEnabled: Boolean = false,
+    onTopLevelBack: () -> Unit = {}
 ) {
     val viewModel = sharedTrainingViewModel(viewModelStoreOwner)
     val routineRouteState = rememberRoutineRouteState(
@@ -65,6 +71,8 @@ fun TrainingRoutineRoute(
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         routineSessionCoordinator = routineRouteState.sessionCoordinator,
         viewModel = viewModel,
+        topLevelBackEnabled = topLevelBackEnabled,
+        onTopLevelBack = onTopLevelBack,
         routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {
         routineFeatureEntry.Route(
@@ -81,7 +89,9 @@ fun TrainingExercisesRoute(
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
-    viewModelStoreOwner: ViewModelStoreOwner
+    viewModelStoreOwner: ViewModelStoreOwner,
+    topLevelBackEnabled: Boolean = false,
+    onTopLevelBack: () -> Unit = {}
 ) {
     val viewModel = sharedTrainingViewModel(viewModelStoreOwner)
     val trainingState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -96,6 +106,8 @@ fun TrainingExercisesRoute(
         workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
         routineSessionCoordinator = routineRouteState.sessionCoordinator,
         viewModel = viewModel,
+        topLevelBackEnabled = topLevelBackEnabled,
+        onTopLevelBack = onTopLevelBack,
         routineDialogs = { routineFeatureEntry.Dialogs(routineRouteState) }
     ) {
         exerciseCatalogFeatureEntry.Route(

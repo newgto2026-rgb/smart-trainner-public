@@ -1,6 +1,11 @@
 package com.smarttrainner.app
 
-import com.smarttrainner.R
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.os.SystemClock
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,6 +57,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -61,6 +67,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -73,6 +80,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.smarttrainner.R
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import com.smarttrainner.core.designsystem.swatchColor
@@ -92,6 +100,7 @@ import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
 
 private const val TrainingGraphRoute = "training_graph"
+private const val ExitBackPressIntervalMillis = 2_000L
 
 @Composable
 fun SmartTrainnerMainScreen(
@@ -115,9 +124,27 @@ fun SmartTrainnerMainScreen(
     val destinations = SmartTrainnerDestination.entries
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: SmartTrainnerDestination.Home.route
+    val context = LocalContext.current
+    val exitPrompt = stringResource(R.string.app_back_exit_prompt)
     var profileOpen by rememberSaveable { mutableStateOf(false) }
     var routineChangePromptOpen by rememberSaveable { mutableStateOf(false) }
     var routineLibraryOpenRequest by rememberSaveable { mutableStateOf(0) }
+    var lastRootBackPressedAt by rememberSaveable(currentRoute) { mutableLongStateOf(0L) }
+    val topLevelBackEnabled = !profileOpen && !routineChangePromptOpen
+    val onTopLevelBack: () -> Unit = remember(currentRoute, context, exitPrompt) {
+        {
+            val now = SystemClock.elapsedRealtime()
+            if (
+                lastRootBackPressedAt != 0L &&
+                now - lastRootBackPressedAt <= ExitBackPressIntervalMillis
+            ) {
+                context.findActivity()?.finish()
+            } else {
+                lastRootBackPressedAt = now
+                Toast.makeText(context, exitPrompt, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         CompositionLocalProvider(
@@ -172,7 +199,9 @@ fun SmartTrainnerMainScreen(
                                                 exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
                                                 routineFeatureEntry = routineFeatureEntry,
                                                 workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-                                                viewModelStoreOwner = trainingViewModelStoreOwner
+                                                viewModelStoreOwner = trainingViewModelStoreOwner,
+                                                topLevelBackEnabled = topLevelBackEnabled,
+                                                onTopLevelBack = onTopLevelBack
                                             )
                                             SmartTrainnerDestination.Routine -> TrainingRoutineRoute(
                                                 exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
@@ -184,14 +213,18 @@ fun SmartTrainnerMainScreen(
                                                     if (routineLibraryOpenRequest == request) {
                                                         routineLibraryOpenRequest = 0
                                                     }
-                                                }
+                                                },
+                                                topLevelBackEnabled = topLevelBackEnabled,
+                                                onTopLevelBack = onTopLevelBack
                                             )
                                             SmartTrainnerDestination.Exercises -> TrainingExercisesRoute(
                                                 exerciseCatalogFeatureEntry = exerciseCatalogFeatureEntry,
                                                 exerciseDetailFeatureEntry = exerciseDetailFeatureEntry,
                                                 routineFeatureEntry = routineFeatureEntry,
                                                 workoutRecordingFeatureEntry = workoutRecordingFeatureEntry,
-                                                viewModelStoreOwner = trainingViewModelStoreOwner
+                                                viewModelStoreOwner = trainingViewModelStoreOwner,
+                                                topLevelBackEnabled = topLevelBackEnabled,
+                                                onTopLevelBack = onTopLevelBack
                                             )
                                             SmartTrainnerDestination.Calendar,
                                             SmartTrainnerDestination.Analysis -> Unit
@@ -200,9 +233,11 @@ fun SmartTrainnerMainScreen(
                                 }
                         }
                         composable(SmartTrainnerDestination.Calendar.route) {
+                            BackHandler(enabled = topLevelBackEnabled, onBack = onTopLevelBack)
                             calendarFeatureEntry.Route()
                         }
                         composable(SmartTrainnerDestination.Analysis.route) {
+                            BackHandler(enabled = topLevelBackEnabled, onBack = onTopLevelBack)
                             analysisFeatureEntry.Route()
                         }
                     }
@@ -326,6 +361,11 @@ private fun ProfileDrawer(
     var themeSettingsOpen by rememberSaveable { mutableStateOf(false) }
     var trainingLevelSettingsOpen by rememberSaveable { mutableStateOf(false) }
     var bodyProfileSettingsOpen by rememberSaveable { mutableStateOf(false) }
+
+    BackHandler(
+        enabled = !themeSettingsOpen && !trainingLevelSettingsOpen && !bodyProfileSettingsOpen,
+        onBack = onDismiss
+    )
 
     Box(
         modifier = modifier
@@ -905,6 +945,12 @@ private fun Double.toDisplayWeight(): String =
 
 private fun UserSession.profileInitial(): String =
     nickname.ifBlank { displayName }.trim().take(1).uppercase()
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 
 @Composable
 private fun SmartTrainnerBottomBar(
