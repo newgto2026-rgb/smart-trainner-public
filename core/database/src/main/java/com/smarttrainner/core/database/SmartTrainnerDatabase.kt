@@ -9,12 +9,15 @@ import androidx.room.RoomDatabase
         WorkoutSetLogEntity::class,
         CustomRoutineEntity::class,
         CustomRoutineDayEntity::class,
-        CustomRoutineExerciseEntity::class
+        CustomRoutineExerciseEntity::class,
+        FriendConnectionEntity::class,
+        FriendRequestEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 abstract class SmartTrainnerDatabase : RoomDatabase() {
     abstract fun workoutLogDao(): WorkoutLogDao
     abstract fun customRoutineDao(): CustomRoutineDao
+    abstract fun friendDao(): FriendDao
 }

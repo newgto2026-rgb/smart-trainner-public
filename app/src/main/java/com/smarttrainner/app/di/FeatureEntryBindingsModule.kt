@@ -9,6 +9,8 @@ import com.smarttrainner.feature.calendar.impl.CalendarFeatureEntryImpl
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.exercise.impl.ExerciseFeatureEntryImpl
+import com.smarttrainner.feature.friend.api.FriendFeatureEntry
+import com.smarttrainner.feature.friend.impl.FriendFeatureEntryImpl
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.routine.impl.RoutineFeatureEntryImpl
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
@@ -35,6 +37,9 @@ abstract class FeatureEntryBindingsModule {
 
     @Binds
     abstract fun bindExerciseMediaRenderer(impl: DefaultExerciseMediaRenderer): ExerciseMediaRenderer
+
+    @Binds
+    abstract fun bindFriendFeatureEntry(impl: FriendFeatureEntryImpl): FriendFeatureEntry
 
     @Binds
     abstract fun bindRoutineFeatureEntry(impl: RoutineFeatureEntryImpl): RoutineFeatureEntry

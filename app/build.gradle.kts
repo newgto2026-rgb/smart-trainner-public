@@ -6,6 +6,10 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
 }
 
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.smarttrainner"
     compileSdk = 36
@@ -72,6 +76,10 @@ dependencies {
     implementation(project(":feature:calendar:impl"))
     implementation(project(":feature:exercise:api"))
     implementation(project(":feature:exercise:impl"))
+    implementation(project(":feature:friend:api"))
+    implementation(project(":feature:friend:data"))
+    implementation(project(":feature:friend:domain"))
+    implementation(project(":feature:friend:impl"))
     implementation(project(":feature:routine:api"))
     implementation(project(":feature:routine:data"))
     implementation(project(":feature:routine:domain"))
@@ -95,6 +103,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.material)
     implementation(libs.googleid)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
     implementation(libs.okhttp)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -124,6 +134,7 @@ dependencies {
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.androidx.room.runtime)
     androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
     kaptAndroidTest(libs.hilt.compiler)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

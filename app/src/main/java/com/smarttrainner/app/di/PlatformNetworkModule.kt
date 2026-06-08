@@ -1,6 +1,8 @@
 package com.smarttrainner.app.di
 
 import com.smarttrainner.core.domain.DeviceSessionStore
+import com.smarttrainner.core.network.FriendNetworkApi
+import com.smarttrainner.core.network.PushTokenNetworkApi
 import com.smarttrainner.core.network.RoutineProgressNetworkApi
 import com.smarttrainner.core.network.RoutineNetworkApi
 import com.smarttrainner.core.network.SessionNetworkApi
@@ -91,6 +93,16 @@ object PlatformNetworkModule {
     @Singleton
     fun provideWorkoutLogNetworkApi(retrofit: Retrofit): WorkoutLogNetworkApi =
         retrofit.create(WorkoutLogNetworkApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideFriendNetworkApi(retrofit: Retrofit): FriendNetworkApi =
+        retrofit.create(FriendNetworkApi::class.java)
+
+    @Provides
+    @Singleton
+    fun providePushTokenNetworkApi(retrofit: Retrofit): PushTokenNetworkApi =
+        retrofit.create(PushTokenNetworkApi::class.java)
 
     private val INVALID_DEVICE_ERROR_CODES = setOf(
         "DEVICE_REQUIRED",

@@ -1,5 +1,6 @@
 package com.smarttrainner
 
+import android.Manifest
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
@@ -20,14 +21,17 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.rule.GrantPermissionRule
 import com.smarttrainner.app.MainActivity
 import com.smarttrainner.app.di.AnalysisDataRepositoryBindingsModule
 import com.smarttrainner.app.di.CoreRepositoryBindingsModule
+import com.smarttrainner.app.di.FriendDataRepositoryBindingsModule
 import com.smarttrainner.app.di.PlatformTimeModule
 import com.smarttrainner.app.di.RoutineDataRepositoryBindingsModule
 import com.smarttrainner.app.di.WorkoutDataRepositoryBindingsModule
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.NetworkStatusRepository
+import com.smarttrainner.core.domain.PushTokenRepository
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.TrainingDataSyncer
@@ -36,7 +40,12 @@ import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.ProfileGender
 import com.smarttrainner.core.model.ProfileSetup
 import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.feature.analysis.domain.CycleSummaryRepository
+import com.smarttrainner.feature.friend.domain.FriendConnection
+import com.smarttrainner.feature.friend.domain.FriendRepository
+import com.smarttrainner.feature.friend.domain.FriendRequest
+import com.smarttrainner.feature.friend.domain.FriendRequestId
 import com.smarttrainner.feature.routine.domain.RoutinePlanCatalogRepository
 import com.smarttrainner.feature.routine.domain.RoutinePlanCommandRepository
 import com.smarttrainner.feature.routine.domain.RoutineProgressCommandRepository
@@ -66,6 +75,7 @@ import org.junit.runner.RunWith
 @UninstallModules(
     AnalysisDataRepositoryBindingsModule::class,
     CoreRepositoryBindingsModule::class,
+    FriendDataRepositoryBindingsModule::class,
     PlatformTimeModule::class,
     RoutineDataRepositoryBindingsModule::class,
     WorkoutDataRepositoryBindingsModule::class
@@ -77,6 +87,10 @@ class TrainingUiTest {
 
     @get:Rule(order = 1)
     val composeRule = createEmptyComposeRule()
+
+    @get:Rule(order = 2)
+    val notificationPermissionRule: GrantPermissionRule =
+        GrantPermissionRule.grant(Manifest.permission.POST_NOTIFICATIONS)
 
     private val trainingRepository = InMemoryTrainingRepository()
 
@@ -124,6 +138,34 @@ class TrainingUiTest {
     @JvmField
     val networkStatusRepository: NetworkStatusRepository = object : NetworkStatusRepository {
         override fun observeOnline(): Flow<Boolean> = flowOf(true)
+    }
+
+    @BindValue
+    @JvmField
+    val friendRepository: FriendRepository = object : FriendRepository {
+        override fun observeFriends(): Flow<List<FriendConnection>> = flowOf(emptyList())
+
+        override fun observeIncomingRequests(): Flow<List<FriendRequest>> = flowOf(emptyList())
+
+        override suspend fun refresh(): Result<Unit> = Result.success(Unit)
+
+        override suspend fun sendRequest(nickname: String): Result<FriendRequest> =
+            Result.failure(UnsupportedOperationException("Friend requests are not used in training UI tests."))
+
+        override suspend fun acceptRequest(id: FriendRequestId): Result<FriendConnection> =
+            Result.failure(UnsupportedOperationException("Friend requests are not used in training UI tests."))
+
+        override suspend fun declineRequest(id: FriendRequestId): Result<Unit> =
+            Result.failure(UnsupportedOperationException("Friend requests are not used in training UI tests."))
+
+        override suspend fun removeFriend(friendSessionId: UserSessionId): Result<Unit> =
+            Result.failure(UnsupportedOperationException("Friends are not used in training UI tests."))
+    }
+
+    @BindValue
+    @JvmField
+    val pushTokenRepository: PushTokenRepository = object : PushTokenRepository {
+        override suspend fun registerToken(token: String): Result<Unit> = Result.success(Unit)
     }
 
     @BindValue
@@ -207,6 +249,17 @@ class TrainingUiTest {
     }
 
     @Test
+    fun friendsTabOpensFriendRoute() {
+        continueFromLoginIfNeeded()
+
+        composeRule.onNodeWithTag("training_tab_friends").performClick()
+        waitForNodeWithTag("friend_add_card")
+
+        composeRule.onNodeWithTag("friend_add_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("friend_nickname_input").assertIsDisplayed()
+    }
+
+    @Test
     fun backOnTopLevelTabsKeepsCurrentTabOnFirstPress() {
         continueFromLoginIfNeeded()
 
@@ -225,6 +278,10 @@ class TrainingUiTest {
         assertTopLevelBackStaysOnScreen(
             tabTag = "training_tab_calendar",
             screenTag = "calendar_month_grid"
+        )
+        assertTopLevelBackStaysOnScreen(
+            tabTag = "training_tab_friends",
+            screenTag = "friend_add_card"
         )
         assertTopLevelBackStaysOnScreen(
             tabTag = "training_tab_analysis",

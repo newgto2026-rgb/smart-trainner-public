@@ -1,0 +1,25 @@
+<resources>
+    <string name="friend_route_title">친구</string>
+    <string name="friend_route_subtitle">요청 %1$s개 · 친구 %2$s명</string>
+    <string name="friend_add_title">닉네임으로 추가</string>
+    <string name="friend_nickname_label">친구 닉네임</string>
+    <string name="friend_nickname_placeholder">닉네임 입력</string>
+    <string name="friend_add_helper">친구가 프로필에 설정한 닉네임을 입력하세요.</string>
+    <string name="friend_send_request">보내기</string>
+    <string name="friend_sending_request">보내는 중</string>
+    <string name="friend_request_sent">요청을 보냈습니다.</string>
+    <string name="friend_error_empty_nickname">닉네임을 입력하세요.</string>
+    <string name="friend_error_send_failed">요청을 처리하지 못했습니다.</string>
+    <string name="friend_incoming_title">받은 요청</string>
+    <string name="friend_request_subtitle">친구 요청을 보냈습니다</string>
+    <string name="friend_accept">수락</string>
+    <string name="friend_decline">거절</string>
+    <string name="friend_request_accepted">친구 요청을 수락했습니다.</string>
+    <string name="friend_request_declined">친구 요청을 거절했습니다.</string>
+    <string name="friend_list_title">친구 목록</string>
+    <string name="friend_connected_subtitle">연결됨</string>
+    <string name="friend_list_empty">아직 친구가 없습니다. 닉네임으로 친구를 추가해 보세요.</string>
+    <string name="friend_loading">친구를 불러오는 중…</string>
+    <string name="friend_load_error">친구 정보를 불러오지 못했습니다.</string>
+    <string name="friend_retry">다시 시도</string>
+</resources>

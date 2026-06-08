@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -56,6 +57,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -96,8 +98,10 @@ import com.smarttrainner.feature.analysis.api.AnalysisFeatureEntry
 import com.smarttrainner.feature.calendar.api.CalendarFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseCatalogFeatureEntry
 import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
+import com.smarttrainner.feature.friend.api.FriendFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
+import java.util.Locale
 
 private const val TrainingGraphRoute = "training_graph"
 private const val ExitBackPressIntervalMillis = 2_000L
@@ -108,11 +112,13 @@ fun SmartTrainnerMainScreen(
     calendarFeatureEntry: CalendarFeatureEntry,
     exerciseCatalogFeatureEntry: ExerciseCatalogFeatureEntry,
     exerciseDetailFeatureEntry: ExerciseDetailFeatureEntry,
+    friendFeatureEntry: FriendFeatureEntry,
     routineFeatureEntry: RoutineFeatureEntry,
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     activeSession: UserSession,
     trainingExperience: TrainingExperience,
     googleSignInInProgress: Boolean,
+    friendNavigationRequest: Int,
     selectedThemeTone: SmartTrainnerThemeTone,
     onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
     onTrainingExperienceSelected: (TrainingExperience) -> Unit,
@@ -142,6 +148,18 @@ fun SmartTrainnerMainScreen(
             } else {
                 lastRootBackPressedAt = now
                 Toast.makeText(context, exitPrompt, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    LaunchedEffect(friendNavigationRequest) {
+        if (friendNavigationRequest > 0) {
+            navController.navigate(SmartTrainnerDestination.Friends.route) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
             }
         }
     }
@@ -227,6 +245,7 @@ fun SmartTrainnerMainScreen(
                                                 onTopLevelBack = onTopLevelBack
                                             )
                                             SmartTrainnerDestination.Calendar,
+                                            SmartTrainnerDestination.Friends,
                                             SmartTrainnerDestination.Analysis -> Unit
                                         }
                                     }
@@ -239,6 +258,10 @@ fun SmartTrainnerMainScreen(
                         composable(SmartTrainnerDestination.Analysis.route) {
                             BackHandler(enabled = topLevelBackEnabled, onBack = onTopLevelBack)
                             analysisFeatureEntry.Route()
+                        }
+                        composable(SmartTrainnerDestination.Friends.route) {
+                            BackHandler(enabled = topLevelBackEnabled, onBack = onTopLevelBack)
+                            friendFeatureEntry.Route(refreshRequest = friendNavigationRequest)
                         }
                     }
                 }
@@ -944,7 +967,13 @@ private fun Double.toDisplayWeight(): String =
     }
 
 private fun UserSession.profileInitial(): String =
-    nickname.ifBlank { displayName }.trim().take(1).uppercase()
+    nickname.ifBlank { displayName }.avatarInitial()
+
+private fun String.avatarInitial(): String {
+    val source = trim().ifBlank { return "?" }
+    val firstCodePoint = source.codePointAt(0)
+    return String(Character.toChars(firstCodePoint)).uppercase(Locale.getDefault())
+}
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
@@ -1021,6 +1050,11 @@ private enum class SmartTrainnerDestination(
         route = "training/analysis",
         labelResId = R.string.app_destination_analysis,
         testTag = "training_tab_analysis"
+    ),
+    Friends(
+        route = "training/friends",
+        labelResId = R.string.app_destination_friends,
+        testTag = "training_tab_friends"
     )
 }
 
@@ -1030,6 +1064,7 @@ private fun SmartTrainnerDestination.icon(): ImageVector = when (this) {
     SmartTrainnerDestination.Exercises -> Icons.Default.FitnessCenter
     SmartTrainnerDestination.Calendar -> Icons.Default.CalendarMonth
     SmartTrainnerDestination.Analysis -> Icons.Default.BarChart
+    SmartTrainnerDestination.Friends -> Icons.Default.Group
 }
 
 private val SmartTrainnerDestination.isTrainingDestination: Boolean
@@ -1038,5 +1073,6 @@ private val SmartTrainnerDestination.isTrainingDestination: Boolean
         SmartTrainnerDestination.Routine,
         SmartTrainnerDestination.Exercises -> true
         SmartTrainnerDestination.Calendar,
+        SmartTrainnerDestination.Friends,
         SmartTrainnerDestination.Analysis -> false
     }

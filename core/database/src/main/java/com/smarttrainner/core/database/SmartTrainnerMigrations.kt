@@ -177,6 +177,64 @@ object SmartTrainnerMigrations {
         }
     }
 
+    private val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `friend_connections` (
+                    `ownerSessionId` TEXT NOT NULL,
+                    `id` TEXT NOT NULL,
+                    `friendSessionId` TEXT NOT NULL,
+                    `friendNickname` TEXT NOT NULL,
+                    `friendDisplayName` TEXT NOT NULL,
+                    `friendAvatarUrl` TEXT,
+                    `createdAt` TEXT NOT NULL,
+                    `updatedAt` TEXT NOT NULL,
+                    PRIMARY KEY(`ownerSessionId`, `id`)
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_friend_connections_ownerSessionId` " +
+                    "ON `friend_connections` (`ownerSessionId`)"
+            )
+            db.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS `index_friend_connections_ownerSessionId_friendSessionId` " +
+                    "ON `friend_connections` (`ownerSessionId`, `friendSessionId`)"
+            )
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `friend_requests` (
+                    `ownerSessionId` TEXT NOT NULL,
+                    `id` TEXT NOT NULL,
+                    `requesterSessionId` TEXT NOT NULL,
+                    `requesterNickname` TEXT NOT NULL,
+                    `requesterDisplayName` TEXT NOT NULL,
+                    `requesterAvatarUrl` TEXT,
+                    `receiverSessionId` TEXT NOT NULL,
+                    `receiverNickname` TEXT NOT NULL,
+                    `receiverDisplayName` TEXT NOT NULL,
+                    `receiverAvatarUrl` TEXT,
+                    `direction` TEXT NOT NULL,
+                    `status` TEXT NOT NULL,
+                    `createdAt` TEXT NOT NULL,
+                    `updatedAt` TEXT NOT NULL,
+                    `respondedAt` TEXT,
+                    PRIMARY KEY(`ownerSessionId`, `id`)
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_friend_requests_ownerSessionId` " +
+                    "ON `friend_requests` (`ownerSessionId`)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_friend_requests_ownerSessionId_direction_status` " +
+                    "ON `friend_requests` (`ownerSessionId`, `direction`, `status`)"
+            )
+        }
+    }
+
     val ALL = arrayOf(
         MIGRATION_1_2,
         MIGRATION_2_3,
@@ -184,6 +242,7 @@ object SmartTrainnerMigrations {
         MIGRATION_4_5,
         MIGRATION_5_6,
         MIGRATION_6_7,
-        MIGRATION_7_8
+        MIGRATION_7_8,
+        MIGRATION_8_9
     )
 }

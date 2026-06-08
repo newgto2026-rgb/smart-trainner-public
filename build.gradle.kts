@@ -19,6 +19,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.kotlin.kapt) apply false
+    alias(libs.plugins.google.services) apply false
 }
 
 val uiExcludedCoverageExcludedProjects = setOf(
@@ -29,6 +30,7 @@ val uiExcludedCoverageExcludedProjects = setOf(
     ":core:ui",
     ":feature:analysis:api",
     ":feature:exercise:api",
+    ":feature:friend:api",
     ":feature:routine:api",
     ":feature:workout:api"
 )
@@ -70,6 +72,7 @@ val uiExcludedCoverageGateProjects = setOf(
     ":core:domain",
     ":feature:analysis:domain",
     ":feature:calendar:domain",
+    ":feature:friend:domain",
     ":feature:routine:domain",
     ":feature:workout:domain"
 )
@@ -88,10 +91,12 @@ val uiExcludedCoverageGateClassExcludes = uiExcludedCoverageClassExcludes + list
     "**/*CalculatorKt*.*",
     "**/*Repository*.*",
     "**/*Repositories*.*",
+    "**/*AcceptFriendRequestUseCase*.*",
     "**/*CancelLatestRoutineDayCompletionUseCase*.*",
     "**/*CheckNicknameAvailabilityUseCase*.*",
     "**/*CompleteRoutineDayUseCase*.*",
     "**/*DeleteCustomRoutineUseCase*.*",
+    "**/*DeclineFriendRequestUseCase*.*",
     "**/*GetLatestWorkoutLogUseCase*.*",
     "**/*LogoutUseCase*.*",
     "**/*ObserveActiveSessionUseCase*.*",
@@ -99,15 +104,20 @@ val uiExcludedCoverageGateClassExcludes = uiExcludedCoverageClassExcludes + list
     "**/*ObserveCurrentCyclePlanUseCase*.*",
     "**/*ObserveCycleSummaryUseCase*.*",
     "**/*ObserveExercisesUseCase*.*",
+    "**/*ObserveFriendsUseCase*.*",
+    "**/*ObserveIncomingFriendRequestsUseCase*.*",
     "**/*ObserveLatestWorkoutLogsUseCase*.*",
     "**/*ObserveNetworkOnlineUseCase*.*",
     "**/*ObservePlanTemplatesUseCase*.*",
     "**/*ObserveRoutineCycleCompletionsUseCase*.*",
     "**/*ObserveRoutineProgressUseCase*.*",
     "**/*ObserveTrainingExperienceUseCase*.*",
+    "**/*RefreshFriendsUseCase*.*",
+    "**/*RemoveFriendUseCase*.*",
     "**/*SaveCustomRoutineUseCase*.*",
     "**/*SaveWorkoutLogUseCase*.*",
     "**/*SelectPlanTemplateUseCase*.*",
+    "**/*SendFriendRequestUseCase*.*",
     "**/*SetRoutineDayDateUseCase*.*",
     "**/*SetTrainingExperienceUseCase*.*",
     "**/*SignInWithGoogleUseCase*.*",
@@ -348,6 +358,8 @@ val checkModuleBoundaries by tasks.registering {
             ":feature:calendar:domain",
             ":feature:calendar:data",
             ":feature:exercise:domain",
+            ":feature:friend:domain",
+            ":feature:friend:data",
             ":feature:routine:domain",
             ":feature:routine:data",
             ":feature:workout:domain",
@@ -355,6 +367,9 @@ val checkModuleBoundaries by tasks.registering {
         )
         val allowedFeatureDataCoreInfrastructureDependencies = setOf(
             ":feature:calendar:data" to ":core:datastore",
+            ":feature:friend:data" to ":core:database",
+            ":feature:friend:data" to ":core:datastore",
+            ":feature:friend:data" to ":core:network",
             ":feature:routine:data" to ":core:database",
             ":feature:routine:data" to ":core:datastore",
             ":feature:routine:data" to ":core:network",
@@ -366,18 +381,21 @@ val checkModuleBoundaries by tasks.registering {
             ":app" to ":feature:analysis:impl",
             ":app" to ":feature:calendar:impl",
             ":app" to ":feature:exercise:impl",
+            ":app" to ":feature:friend:impl",
             ":app" to ":feature:routine:impl",
             ":app" to ":feature:workout:impl"
         )
         val allowedAppFeatureDataDependencies = setOf(
             ":app" to ":feature:analysis:data",
             ":app" to ":feature:calendar:data",
+            ":app" to ":feature:friend:data",
             ":app" to ":feature:routine:data",
             ":app" to ":feature:workout:data"
         )
         val allowedAppFeatureDomainDependencies = setOf(
             ":app" to ":feature:analysis:domain",
             ":app" to ":feature:calendar:domain",
+            ":app" to ":feature:friend:domain",
             ":app" to ":feature:routine:domain",
             ":app" to ":feature:workout:domain"
         )
@@ -510,6 +528,7 @@ val checkModuleBoundaries by tasks.registering {
         val appDiFeatureDataFiles = setOf(
             "AnalysisDataRepositoryBindingsModule.kt",
             "CalendarDataRepositoryBindingsModule.kt",
+            "FriendDataRepositoryBindingsModule.kt",
             "RoutineDataRepositoryBindingsModule.kt",
             "WorkoutDataRepositoryBindingsModule.kt"
         )

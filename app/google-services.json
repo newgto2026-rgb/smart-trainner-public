@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "185652283261",
+    "project_id": "weefit-48cd6",
+    "storage_bucket": "weefit-48cd6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:185652283261:android:c4bbfac32918f2b2e1ae14",
+        "android_client_info": {
+          "package_name": "com.smarttrainner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHRvhR_fT-kiwulPTiijCfGJLsYfe6Klo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

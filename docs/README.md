@@ -21,6 +21,8 @@
 |---|---|
 | [커스텀 루틴 PRD](custom-routines-prd.md) | 커스텀 루틴 제품 요구사항 |
 | [커스텀 루틴 TRD](custom-routines-trd.md) | 커스텀 루틴 기술 설계 |
+| [친구 연결 PRD](friend-linking-prd.md) | 닉네임 기반 친구 요청/수락과 알림 정책 |
+| [친구 연결 TRD](friend-linking-trd.md) | 친구 관계, 서버 API, Room 캐시, FCM 연동 설계 |
 | [루틴 진행 PRD](routine-progression-prd.md) | 루틴 사이클/일차 진행 정책 |
 | [루틴 진행 TRD](routine-progression-trd.md) | 루틴 진행 repository/use case/data 설계 |
 | [운동 분석 PRD](training-analysis-prd.md) | 분석 화면과 요약 지표 요구사항 |
