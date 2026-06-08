@@ -1,5 +1,6 @@
 package com.smarttrainner.app.training
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -18,6 +19,8 @@ internal fun TrainingRoute(
     workoutRecordingFeatureEntry: WorkoutRecordingFeatureEntry,
     routineSessionCoordinator: RoutineSessionCoordinator,
     viewModel: TrainingViewModel,
+    topLevelBackEnabled: Boolean = false,
+    onTopLevelBack: () -> Unit = {},
     routineDialogs: @Composable () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -67,6 +70,8 @@ internal fun TrainingRoute(
         onAddExerciseRequested = { planned -> routineSessionCoordinator.requestAdditionalExercise(planned) },
         onExerciseDetailDismiss = viewModel::dismissExerciseDetail,
         onRecordDialogDismiss = viewModel::dismissRecordDialog,
+        topLevelBackEnabled = topLevelBackEnabled,
+        onTopLevelBack = onTopLevelBack,
         routineDialogs = routineDialogs,
         content = content
     )
@@ -90,11 +95,14 @@ private fun TrainingScreen(
     onAddExerciseRequested: (PlannedExercise) -> Unit,
     onExerciseDetailDismiss: () -> Unit,
     onRecordDialogDismiss: () -> Unit,
+    topLevelBackEnabled: Boolean,
+    onTopLevelBack: () -> Unit,
     routineDialogs: @Composable () -> Unit,
     content: @Composable () -> Unit
 ) {
     val selectedExerciseId = state.selectedExerciseId
     val recordingPlannedExercise = state.recordingPlannedExercise
+    BackHandler(enabled = topLevelBackEnabled, onBack = onTopLevelBack)
     if (recordingPlannedExercise != null && selectedExerciseId == null) {
         val hasNextPlannedExercise = state.recordingFlow == RecordingFlow.CONTINUOUS &&
             routineSessionCoordinator.nextPlannedExerciseAfterSaved(

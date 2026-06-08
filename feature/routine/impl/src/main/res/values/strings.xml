@@ -167,6 +167,7 @@
     <string name="routine_complete_cycle_confirm_title">Complete this cycle?</string>
     <string name="routine_cycle_day_title">Cycle %1$d · Day %2$d</string>
     <string name="routine_day_date_assigned">Workout date: %1$s</string>
+    <string name="routine_day_date_unassigned_compact">Select</string>
     <string name="routine_day_date_complete_title">Choose the date for this routine day</string>
     <string name="routine_day_date_edit_title">Change routine day date</string>
     <string name="routine_day_date_error_after_previous">This day must be later than the previous routine day. Add extra same-day work to the current day instead.</string>

@@ -3,6 +3,7 @@ package com.smarttrainner.feature.routine.impl
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -157,15 +160,29 @@ internal fun NextRoutineDayCard(
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = routineDay.primaryFocus?.let { focus ->
-                        stringResource(R.string.routine_today_focus_title, focus.localizedTodayFocusLabel())
-                    } ?: fallbackDayTitle,
-                    modifier = Modifier.testTag("training_next_routine_day_${routineDay.dayNumber}"),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = SmartTrainnerColors.Ink
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = routineDay.primaryFocus?.let { focus ->
+                            stringResource(R.string.routine_today_focus_title, focus.localizedTodayFocusLabel())
+                        } ?: fallbackDayTitle,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("training_next_routine_day_${routineDay.dayNumber}"),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = SmartTrainnerColors.Ink,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    RoutineDayDateButton(
+                        routineDay = routineDay,
+                        onEditRoutineDayDate = onEditRoutineDayDate
+                    )
+                }
             }
             SmartTrainnerProgressBar(
                 progress = if (routineDay.totalExerciseCount == 0) {
@@ -178,21 +195,6 @@ internal fun NextRoutineDayCard(
                     .height(8.dp)
             )
             RoutineDayBadgeRow(routineDay)
-            OutlinedButton(
-                onClick = onEditRoutineDayDate,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("training_routine_day_date"),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.size(8.dp))
-                Text(
-                    text = routineDay.routineDayDate?.let { date ->
-                        stringResource(R.string.routine_day_date_assigned, date.toString())
-                    } ?: stringResource(R.string.routine_day_date_unassigned)
-                )
-            }
             Text(
                 text = stringResource(
                     R.string.routine_routine_completed_progress,
@@ -241,30 +243,11 @@ internal fun NextRoutineDayCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            routineDay.startExercise?.let { startExercise ->
-                Button(
-                    onClick = { onRecordSelected(startExercise) },
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("training_home_start_workout")
-                ) {
-                    Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.routine_start_record))
-                }
-            }
-            OutlinedButton(
-                onClick = onCompleteRoutineDay,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("training_complete_routine_day"),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.routine_complete_routine_day))
-            }
+            RoutineDayActionButtons(
+                routineDay = routineDay,
+                onRecordSelected = onRecordSelected,
+                onCompleteRoutineDay = onCompleteRoutineDay
+            )
             routineDay.nextPrimaryFocus?.let { nextFocus ->
                 Text(
                     text = stringResource(R.string.routine_next_routine_day, nextFocus.localizedTodayFocusLabel()),
@@ -273,6 +256,97 @@ internal fun NextRoutineDayCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun RoutineDayDateButton(
+    routineDay: NextRoutineDayUiModel,
+    onEditRoutineDayDate: () -> Unit
+) {
+    val accessibilityLabel = routineDay.routineDayDate?.let { date ->
+        stringResource(R.string.routine_day_date_assigned, date.toString())
+    } ?: stringResource(R.string.routine_day_date_unassigned)
+    OutlinedButton(
+        onClick = onEditRoutineDayDate,
+        modifier = Modifier
+            .testTag("training_routine_day_date")
+            .semantics { contentDescription = accessibilityLabel },
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+    ) {
+        Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.size(6.dp))
+        Text(
+            text = routineDay.routineDayDate?.toString()
+                ?: stringResource(R.string.routine_day_date_unassigned_compact),
+            style = MaterialTheme.typography.labelMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun RoutineDayActionButtons(
+    routineDay: NextRoutineDayUiModel,
+    onRecordSelected: (PlannedExercise) -> Unit,
+    onCompleteRoutineDay: () -> Unit
+) {
+    val startExercise = routineDay.startExercise
+    if (startExercise == null) {
+        CompleteRoutineDayButton(
+            onCompleteRoutineDay = onCompleteRoutineDay,
+            modifier = Modifier.fillMaxWidth()
+        )
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = { onRecordSelected(startExercise) },
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("training_home_start_workout"),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
+            ) {
+                Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.size(6.dp))
+                Text(
+                    text = stringResource(R.string.routine_start_record),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            CompleteRoutineDayButton(
+                onCompleteRoutineDay = onCompleteRoutineDay,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompleteRoutineDayButton(
+    onCompleteRoutineDay: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedButton(
+        onClick = onCompleteRoutineDay,
+        modifier = modifier.testTag("training_complete_routine_day"),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
+    ) {
+        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.size(6.dp))
+        Text(
+            text = stringResource(R.string.routine_complete_routine_day),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
