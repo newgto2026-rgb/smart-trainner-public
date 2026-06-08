@@ -45,7 +45,7 @@ Push token registration은 친구 feature에 두지 않는다.
 
 - `core:domain`: `PushTokenRepository`, `RegisterPushTokenUseCase`
 - `core:data`: `DefaultPushTokenRepository`
-- `app`: `PushTokenRegistrar`, `FirebasePushTokenRegistrar`, `SmartTrainnerFirebaseMessagingService`, notification permission prompt, notification tap navigation to Friends
+- `app`: `PushTokenRegistrar`, `FirebasePushTokenRegistrar`, `SmartTrainnerFirebaseMessagingService`, notification permission prompt, notification tap navigation and refresh request to Friends
 
 ## Android 데이터 모델
 
@@ -212,6 +212,8 @@ Android:
 - `SmartTrainnerFirebaseMessagingService` registers refreshed tokens from `onNewToken`.
 - `SmartTrainnerFirebaseMessagingService` displays foreground/background data notification payloads in the app-owned friend notification channel.
 - FCM notification taps send an app-owned navigation request to `SmartTrainnerDestination.Friends`.
+- `SmartTrainnerNavigation` passes the monotonically increasing request id to `FriendFeatureEntry.Route(refreshRequest)`.
+- `feature:friend:impl` treats non-zero refresh requests as server refresh commands so an already-alive Friends screen updates after a notification tap.
 
 Server:
 
@@ -235,7 +237,7 @@ FCM data payload:
 - `friendshipId`
 - `deepLink`: `smarttrainner://friends` or `smarttrainner://friends/requests`
 
-Android treats this payload as a navigation/refresh hint only.
+Android treats this payload as a navigation/refresh hint only. It does not trust payload data as the source of truth; the Friends feature refreshes from the server after notification navigation.
 
 ## Future Workout Sharing
 

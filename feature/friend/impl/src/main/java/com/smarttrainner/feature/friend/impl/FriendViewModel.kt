@@ -61,6 +61,7 @@ internal class FriendViewModel @Inject constructor(
             is FriendAction.AcceptRequestClick -> acceptRequest(action.id)
             is FriendAction.DeclineRequestClick -> declineRequest(action.id)
             FriendAction.RetryClick -> refresh()
+            FriendAction.RefreshRequested -> refresh()
             FriendAction.MessageShown -> commandState.update { it.copy(message = null) }
         }
     }

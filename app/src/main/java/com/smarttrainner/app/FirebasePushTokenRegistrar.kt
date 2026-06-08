@@ -35,12 +35,19 @@ class FirebasePushTokenRegistrar @Inject constructor(
         suspendCancellableCoroutine { continuation ->
             FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
                 if (!continuation.isActive) return@addOnCompleteListener
+                if (!task.isSuccessful) {
+                    continuation.resume(
+                        Result.failure(task.exception ?: IllegalStateException("FCM token unavailable."))
+                    )
+                    return@addOnCompleteListener
+                }
+
                 val token = task.result
-                if (task.isSuccessful && !token.isNullOrBlank()) {
+                if (!token.isNullOrBlank()) {
                     continuation.resume(Result.success(token))
                 } else {
                     continuation.resume(
-                        Result.failure(task.exception ?: IllegalStateException("FCM token unavailable."))
+                        Result.failure(IllegalStateException("FCM token unavailable."))
                     )
                 }
             }

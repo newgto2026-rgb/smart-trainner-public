@@ -4,5 +4,5 @@ import androidx.compose.runtime.Composable
 
 interface FriendFeatureEntry {
     @Composable
-    fun Route()
+    fun Route(refreshRequest: Int)
 }

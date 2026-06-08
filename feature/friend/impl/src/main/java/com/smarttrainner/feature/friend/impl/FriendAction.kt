@@ -8,5 +8,6 @@ internal sealed interface FriendAction {
     data class AcceptRequestClick(val id: FriendRequestId) : FriendAction
     data class DeclineRequestClick(val id: FriendRequestId) : FriendAction
     data object RetryClick : FriendAction
+    data object RefreshRequested : FriendAction
     data object MessageShown : FriendAction
 }

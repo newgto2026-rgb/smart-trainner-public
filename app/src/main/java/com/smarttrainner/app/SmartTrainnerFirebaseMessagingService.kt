@@ -13,9 +13,11 @@ import com.google.firebase.messaging.RemoteMessage
 import com.smarttrainner.R
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -37,6 +39,11 @@ class SmartTrainnerFirebaseMessagingService : FirebaseMessagingService() {
         showNotification(title, body, message.data)
     }
 
+    override fun onDestroy() {
+        serviceScope.cancel()
+        super.onDestroy()
+    }
+
     private fun showNotification(title: String, body: String, data: Map<String, String>) {
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -45,7 +52,7 @@ class SmartTrainnerFirebaseMessagingService : FirebaseMessagingService() {
             return
         }
 
-        val manager = getSystemService(NotificationManager::class.java)
+        val manager = getSystemService(NotificationManager::class.java) ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             manager.createNotificationChannel(
                 NotificationChannel(
@@ -56,10 +63,10 @@ class SmartTrainnerFirebaseMessagingService : FirebaseMessagingService() {
             )
         }
 
-        val requestCode = notificationRequestCode(data)
+        val notificationKey = notificationKey(data)
         val contentIntent = PendingIntent.getActivity(
             this,
-            requestCode,
+            notificationKey.requestCode,
             Intent(this, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 .putExtra(EXTRA_OPEN_DESTINATION, OPEN_DESTINATION_FRIENDS),
@@ -73,15 +80,39 @@ class SmartTrainnerFirebaseMessagingService : FirebaseMessagingService() {
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
             .build()
-        manager.notify(requestCode, notification)
+        if (notificationKey.tag == null) {
+            manager.notify(notificationKey.id, notification)
+        } else {
+            manager.notify(notificationKey.tag, notificationKey.id, notification)
+        }
     }
 
-    private fun notificationRequestCode(data: Map<String, String>): Int =
-        (data["notificationEventId"] ?: data["notificationId"] ?: data["friendRequestId"] ?: data["friendshipId"])
-            ?.hashCode()
-            ?: System.currentTimeMillis().toInt()
+    private fun notificationKey(data: Map<String, String>): NotificationKey {
+        val eventTag = notificationEventTag(data)
+        val requestCode = nextNotificationId()
+        return if (eventTag == null) {
+            NotificationKey(tag = null, id = requestCode, requestCode = requestCode)
+        } else {
+            NotificationKey(tag = eventTag, id = FRIEND_NOTIFICATION_ID, requestCode = requestCode)
+        }
+    }
+
+    private fun notificationEventTag(data: Map<String, String>): String? =
+        listOf("notificationEventId", "notificationId", "friendRequestId", "friendshipId")
+            .firstNotNullOfOrNull { key -> data[key]?.takeIf { value -> value.isNotBlank() } }
+
+    private fun nextNotificationId(): Int =
+        nextNotificationSequence.updateAndGet { id -> if (id == Int.MAX_VALUE) 1 else id + 1 }
 
     private companion object {
         const val FRIEND_CHANNEL_ID = "friend_alerts"
+        const val FRIEND_NOTIFICATION_ID = 1001
+        val nextNotificationSequence = AtomicInteger(0)
     }
 }
+
+private data class NotificationKey(
+    val tag: String?,
+    val id: Int,
+    val requestCode: Int
+)

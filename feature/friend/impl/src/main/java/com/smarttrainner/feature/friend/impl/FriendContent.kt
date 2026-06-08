@@ -43,6 +43,7 @@ import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.ui.SmartTrainnerSectionTitle
 import com.smarttrainner.feature.friend.domain.FriendConnection
 import com.smarttrainner.feature.friend.domain.FriendRequest
+import java.util.Locale
 
 @Composable
 internal fun FriendAddCard(
@@ -306,7 +307,7 @@ private fun FriendAvatar(
     nickname: String,
     modifier: Modifier = Modifier
 ) {
-    val initial = nickname.ifBlank { "?" }.take(1).uppercase()
+    val initial = nickname.avatarInitial()
     Surface(
         shape = CircleShape,
         color = SmartTrainnerColors.CoralSoft,
@@ -329,4 +330,10 @@ private fun FriendAvatar(
             )
         }
     }
+}
+
+private fun String.avatarInitial(): String {
+    val source = trim().ifBlank { return "?" }
+    val firstCodePoint = source.codePointAt(0)
+    return String(Character.toChars(firstCodePoint)).uppercase(Locale.getDefault())
 }

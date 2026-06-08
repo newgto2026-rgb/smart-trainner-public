@@ -93,6 +93,7 @@ import com.smarttrainner.feature.exercise.api.ExerciseDetailFeatureEntry
 import com.smarttrainner.feature.friend.api.FriendFeatureEntry
 import com.smarttrainner.feature.routine.api.RoutineFeatureEntry
 import com.smarttrainner.feature.workout.api.WorkoutRecordingFeatureEntry
+import java.util.Locale
 
 private const val TrainingGraphRoute = "training_graph"
 
@@ -224,7 +225,7 @@ fun SmartTrainnerMainScreen(
                             analysisFeatureEntry.Route()
                         }
                         composable(SmartTrainnerDestination.Friends.route) {
-                            friendFeatureEntry.Route()
+                            friendFeatureEntry.Route(refreshRequest = friendNavigationRequest)
                         }
                     }
                 }
@@ -925,7 +926,13 @@ private fun Double.toDisplayWeight(): String =
     }
 
 private fun UserSession.profileInitial(): String =
-    nickname.ifBlank { displayName }.trim().take(1).uppercase()
+    nickname.ifBlank { displayName }.avatarInitial()
+
+private fun String.avatarInitial(): String {
+    val source = trim().ifBlank { return "?" }
+    val firstCodePoint = source.codePointAt(0)
+    return String(Character.toChars(firstCodePoint)).uppercase(Locale.getDefault())
+}
 
 @Composable
 private fun SmartTrainnerBottomBar(

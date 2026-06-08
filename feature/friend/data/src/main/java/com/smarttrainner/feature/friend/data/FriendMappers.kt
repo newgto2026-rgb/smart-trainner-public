@@ -13,6 +13,7 @@ import com.smarttrainner.feature.friend.domain.FriendRequestDirection
 import com.smarttrainner.feature.friend.domain.FriendRequestId
 import com.smarttrainner.feature.friend.domain.FriendRequestStatus
 import com.smarttrainner.feature.friend.domain.SocialUser
+import java.util.Locale
 
 internal fun FriendDto.toEntity(ownerSessionId: String): FriendConnectionEntity =
     FriendConnectionEntity(
@@ -108,7 +109,7 @@ internal val FriendRequestDirection.storageValue: String
     }
 
 internal fun String.toFriendRequestStatus(): FriendRequestStatus =
-    when (uppercase()) {
+    when (uppercase(Locale.ROOT)) {
         "ACCEPTED" -> FriendRequestStatus.Accepted
         "DECLINED",
         "REJECTED" -> FriendRequestStatus.Declined

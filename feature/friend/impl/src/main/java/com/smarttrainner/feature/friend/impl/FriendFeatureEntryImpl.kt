@@ -1,6 +1,7 @@
 package com.smarttrainner.feature.friend.impl
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -12,8 +13,13 @@ import javax.inject.Inject
 
 class FriendFeatureEntryImpl @Inject constructor() : FriendFeatureEntry {
     @Composable
-    override fun Route() {
+    override fun Route(refreshRequest: Int) {
         val viewModel: FriendViewModel = hiltViewModel()
+        LaunchedEffect(refreshRequest) {
+            if (refreshRequest > 0) {
+                viewModel.onAction(FriendAction.RefreshRequested)
+            }
+        }
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         val message = state.message
         SmartTrainnerScreenScaffold(
