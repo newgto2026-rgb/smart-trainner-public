@@ -243,6 +243,17 @@ class TrainingUiTest {
     }
 
     @Test
+    fun friendsTabOpensFriendRoute() {
+        continueFromLoginIfNeeded()
+
+        composeRule.onNodeWithTag("training_tab_friends").performClick()
+        waitForNodeWithTag("friend_add_card")
+
+        composeRule.onNodeWithTag("friend_add_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("friend_nickname_input").assertIsDisplayed()
+    }
+
+    @Test
     fun exerciseSearchFiltersCatalogAndClearRestoresRows() {
         continueFromLoginIfNeeded()
         composeRule.onNodeWithTag("training_tab_exercises").performClick()
