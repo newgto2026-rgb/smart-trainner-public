@@ -4,7 +4,7 @@
 - PR: https://github.com/newgto2026-rgb/smart-trainner-public/pull/101
 - Base: `main`
 - Initial PR Commit: `11b5ce1fb44ceb779f234b32aaca11328b2cd3db`
-- Latest Follow-up Commit: `f4ad9ce01663ed0a9f82f4d7bda4de5b7706a768`
+- Latest Follow-up Commit: `288927eca66f0f7f440184cc937e9b4c6da205be`
 - Scope: friend linking feature, app-level FCM push token registration, friend notifications, and server API integration
 
 ## Rework Events
@@ -61,7 +61,7 @@
 - Finding: Several active review threads remained unresolved after the initial push hardening: friend mutations could report failure when only the post-mutation cache refresh failed, friend refresh fetched independent network resources sequentially, nickname input auto-capitalized handles, and request status mapping plus subtitle placeholders could still trigger review/lint concerns.
 - Fix Scope: Friend data repository mutation/refresh behavior, friend mapper test coverage, Friends input keyboard behavior, and friend string resources.
 - Fix Size: Small
-- Rework Commit: `f4ad9ce01663ed0a9f82f4d7bda4de5b7706a768`
+- Rework Commit: `288927eca66f0f7f440184cc937e9b4c6da205be`
 - Verification: `./gradlew :feature:friend:data:testDebugUnitTest`; `./gradlew :feature:friend:data:lintDebug :feature:friend:impl:lintDebug :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`; guarded `adb -s emulator-5556 shell am instrument -w -r com.smarttrainner.test/com.smarttrainner.HiltTestRunner` returned `OK (24 tests)`. A broad `./gradlew :app:connectedDebugAndroidTest` run reached `24/24` pass on `emulator-5556` and the Galaxy mDNS connection, but the duplicate Galaxy USB connection crashed one instrumentation process and made the aggregate Gradle task fail.
 - Lesson: Review cleanup needs thread-level verification instead of relying on a summary review body; connected tests also need a single-device path when a physical device is exposed twice over USB and mDNS.
 
