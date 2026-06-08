@@ -129,15 +129,20 @@ fun SmartTrainnerMainScreen(
     var profileOpen by rememberSaveable { mutableStateOf(false) }
     var routineChangePromptOpen by rememberSaveable { mutableStateOf(false) }
     var routineLibraryOpenRequest by rememberSaveable { mutableStateOf(0) }
-    var lastRootBackPressedAt by remember(currentRoute) { mutableLongStateOf(0L) }
+    var lastRootBackPressedAt by rememberSaveable(currentRoute) { mutableLongStateOf(0L) }
     val topLevelBackEnabled = !profileOpen && !routineChangePromptOpen
-    val onTopLevelBack: () -> Unit = {
-        val now = SystemClock.elapsedRealtime()
-        if (now - lastRootBackPressedAt <= ExitBackPressIntervalMillis) {
-            context.findActivity()?.finish()
-        } else {
-            lastRootBackPressedAt = now
-            Toast.makeText(context, exitPrompt, Toast.LENGTH_SHORT).show()
+    val onTopLevelBack: () -> Unit = remember(currentRoute, context, exitPrompt) {
+        {
+            val now = SystemClock.elapsedRealtime()
+            if (
+                lastRootBackPressedAt != 0L &&
+                now - lastRootBackPressedAt <= ExitBackPressIntervalMillis
+            ) {
+                context.findActivity()?.finish()
+            } else {
+                lastRootBackPressedAt = now
+                Toast.makeText(context, exitPrompt, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

@@ -317,7 +317,7 @@ private fun RoutineDayActionButtons(
                 Spacer(Modifier.size(6.dp))
                 Text(
                     text = stringResource(R.string.routine_start_record),
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }
@@ -344,7 +344,7 @@ private fun CompleteRoutineDayButton(
         Spacer(Modifier.size(6.dp))
         Text(
             text = stringResource(R.string.routine_complete_routine_day),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
     }
