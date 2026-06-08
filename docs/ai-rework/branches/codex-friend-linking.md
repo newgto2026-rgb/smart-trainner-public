@@ -51,10 +51,25 @@
 - Verification: `./gradlew :feature:friend:api:assembleDebug :feature:friend:impl:lintDebug :app:compileDebugKotlin :app:assembleDebugAndroidTest`; `./gradlew :app:lintDebug`; `CI=true ./gradlew --stacktrace test -Psmarttrainner.serverBaseUrl=https://ci.smart-trainner.invalid/`; `./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.smarttrainner.TrainingUiTest#friendsTabOpensFriendRoute`
 - Lesson: App-level push plumbing needs defensive handling around platform services and Firebase task failures before feature-level flows depend on it.
 
+### ci-27113994995-notification-permission-dialog
+- Source: GitHub Actions failing check `Connected UI Tests`
+- Severity: P0
+- Attribution: AI
+- Automation Possible: Yes
+- Automation Added: Yes
+- Status: verified
+- Finding: Adding app-level FCM permission prompting caused a fresh API 35 CI emulator to show the Android notification permission dialog on startup, blocking the Compose login/home screen and timing out all 23 connected tests.
+- Fix Scope: Android instrumentation test permission setup
+- Fix Size: Small
+- Rework Commit: `HEAD`
+- Verification: `./gradlew :app:compileDebugAndroidTestKotlin`; `./gradlew :app:connectedDebugAndroidTest`
+- Lesson: App-level runtime permissions need explicit instrumentation-test setup so system permission UI cannot mask app UI and make feature tests fail for a shared startup precondition.
+
 ## External Event Coverage
 - `conversation-2026-06-08-friends-tab-crash`: covered by rework event above
 - `ci-27112865567-register-push-token-coverage`: covered by rework event above
 - `PRR_kwDOSsEQm88AAAABCPY-DQ`: covered by rework event above
+- `ci-27113994995-notification-permission-dialog`: covered by rework event above
 
 ## Non-Rework Follow-up Commits
 - `f305103382778f8198f2a76267ba83188905610a`: Firebase Android app config requested during setup

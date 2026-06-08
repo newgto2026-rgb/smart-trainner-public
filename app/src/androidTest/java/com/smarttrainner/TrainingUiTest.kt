@@ -1,5 +1,6 @@
 package com.smarttrainner
 
+import android.Manifest
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
@@ -20,6 +21,7 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.rule.GrantPermissionRule
 import com.smarttrainner.app.MainActivity
 import com.smarttrainner.app.di.AnalysisDataRepositoryBindingsModule
 import com.smarttrainner.app.di.CoreRepositoryBindingsModule
@@ -85,6 +87,10 @@ class TrainingUiTest {
 
     @get:Rule(order = 1)
     val composeRule = createEmptyComposeRule()
+
+    @get:Rule(order = 2)
+    val notificationPermissionRule: GrantPermissionRule =
+        GrantPermissionRule.grant(Manifest.permission.POST_NOTIFICATIONS)
 
     private val trainingRepository = InMemoryTrainingRepository()
 
