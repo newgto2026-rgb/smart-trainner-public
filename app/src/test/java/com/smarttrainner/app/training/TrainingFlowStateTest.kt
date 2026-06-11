@@ -47,7 +47,24 @@ class TrainingFlowStateTest {
 
         assertThat(state.recordingFlow).isEqualTo(RecordingFlow.SINGLE)
         assertThat(state.recordingPlannedExercise).isNull()
-        assertThat(state.recordedPlannedExerciseIds).isEmpty()
+        assertThat(state.recordedPlannedExerciseIds).containsExactly(first.id)
+    }
+
+    @Test
+    fun dismissRecordDialog_keepsSessionProgressForUiRefresh() {
+        val first = plannedExercise("back_pull")
+        val second = plannedExercise("back_row")
+
+        val state = TrainingFlowState()
+            .startContinuousRecording(first)
+            .recordSaved(second)
+            .skipCurrentExercise(nextPlannedExercise = null)
+            .dismissRecordDialog()
+
+        assertThat(state.recordingFlow).isEqualTo(RecordingFlow.SINGLE)
+        assertThat(state.recordingPlannedExercise).isNull()
+        assertThat(state.recordedPlannedExerciseIds).containsExactly(first.id)
+        assertThat(state.skippedPlannedExerciseIds).containsExactly(second.id)
     }
 
     @Test

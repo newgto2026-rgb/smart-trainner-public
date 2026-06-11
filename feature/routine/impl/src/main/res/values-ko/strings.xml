@@ -132,6 +132,8 @@
     <string name="routine_complete_day_confirm_body">미기록 운동: %1$s개. 그래도 %2$s사이클 %3$s일차를 완료할까요?</string>
     <string name="routine_complete_day_confirm_return">돌아가기</string>
     <string name="routine_complete_day_confirm_title">기록하지 않은 운동이 있어요</string>
+    <string name="routine_complete_day_ready_confirm_body">확인하면 %1$s사이클 %2$s일차를 완료하고 다음 일차로 이동합니다.</string>
+    <string name="routine_complete_day_ready_confirm_title">오늘 운동을 완료할까요?</string>
     <string name="routine_complete_cycle_confirm_body">확인하면 %1$s사이클을 완료하고 다음 사이클 1일차부터 시작합니다.</string>
     <string name="routine_complete_cycle_confirm_title">이번 사이클을 완료할까요?</string>
     <string name="routine_cycle_day_title">%1$d사이클 · %2$d일차</string>
@@ -177,6 +179,7 @@
     <string name="routine_save_custom_routine">저장</string>
     <string name="routine_selected">선택됨</string>
     <string name="routine_set_number">%1$d세트</string>
+    <string name="routine_skipped">건너뜀</string>
     <string name="routine_show_recommendations">추천 루틴 보기</string>
     <string name="routine_switch_confirm_body">%1$s 루틴으로 현재 진행 중인 사이클을 1일차부터 대체합니다. 주의: 완료되지 않은 현재 사이클의 진행도, 배정 날짜, 운동 기록은 완전히 삭제되고, 완료된 이전 사이클 기록만 유지됩니다.</string>
     <string name="routine_switch_confirm_dismiss">현재 루틴 유지</string>

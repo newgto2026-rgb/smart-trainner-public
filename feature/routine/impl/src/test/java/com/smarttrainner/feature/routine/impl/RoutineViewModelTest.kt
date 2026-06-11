@@ -179,6 +179,7 @@ class RoutineViewModelTest {
 
             assertThat(startedExercise?.routineDayDate).isEqualTo(LocalDate.of(2026, 5, 24))
             assertThat(startedExercise?.routineDayInstanceId).isNotNull()
+            assertThat(startedExercise?.id?.value).contains("2026-05-24")
             assertThat(viewModel.uiState.value.routineDayDatePicker).isNull()
             cancelAndIgnoreRemainingEvents()
         }
@@ -591,6 +592,44 @@ class RoutineViewModelTest {
             assertThat(advanced.activeRoutineProgress?.lastCompletedAt).isNull()
             assertThat(advanced.latestRoutineDayCompletion).isNull()
             assertThat(advanced.nextRoutineDayUi?.dayNumber).isEqualTo(1)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun requestCompleteCurrentRoutineDay_requiresConfirmationBeforeAdvancingAfterRecordedDay() = runTest {
+        repository.assignCurrentRoutineDayDate(LocalDate.of(2026, 5, 24))
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            var state = awaitItem()
+            while (state.nextRoutineDayUi == null) {
+                state = awaitItem()
+            }
+            val recordedIds = state.nextRoutineDayUi?.previewExercises.orEmpty().map { it.id }.toSet()
+
+            viewModel.requestCompleteCurrentRoutineDay(
+                skippedPlannedExerciseIds = emptySet(),
+                justRecordedPlannedExerciseIds = recordedIds
+            )
+            advanceUntilIdle()
+
+            var confirm = awaitItem()
+            while (confirm.routineCompletionConfirm == null) {
+                confirm = awaitItem()
+            }
+            assertThat(confirm.activeRoutineProgress?.dayIndex).isEqualTo(0)
+            assertThat(confirm.routineCompletionConfirm?.reason).isEqualTo(RoutineCompletionConfirmReason.MANUAL)
+            assertThat(confirm.routineCompletionConfirm?.unrecordedExercises).isEmpty()
+
+            viewModel.confirmCompleteCurrentRoutineDay()
+            advanceUntilIdle()
+
+            var advanced = awaitItem()
+            while (advanced.activeRoutineProgress?.dayIndex != 1) {
+                advanced = awaitItem()
+            }
+            assertThat(advanced.latestRoutineDayCompletion?.dayNumber).isEqualTo(1)
             cancelAndIgnoreRemainingEvents()
         }
     }

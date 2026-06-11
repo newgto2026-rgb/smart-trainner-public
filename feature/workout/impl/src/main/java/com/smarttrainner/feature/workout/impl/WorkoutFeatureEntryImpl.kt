@@ -1,7 +1,6 @@
 package com.smarttrainner.feature.workout.impl
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -31,11 +30,6 @@ class WorkoutFeatureEntryImpl @Inject constructor(
         LaunchedEffect(plannedExercise) {
             viewModel.updatePlannedExercise(plannedExercise)
         }
-        DisposableEffect(viewModel) {
-            onDispose {
-                viewModel.clearRecording()
-            }
-        }
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         WorkoutRecordDialog(
             state = state.copy(
@@ -50,9 +44,17 @@ class WorkoutFeatureEntryImpl @Inject constructor(
                 onAddSet = viewModel::addSetEntry,
                 onRemoveSet = viewModel::removeSetEntry,
                 onMemoChanged = viewModel::updateMemo,
-                onSaveRecord = { viewModel.saveRecord(onRecordSaved) },
+                onSaveRecord = {
+                    viewModel.saveRecord { saved ->
+                        viewModel.clearRecording()
+                        onRecordSaved(saved)
+                    }
+                },
                 onSkipExercise = {
-                    state.recordingPlannedExercise?.let(onSkipExercise)
+                    state.recordingPlannedExercise?.let { planned ->
+                        viewModel.clearRecording()
+                        onSkipExercise(planned)
+                    }
                 },
                 onSubstituteExerciseRequested = {
                     state.recordingPlannedExercise?.let(onSubstituteExerciseRequested)
@@ -66,7 +68,10 @@ class WorkoutFeatureEntryImpl @Inject constructor(
                         ?.id
                         ?.let(onExerciseMethodSelected)
                 },
-                onDismiss = onDismiss
+                onDismiss = {
+                    viewModel.clearRecording()
+                    onDismiss()
+                }
             ),
             exerciseMediaRenderer = exerciseMediaRenderer
         )

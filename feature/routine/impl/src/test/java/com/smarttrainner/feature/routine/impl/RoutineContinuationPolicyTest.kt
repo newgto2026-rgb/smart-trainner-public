@@ -210,6 +210,79 @@ class RoutineContinuationPolicyTest {
     }
 
     @Test
+    fun withSessionProgress_marksRecordedExerciseCompleteBeforeRepositoryRefresh() {
+        val first = plannedExercise("back_pull")
+        val second = plannedExercise("back_row")
+        val day = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 18),
+            title = "Day 1",
+            focus = "Back",
+            exercises = listOf(first, second),
+            dayNumber = 1,
+            primaryFocus = RoutineFocus.BACK,
+            secondaryFocuses = emptyList(),
+            minRecoveryHours = 24
+        )
+        val state = RoutineUiState(
+            plan = cyclePlan(day),
+            nextRoutineDayUi = day.toNextRoutineDayUiModel(
+                template = null,
+                dayIndex = 0,
+                cycleNumber = 1,
+                routineDayDate = null,
+                previousRoutineDayDate = null,
+                completedIds = emptySet()
+            )
+        ).withSessionProgress(
+            recordedPlannedExerciseIds = setOf(first.id),
+            skippedPlannedExerciseIds = emptySet()
+        )
+
+        assertThat(state.completedPlannedExerciseIds).containsExactly(first.id)
+        assertThat(state.nextRoutineDayUi?.completedExerciseCount).isEqualTo(1)
+        assertThat(state.nextRoutineDayUi?.startExercise?.id).isEqualTo(second.id)
+        assertThat(state.isPlanExerciseCompleted(dayIndex = 0, plannedExercise = first)).isTrue()
+    }
+
+    @Test
+    fun nextPlannedExerciseAfterSaved_skipsSessionSkippedExercise() {
+        val first = plannedExercise("back_pull")
+        val skipped = plannedExercise("back_row")
+        val third = plannedExercise("lat_pulldown")
+        val day = WorkoutDayPlan(
+            date = LocalDate.of(2026, 5, 18),
+            title = "Day 1",
+            focus = "Back",
+            exercises = listOf(first, skipped, third),
+            dayNumber = 1,
+            primaryFocus = RoutineFocus.BACK,
+            secondaryFocuses = emptyList(),
+            minRecoveryHours = 24
+        )
+        val state = RoutineUiState(
+            plan = cyclePlan(day),
+            nextRoutineDayUi = day.toNextRoutineDayUiModel(
+                template = null,
+                dayIndex = 0,
+                cycleNumber = 1,
+                routineDayDate = null,
+                previousRoutineDayDate = null,
+                completedIds = emptySet()
+            ),
+            skippedPlannedExerciseIds = setOf(skipped.id)
+        )
+
+        assertThat(state.nextPlannedExerciseAfterSaved(first)?.id).isEqualTo(third.id)
+        assertThat(
+            state.isPlanExerciseSkipped(
+                dayIndex = 0,
+                plannedExercise = skipped,
+                hasRecordedLog = false
+            )
+        ).isTrue()
+    }
+
+    @Test
     fun isPlanExerciseCompleted_returnsTrueForCompletedPreviousRoutineDay() {
         val completed = plannedExercise("back_pull")
         val current = plannedExercise("chest_press")
@@ -248,6 +321,41 @@ class RoutineContinuationPolicyTest {
 
         assertThat(state.isPlanExerciseCompleted(dayIndex = 0, plannedExercise = completed)).isTrue()
         assertThat(state.isPlanExerciseCompleted(dayIndex = 1, plannedExercise = current)).isFalse()
+    }
+
+    @Test
+    fun isPlanExerciseSkipped_returnsTrueForCompletedRoutineDayWithoutRecordedLog() {
+        val skipped = plannedExercise("back_pull")
+        val state = RoutineUiState(
+            plan = cyclePlan(
+                WorkoutDayPlan(
+                    date = LocalDate.of(2026, 5, 18),
+                    title = "Day 1",
+                    focus = "Back",
+                    exercises = listOf(skipped),
+                    dayNumber = 1,
+                    primaryFocus = RoutineFocus.BACK,
+                    secondaryFocuses = emptyList(),
+                    minRecoveryHours = 24
+                )
+            ),
+            activeRoutineProgress = RoutineProgress(
+                templateId = "template",
+                dayIndex = 1,
+                lastCompletedDayIndex = 0,
+                lastCompletedAt = null,
+                cycleNumber = 1,
+                lastCompletedCycleNumber = 1
+            )
+        )
+
+        assertThat(
+            state.isPlanExerciseSkipped(
+                dayIndex = 0,
+                plannedExercise = skipped,
+                hasRecordedLog = false
+            )
+        ).isTrue()
     }
 }
 

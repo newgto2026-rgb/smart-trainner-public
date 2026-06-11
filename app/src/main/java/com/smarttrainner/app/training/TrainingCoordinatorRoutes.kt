@@ -138,16 +138,21 @@ private fun rememberRoutineRouteState(
     viewModel: TrainingViewModel,
     routineLibraryOpenRequest: Int = 0,
     onRoutineLibraryOpenRequestConsumed: (Int) -> Unit = {}
-): RoutineRouteState = routineFeatureEntry.rememberRouteState(
-    viewModelStoreOwner = viewModelStoreOwner,
-    callbacks = RoutineFeatureCallbacks(
-        onWorkoutStarted = viewModel::startContinuousRecording,
-        onRoutineDayCompleted = viewModel::clearRecordingFlow,
-        onExerciseMethodSelected = viewModel::showExerciseMethod,
-        onRecordSelected = viewModel::selectPlannedExercise,
-        onSubstituteExerciseSelected = viewModel::replaceRecordingExercise,
-        onAdditionalExerciseSelected = viewModel::recordAdditionalExercise,
-        routineLibraryOpenRequest = routineLibraryOpenRequest,
-        onRoutineLibraryOpenRequestConsumed = onRoutineLibraryOpenRequestConsumed
+): RoutineRouteState {
+    val trainingState by viewModel.uiState.collectAsStateWithLifecycle()
+    return routineFeatureEntry.rememberRouteState(
+        viewModelStoreOwner = viewModelStoreOwner,
+        callbacks = RoutineFeatureCallbacks(
+            onWorkoutStarted = viewModel::startContinuousRecording,
+            onRoutineDayCompleted = viewModel::clearRecordingFlow,
+            onExerciseMethodSelected = viewModel::showExerciseMethod,
+            onRecordSelected = viewModel::selectPlannedExercise,
+            onSubstituteExerciseSelected = viewModel::replaceRecordingExercise,
+            onAdditionalExerciseSelected = viewModel::recordAdditionalExercise,
+            routineLibraryOpenRequest = routineLibraryOpenRequest,
+            onRoutineLibraryOpenRequestConsumed = onRoutineLibraryOpenRequestConsumed,
+            sessionRecordedPlannedExerciseIds = trainingState.recordedPlannedExerciseIds,
+            sessionSkippedPlannedExerciseIds = trainingState.skippedPlannedExerciseIds
+        )
     )
-)
+}

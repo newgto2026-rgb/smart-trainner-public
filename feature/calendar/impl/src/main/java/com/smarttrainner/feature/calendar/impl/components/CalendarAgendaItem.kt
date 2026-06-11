@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.MuscleGroup
+import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
 import com.smarttrainner.feature.calendar.impl.CalendarSelectedWorkoutUiModel
@@ -130,7 +131,7 @@ private fun CalendarSelectedWorkoutUiModel.metricBadges(): List<SmartTrainnerBad
             )
         )
     }
-    weightKg?.let { value ->
+    displayWeightText()?.let { value ->
         add(
             SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.calendar_record_metric_weight, value),
@@ -149,5 +150,22 @@ private fun CalendarSelectedWorkoutUiModel.metricBadges(): List<SmartTrainnerBad
         )
     }
 }
+
+private fun CalendarSelectedWorkoutUiModel.displayWeightText(): String? =
+    displaySetWeights()
+        .takeIf { it.isNotEmpty() }
+        ?.joinToString("/") { it.toRecordInput() }
+
+private fun CalendarSelectedWorkoutUiModel.displaySetWeights(): List<Double> =
+    setEntries.weightEntries().ifEmpty {
+        val weight = weightKg ?: return@ifEmpty emptyList()
+        List(sets.coerceAtLeast(1)) { weight }
+    }
+
+private fun List<WorkoutSetLog>.weightEntries(): List<Double> =
+    sortedBy { it.order }.mapNotNull { it.weightKg }
+
+private fun Double.toRecordInput(): String =
+    if (rem(1.0) == 0.0) toLong().toString() else toString()
 
 private fun MuscleGroup.displayLabel(): String = displayName

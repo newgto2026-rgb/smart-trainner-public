@@ -201,6 +201,7 @@ internal fun NextRoutineDayCard(
                     routineDay.completedExerciseCount,
                     routineDay.totalExerciseCount
                 ),
+                modifier = Modifier.testTag("training_next_routine_completion_progress"),
                 color = SmartTrainnerColors.Muted,
                 style = MaterialTheme.typography.bodySmall
             )

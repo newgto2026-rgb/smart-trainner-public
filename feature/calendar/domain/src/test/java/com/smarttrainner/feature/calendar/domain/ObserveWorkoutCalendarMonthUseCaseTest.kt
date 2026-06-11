@@ -12,6 +12,7 @@ import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
+import com.smarttrainner.core.model.WorkoutSetLog
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -39,7 +40,11 @@ class ObserveWorkoutCalendarMonthUseCaseTest {
                 performedAt = LocalDateTime.of(2026, 5, 9, 17, 0),
                 sets = 4,
                 reps = 8,
-                weightKg = 35.0
+                weightKg = 35.0,
+                setEntries = listOf(
+                    WorkoutSetLog(order = 1, reps = 8, weightKg = 35.0, durationMinutes = null),
+                    WorkoutSetLog(order = 2, reps = 8, weightKg = 40.0, durationMinutes = null)
+                )
             ),
             workoutLog(
                 id = 3,
@@ -61,6 +66,9 @@ class ObserveWorkoutCalendarMonthUseCaseTest {
                 .isEqualTo(7)
             assertThat(month.logsByDate.getValue(LocalDate.of(2026, 5, 9)).map { it.exerciseName })
                 .containsExactly("Row", "Bench press")
+                .inOrder()
+            assertThat(month.logsByDate.getValue(LocalDate.of(2026, 5, 9)).first().setEntries.map { it.weightKg })
+                .containsExactly(35.0, 40.0)
                 .inOrder()
             cancelAndIgnoreRemainingEvents()
         }
@@ -93,7 +101,8 @@ private fun workoutLog(
     sets: Int = 3,
     reps: Int? = 10,
     weightKg: Double? = 20.0,
-    durationMinutes: Int? = null
+    durationMinutes: Int? = null,
+    setEntries: List<WorkoutSetLog> = emptyList()
 ) = WorkoutLog(
     id = WorkoutLogId(id),
     sessionId = UserSessionId("session"),
@@ -105,7 +114,8 @@ private fun workoutLog(
     weightKg = weightKg,
     durationMinutes = durationMinutes,
     memo = "",
-    completed = true
+    completed = true,
+    setEntries = setEntries
 )
 
 private fun exercise(

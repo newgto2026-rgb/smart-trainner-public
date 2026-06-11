@@ -30,6 +30,16 @@ class RoutineFeatureEntryImpl @Inject constructor(
     ): RoutineRouteState {
         val viewModel: RoutineViewModel = hiltViewModel(viewModelStoreOwner)
         val state by viewModel.uiState.collectAsStateWithLifecycle()
+        val routeState = remember(
+            state,
+            callbacks.sessionRecordedPlannedExerciseIds,
+            callbacks.sessionSkippedPlannedExerciseIds
+        ) {
+            state.withSessionProgress(
+                recordedPlannedExerciseIds = callbacks.sessionRecordedPlannedExerciseIds,
+                skippedPlannedExerciseIds = callbacks.sessionSkippedPlannedExerciseIds
+            )
+        }
         LaunchedEffect(callbacks.routineLibraryOpenRequest, viewModel) {
             val request = callbacks.routineLibraryOpenRequest
             if (request > 0) {
@@ -37,7 +47,7 @@ class RoutineFeatureEntryImpl @Inject constructor(
                 callbacks.onRoutineLibraryOpenRequestConsumed(request)
             }
         }
-        val currentRoutineName = state.plan?.localizedName().orEmpty()
+        val currentRoutineName = routeState.plan?.localizedName().orEmpty()
         val actions = remember(callbacks, viewModel) {
             RoutineActions(
                 onTemplateSelected = viewModel::selectTemplate,
@@ -111,7 +121,9 @@ class RoutineFeatureEntryImpl @Inject constructor(
                     }
                 },
                 onDismissRoutineExercisePicker = viewModel::dismissRoutineExercisePicker,
-                onWorkoutStarted = { viewModel.requestStartWorkout(callbacks.onWorkoutStarted) },
+                onWorkoutStarted = { planned ->
+                    viewModel.requestStartWorkout(planned, callbacks.onWorkoutStarted)
+                },
                 onSubstituteExerciseSelected = callbacks.onSubstituteExerciseSelected,
                 onAdditionalExerciseSelected = callbacks.onAdditionalExerciseSelected,
                 onCompleteRoutineDay = { viewModel.requestCompleteCurrentRoutineDay(emptySet(), emptySet()) },
@@ -121,13 +133,13 @@ class RoutineFeatureEntryImpl @Inject constructor(
                 }
             )
         }
-        return remember(state, actions, currentRoutineName) {
+        return remember(routeState, actions, currentRoutineName) {
             DefaultRoutineRouteState(
-                state = state,
+                state = routeState,
                 actions = actions,
                 currentRoutineName = currentRoutineName,
                 sessionCoordinator = DefaultRoutineSessionCoordinator(
-                    state = state,
+                    state = routeState,
                     actions = actions
                 )
             )
