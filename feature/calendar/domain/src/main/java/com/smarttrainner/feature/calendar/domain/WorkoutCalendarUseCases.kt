@@ -36,7 +36,8 @@ class ObserveWorkoutCalendarMonthUseCase @Inject constructor(
                     durationMinutes = log.durationMinutes,
                     memo = log.memo,
                     completed = log.completed,
-                    volumeKg = log.volumeKg
+                    volumeKg = log.volumeKg,
+                    setEntries = log.setEntries
                 )
             }
             .toList()

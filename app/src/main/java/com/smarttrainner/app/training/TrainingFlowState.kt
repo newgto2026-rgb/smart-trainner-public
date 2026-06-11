@@ -48,8 +48,6 @@ internal data class TrainingFlowState(
         copy(
             recordingPlannedExercise = null,
             recordingFlow = RecordingFlow.SINGLE,
-            skippedPlannedExerciseIds = emptySet(),
-            recordedPlannedExerciseIds = emptySet(),
             pausedPlannedExercise = null
         )
 
@@ -73,7 +71,7 @@ internal data class TrainingFlowState(
             copy(
                 recordingPlannedExercise = null,
                 recordingFlow = RecordingFlow.SINGLE,
-                recordedPlannedExerciseIds = emptySet(),
+                recordedPlannedExerciseIds = nextRecordedIds,
                 pausedPlannedExercise = null
             )
         }
@@ -109,7 +107,6 @@ internal data class TrainingFlowState(
                 recordingPlannedExercise = null,
                 recordingFlow = RecordingFlow.SINGLE,
                 skippedPlannedExerciseIds = skippedPlannedExerciseIds + current.id,
-                recordedPlannedExerciseIds = emptySet(),
                 pausedPlannedExercise = null,
                 selectedExerciseId = null
             )

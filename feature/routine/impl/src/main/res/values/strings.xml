@@ -150,6 +150,7 @@
     <string name="routine_save_custom_routine">Save</string>
     <string name="routine_selected">Selected</string>
     <string name="routine_set_number">Set %1$d</string>
+    <string name="routine_skipped">Skipped</string>
     <string name="routine_show_recommendations">Show recommendations</string>
     <string name="routine_switch_confirm_body">Changing to %1$s replaces the current in-progress cycle from Day 1. Warning: all progress, assigned dates, and workout records in the unfinished current cycle will be permanently deleted; completed past cycles stay intact.</string>
     <string name="routine_switch_confirm_dismiss">Keep current routine</string>
@@ -163,6 +164,8 @@
     <string name="routine_complete_day_confirm_body">Unrecorded exercises: %1$s. Complete Cycle %2$s · Day %3$s anyway?</string>
     <string name="routine_complete_day_confirm_return">Go back</string>
     <string name="routine_complete_day_confirm_title">Unrecorded exercises remain</string>
+    <string name="routine_complete_day_ready_confirm_body">Confirm to complete Cycle %1$s · Day %2$s and move to the next day.</string>
+    <string name="routine_complete_day_ready_confirm_title">Complete today&#8217;s workout?</string>
     <string name="routine_complete_cycle_confirm_body">Cycle %1$s will be completed, and the next cycle will start from Day 1 only after you confirm.</string>
     <string name="routine_complete_cycle_confirm_title">Complete this cycle?</string>
     <string name="routine_cycle_day_title">Cycle %1$d · Day %2$d</string>

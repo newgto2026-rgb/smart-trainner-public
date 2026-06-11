@@ -42,6 +42,7 @@ import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
@@ -214,7 +215,7 @@ private fun WorkoutLog.metricBadges(): List<SmartTrainnerBadgeSpec> = buildList 
             )
         )
     }
-    weightKg?.let { value ->
+    displayWeightText()?.let { value ->
         add(
             SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.analysis_record_metric_weight, value),
@@ -234,6 +235,23 @@ private fun WorkoutLog.metricBadges(): List<SmartTrainnerBadgeSpec> = buildList 
         )
     }
 }
+
+private fun WorkoutLog.displayWeightText(): String? =
+    displaySetWeights()
+        .takeIf { it.isNotEmpty() }
+        ?.joinToString("/") { it.toRecordInput() }
+
+private fun WorkoutLog.displaySetWeights(): List<Double> =
+    setEntries.weightEntries().ifEmpty {
+        val weight = weightKg ?: return@ifEmpty emptyList()
+        List(sets.coerceAtLeast(1)) { weight }
+    }
+
+private fun List<WorkoutSetLog>.weightEntries(): List<Double> =
+    sortedBy { it.order }.mapNotNull { it.weightKg }
+
+private fun Double.toRecordInput(): String =
+    if (rem(1.0) == 0.0) toLong().toString() else toString()
 
 @Composable
 private fun SummaryBand(

@@ -187,6 +187,7 @@ internal data class RoutineUiState(
     val logs: List<WorkoutLog> = emptyList(),
     val latestWorkoutLogs: List<WorkoutLog> = emptyList(),
     val completedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
+    val skippedPlannedExerciseIds: Set<PlannedExerciseId> = emptySet(),
     val completeDayError: Boolean = false,
     val routineDayDateError: RoutineDayDateError? = null
 ) {

@@ -14,7 +14,7 @@
     <string name="calendar_selected_date_format">yyyy MMM d (E)</string>
     <string name="calendar_bottom_sheet_empty">No workout records for this date.</string>
     <string name="calendar_workout_collapse">Collapse</string>
-    <string name="calendar_record_metric_weight">%1$.1f kg</string>
+    <string name="calendar_record_metric_weight">%1$s kg</string>
     <string name="calendar_record_metric_volume">%1$.0f kg volume</string>
 
     <plurals name="calendar_a11y_workout_count">

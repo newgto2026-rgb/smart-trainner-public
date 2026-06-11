@@ -576,12 +576,32 @@ internal fun RoutineCompleteDayConfirmationDialog(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     confirmation.unrecordedExercises.forEach { exercise ->
-                        Text(
-                            text = exercise.exercise.localizedName(),
-                            color = SmartTrainnerColors.Ink,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.testTag("training_unrecorded_exercise_${exercise.exercise.id.value}")
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("training_unrecorded_exercise_${exercise.exercise.id.value}"),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = exercise.exercise.localizedName(),
+                                modifier = Modifier.weight(1f),
+                                color = SmartTrainnerColors.Ink,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (exercise.id in confirmation.skippedExerciseIds) {
+                                SmartTrainnerBadge(
+                                    text = stringResource(R.string.routine_skipped),
+                                    containerColor = SmartTrainnerColors.AmberSoft,
+                                    contentColor = SmartTrainnerColors.Ink,
+                                    modifier = Modifier.testTag(
+                                        "training_skipped_exercise_${exercise.exercise.id.value}"
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
                 Row(
@@ -619,7 +639,20 @@ private fun RoutineCompletionConfirmState.bodyText(routineDay: NextRoutineDayUiM
             R.string.routine_complete_cycle_confirm_body,
             routineDay?.cycleNumber ?: 1
         )
-        RoutineCompletionConfirmReason.MANUAL,
+        RoutineCompletionConfirmReason.MANUAL -> if (unrecordedExercises.isEmpty()) {
+            stringResource(
+                R.string.routine_complete_day_ready_confirm_body,
+                routineDay?.cycleNumber ?: 1,
+                routineDay?.dayNumber ?: 1
+            )
+        } else {
+            stringResource(
+                R.string.routine_complete_day_confirm_body,
+                unrecordedExercises.size,
+                routineDay?.cycleNumber ?: 1,
+                routineDay?.dayNumber ?: 1
+            )
+        }
         RoutineCompletionConfirmReason.SESSION_ENDED_WITH_SKIPS -> stringResource(
             R.string.routine_complete_day_confirm_body,
             unrecordedExercises.size,
@@ -631,7 +664,11 @@ private fun RoutineCompletionConfirmState.bodyText(routineDay: NextRoutineDayUiM
 private fun RoutineCompletionConfirmState.titleRes(): Int =
     when (reason) {
         RoutineCompletionConfirmReason.CYCLE_COMPLETE -> R.string.routine_complete_cycle_confirm_title
-        RoutineCompletionConfirmReason.MANUAL,
+        RoutineCompletionConfirmReason.MANUAL -> if (unrecordedExercises.isEmpty()) {
+            R.string.routine_complete_day_ready_confirm_title
+        } else {
+            R.string.routine_complete_day_confirm_title
+        }
         RoutineCompletionConfirmReason.SESSION_ENDED_WITH_SKIPS -> R.string.routine_complete_day_confirm_title
     }
 

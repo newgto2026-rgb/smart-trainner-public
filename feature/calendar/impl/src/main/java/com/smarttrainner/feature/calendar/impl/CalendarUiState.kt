@@ -3,6 +3,7 @@ package com.smarttrainner.feature.calendar.impl
 import androidx.compose.runtime.Immutable
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutLogId
+import com.smarttrainner.core.model.WorkoutSetLog
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -37,5 +38,6 @@ internal data class CalendarSelectedWorkoutUiModel(
     val weightKg: Double?,
     val memo: String,
     val completed: Boolean,
-    val volumeKg: Double
+    val volumeKg: Double,
+    val setEntries: List<WorkoutSetLog> = emptyList()
 )

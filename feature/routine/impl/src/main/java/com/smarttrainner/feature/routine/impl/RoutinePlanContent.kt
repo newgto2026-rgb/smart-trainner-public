@@ -24,6 +24,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -127,13 +128,20 @@ internal fun LazyListScope.planContent(
             contentType = { "routine-plan-exercise" }
         ) { exercise ->
             val recordableExercise = currentDayExercisesById[exercise.id]
+            val displayLog = cycleLogsByPlannedExerciseId[exercise.id]
+                ?: latestLogsByExerciseId[exercise.exercise.id]
             val completed = state.isPlanExerciseCompleted(dayIndex, exercise)
+            val skipped = state.isPlanExerciseSkipped(
+                dayIndex = dayIndex,
+                plannedExercise = exercise,
+                hasRecordedLog = cycleLogsByPlannedExerciseId.containsKey(exercise.id)
+            )
             PlanExerciseRow(
                 exercise = recordableExercise ?: exercise,
-                displayLog = cycleLogsByPlannedExerciseId[exercise.id]
-                    ?: latestLogsByExerciseId[exercise.exercise.id],
+                displayLog = displayLog,
                 completed = completed,
-                recordable = recordableExercise != null && !completed,
+                skipped = skipped,
+                recordable = recordableExercise != null && !completed && !skipped,
                 exerciseMediaRenderer = exerciseMediaRenderer,
                 onClick = { recordableExercise?.let(actions.onRecordSelected) }
             )
@@ -223,6 +231,7 @@ internal fun PlanExerciseRow(
     exercise: PlannedExercise,
     displayLog: com.smarttrainner.core.model.WorkoutLog?,
     completed: Boolean,
+    skipped: Boolean,
     recordable: Boolean,
     exerciseMediaRenderer: ExerciseMediaRenderer,
     onClick: () -> Unit
@@ -282,8 +291,13 @@ internal fun PlanExerciseRow(
                     }
                 )
             }
-            if (completed) {
-                StatusIcon(completed = true)
+            if (skipped) {
+                SkippedChip()
+            } else if (completed) {
+                StatusIcon(
+                    completed = true,
+                    modifier = Modifier.testTag("training_plan_completed_icon_${exercise.exercise.id.value}")
+                )
             } else if (recordable) {
                 OutlinedButton(
                     onClick = onClick,
@@ -298,6 +312,23 @@ internal fun PlanExerciseRow(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SkippedChip() {
+    Surface(
+        shape = RoundedCornerShape(999.dp),
+        color = SmartTrainnerColors.AmberSoft,
+        modifier = Modifier.testTag("training_plan_skipped_chip")
+    ) {
+        Text(
+            text = stringResource(R.string.routine_skipped),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = SmartTrainnerColors.Ink
+        )
     }
 }
 

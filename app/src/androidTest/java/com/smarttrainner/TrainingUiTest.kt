@@ -1,6 +1,7 @@
 package com.smarttrainner
 
 import android.Manifest
+import android.content.pm.ActivityInfo
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
@@ -425,6 +426,110 @@ class TrainingUiTest {
     }
 
     @Test
+    fun homeStartWorkoutSavingOneExerciseRefreshesRoutineProgress() {
+        continueFromLoginIfNeeded()
+
+        openHomeStartWorkout()
+        confirmRoutineDayDateIfNeeded()
+        waitForNodeWithTag("training_record_dialog")
+        saveVisibleRecordWithoutClosingContinuousDialog()
+        waitForTextInsideTag("training_record_dialog", "레그 프레스", "Leg Press")
+        closeRecordDialogIfVisible()
+        scrollToNodeWithTag("training_next_routine_completion_progress")
+
+        assertTaggedTextContainsAny("training_next_routine_completion_progress", "1/", "1개 기록")
+    }
+
+    @Test
+    fun recordDialogKeepsEnteredValuesAfterLandscapeRecreation() {
+        continueFromLoginIfNeeded()
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        clickPlanExercise("training_plan_exercise_leg_press")
+        confirmRoutineDayDateIfNeeded()
+        waitForNodeWithTag("training_record_dialog")
+
+        selectSetWeight(index = 0, optionTagValue = "1_5")
+        selectSetWeight(index = 1, optionTagValue = "2")
+        assertTaggedTextContainsAny("training_set_weight_input_0", "1.5")
+        assertTaggedTextContainsAny("training_set_weight_input_1", "2")
+
+        try {
+            scenario.onActivity { activity ->
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            }
+            waitForNodeWithTag("training_record_dialog")
+
+            assertTaggedTextContainsAny("training_set_weight_input_0", "1.5")
+            assertTaggedTextContainsAny("training_set_weight_input_1", "2")
+        } finally {
+            scenario.onActivity { activity ->
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+        }
+    }
+
+    @Test
+    fun savingPlanWorkoutShowsSetWeightsInCalendarAndAnalysis() {
+        continueFromLoginIfNeeded()
+
+        recordPlanExercise("training_plan_exercise_leg_press")
+
+        composeRule.onNodeWithTag("training_tab_calendar").performClick()
+        waitForNodeWithTag("calendar_day_workout_sheet")
+        assertAnyTextInsideTagWithScroll("calendar_day_workout_sheet", "1/1.5/2 kg")
+
+        composeRule.onNodeWithTag("training_tab_analysis").performClick()
+        waitForNodeWithTag("training_recent_records_card")
+        assertAnyTextInsideTagWithScroll("training_recent_records_card", "1/1.5/2 kg")
+    }
+
+    @Test
+    fun completedRoutineDayMarksUnrecordedExerciseAsSkippedInPlan() {
+        continueFromLoginIfNeeded()
+        createAndSelectTwoDayCustomRoutineForSwitch()
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_home_routine_source_custom")
+        waitForNodeWithTag("training_next_routine_day_1")
+        completeRoutineDayWithConfirmation()
+        waitForNodeWithTag("training_next_routine_day_2")
+
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        scrollToNodeWithTag("training_plan_exercise_machine_chest_press")
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("training_plan_exercise_machine_chest_press")) and
+                hasTestTag("training_plan_skipped_chip")
+        ).assertIsDisplayed()
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("training_plan_exercise_machine_chest_press")) and
+                (hasText("건너뜀", substring = true) or hasText("Skipped", substring = true))
+        ).assertIsDisplayed()
+    }
+
+    @Test
+    fun savingAllTodayExercisesRequiresConfirmationBeforeRoutineDayAdvances() {
+        continueFromLoginIfNeeded()
+        createAndSelectTwoDayCustomRoutineForSwitch()
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_next_routine_day_1")
+        openHomeStartWorkout()
+        confirmRoutineDayDateIfNeeded()
+        waitForNodeWithTag("training_record_dialog")
+        saveDefaultWeightedRecord()
+
+        waitForNodeWithTag("training_complete_day_confirmation_dialog")
+        assertEquals(0, trainingRepository.progressForTest().dayIndex)
+        assertTaggedTextContainsAny("training_complete_day_confirmation_dialog", "오늘 운동", "Complete today")
+
+        confirmVisibleRoutineDayCompletion()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            trainingRepository.progressForTest().dayIndex == 1
+        }
+        waitForNodeWithTag("training_next_routine_day_2")
+    }
+
+    @Test
     fun routineDayDateCancelKeepsScheduleUnassignedAndDoesNotStartWorkout() {
         continueFromLoginIfNeeded()
 
@@ -752,6 +857,9 @@ class TrainingUiTest {
         waitForNodeWithTag("training_record_dialog")
         saveDefaultWeightedRecord()
 
+        waitForNodeWithTag("training_complete_day_confirmation_dialog")
+        assertEquals(0, trainingRepository.progressForTest().dayIndex)
+        confirmVisibleRoutineDayCompletion()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             trainingRepository.progressForTest().dayIndex == 1
         }
@@ -857,6 +965,7 @@ class TrainingUiTest {
         assertAnalysisCurrentCycleEmpty()
 
         recordCurrentHomeWorkout()
+        confirmVisibleRoutineDayCompletion()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             trainingRepository.progressForTest().dayIndex == 1
         }
@@ -1240,6 +1349,30 @@ class TrainingUiTest {
         waitForNodeWithTagToDisappear("training_record_dialog")
     }
 
+    private fun saveVisibleRecordWithoutClosingContinuousDialog() {
+        if (hasNodeWithTag("training_set_weight_input_0")) {
+            selectSetWeight(index = 0, optionTagValue = "1")
+            if (hasNodeWithTag("training_set_weight_input_1")) {
+                selectSetWeight(index = 1, optionTagValue = "1_5")
+            }
+            if (hasNodeWithTag("training_set_weight_input_2")) {
+                selectSetWeight(index = 2, optionTagValue = "2")
+            }
+        }
+        composeRule.onNodeWithTag("training_save_record").performScrollTo().performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            trainingRepository.workoutLogsForTest().isNotEmpty()
+        }
+    }
+
+    private fun closeRecordDialogIfVisible() {
+        composeRule.waitForIdle()
+        if (hasNodeWithTag("training_record_dialog")) {
+            composeRule.onNodeWithTag("training_close_record_dialog").performClick()
+            waitForNodeWithTagToDisappear("training_record_dialog")
+        }
+    }
+
     private fun recordCurrentHomeWorkout() {
         openHomeStartWorkout()
         confirmRoutineDayDateIfNeeded()
@@ -1270,12 +1403,56 @@ class TrainingUiTest {
         ).assertIsDisplayed()
     }
 
+    private fun assertTaggedTextContainsAny(testTag: String, vararg texts: String) {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            hasTaggedTextContainingAny(testTag, *texts)
+        }
+        runCatching {
+            composeRule.onNodeWithTag(testTag, useUnmergedTree = true).performScrollTo()
+        }
+        composeRule.onNode(taggedTextMatcher(testTag, *texts), useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    private fun hasTaggedTextContainingAny(testTag: String, vararg texts: String): Boolean =
+        runCatching {
+            composeRule.onAllNodes(taggedTextMatcher(testTag, *texts), useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }.getOrDefault(false)
+
+    private fun taggedTextMatcher(testTag: String, vararg texts: String): SemanticsMatcher {
+        val textMatcher = texts
+            .map { text -> hasText(text, substring = true) }
+            .reduce { left, right -> left or right }
+        return (hasTestTag(testTag) and textMatcher) or
+            (hasAnyAncestor(hasTestTag(testTag)) and textMatcher)
+    }
+
     private fun assertAnyTextInsideTag(containerTag: String, vararg texts: String) {
         val matcher = texts
             .map { text -> hasText(text, substring = true) }
             .reduce { left, right -> left or right }
         composeRule.onNode(hasAnyAncestor(hasTestTag(containerTag)) and matcher)
             .assertIsDisplayed()
+    }
+
+    private fun waitForTextInsideTag(containerTag: String, vararg texts: String) {
+        val matcher = hasAnyAncestor(hasTestTag(containerTag)) and texts
+            .map { text -> hasText(text, substring = true) }
+            .reduce { left, right -> left or right }
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(matcher, useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+    }
+
+    private fun assertAnyTextInsideTagWithScroll(containerTag: String, vararg texts: String) {
+        val matcher = hasAnyAncestor(hasTestTag(containerTag)) and texts
+            .map { text -> hasText(text, substring = true) }
+            .reduce { left, right -> left or right }
+        scrollToNode(matcher)
+        composeRule.onNode(matcher).assertIsDisplayed()
     }
 
     private fun assertCycleCompletionTextVisible() {
@@ -1385,6 +1562,10 @@ class TrainingUiTest {
         scrollToNodeWithTag("training_complete_routine_day")
         composeRule.onNodeWithTag("training_complete_routine_day").assertIsDisplayed().performClick()
         confirmRoutineDayDateIfNeeded()
+        confirmVisibleRoutineDayCompletion()
+    }
+
+    private fun confirmVisibleRoutineDayCompletion() {
         waitForNodeWithTag("training_complete_day_confirmation_dialog")
         composeRule.onNodeWithTag("training_confirm_complete_routine_day").assertIsDisplayed().performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {

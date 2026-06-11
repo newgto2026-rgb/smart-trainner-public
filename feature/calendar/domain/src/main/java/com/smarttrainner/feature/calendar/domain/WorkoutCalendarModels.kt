@@ -3,6 +3,7 @@ package com.smarttrainner.feature.calendar.domain
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutLogId
+import com.smarttrainner.core.model.WorkoutSetLog
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -34,5 +35,6 @@ data class WorkoutCalendarLog(
     val durationMinutes: Int?,
     val memo: String,
     val completed: Boolean,
-    val volumeKg: Double
+    val volumeKg: Double,
+    val setEntries: List<WorkoutSetLog> = emptyList()
 )

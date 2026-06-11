@@ -237,5 +237,6 @@ internal fun WorkoutCalendarLog.toUiModel(): CalendarSelectedWorkoutUiModel =
         weightKg = weightKg,
         memo = memo,
         completed = completed,
-        volumeKg = volumeKg
+        volumeKg = volumeKg,
+        setEntries = setEntries
     )

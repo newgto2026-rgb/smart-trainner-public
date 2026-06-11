@@ -18,6 +18,7 @@ import com.smarttrainner.core.model.RoutineFocus
 import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.core.model.isRoutineAdditionalExerciseId
 import com.smarttrainner.core.model.targetsAnyMuscleGroup
 import com.smarttrainner.core.model.routineAdditionalExerciseIdPrefix
 import com.smarttrainner.feature.routine.domain.CancelLatestRoutineDayCompletionUseCase
@@ -38,9 +39,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -635,18 +638,14 @@ class RoutineViewModel @Inject constructor(
         val unrecordedExercises = routineDay.previewExercises.filter { exercise ->
             exercise.id !in effectiveCompletedIds || exercise.id in skippedPlannedExerciseIds
         }
-        if (unrecordedExercises.isEmpty() && !routineDay.completesCurrentCycle()) {
-            completeCurrentRoutineDay(completedAtOverride = completedAtOverride)
-        } else {
-            completionConfirm.value = RoutineCompletionConfirmState(
-                reason = routineDay.completionConfirmReason(
-                    skippedPlannedExerciseIds = skippedPlannedExerciseIds,
-                    unrecordedExercises = unrecordedExercises
-                ),
-                skippedExerciseIds = skippedPlannedExerciseIds,
+        completionConfirm.value = RoutineCompletionConfirmState(
+            reason = routineDay.completionConfirmReason(
+                skippedPlannedExerciseIds = skippedPlannedExerciseIds,
                 unrecordedExercises = unrecordedExercises
-            )
-        }
+            ),
+            skippedExerciseIds = skippedPlannedExerciseIds,
+            unrecordedExercises = unrecordedExercises
+        )
     }
 
     fun confirmCompleteCurrentRoutineDay(onCompleted: () -> Unit = {}) {
@@ -658,10 +657,16 @@ class RoutineViewModel @Inject constructor(
         completionConfirm.value = null
     }
 
-    fun requestStartWorkout(onStarted: (PlannedExercise) -> Unit) {
+    fun requestStartWorkout(
+        plannedExercise: PlannedExercise? = null,
+        onStarted: (PlannedExercise) -> Unit
+    ) {
         val state = uiState.value
-        val startExercise = state.nextRoutineDayUi?.startExercise ?: return
-        if (state.nextRoutineDayUi.routineDayDate == null) {
+        val routineDay = state.nextRoutineDayUi ?: return
+        val startExercise = plannedExercise?.currentRoutineDayExercise(state)
+            ?: routineDay.startExercise
+            ?: return
+        if (routineDay.routineDayDate == null) {
             openRoutineDayDatePicker(
                 reason = RoutineDayDatePickerReason.START_WORKOUT,
                 pendingAction = PendingRoutineDayDateAction.StartWorkout(startExercise)
@@ -727,6 +732,12 @@ class RoutineViewModel @Inject constructor(
                 routineDayDateError.value = RoutineDayDateError.SAVE_FAILED
                 return@launch
             }
+            val updatedState = withTimeoutOrNull(2_000) {
+                uiState.first { updated ->
+                    updated.nextRoutineDayUi?.routineDayInstanceId == routineDayInstanceId &&
+                        updated.nextRoutineDayUi?.routineDayDate == date
+                }
+            } ?: uiState.value
             val pendingAction = pendingRoutineDayDateAction
             pendingRoutineDayDateAction = null
             routineDayDatePicker.value = null
@@ -737,7 +748,11 @@ class RoutineViewModel @Inject constructor(
                         pendingAction.plannedExercise.withRoutineDayDate(
                             date = date,
                             routineDayInstanceId = routineDayInstanceId
-                        )
+                        ).currentRoutineDayExercise(updatedState)
+                            ?: pendingAction.plannedExercise.withRoutineDayDate(
+                                date = date,
+                                routineDayInstanceId = routineDayInstanceId
+                            )
                     )
                 }
                 is PendingRoutineDayDateAction.RecordExercise -> {
@@ -745,13 +760,23 @@ class RoutineViewModel @Inject constructor(
                         pendingAction.plannedExercise.withRoutineDayDate(
                             date = date,
                             routineDayInstanceId = routineDayInstanceId
-                        )
+                        ).currentRoutineDayExercise(updatedState)
+                            ?: pendingAction.plannedExercise.withRoutineDayDate(
+                                date = date,
+                                routineDayInstanceId = routineDayInstanceId
+                            )
                     )
                 }
                 is PendingRoutineDayDateAction.CompleteDay -> {
+                    val updatedRoutineDay = updatedState.nextRoutineDayUi
+                        ?.takeIf { updatedRoutineDay ->
+                            updatedRoutineDay.routineDayInstanceId == routineDayInstanceId &&
+                                updatedRoutineDay.routineDayDate == date
+                        }
+                        ?: routineDay.copy(routineDayDate = date)
                     continueCompleteCurrentRoutineDay(
-                        state = state,
-                        routineDay = routineDay.copy(routineDayDate = date),
+                        state = updatedState,
+                        routineDay = updatedRoutineDay,
                         skippedPlannedExerciseIds = pendingAction.skippedPlannedExerciseIds,
                         justRecordedPlannedExerciseIds = pendingAction.justRecordedPlannedExerciseIds,
                         completedAtOverride = routineDayCompletedAt(date)
@@ -956,6 +981,9 @@ class RoutineViewModel @Inject constructor(
         val currentDay = state.nextRoutineDayUi ?: return null
         currentDay.previewExercises.firstOrNull { it.id == id }?.let { return it }
         if (routineDayInstanceId != currentDay.routineDayInstanceId) return null
+        if (!id.isRoutineAdditionalExerciseId() && id.value.endsWith("_${exercise.id.value}")) {
+            currentDay.previewExercises.firstOrNull { it.exercise.id == exercise.id }?.let { return it }
+        }
         return copy(routineDayDate = routineDayDate ?: currentDay.routineDayDate)
     }
 
