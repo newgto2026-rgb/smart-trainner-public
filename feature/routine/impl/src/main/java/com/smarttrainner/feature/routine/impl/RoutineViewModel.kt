@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -731,10 +732,12 @@ class RoutineViewModel @Inject constructor(
                 routineDayDateError.value = RoutineDayDateError.SAVE_FAILED
                 return@launch
             }
-            val updatedState = uiState.first { updated ->
-                updated.nextRoutineDayUi?.routineDayInstanceId == routineDayInstanceId &&
-                    updated.nextRoutineDayUi?.routineDayDate == date
-            }
+            val updatedState = withTimeoutOrNull(2_000) {
+                uiState.first { updated ->
+                    updated.nextRoutineDayUi?.routineDayInstanceId == routineDayInstanceId &&
+                        updated.nextRoutineDayUi?.routineDayDate == date
+                }
+            } ?: uiState.value
             val pendingAction = pendingRoutineDayDateAction
             pendingRoutineDayDateAction = null
             routineDayDatePicker.value = null
@@ -765,9 +768,15 @@ class RoutineViewModel @Inject constructor(
                     )
                 }
                 is PendingRoutineDayDateAction.CompleteDay -> {
+                    val updatedRoutineDay = updatedState.nextRoutineDayUi
+                        ?.takeIf { updatedRoutineDay ->
+                            updatedRoutineDay.routineDayInstanceId == routineDayInstanceId &&
+                                updatedRoutineDay.routineDayDate == date
+                        }
+                        ?: routineDay.copy(routineDayDate = date)
                     continueCompleteCurrentRoutineDay(
                         state = updatedState,
-                        routineDay = updatedState.nextRoutineDayUi ?: routineDay.copy(routineDayDate = date),
+                        routineDay = updatedRoutineDay,
                         skippedPlannedExerciseIds = pendingAction.skippedPlannedExerciseIds,
                         justRecordedPlannedExerciseIds = pendingAction.justRecordedPlannedExerciseIds,
                         completedAtOverride = routineDayCompletedAt(date)

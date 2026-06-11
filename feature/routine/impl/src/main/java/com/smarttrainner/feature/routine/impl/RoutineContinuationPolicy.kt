@@ -58,12 +58,16 @@ internal fun RoutineUiState.withSessionProgress(
     if (recordedPlannedExerciseIds.isEmpty() && skippedPlannedExerciseIds.isEmpty()) return this
     val effectiveCompletedIds = completedPlannedExerciseIds + recordedPlannedExerciseIds
     val effectiveSkippedIds = this.skippedPlannedExerciseIds + skippedPlannedExerciseIds
-    val updatedNextRoutineDay = nextRoutineDayUi?.copy(
-        completedExerciseCount = nextRoutineDayUi.previewExercises.count { it.id in effectiveCompletedIds },
-        startExercise = nextRoutineDayUi.previewExercises
-            .firstOrNull { it.id !in effectiveCompletedIds && it.id !in effectiveSkippedIds }
-            ?: nextRoutineDayUi.previewExercises.firstOrNull()
-    )
+    val currentNextRoutineDayUi = nextRoutineDayUi
+    val updatedNextRoutineDay = currentNextRoutineDayUi?.let { nextDayUi ->
+        val previewExercises = nextDayUi.previewExercises
+        nextDayUi.copy(
+            completedExerciseCount = previewExercises.count { it.id in effectiveCompletedIds },
+            startExercise = previewExercises
+                .firstOrNull { it.id !in effectiveCompletedIds && it.id !in effectiveSkippedIds }
+                ?: previewExercises.firstOrNull()
+        )
+    }
     return copy(
         nextRoutineDayUi = updatedNextRoutineDay,
         nextRoutineDay = updatedNextRoutineDay?.day ?: nextRoutineDay,
