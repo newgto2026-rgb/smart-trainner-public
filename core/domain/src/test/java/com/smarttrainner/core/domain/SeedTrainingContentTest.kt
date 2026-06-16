@@ -3,6 +3,7 @@ package com.smarttrainner.core.domain
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.smarttrainner.core.model.EquipmentType
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.ExerciseMovementPattern
 import com.smarttrainner.core.model.ExerciseMuscleRole
 import com.smarttrainner.core.model.MuscleGroup
@@ -157,6 +158,16 @@ class SeedTrainingContentTest {
             "bulgarian_split_squat",
             "barbell_romanian_deadlift"
         )
+    }
+
+    @Test
+    fun assistedBodyweightMachinesUseAssistanceLoadType() {
+        val exercisesById = SeedTrainingContent.exercises.associateBy { it.id.value }
+
+        assertThat(exercisesById.getValue("assisted_pullup").loadType)
+            .isEqualTo(ExerciseLoadType.ASSISTANCE_LOAD)
+        assertThat(exercisesById.getValue("assisted_dip").loadType)
+            .isEqualTo(ExerciseLoadType.ASSISTANCE_LOAD)
     }
 
     @Test

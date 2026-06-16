@@ -4,11 +4,15 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.CyclePlanRepository
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.ObserveActiveSessionUseCase
 import com.smarttrainner.core.domain.ObserveCurrentRoutineCycleUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ResolveCurrentRoutineCycleUseCase
 import com.smarttrainner.core.domain.RoutineProgressRepository
+import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.AuthProvider
+import com.smarttrainner.core.model.BodyMeasurement
 import com.smarttrainner.core.model.CurrentRoutineCycle
 import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.CycleSummary
@@ -17,10 +21,16 @@ import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
+import com.smarttrainner.core.model.NicknameAvailability
 import com.smarttrainner.core.model.PlanId
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.ProfileGender
+import com.smarttrainner.core.model.ProfileSetup
 import com.smarttrainner.core.model.RoutineProgress
+import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.UserProfile
+import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
@@ -176,6 +186,7 @@ class AnalysisViewModelTest {
             clock = clock
         ),
         observeCycleSummary = ObserveCycleSummaryUseCase(repository),
+        observeActiveSession = ObserveActiveSessionUseCase(repository),
         observeExercises = ObserveExercisesUseCase(repository),
         clock = clock
     )
@@ -197,6 +208,7 @@ class MainDispatcherRule(
 private class FakeAnalysisRepository :
     ExerciseRepository,
     RoutineProgressRepository,
+    SessionRepository,
     CyclePlanRepository,
     CycleSummaryRepository,
     WorkoutLogRepository {
@@ -224,6 +236,7 @@ private class FakeAnalysisRepository :
         )
     )
     private val summary = MutableStateFlow(summary(LocalDate.of(2026, 5, 18)))
+    private val activeSession = MutableStateFlow(sessionWithBodyWeight(80.0))
 
     fun reset() {
         logs.value = emptyList()
@@ -240,6 +253,11 @@ private class FakeAnalysisRepository :
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
     override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs
+
+    override fun observeActiveSession(): Flow<UserSession?> = activeSession
+
+    override fun observeTrainingExperience(): Flow<TrainingExperience> =
+        MutableStateFlow(TrainingExperience.BEGINNER)
 
     override fun observeCurrentCyclePlan(
         templateId: String,
@@ -284,7 +302,36 @@ private class FakeAnalysisRepository :
 
     override suspend fun getExercise(id: ExerciseId): Exercise? = unused()
 
+    override suspend fun startDefaultSession(
+        nickname: String,
+        profileSetup: ProfileSetup
+    ): Result<UserSession> = unsupported()
+
+    override suspend fun checkNicknameAvailability(nickname: String): Result<NicknameAvailability> = unsupported()
+
+    override suspend fun signInWithGoogle(
+        idToken: String,
+        nickname: String?,
+        profileSetup: ProfileSetup?,
+        forceDeviceLogin: Boolean
+    ): Result<UserSession> = unsupported()
+
+    override suspend fun validateActiveSessionDevice(): Result<Unit> = unsupported()
+
+    override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> = unsupported()
+
+    override suspend fun updateBodyProfile(
+        gender: ProfileGender?,
+        heightCm: Int,
+        weightKg: Double,
+        nickname: String?
+    ): Result<Unit> = unsupported()
+
+    override suspend fun logout(): Result<Unit> = unsupported()
+
     private fun unused(): Nothing = error("Not used")
+
+    private fun <T> unsupported(): Result<T> = Result.failure(UnsupportedOperationException())
 }
 
 private fun workoutLog(
@@ -333,3 +380,21 @@ private fun summary(cycleStartDate: LocalDate) = CycleSummary(
     muscleBalance = emptyMap(),
     insight = ""
 )
+
+private fun sessionWithBodyWeight(weightKg: Double): UserSession =
+    UserSession(
+        id = UserSessionId("local-default"),
+        displayName = "Local",
+        email = null,
+        provider = AuthProvider.LOCAL,
+        linkedAt = null,
+        profile = UserProfile(
+            bodyMeasurements = listOf(
+                BodyMeasurement(
+                    recordedDate = LocalDate.of(2026, 5, 1),
+                    heightCm = 180,
+                    weightKg = weightKg
+                )
+            )
+        )
+    )

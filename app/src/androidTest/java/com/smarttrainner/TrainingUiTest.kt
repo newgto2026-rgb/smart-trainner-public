@@ -498,6 +498,43 @@ class TrainingUiTest {
     }
 
     @Test
+    fun assistedLoadWorkoutShowsAssistanceAndEffectiveLoadInCalendarAndAnalysis() {
+        continueFromLoginIfNeeded()
+        trainingRepository.seedAssistedPullupLogForTest()
+
+        composeRule.onNodeWithTag("training_tab_calendar").performClick()
+        waitForNodeWithTag("calendar_day_workout_sheet")
+        assertAnyTextInsideTagWithScroll(
+            "calendar_day_workout_sheet",
+            "보조 62.5 kg",
+            "62.5 kg assist"
+        )
+        assertAnyTextInsideTagWithScroll(
+            "calendar_day_workout_sheet",
+            "유효부하 20 kg",
+            "20 kg effective"
+        )
+        assertAnyTextInsideTagWithScroll(
+            "calendar_day_workout_sheet",
+            "유효볼륨 100 kg",
+            "100 kg effective volume"
+        )
+
+        composeRule.onNodeWithTag("training_tab_analysis").performClick()
+        waitForNodeWithTag("training_recent_records_card")
+        assertAnyTextInsideTagWithScroll(
+            "training_recent_records_card",
+            "보조 62.5 kg",
+            "62.5 kg assist"
+        )
+        assertAnyTextInsideTagWithScroll(
+            "training_recent_records_card",
+            "유효부하 20 kg",
+            "20 kg effective"
+        )
+    }
+
+    @Test
     fun completedRoutineDayMarksUnrecordedExerciseAsSkippedInPlan() {
         continueFromLoginIfNeeded()
         createAndSelectTwoDayCustomRoutineForSwitch()

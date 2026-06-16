@@ -15,7 +15,10 @@
     <string name="calendar_bottom_sheet_empty">선택한 날짜에 기록된 운동이 없습니다.</string>
     <string name="calendar_workout_collapse">접기</string>
     <string name="calendar_record_metric_weight">%1$s kg</string>
+    <string name="calendar_record_metric_assistance_weight">보조 %1$s kg</string>
+    <string name="calendar_record_metric_effective_load">유효부하 %1$s kg</string>
     <string name="calendar_record_metric_volume">볼륨 %1$.0f kg</string>
+    <string name="calendar_record_metric_effective_volume">유효볼륨 %1$.0f kg</string>
 
     <plurals name="calendar_a11y_workout_count">
         <item quantity="other">운동 %d개</item>

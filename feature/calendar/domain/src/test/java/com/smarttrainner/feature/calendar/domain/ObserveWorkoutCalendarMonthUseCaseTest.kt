@@ -3,12 +3,22 @@ package com.smarttrainner.feature.calendar.domain
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.AuthProvider
+import com.smarttrainner.core.model.BodyMeasurement
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.MuscleGroup
+import com.smarttrainner.core.model.NicknameAvailability
+import com.smarttrainner.core.model.ProfileGender
+import com.smarttrainner.core.model.ProfileSetup
+import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.UserProfile
+import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
@@ -52,7 +62,7 @@ class ObserveWorkoutCalendarMonthUseCaseTest {
                 performedAt = LocalDateTime.of(2026, 6, 1, 10, 0)
             )
         )
-        val useCase = ObserveWorkoutCalendarMonthUseCase(repository, repository)
+        val useCase = ObserveWorkoutCalendarMonthUseCase(repository, repository, repository)
 
         useCase(
             month = YearMonth.of(2026, 5),
@@ -73,16 +83,60 @@ class ObserveWorkoutCalendarMonthUseCaseTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun invoke_calculatesEffectiveVolumeForAssistedLoadExercises() = runTest {
+        val repository = FakeWorkoutCalendarRepository()
+        repository.setBodyWeight(80.0)
+        repository.logs.value = listOf(
+            workoutLog(
+                id = 1,
+                exerciseId = "assisted_pullup",
+                performedAt = LocalDateTime.of(2026, 5, 9, 18, 0),
+                sets = 1,
+                reps = 5,
+                weightKg = 60.0
+            )
+        )
+        val useCase = ObserveWorkoutCalendarMonthUseCase(repository, repository, repository)
+
+        useCase(
+            month = YearMonth.of(2026, 5),
+            today = LocalDate.of(2026, 5, 9)
+        ).test {
+            val month = awaitItem()
+            val log = month.logsByDate.getValue(LocalDate.of(2026, 5, 9)).single()
+
+            assertThat(log.loadType).isEqualTo(ExerciseLoadType.ASSISTANCE_LOAD)
+            assertThat(log.effectiveSetLoadsKg).containsExactly(20.0)
+            assertThat(log.effectiveVolumeKg).isEqualTo(100.0)
+            assertThat(log.volumeKg).isEqualTo(100.0)
+            assertThat(month.summariesByDate.getValue(LocalDate.of(2026, 5, 9)).totalVolumeKg)
+                .isEqualTo(100.0)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 }
 
-private class FakeWorkoutCalendarRepository : WorkoutLogRepository, ExerciseRepository {
+private class FakeWorkoutCalendarRepository : WorkoutLogRepository, ExerciseRepository, SessionRepository {
     val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
     private val exercises = MutableStateFlow(
         listOf(
             exercise("bench", "Bench press", MuscleGroup.CHEST),
-            exercise("row", "Row", MuscleGroup.BACK)
+            exercise("row", "Row", MuscleGroup.BACK),
+            exercise(
+                id = "assisted_pullup",
+                name = "Assisted Pull-up",
+                muscleGroup = MuscleGroup.BACK,
+                loadType = ExerciseLoadType.ASSISTANCE_LOAD
+            )
         )
     )
+    private val activeSession = MutableStateFlow(sessionWithBodyWeight(80.0))
+
+    fun setBodyWeight(weightKg: Double) {
+        activeSession.value = sessionWithBodyWeight(weightKg)
+    }
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
@@ -92,6 +146,40 @@ private class FakeWorkoutCalendarRepository : WorkoutLogRepository, ExerciseRepo
 
     override suspend fun getExercise(id: ExerciseId): Exercise? =
         exercises.value.firstOrNull { it.id == id }
+
+    override fun observeActiveSession(): Flow<UserSession?> = activeSession
+
+    override fun observeTrainingExperience(): Flow<TrainingExperience> =
+        MutableStateFlow(TrainingExperience.BEGINNER)
+
+    override suspend fun startDefaultSession(
+        nickname: String,
+        profileSetup: ProfileSetup
+    ): Result<UserSession> = unsupported()
+
+    override suspend fun checkNicknameAvailability(nickname: String): Result<NicknameAvailability> = unsupported()
+
+    override suspend fun signInWithGoogle(
+        idToken: String,
+        nickname: String?,
+        profileSetup: ProfileSetup?,
+        forceDeviceLogin: Boolean
+    ): Result<UserSession> = unsupported()
+
+    override suspend fun validateActiveSessionDevice(): Result<Unit> = unsupported()
+
+    override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> = unsupported()
+
+    override suspend fun updateBodyProfile(
+        gender: ProfileGender?,
+        heightCm: Int,
+        weightKg: Double,
+        nickname: String?
+    ): Result<Unit> = unsupported()
+
+    override suspend fun logout(): Result<Unit> = unsupported()
+
+    private fun <T> unsupported(): Result<T> = Result.failure(UnsupportedOperationException())
 }
 
 private fun workoutLog(
@@ -121,7 +209,8 @@ private fun workoutLog(
 private fun exercise(
     id: String,
     name: String,
-    muscleGroup: MuscleGroup
+    muscleGroup: MuscleGroup,
+    loadType: ExerciseLoadType = ExerciseLoadType.EXTERNAL_LOAD
 ) = Exercise(
     id = ExerciseId(id),
     name = name,
@@ -135,5 +224,24 @@ private fun exercise(
     defaultSets = 3,
     defaultRepRange = 8..12,
     defaultDurationMinutes = null,
-    restSeconds = 90
+    restSeconds = 90,
+    loadType = loadType
 )
+
+private fun sessionWithBodyWeight(weightKg: Double): UserSession =
+    UserSession(
+        id = UserSessionId("session"),
+        displayName = "Local",
+        email = null,
+        provider = AuthProvider.LOCAL,
+        linkedAt = null,
+        profile = UserProfile(
+            bodyMeasurements = listOf(
+                BodyMeasurement(
+                    recordedDate = LocalDate.of(2026, 5, 1),
+                    heightCm = 180,
+                    weightKg = weightKg
+                )
+            )
+        )
+    )

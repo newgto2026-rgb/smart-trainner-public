@@ -63,6 +63,7 @@ import androidx.compose.ui.window.PopupProperties
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.PlannedExercise
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
@@ -256,7 +257,7 @@ private fun RecordForm(
                     }
                     if (showWeight) {
                         RecordValueSelector(
-                            label = stringResource(R.string.workout_weight_short),
+                            label = stringResource(planned.exercise.recordWeightLabelRes()),
                             value = setEntry.weightKg,
                             onValueChange = { actions.onSetWeightChanged(index, it) },
                             options = recordWeightKgOptions,
@@ -638,7 +639,7 @@ private fun isKoreanLocale(): Boolean {
 
 @Composable
 private fun PlannedExercise.workoutMetricBadges(latestLog: WorkoutLog?): List<SmartTrainnerBadgeSpec> =
-    latestLog?.workoutRecordMetricBadges() ?: buildList {
+    latestLog?.workoutRecordMetricBadges(exercise.loadType) ?: buildList {
         add(
             SmartTrainnerBadgeSpec(
                 text = stringResource(R.string.workout_set_number, sets),
@@ -681,7 +682,7 @@ private fun PlannedExercise.workoutMetricBadges(latestLog: WorkoutLog?): List<Sm
     }
 
 @Composable
-private fun WorkoutLog.workoutRecordMetricBadges(): List<SmartTrainnerBadgeSpec> {
+private fun WorkoutLog.workoutRecordMetricBadges(loadType: ExerciseLoadType): List<SmartTrainnerBadgeSpec> {
     val entries = displaySetEntries()
     val reps = entries.mapNotNull { it.reps }.toCollapsedText()
     val weights = entries.mapNotNull { it.weightKg }.map { it.toRecordInput() }.toCollapsedText()
@@ -706,9 +707,14 @@ private fun WorkoutLog.workoutRecordMetricBadges(): List<SmartTrainnerBadgeSpec>
             )
         }
         weights?.let {
+            val weightTextRes = if (loadType == ExerciseLoadType.ASSISTANCE_LOAD) {
+                R.string.workout_actual_assistance_weight
+            } else {
+                R.string.workout_actual_weight
+            }
             add(
                 SmartTrainnerBadgeSpec(
-                    text = stringResource(R.string.workout_actual_weight, it),
+                    text = stringResource(weightTextRes, it),
                     containerColor = SmartTrainnerColors.SteelSoft,
                     contentColor = SmartTrainnerColors.Ink
                 )
@@ -736,6 +742,13 @@ private fun WorkoutLog.workoutRecordMetricBadges(): List<SmartTrainnerBadgeSpec>
         }
     }
 }
+
+private fun Exercise.recordWeightLabelRes(): Int =
+    if (loadType == ExerciseLoadType.ASSISTANCE_LOAD) {
+        R.string.workout_assistance_weight_short
+    } else {
+        R.string.workout_weight_short
+    }
 
 private fun WorkoutLog.displaySetEntries(): List<WorkoutSetLog> =
     setEntries.takeIf { it.isNotEmpty() }

@@ -33,6 +33,7 @@ import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutLogInput
+import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.model.routineAdditionalExerciseCyclePrefix
 import com.smarttrainner.core.model.routineDayInstanceId
 import com.smarttrainner.core.model.routineDayInstancePrefix
@@ -184,6 +185,33 @@ internal class InMemoryTrainingRepository :
     fun workoutLogsForTest(): List<WorkoutLog> = logs.value
 
     fun progressForTest(): RoutineProgress = progress.value
+
+    fun seedAssistedPullupLogForTest() {
+        val exercise = exerciseById.getValue(ExerciseId("assisted_pullup"))
+        logs.value = listOf(
+            WorkoutLog(
+                id = WorkoutLogId(1),
+                sessionId = UserSessionId(TEST_SESSION_ID),
+                plannedExerciseId = PlannedExerciseId("seed_assisted_pullup"),
+                exerciseId = exercise.id,
+                performedAt = LocalDate.of(2026, 5, 24).atTime(18, 0),
+                sets = 1,
+                reps = 5,
+                weightKg = 62.5,
+                durationMinutes = null,
+                memo = "",
+                completed = true,
+                setEntries = listOf(
+                    WorkoutSetLog(
+                        order = 1,
+                        reps = 5,
+                        weightKg = 62.5,
+                        durationMinutes = null
+                    )
+                )
+            )
+        )
+    }
 
     fun assignCurrentRoutineDayDateForTest(date: LocalDate) {
         val current = progress.value

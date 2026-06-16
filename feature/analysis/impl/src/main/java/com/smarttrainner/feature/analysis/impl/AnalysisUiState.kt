@@ -7,7 +7,8 @@ import com.smarttrainner.core.model.WorkoutLog
 internal data class AnalysisUiState(
     val recentLogs: List<RecentWorkoutLogUiModel> = emptyList(),
     val summary: CycleSummary? = null,
-    val cycleNumber: Int = 1
+    val cycleNumber: Int = 1,
+    val bodyWeightKg: Double? = null
 )
 
 internal data class RecentWorkoutLogUiModel(

@@ -14,6 +14,8 @@
     <string name="analysis_record_metric_sets">Sets: %1$d</string>
     <string name="analysis_record_metric_reps">Reps: %1$d</string>
     <string name="analysis_record_metric_weight">%1$s kg</string>
+    <string name="analysis_record_metric_assistance_weight">%1$s kg assist</string>
+    <string name="analysis_record_metric_effective_load">%1$s kg effective</string>
     <string name="analysis_record_metric_duration">Time: %1$d min</string>
     <string name="analysis_completion_rate">Completion</string>
     <string name="analysis_total_sets">Total Sets</string>

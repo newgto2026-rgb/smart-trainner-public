@@ -6,6 +6,7 @@ import com.smarttrainner.core.model.RoutineProgress
 import com.smarttrainner.core.model.CyclePlan
 import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
+import com.smarttrainner.core.model.summaryVolumeKg
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -14,14 +15,16 @@ import javax.inject.Inject
 class CycleSummaryCalculator @Inject constructor() {
     fun calculate(
         currentCycle: CurrentRoutineCycle,
-        zone: ZoneId
+        zone: ZoneId,
+        bodyWeightKg: Double? = null
     ): CycleSummary {
         val cycleStartedAt = currentCycle.progress.cycleStartedAtDateTime(zone)
         return calculateFromCurrentCycleLogs(
             plan = currentCycle.plan,
             completedLogs = currentCycle.currentCycleLogs.filter { it.completed },
             progress = currentCycle.progress,
-            cycleStartedAt = cycleStartedAt
+            cycleStartedAt = cycleStartedAt,
+            bodyWeightKg = bodyWeightKg
         )
     }
 
@@ -29,7 +32,8 @@ class CycleSummaryCalculator @Inject constructor() {
         plan: CyclePlan,
         completedLogs: List<WorkoutLog>,
         progress: RoutineProgress,
-        cycleStartedAt: LocalDateTime?
+        cycleStartedAt: LocalDateTime?,
+        bodyWeightKg: Double?
     ): CycleSummary {
         val plannedCount = plan.days.sumOf { it.exercises.size }
         val completedCount = completedLogs
@@ -39,16 +43,20 @@ class CycleSummaryCalculator @Inject constructor() {
         val totalSets = completedLogs.sumOf { log ->
             log.setEntries.takeIf { it.isNotEmpty() }?.size ?: log.sets
         }
-        val totalVolume = completedLogs.sumOf { it.volumeKg }
+        val exercisesById = plan.days
+            .flatMap { it.exercises }
+            .associate { planned -> planned.exercise.id to planned.exercise }
+        val totalVolume = completedLogs.sumOf { log ->
+            log.summaryVolumeKg(exercisesById[log.exerciseId], bodyWeightKg)
+        }
         val totalMinutes = completedLogs.sumOf { log ->
             log.setEntries.takeIf { it.isNotEmpty() }?.sumOf { it.durationMinutes ?: 0 }
                 ?: (log.durationMinutes ?: 0)
         }
-        val musclesByExerciseId = plan.days
-            .flatMap { it.exercises }
-            .associate { planned ->
-                planned.exercise.id to planned.exercise.muscleGroups.ifEmpty {
-                    listOf(planned.exercise.muscleGroup)
+        val musclesByExerciseId = exercisesById.values
+            .associate { exercise ->
+                exercise.id to exercise.muscleGroups.ifEmpty {
+                    listOf(exercise.muscleGroup)
                 }
             }
         val muscleBalance = completedLogs

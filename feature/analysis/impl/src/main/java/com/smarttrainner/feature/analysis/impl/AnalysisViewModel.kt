@@ -3,6 +3,7 @@ package com.smarttrainner.feature.analysis.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smarttrainner.core.domain.ObserveCurrentRoutineCycleUseCase
+import com.smarttrainner.core.domain.ObserveActiveSessionUseCase
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.feature.analysis.domain.ObserveCycleSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 class AnalysisViewModel @Inject constructor(
     observeCurrentRoutineCycle: ObserveCurrentRoutineCycleUseCase,
     observeCycleSummary: ObserveCycleSummaryUseCase,
+    observeActiveSession: ObserveActiveSessionUseCase,
     observeExercises: ObserveExercisesUseCase,
     clock: Clock
 ) : ViewModel() {
@@ -26,8 +28,9 @@ class AnalysisViewModel @Inject constructor(
         .flatMapLatest { currentCycle ->
             combine(
                 observeCycleSummary(currentCycle, clock.zone),
-                observeExercises()
-            ) { summary, exercises ->
+                observeExercises(),
+                observeActiveSession()
+            ) { summary, exercises, session ->
                 val exercisesById = exercises.associateBy { it.id }
                 AnalysisUiState(
                     recentLogs = currentCycle.allLogs
@@ -39,7 +42,8 @@ class AnalysisViewModel @Inject constructor(
                             )
                         },
                     summary = summary,
-                    cycleNumber = currentCycle.progress.cycleNumber
+                    cycleNumber = currentCycle.progress.cycleNumber,
+                    bodyWeightKg = session?.profile?.latestBodyMeasurement?.weightKg
                 )
             }
         }.stateIn(

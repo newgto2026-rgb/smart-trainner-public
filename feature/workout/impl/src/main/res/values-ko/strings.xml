@@ -4,6 +4,7 @@
     <string name="workout_remove_set">세트 삭제</string>
     <string name="workout_reps">반복 횟수</string>
     <string name="workout_weight_short">kg</string>
+    <string name="workout_assistance_weight_short">보조 kg</string>
     <string name="workout_not_recorded">미기록</string>
     <string name="workout_duration">운동 시간(분)</string>
     <string name="workout_rest_seconds">휴식(초)</string>
@@ -28,6 +29,7 @@
     <string name="workout_substitute_exercise_short">대체</string>
     <string name="workout_actual_reps">반복 %1$s회</string>
     <string name="workout_actual_weight">kg %1$s</string>
+    <string name="workout_actual_assistance_weight">보조 %1$s kg</string>
     <string name="workout_actual_duration">%1$s분</string>
     <string name="workout_actual_rest">휴식 %1$s초</string>
     <string name="workout_metric_recommended">권장</string>
