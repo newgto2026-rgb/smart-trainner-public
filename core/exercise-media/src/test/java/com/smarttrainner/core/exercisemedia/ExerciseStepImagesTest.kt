@@ -5,7 +5,7 @@ import org.junit.Test
 
 class ExerciseStepImagesTest {
     @Test
-    fun everySeedExerciseIdHasVariableStepVisuals() {
+    fun everyQaReadySeedExerciseIdHasVariableStepVisuals() {
         val expectedExerciseIds = setOf(
             "bodyweight_squat",
             "leg_press",
@@ -217,11 +217,12 @@ class ExerciseStepImagesTest {
 
     @Test
     fun visuallyRejectedAssetsStayQuarantined() {
-        val quarantinedExerciseIds = emptySet<String>()
+        val quarantinedExerciseIds = setOf("hack_slide")
 
         quarantinedExerciseIds.forEach { exerciseId ->
             assertThat(exerciseArtNeedsQaReplacement(exerciseId)).isTrue()
             assertThat(exerciseThumbnailDrawableResId(exerciseId)).isNull()
+            assertThat(exerciseStepVisuals(exerciseId)).isEmpty()
         }
     }
 }

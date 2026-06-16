@@ -38,7 +38,7 @@ Before deciding whether an existing image can stay, explicitly check each item b
 
 If any item fails, the exercise status is `Needs regeneration`, `Needs crop/export fix`, or `Needs copy fix`; never mark it `Pass`.
 
-For the 101-exercise catalog, work one exercise at a time in catalog order:
+For the 102-exercise catalog, work one exercise at a time in catalog order:
 
 1. Open every step image at original size.
 2. Open the thumbnail at original size.

@@ -30,7 +30,9 @@ fun exerciseThumbnailDrawableResId(exerciseId: String): Int? =
         THUMBNAIL_DRAWABLES[exerciseId]
     }
 
-private val ART_QA_REPLACEMENT_BLOCKLIST = emptySet<String>()
+private val ART_QA_REPLACEMENT_BLOCKLIST = setOf(
+    "hack_slide"
+)
 
 private val THUMBNAIL_ASSET_BLOCKLIST = emptySet<String>()
 

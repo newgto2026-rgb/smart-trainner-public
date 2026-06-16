@@ -79,6 +79,8 @@ class SeedTrainingContentTest {
             .isEqualTo(ExerciseMovementPattern.SQUAT)
         assertThat(exercisesById.getValue("leg_press").movementPattern)
             .isEqualTo(ExerciseMovementPattern.LEG_PRESS)
+        assertThat(exercisesById.getValue("hack_slide").movementPattern)
+            .isEqualTo(ExerciseMovementPattern.LEG_PRESS)
         assertThat(exercisesById.getValue("conventional_deadlift").movementPattern)
             .isEqualTo(ExerciseMovementPattern.HINGE)
         assertThat(exercisesById.getValue("barbell_back_squat").variantRank)
@@ -152,6 +154,7 @@ class SeedTrainingContentTest {
 
         assertThat(exerciseIds).containsAtLeast(
             "bodyweight_squat",
+            "hack_slide",
             "pullup",
             "dip",
             "bulgarian_split_squat",
