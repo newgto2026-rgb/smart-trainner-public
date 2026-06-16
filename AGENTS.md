@@ -29,7 +29,15 @@ git worktree add -b codex/<task-name> "$HOME/.codex/worktrees/<task-name>/smart-
 2. Run affected module lint.
 3. Run app build or integration tests when the change crosses module boundaries.
 4. Run `connectedDebugAndroidTest` before PR updates when core user flows or UI test harnesses changed.
-5. Record validation commands and results in the PR description.
+5. Confirm every new or changed user-facing flow is covered by UI tests, including small flows and edge states described by the feature.
+6. Record validation commands and results in the PR description.
+
+## UI Test Coverage
+- UI tests are mandatory for every implemented user-facing feature flow, even when the flow looks small or obvious.
+- For each feature, enumerate the visible flows introduced or changed by the request and cover them with Compose/instrumented UI tests by default.
+- Cover happy paths plus applicable navigation, validation, loading, empty, error, save/cancel, completion, and cross-screen state flows.
+- Unit tests do not replace UI tests for behavior that users experience through the UI.
+- Do not omit UI tests because the change is minor; if the harness cannot cover a required flow, fix the harness in the same task or document the explicit blocker before PR.
 
 ## Architecture And Dependencies
 - Keep module boundaries and dependency direction intact.
