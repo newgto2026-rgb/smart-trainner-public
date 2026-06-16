@@ -1435,12 +1435,74 @@ class RoutineViewModelTest {
             viewModel.saveCustomRoutine(startAfterSave = false)
             advanceUntilIdle()
 
+            assertThat(viewModel.uiState.value.showCustomRoutineProgressConfirmDialog).isTrue()
+            assertThat(viewModel.uiState.value.customRoutineBuilder.visible).isTrue()
+
+            viewModel.keepCustomRoutineProgressAfterEdit()
+            advanceUntilIdle()
+
             val saved = viewModel.uiState.value
             assertThat(saved.customRoutineBuilder.visible).isFalse()
+            assertThat(saved.showCustomRoutineProgressConfirmDialog).isFalse()
             assertThat(saved.activeRoutineProgress?.templateId).isEqualTo("custom-test")
             assertThat(saved.activeRoutineProgress?.dayIndex).isEqualTo(1)
             assertThat(saved.customTemplates.single { it.id == "custom-test" }.name)
                 .isEqualTo("My edited split")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun saveCustomRoutine_editingExistingRoutineCanResetCurrentCycle() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            awaitItem()
+
+            viewModel.showCreateCustomRoutine()
+            viewModel.updateCustomRoutineName("My split")
+            viewModel.addExerciseToCustomRoutine(ExerciseId("back_pull"))
+            viewModel.saveCustomRoutine(startAfterSave = true)
+            advanceUntilIdle()
+
+            val dayOneInstanceId = routineDayInstanceId("custom-test", cycleNumber = 1, dayNumber = 1)
+            repository.progress.value = repository.progress.value.copy(
+                dayIndex = 1,
+                routineDayDates = mapOf(dayOneInstanceId to LocalDate.of(2026, 5, 24))
+            )
+            repository.setLogs(
+                listOf(
+                    repository.completedLog(
+                        dayIndex = 0,
+                        performedAt = LocalDateTime.of(2026, 5, 24, 12, 0),
+                        routineDayInstanceId = dayOneInstanceId
+                    )
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.editCustomRoutine("custom-test")
+            advanceUntilIdle()
+            viewModel.updateCustomRoutineName("My reset split")
+            viewModel.saveCustomRoutine(startAfterSave = false)
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.showCustomRoutineProgressConfirmDialog).isTrue()
+            assertThat(repository.currentLogs()).hasSize(1)
+
+            viewModel.resetCustomRoutineProgressAfterEdit()
+            advanceUntilIdle()
+
+            val saved = viewModel.uiState.value
+            assertThat(saved.customRoutineBuilder.visible).isFalse()
+            assertThat(saved.showCustomRoutineProgressConfirmDialog).isFalse()
+            assertThat(saved.activeRoutineProgress?.templateId).isEqualTo("custom-test")
+            assertThat(saved.activeRoutineProgress?.dayIndex).isEqualTo(0)
+            assertThat(saved.activeRoutineProgress?.routineDayDates).isEmpty()
+            assertThat(repository.currentLogs()).isEmpty()
+            assertThat(saved.customTemplates.single { it.id == "custom-test" }.name)
+                .isEqualTo("My reset split")
             cancelAndIgnoreRemainingEvents()
         }
     }
