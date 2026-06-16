@@ -19,6 +19,7 @@ import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.isRoutineAdditionalExerciseId
+import com.smarttrainner.core.model.routineDayInstanceId
 import com.smarttrainner.core.model.targetsAnyMuscleGroup
 import com.smarttrainner.core.model.routineAdditionalExerciseIdPrefix
 import com.smarttrainner.feature.routine.domain.CancelLatestRoutineDayCompletionUseCase
@@ -993,9 +994,18 @@ class RoutineViewModel @Inject constructor(
 
     private fun RoutineUiState.hasCurrentCycleProgress(): Boolean {
         val progress = activeRoutineProgress ?: return false
+        val hasAssignedCurrentCycleDate = plan?.days.orEmpty().any { day ->
+            progress.routineDayDates.containsKey(
+                routineDayInstanceId(
+                    templateId = progress.templateId,
+                    cycleNumber = progress.cycleNumber,
+                    dayNumber = day.dayNumber
+                )
+            )
+        }
         return progress.dayIndex > 0 ||
             progress.lastCompletedDayIndex != null ||
-            progress.routineDayDates.isNotEmpty() ||
+            hasAssignedCurrentCycleDate ||
             logs.isNotEmpty()
     }
 
