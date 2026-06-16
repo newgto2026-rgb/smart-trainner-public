@@ -43,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,9 +87,12 @@ fun SmartTrainnerApp(
     onThemeToneSelected: (SmartTrainnerThemeTone) -> Unit,
     viewModel: SmartTrainnerAppViewModel = hiltViewModel()
 ) {
-    var showSplash by rememberSaveable { mutableStateOf(true) }
-    LaunchedEffect(Unit) {
-        delay(1_350)
+    val shouldShowBrandSplash = remember { BrandSplashGate.shouldShow() }
+    var showSplash by remember { mutableStateOf(shouldShowBrandSplash) }
+    LaunchedEffect(shouldShowBrandSplash) {
+        if (shouldShowBrandSplash && BrandSplashGate.markShownIfNeeded()) {
+            delay(1_350)
+        }
         showSplash = false
     }
     if (showSplash) {
@@ -239,6 +241,25 @@ private fun BrandSplashScreen() {
 }
 
 private val SplashBackgroundColor = Color(0xFFF6FAFC)
+
+internal object BrandSplashGate {
+    private var hasShownBrandSplash = false
+
+    @Synchronized
+    fun shouldShow(): Boolean = !hasShownBrandSplash
+
+    @Synchronized
+    fun markShownIfNeeded(): Boolean {
+        if (hasShownBrandSplash) return false
+        hasShownBrandSplash = true
+        return true
+    }
+
+    @Synchronized
+    fun resetForTest() {
+        hasShownBrandSplash = false
+    }
+}
 
 @Composable
 private fun LoadingScreen() {
