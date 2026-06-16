@@ -78,6 +78,7 @@ class RoutineViewModel @Inject constructor(
     private val customRoutineBuilder = MutableStateFlow(CustomRoutineBuilderState())
     private val completeDayFailed = MutableStateFlow(false)
     private var pendingRoutineDayDateAction: PendingRoutineDayDateAction? = null
+    private var completeRoutineDayInFlight = false
 
     private val routineModalState = combine(
         completionConfirm,
@@ -607,6 +608,7 @@ class RoutineViewModel @Inject constructor(
         skippedPlannedExerciseIds: Set<PlannedExerciseId>,
         justRecordedPlannedExerciseIds: Set<PlannedExerciseId>
     ) {
+        if (completeRoutineDayInFlight) return
         val state = uiState.value
         val routineDay = state.nextRoutineDayUi ?: return
         if (routineDay.routineDayDate == null) {
@@ -880,6 +882,7 @@ class RoutineViewModel @Inject constructor(
         onCompleted: () -> Unit = {},
         completedAtOverride: Instant? = null
     ) {
+        if (completeRoutineDayInFlight) return
         val state = uiState.value
         val template = activeTemplate(state)
             ?: return
@@ -890,15 +893,20 @@ class RoutineViewModel @Inject constructor(
             ?.routineDayDate
             ?.let(::routineDayCompletedAt)
             ?: clock.instant()
+        completeRoutineDayInFlight = true
         viewModelScope.launch {
-            val result = completeRoutineDay(
-                template = template,
-                completedDayIndex = dayIndex,
-                completedAt = completedAt
-            )
-            completeDayFailed.value = result.isFailure
-            if (result.isSuccess) {
-                onCompleted()
+            try {
+                val result = completeRoutineDay(
+                    template = template,
+                    completedDayIndex = dayIndex,
+                    completedAt = completedAt
+                )
+                completeDayFailed.value = result.isFailure
+                if (result.isSuccess) {
+                    onCompleted()
+                }
+            } finally {
+                completeRoutineDayInFlight = false
             }
         }
     }

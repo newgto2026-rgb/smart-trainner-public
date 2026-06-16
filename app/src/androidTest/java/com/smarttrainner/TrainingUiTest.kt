@@ -2,6 +2,7 @@ package com.smarttrainner
 
 import android.Manifest
 import android.content.pm.ActivityInfo
+import android.content.Intent
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
@@ -22,7 +23,10 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import com.smarttrainner.app.MainActivity
 import com.smarttrainner.app.di.AnalysisDataRepositoryBindingsModule
 import com.smarttrainner.app.di.CoreRepositoryBindingsModule
@@ -1131,6 +1135,29 @@ class TrainingUiTest {
         assertNull(trainingRepository.progressForTest().lastCompletedDayIndex)
     }
 
+    @Test
+    fun launcherReentryWhileCycleCompletionDialogIsOpenDoesNotStackMainActivity() {
+        continueFromLoginIfNeeded()
+        createAndSelectTwoDayCustomRoutineForSwitch()
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        completeRoutineDayWithConfirmation()
+        waitForNodeWithTag("training_next_routine_day_2")
+        trainingRepository.assignCurrentRoutineDayDateForTest(FIXED_UI_DATE)
+
+        scrollToNodeWithTag("training_complete_routine_day")
+        composeRule.onNodeWithTag("training_complete_routine_day").performClick()
+        waitForNodeWithTag("training_complete_day_confirmation_dialog")
+        assertCycleCompletionTextVisible()
+        assertMainActivityInstanceCount(1)
+
+        launchAppFromLauncher()
+
+        waitForNodeWithTag("training_complete_day_confirmation_dialog")
+        composeRule.onAllNodesWithTag("brand_splash").assertCountEquals(0)
+        assertMainActivityInstanceCount(1)
+    }
+
     private fun resetTestState() {
         trainingRepository.reset()
         (sessionRepository as InMemorySessionRepository).reset()
@@ -1310,6 +1337,43 @@ class TrainingUiTest {
         }
         composeRule.waitForIdle()
         composeRule.onAllNodesWithTag(screenTag).assertCountEquals(1)
+    }
+
+    private fun launchAppFromLauncher() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val targetContext = instrumentation.targetContext
+        val launchIntent = targetContext.packageManager
+            .getLaunchIntentForPackage(targetContext.packageName)
+        assertNotNull(launchIntent)
+        targetContext.startActivity(
+            launchIntent!!.apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        )
+        instrumentation.waitForIdleSync()
+        composeRule.waitForIdle()
+    }
+
+    private fun assertMainActivityInstanceCount(expected: Int) {
+        assertEquals(expected, mainActivityInstanceCount())
+    }
+
+    private fun mainActivityInstanceCount(): Int {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        var count = 0
+        instrumentation.runOnMainSync {
+            count = listOf(
+                Stage.CREATED,
+                Stage.STARTED,
+                Stage.RESUMED,
+                Stage.PAUSED,
+                Stage.STOPPED
+            )
+                .flatMap { stage -> ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(stage) }
+                .toSet()
+                .count { activity -> activity is MainActivity }
+        }
+        return count
     }
 
     private fun assignCurrentRoutineDayDate() {

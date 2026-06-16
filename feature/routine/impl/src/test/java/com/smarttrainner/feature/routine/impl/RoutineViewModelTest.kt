@@ -635,6 +635,44 @@ class RoutineViewModelTest {
     }
 
     @Test
+    fun confirmCompleteCurrentRoutineDay_ignoresDuplicateCycleCompletionConfirmations() = runTest {
+        repository.progress.value = RoutineProgress(
+            templateId = "intermediate-body-part-4day",
+            dayIndex = 3,
+            lastCompletedDayIndex = null,
+            lastCompletedAt = null,
+            startedAt = Instant.parse("2026-05-20T00:00:00Z"),
+            cycleStartedAt = Instant.parse("2026-05-20T00:00:00Z")
+        )
+        repository.assignCurrentRoutineDayDate(LocalDate.of(2026, 5, 24))
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            assertThat(awaitItem().nextRoutineDayUi?.dayNumber).isEqualTo(4)
+
+            viewModel.requestCompleteCurrentRoutineDay(
+                skippedPlannedExerciseIds = emptySet(),
+                justRecordedPlannedExerciseIds = emptySet()
+            )
+            advanceUntilIdle()
+
+            var confirm = awaitItem()
+            while (confirm.routineCompletionConfirm == null) {
+                confirm = awaitItem()
+            }
+
+            viewModel.confirmCompleteCurrentRoutineDay()
+            viewModel.confirmCompleteCurrentRoutineDay()
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.activeRoutineProgress?.cycleNumber).isEqualTo(2)
+            assertThat(viewModel.uiState.value.activeRoutineProgress?.dayIndex).isEqualTo(0)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun requestCompleteCurrentRoutineDay_showsConfirmationForSkippedOrUnrecordedExercises() = runTest {
         val skipped = repository.plannedExercise(dayIndex = 0, exerciseIndex = 0)
         repository.assignCurrentRoutineDayDate(LocalDate.of(2026, 5, 24))
