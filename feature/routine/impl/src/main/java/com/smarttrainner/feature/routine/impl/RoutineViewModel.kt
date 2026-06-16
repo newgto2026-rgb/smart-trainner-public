@@ -19,6 +19,7 @@ import com.smarttrainner.core.model.TrainingExperience
 import com.smarttrainner.core.model.WorkoutDayPlan
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.isRoutineAdditionalExerciseId
+import com.smarttrainner.core.model.routineDayInstanceId
 import com.smarttrainner.core.model.targetsAnyMuscleGroup
 import com.smarttrainner.core.model.routineAdditionalExerciseIdPrefix
 import com.smarttrainner.feature.routine.domain.CancelLatestRoutineDayCompletionUseCase
@@ -75,6 +76,7 @@ class RoutineViewModel @Inject constructor(
     private val routineDayDateError = MutableStateFlow<RoutineDayDateError?>(null)
     private val routineExercisePicker = MutableStateFlow<RoutineExercisePickerState?>(null)
     private val showCancelLatestRoutineDayDialog = MutableStateFlow(false)
+    private val showCustomRoutineProgressConfirmDialog = MutableStateFlow(false)
     private val customRoutineBuilder = MutableStateFlow(CustomRoutineBuilderState())
     private val completeDayFailed = MutableStateFlow(false)
     private var pendingRoutineDayDateAction: PendingRoutineDayDateAction? = null
@@ -84,13 +86,15 @@ class RoutineViewModel @Inject constructor(
         completionConfirm,
         routineDayDatePicker,
         routineExercisePicker,
-        showCancelLatestRoutineDayDialog
-    ) { completionConfirm, datePicker, exercisePicker, showCancelLatest ->
+        showCancelLatestRoutineDayDialog,
+        showCustomRoutineProgressConfirmDialog
+    ) { completionConfirm, datePicker, exercisePicker, showCancelLatest, showCustomProgressConfirm ->
         RoutineModalState(
             completionConfirm = completionConfirm,
             datePicker = datePicker,
             exercisePicker = exercisePicker,
-            showCancelLatest = showCancelLatest
+            showCancelLatest = showCancelLatest,
+            showCustomProgressConfirm = showCustomProgressConfirm
         )
     }
 
@@ -109,7 +113,8 @@ class RoutineViewModel @Inject constructor(
             completionConfirm = modal.completionConfirm,
             datePicker = modal.datePicker,
             exercisePicker = modal.exercisePicker,
-            showCancelLatest = modal.showCancelLatest
+            showCancelLatest = modal.showCancelLatest,
+            showCustomProgressConfirm = modal.showCustomProgressConfirm
         )
     }
 
@@ -216,6 +221,7 @@ class RoutineViewModel @Inject constructor(
             routineDayDatePicker = control.routineDialogState.datePicker,
             routineExercisePicker = control.routineDialogState.exercisePicker,
             showCancelLatestRoutineDayDialog = control.routineDialogState.showCancelLatest,
+            showCustomRoutineProgressConfirmDialog = control.routineDialogState.showCustomProgressConfirm,
             customRoutineBuilder = control.customRoutineBuilder,
             exercises = data.exercises,
             logs = currentCycle.currentCycleLogs,
@@ -274,6 +280,7 @@ class RoutineViewModel @Inject constructor(
         completionConfirm.value = null
         routineExercisePicker.value = null
         showCancelLatestRoutineDayDialog.value = false
+        showCustomRoutineProgressConfirmDialog.value = false
         showRoutineLibraryDialog.value = true
     }
 
@@ -290,6 +297,7 @@ class RoutineViewModel @Inject constructor(
         completionConfirm.value = null
         routineExercisePicker.value = null
         showCancelLatestRoutineDayDialog.value = false
+        showCustomRoutineProgressConfirmDialog.value = false
         showRoutineSettingsDialog.value = true
     }
 
@@ -337,6 +345,7 @@ class RoutineViewModel @Inject constructor(
         completionConfirm.value = null
         routineExercisePicker.value = null
         showCancelLatestRoutineDayDialog.value = false
+        showCustomRoutineProgressConfirmDialog.value = false
         customRoutineBuilder.value = CustomRoutineBuilderState(
             visible = true,
             name = "",
@@ -353,6 +362,7 @@ class RoutineViewModel @Inject constructor(
         completionConfirm.value = null
         routineExercisePicker.value = null
         showCancelLatestRoutineDayDialog.value = false
+        showCustomRoutineProgressConfirmDialog.value = false
         customRoutineBuilder.value = CustomRoutineBuilderState(
             visible = true,
             name = "${template.name} Copy",
@@ -387,6 +397,7 @@ class RoutineViewModel @Inject constructor(
         completionConfirm.value = null
         routineExercisePicker.value = null
         showCancelLatestRoutineDayDialog.value = false
+        showCustomRoutineProgressConfirmDialog.value = false
         customRoutineBuilder.value = CustomRoutineBuilderState(
             visible = true,
             editingRoutineId = template.id,
@@ -414,6 +425,7 @@ class RoutineViewModel @Inject constructor(
     }
 
     fun dismissCustomRoutineBuilder() {
+        showCustomRoutineProgressConfirmDialog.value = false
         customRoutineBuilder.value = CustomRoutineBuilderState()
     }
 
@@ -560,6 +572,42 @@ class RoutineViewModel @Inject constructor(
     fun saveCustomRoutine(startAfterSave: Boolean) {
         val state = uiState.value
         val builder = customRoutineBuilder.value
+        if (shouldConfirmCustomRoutineProgressPolicy(state, builder, startAfterSave)) {
+            showCustomRoutineProgressConfirmDialog.value = true
+            return
+        }
+        commitCustomRoutine(
+            startAfterSave = startAfterSave,
+            resetCurrentCycle = false
+        )
+    }
+
+    fun keepCustomRoutineProgressAfterEdit() {
+        showCustomRoutineProgressConfirmDialog.value = false
+        commitCustomRoutine(
+            startAfterSave = false,
+            resetCurrentCycle = false
+        )
+    }
+
+    fun resetCustomRoutineProgressAfterEdit() {
+        showCustomRoutineProgressConfirmDialog.value = false
+        commitCustomRoutine(
+            startAfterSave = false,
+            resetCurrentCycle = true
+        )
+    }
+
+    fun dismissCustomRoutineProgressConfirmation() {
+        showCustomRoutineProgressConfirmDialog.value = false
+    }
+
+    private fun commitCustomRoutine(
+        startAfterSave: Boolean,
+        resetCurrentCycle: Boolean
+    ) {
+        val state = uiState.value
+        val builder = customRoutineBuilder.value
         val input = builder.toInput()
         val validationError = builder.toFormError()
         if (input == null || validationError != null) {
@@ -572,7 +620,7 @@ class RoutineViewModel @Inject constructor(
                 availableExerciseIds = state.exercises.map { it.id }.toSet()
             )
             result.onSuccess { template ->
-                val switchResult = if (startAfterSave) {
+                val switchResult = if (startAfterSave || resetCurrentCycle) {
                     switchRoutineTemplate(template.id)
                 } else {
                     Result.success(Unit)
@@ -586,6 +634,18 @@ class RoutineViewModel @Inject constructor(
                 customRoutineBuilder.update { it.copy(error = CustomRoutineFormError.SAVE_FAILED) }
             }
         }
+    }
+
+    private fun shouldConfirmCustomRoutineProgressPolicy(
+        state: RoutineUiState,
+        builder: CustomRoutineBuilderState,
+        startAfterSave: Boolean
+    ): Boolean {
+        val editingId = builder.editingRoutineId ?: return false
+        val progress = state.activeRoutineProgress ?: return false
+        return !startAfterSave &&
+            editingId == progress.templateId &&
+            state.hasCurrentCycleProgress()
     }
 
     fun updateRoutineCycleLength(cycleLength: Int) {
@@ -940,6 +1000,23 @@ class RoutineViewModel @Inject constructor(
         state.templates.firstOrNull { it.id == state.activeRoutineProgress?.templateId }
             ?: state.templates.firstOrNull { it.id == state.selectedTemplateId }
 
+    private fun RoutineUiState.hasCurrentCycleProgress(): Boolean {
+        val progress = activeRoutineProgress ?: return false
+        val hasAssignedCurrentCycleDate = plan?.days.orEmpty().any { day ->
+            progress.routineDayDates.containsKey(
+                routineDayInstanceId(
+                    templateId = progress.templateId,
+                    cycleNumber = progress.cycleNumber,
+                    dayNumber = day.dayNumber
+                )
+            )
+        }
+        return progress.dayIndex > 0 ||
+            progress.lastCompletedDayIndex != null ||
+            hasAssignedCurrentCycleDate ||
+            logs.isNotEmpty()
+    }
+
     private fun openRoutineDayDatePicker(
         reason: RoutineDayDatePickerReason,
         pendingAction: PendingRoutineDayDateAction?
@@ -987,7 +1064,20 @@ class RoutineViewModel @Inject constructor(
 
     private fun PlannedExercise.currentRoutineDayExercise(state: RoutineUiState): PlannedExercise? {
         val currentDay = state.nextRoutineDayUi ?: return null
-        currentDay.previewExercises.firstOrNull { it.id == id }?.let { return it }
+        currentDay.previewExercises.firstOrNull { it.id == id }?.let { current ->
+            return if (current.exercise.id == exercise.id) {
+                current
+            } else {
+                copy(
+                    routineDayInstanceId = routineDayInstanceId
+                        ?: current.routineDayInstanceId
+                        ?: currentDay.routineDayInstanceId,
+                    routineDayDate = routineDayDate
+                        ?: current.routineDayDate
+                        ?: currentDay.routineDayDate
+                )
+            }
+        }
         if (routineDayInstanceId != currentDay.routineDayInstanceId) return null
         if (!id.isRoutineAdditionalExerciseId() && id.value.endsWith("_${exercise.id.value}")) {
             currentDay.previewExercises.firstOrNull { it.exercise.id == exercise.id }?.let { return it }
@@ -1016,7 +1106,8 @@ class RoutineViewModel @Inject constructor(
         val completionConfirm: RoutineCompletionConfirmState?,
         val datePicker: RoutineDayDatePickerState?,
         val exercisePicker: RoutineExercisePickerState?,
-        val showCancelLatest: Boolean
+        val showCancelLatest: Boolean,
+        val showCustomProgressConfirm: Boolean
     )
 
     private data class RoutineDialogState(
@@ -1027,7 +1118,8 @@ class RoutineViewModel @Inject constructor(
         val completionConfirm: RoutineCompletionConfirmState?,
         val datePicker: RoutineDayDatePickerState?,
         val exercisePicker: RoutineExercisePickerState?,
-        val showCancelLatest: Boolean
+        val showCancelLatest: Boolean,
+        val showCustomProgressConfirm: Boolean
     )
 
     private sealed interface PendingRoutineDayDateAction {

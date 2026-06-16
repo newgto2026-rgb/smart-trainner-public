@@ -444,6 +444,25 @@ class TrainingUiTest {
     }
 
     @Test
+    fun substitutingCurrentRoutineExerciseImmediatelyUpdatesRecordDialogAndSavedLog() {
+        continueFromLoginIfNeeded()
+
+        openHomeStartWorkout()
+        confirmRoutineDayDateIfNeeded()
+        waitForNodeWithTag("training_record_dialog")
+        waitForTextInsideTag("training_record_dialog", "트레드밀 걷기", "Treadmill Walk")
+
+        substituteVisibleRoutineExerciseWithIndoorBike()
+
+        waitForTextInsideTag("training_record_dialog", "실내 자전거", "Indoor Bike")
+        saveVisibleRecordWithoutClosingContinuousDialog()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            trainingRepository.workoutLogsForTest().size == 1
+        }
+        assertEquals("indoor_bike", trainingRepository.workoutLogsForTest().single().exerciseId.value)
+    }
+
+    @Test
     fun recordDialogKeepsEnteredValuesAfterActivityRecreation() {
         continueFromLoginIfNeeded()
         composeRule.onNodeWithTag("training_tab_plan").performClick()
@@ -911,6 +930,68 @@ class TrainingUiTest {
     }
 
     @Test
+    fun editingActiveCustomRoutineCanKeepCompletedProgressAndApplyFutureExerciseChanges() {
+        continueFromLoginIfNeeded()
+        createAndSelectTwoDayCustomRoutineForSwitch()
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_next_routine_day_1")
+        recordCurrentHomeWorkout()
+        confirmVisibleRoutineDayCompletion()
+        waitForNodeWithTag("training_next_routine_day_2")
+        assertEquals(1, trainingRepository.progressForTest().dayIndex)
+        assertEquals(1, trainingRepository.workoutLogsForTest().size)
+
+        editCurrentCustomRoutineDayTwoToGobletAndSave()
+        composeRule.onNodeWithTag("training_custom_routine_progress_dialog").assertIsDisplayed()
+        assertTaggedTextContainsAny("training_custom_routine_progress_dialog", "현재 사이클", "current-cycle")
+        composeRule.onNodeWithTag("training_keep_custom_routine_progress").performClick()
+        waitForNodeWithTagToDisappear("training_custom_routine_progress_dialog")
+        waitForNodeWithTagToDisappear("training_custom_routine_builder")
+
+        assertEquals(1, trainingRepository.progressForTest().dayIndex)
+        assertEquals(1, trainingRepository.workoutLogsForTest().size)
+        assertEquals(1, trainingRepository.routineDayDatesForTest().size)
+        assertPlanShowsCurrentRoutine(
+            sourceTag = "training_current_routine_source_custom",
+            exerciseTag = "training_plan_exercise_goblet_squat"
+        )
+        composeRule.onAllNodesWithTag("training_plan_exercise_leg_press").assertCountEquals(0)
+    }
+
+    @Test
+    fun editingActiveCustomRoutineCanResetCurrentCycleFromConfirmation() {
+        continueFromLoginIfNeeded()
+        createAndSelectTwoDayCustomRoutineForSwitch()
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_next_routine_day_1")
+        recordCurrentHomeWorkout()
+        confirmVisibleRoutineDayCompletion()
+        waitForNodeWithTag("training_next_routine_day_2")
+        assertEquals(1, trainingRepository.progressForTest().dayIndex)
+        assertEquals(1, trainingRepository.workoutLogsForTest().size)
+
+        editCurrentCustomRoutineDayTwoToGobletAndSave()
+        composeRule.onNodeWithTag("training_reset_custom_routine_progress").performClick()
+        waitForNodeWithTagToDisappear("training_custom_routine_progress_dialog")
+        waitForNodeWithTagToDisappear("training_custom_routine_builder")
+
+        assertEquals(0, trainingRepository.progressForTest().dayIndex)
+        assertNull(trainingRepository.progressForTest().lastCompletedDayIndex)
+        assertTrue(trainingRepository.workoutLogsForTest().isEmpty())
+        assertTrue(trainingRepository.routineDayDatesForTest().isEmpty())
+        assertHomeShowsCustomRoutine(
+            dayTag = "training_next_routine_day_1",
+            focusTag = "training_next_routine_focus_CHEST"
+        )
+        assertPlanShowsCurrentRoutine(
+            sourceTag = "training_current_routine_source_custom",
+            exerciseTag = "training_plan_exercise_goblet_squat"
+        )
+    }
+
+    @Test
     fun switchingRoutineKeepsCompletedPastCycleRecordsButClearsCurrentCycleRecords() {
         continueFromLoginIfNeeded()
         trainingRepository.seedCompletedPastCycleAndCurrentCycleLogForSwitchTest()
@@ -1291,6 +1372,34 @@ class TrainingUiTest {
         waitForNodeWithTagToDisappear("training_routine_library_dialog")
     }
 
+    private fun substituteVisibleRoutineExerciseWithIndoorBike() {
+        composeRule.onNodeWithTag("training_substitute_routine_exercise")
+            .performScrollTo()
+            .performClick()
+        waitForNodeWithTag("training_routine_exercise_picker_dialog")
+        scrollToNodeWithTag("training_pick_routine_exercise_group_CARDIO")
+        composeRule.onNodeWithTag("training_pick_routine_exercise_group_CARDIO").performClick()
+        scrollToNodeWithTag("training_pick_routine_exercise_indoor_bike")
+        composeRule.onNodeWithTag("training_pick_routine_exercise_indoor_bike").performClick()
+        waitForNodeWithTagToDisappear("training_routine_exercise_picker_dialog")
+    }
+
+    private fun editCurrentCustomRoutineDayTwoToGobletAndSave() {
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        scrollToNodeWithTag("training_edit_current_custom_routine")
+        composeRule.onNodeWithTag("training_edit_current_custom_routine").performClick()
+        waitForNodeWithTag("training_custom_routine_builder")
+        composeRule.onNodeWithTag("training_custom_day_tab_1").performClick()
+        scrollToNodeWithTag("training_remove_custom_exercise_0")
+        composeRule.onNodeWithTag("training_remove_custom_exercise_0").performClick()
+        scrollToNodeWithTag("training_custom_exercise_group_LOWER_BODY")
+        composeRule.onNodeWithTag("training_custom_exercise_group_LOWER_BODY").performClick()
+        scrollToNodeWithTag("training_custom_add_exercise_goblet_squat")
+        composeRule.onNodeWithTag("training_custom_add_exercise_goblet_squat").performClick()
+        composeRule.onNodeWithTag("training_save_custom_routine").performClick()
+        waitForNodeWithTag("training_custom_routine_progress_dialog")
+    }
+
     private fun switchToDefaultRoutineFromPlanTab(templateId: String = "beginner-full-body-3day") {
         composeRule.onNodeWithTag("training_tab_plan").performClick()
         scrollToNodeWithTag("training_find_routine_button")
@@ -1465,7 +1574,8 @@ class TrainingUiTest {
         runCatching {
             composeRule.onNodeWithTag(testTag, useUnmergedTree = true).performScrollTo()
         }
-        composeRule.onNode(taggedTextMatcher(testTag, *texts), useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onAllNodes(taggedTextMatcher(testTag, *texts), useUnmergedTree = true)[0]
+            .assertIsDisplayed()
     }
 
     private fun hasTaggedTextContainingAny(testTag: String, vararg texts: String): Boolean =

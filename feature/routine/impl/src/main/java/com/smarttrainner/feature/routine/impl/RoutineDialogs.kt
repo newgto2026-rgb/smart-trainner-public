@@ -456,6 +456,78 @@ internal fun RoutineSwitchConfirmDialog(
 }
 
 @Composable
+internal fun CustomRoutineProgressConfirmDialog(
+    onKeepProgress: () -> Unit,
+    onResetCurrentCycle: () -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+                .testTag("training_custom_routine_progress_dialog"),
+            shape = RoundedCornerShape(8.dp),
+            color = SmartTrainnerColors.Surface,
+            shadowElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                DialogHeader(
+                    title = stringResource(R.string.routine_custom_progress_confirm_title),
+                    onDismissRequest = onDismissRequest
+                )
+                Text(
+                    text = stringResource(R.string.routine_custom_progress_confirm_body),
+                    color = SmartTrainnerColors.Muted,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = onKeepProgress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("training_keep_custom_routine_progress"),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text(stringResource(R.string.routine_custom_progress_keep))
+                    }
+                    OutlinedButton(
+                        onClick = onResetCurrentCycle,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("training_reset_custom_routine_progress"),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = SmartTrainnerColors.Danger
+                        )
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text(stringResource(R.string.routine_custom_progress_reset))
+                    }
+                    TextButton(
+                        onClick = onDismissRequest,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("training_cancel_custom_routine_progress")
+                    ) {
+                        Text(stringResource(R.string.routine_cancel))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 internal fun RoutineSettingsDialog(
     form: RoutineRecommendationFormState,
     availability: RoutineRecommendationFilterAvailability,
