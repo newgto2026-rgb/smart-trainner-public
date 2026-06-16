@@ -1,7 +1,6 @@
 package com.smarttrainner
 
 import android.Manifest
-import android.content.pm.ActivityInfo
 import android.content.Intent
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assert
@@ -464,7 +463,7 @@ class TrainingUiTest {
     }
 
     @Test
-    fun recordDialogKeepsEnteredValuesAfterLandscapeRecreation() {
+    fun recordDialogKeepsEnteredValuesAfterActivityRecreation() {
         continueFromLoginIfNeeded()
         composeRule.onNodeWithTag("training_tab_plan").performClick()
         clickPlanExercise("training_plan_exercise_leg_press")
@@ -476,19 +475,11 @@ class TrainingUiTest {
         assertTaggedTextContainsAny("training_set_weight_input_0", "1.5")
         assertTaggedTextContainsAny("training_set_weight_input_1", "2")
 
-        try {
-            scenario.onActivity { activity ->
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            }
-            waitForNodeWithTag("training_record_dialog")
+        scenario.recreate()
+        waitForNodeWithTag("training_record_dialog")
 
-            assertTaggedTextContainsAny("training_set_weight_input_0", "1.5")
-            assertTaggedTextContainsAny("training_set_weight_input_1", "2")
-        } finally {
-            scenario.onActivity { activity ->
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            }
-        }
+        assertTaggedTextContainsAny("training_set_weight_input_0", "1.5")
+        assertTaggedTextContainsAny("training_set_weight_input_1", "2")
     }
 
     @Test
