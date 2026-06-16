@@ -39,10 +39,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
 import com.smarttrainner.core.model.Exercise
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.CycleSummary
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutSetLog
+import com.smarttrainner.core.model.effectiveSetLoadsKg
 import com.smarttrainner.core.ui.SmartTrainnerBadge
 import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
 import com.smarttrainner.core.ui.SmartTrainnerBadgeSpec
@@ -55,7 +57,7 @@ internal fun AnalysisContent(state: AnalysisUiState) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         SummaryBand(summary = state.summary, cycleNumber = state.cycleNumber)
         if (state.recentLogs.isNotEmpty()) {
-            RecentRecordsCard(records = state.recentLogs)
+            RecentRecordsCard(records = state.recentLogs, bodyWeightKg = state.bodyWeightKg)
         }
         MuscleBalanceCard(summary = state.summary)
     }
@@ -63,7 +65,8 @@ internal fun AnalysisContent(state: AnalysisUiState) {
 
 @Composable
 private fun RecentRecordsCard(
-    records: List<RecentWorkoutLogUiModel>
+    records: List<RecentWorkoutLogUiModel>,
+    bodyWeightKg: Double?
 ) {
     var visibleRecordLimit by remember(records) { mutableIntStateOf(RECENT_RECORD_PREVIEW_LIMIT) }
     val visibleRecords = records.take(visibleRecordLimit)
@@ -101,7 +104,7 @@ private fun RecentRecordsCard(
                 style = MaterialTheme.typography.bodySmall
             )
             visibleRecords.forEach { record ->
-                RecentRecordItem(record = record)
+                RecentRecordItem(record = record, bodyWeightKg = bodyWeightKg)
             }
             if (canShowMore || canCollapse) {
                 Row(
@@ -152,7 +155,8 @@ private fun RecentRecordsCard(
 
 @Composable
 private fun RecentRecordItem(
-    record: RecentWorkoutLogUiModel
+    record: RecentWorkoutLogUiModel,
+    bodyWeightKg: Double?
 ) {
     val log = record.log
     Surface(
@@ -189,7 +193,7 @@ private fun RecentRecordItem(
                 )
             }
             SmartTrainnerBadgeRow(
-                badges = log.metricBadges(),
+                badges = log.metricBadges(record.exercise, bodyWeightKg),
                 maxItemsPerRow = 3
             )
         }
@@ -197,7 +201,10 @@ private fun RecentRecordItem(
 }
 
 @Composable
-private fun WorkoutLog.metricBadges(): List<SmartTrainnerBadgeSpec> = buildList {
+private fun WorkoutLog.metricBadges(
+    exercise: Exercise?,
+    bodyWeightKg: Double?
+): List<SmartTrainnerBadgeSpec> = buildList {
     add(
         SmartTrainnerBadgeSpec(
             text = stringResource(R.string.analysis_record_metric_sets, sets),
@@ -216,10 +223,24 @@ private fun WorkoutLog.metricBadges(): List<SmartTrainnerBadgeSpec> = buildList 
         )
     }
     displayWeightText()?.let { value ->
+        val weightTextRes = if (exercise?.loadType == ExerciseLoadType.ASSISTANCE_LOAD) {
+            R.string.analysis_record_metric_assistance_weight
+        } else {
+            R.string.analysis_record_metric_weight
+        }
         add(
             SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.analysis_record_metric_weight, value),
+                text = stringResource(weightTextRes, value),
                 containerColor = SmartTrainnerColors.SteelSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+    }
+    displayEffectiveLoadText(exercise, bodyWeightKg)?.let { value ->
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(R.string.analysis_record_metric_effective_load, value),
+                containerColor = SmartTrainnerColors.GreenSoft,
                 contentColor = SmartTrainnerColors.Ink
             )
         )
@@ -240,6 +261,16 @@ private fun WorkoutLog.displayWeightText(): String? =
     displaySetWeights()
         .takeIf { it.isNotEmpty() }
         ?.joinToString("/") { it.toRecordInput() }
+
+private fun WorkoutLog.displayEffectiveLoadText(
+    exercise: Exercise?,
+    bodyWeightKg: Double?
+): String? {
+    if (exercise == null) return null
+    return effectiveSetLoadsKg(exercise, bodyWeightKg)
+        .takeIf { it.isNotEmpty() }
+        ?.joinToString("/") { it.toRecordInput() }
+}
 
 private fun WorkoutLog.displaySetWeights(): List<Double> =
     setEntries.weightEntries().ifEmpty {

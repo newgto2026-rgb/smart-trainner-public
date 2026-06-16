@@ -1,6 +1,7 @@
 package com.smarttrainner.feature.calendar.impl
 
 import androidx.compose.runtime.Immutable
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutSetLog
@@ -39,5 +40,8 @@ internal data class CalendarSelectedWorkoutUiModel(
     val memo: String,
     val completed: Boolean,
     val volumeKg: Double,
+    val loadType: ExerciseLoadType,
+    val effectiveVolumeKg: Double?,
+    val effectiveSetLoadsKg: List<Double> = emptyList(),
     val setEntries: List<WorkoutSetLog> = emptyList()
 )

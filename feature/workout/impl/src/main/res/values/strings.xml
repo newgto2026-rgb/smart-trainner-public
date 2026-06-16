@@ -4,6 +4,7 @@
     <string name="workout_remove_set">Remove Set</string>
     <string name="workout_reps">Reps</string>
     <string name="workout_weight_short">kg</string>
+    <string name="workout_assistance_weight_short">Assist kg</string>
     <string name="workout_not_recorded">Not logged</string>
     <string name="workout_duration">Minutes</string>
     <string name="workout_rest_seconds">Rest (s)</string>
@@ -28,6 +29,7 @@
     <string name="workout_substitute_exercise_short">Swap</string>
     <string name="workout_actual_reps">Reps %1$s</string>
     <string name="workout_actual_weight">%1$s kg</string>
+    <string name="workout_actual_assistance_weight">Assist %1$s kg</string>
     <string name="workout_actual_duration">%1$s min</string>
     <string name="workout_actual_rest">Rest %1$s s</string>
     <string name="workout_metric_recommended">Target</string>

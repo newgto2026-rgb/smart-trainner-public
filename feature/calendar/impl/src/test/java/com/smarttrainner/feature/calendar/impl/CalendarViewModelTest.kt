@@ -4,13 +4,23 @@ import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.AuthProvider
+import com.smarttrainner.core.model.BodyMeasurement
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.MuscleGroup
+import com.smarttrainner.core.model.NicknameAvailability
 import com.smarttrainner.core.model.PlannedExerciseId
+import com.smarttrainner.core.model.ProfileGender
+import com.smarttrainner.core.model.ProfileSetup
+import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.UserProfile
+import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
@@ -219,7 +229,7 @@ class CalendarViewModelTest {
         savedStateHandle: SavedStateHandle = SavedStateHandle()
     ) = CalendarViewModel(
         savedStateHandle = savedStateHandle,
-        observeWorkoutCalendarMonth = ObserveWorkoutCalendarMonthUseCase(repository, repository),
+        observeWorkoutCalendarMonth = ObserveWorkoutCalendarMonthUseCase(repository, repository, repository),
         observeCalendarMonthExpanded = ObserveCalendarMonthExpandedUseCase(preferencesRepository),
         updateCalendarMonthExpanded = UpdateCalendarMonthExpandedUseCase(preferencesRepository),
         clock = fixedClock
@@ -239,7 +249,7 @@ class MainDispatcherRule(
     }
 }
 
-private class FakeCalendarRepository : WorkoutLogRepository, ExerciseRepository {
+private class FakeCalendarRepository : WorkoutLogRepository, ExerciseRepository, SessionRepository {
     val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
     private val exercises = MutableStateFlow(
         listOf(
@@ -247,6 +257,7 @@ private class FakeCalendarRepository : WorkoutLogRepository, ExerciseRepository 
             exercise("row", "Row", MuscleGroup.BACK)
         )
     )
+    private val activeSession = MutableStateFlow(sessionWithBodyWeight(80.0))
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
@@ -256,6 +267,40 @@ private class FakeCalendarRepository : WorkoutLogRepository, ExerciseRepository 
 
     override suspend fun getExercise(id: ExerciseId): Exercise? =
         exercises.value.firstOrNull { it.id == id }
+
+    override fun observeActiveSession(): Flow<UserSession?> = activeSession
+
+    override fun observeTrainingExperience(): Flow<TrainingExperience> =
+        MutableStateFlow(TrainingExperience.BEGINNER)
+
+    override suspend fun startDefaultSession(
+        nickname: String,
+        profileSetup: ProfileSetup
+    ): Result<UserSession> = unsupported()
+
+    override suspend fun checkNicknameAvailability(nickname: String): Result<NicknameAvailability> = unsupported()
+
+    override suspend fun signInWithGoogle(
+        idToken: String,
+        nickname: String?,
+        profileSetup: ProfileSetup?,
+        forceDeviceLogin: Boolean
+    ): Result<UserSession> = unsupported()
+
+    override suspend fun validateActiveSessionDevice(): Result<Unit> = unsupported()
+
+    override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> = unsupported()
+
+    override suspend fun updateBodyProfile(
+        gender: ProfileGender?,
+        heightCm: Int,
+        weightKg: Double,
+        nickname: String?
+    ): Result<Unit> = unsupported()
+
+    override suspend fun logout(): Result<Unit> = unsupported()
+
+    private fun <T> unsupported(): Result<T> = Result.failure(UnsupportedOperationException())
 }
 
 private class FakeCalendarPreferencesRepository(
@@ -294,7 +339,8 @@ private fun workoutLog(
 private fun exercise(
     id: String,
     name: String,
-    muscleGroup: MuscleGroup
+    muscleGroup: MuscleGroup,
+    loadType: ExerciseLoadType = ExerciseLoadType.EXTERNAL_LOAD
 ) = Exercise(
     id = ExerciseId(id),
     name = name,
@@ -308,5 +354,24 @@ private fun exercise(
     defaultSets = 3,
     defaultRepRange = 8..12,
     defaultDurationMinutes = null,
-    restSeconds = 90
+    restSeconds = 90,
+    loadType = loadType
 )
+
+private fun sessionWithBodyWeight(weightKg: Double): UserSession =
+    UserSession(
+        id = UserSessionId("session"),
+        displayName = "Local",
+        email = null,
+        provider = AuthProvider.LOCAL,
+        linkedAt = null,
+        profile = UserProfile(
+            bodyMeasurements = listOf(
+                BodyMeasurement(
+                    recordedDate = LocalDate.of(2026, 5, 1),
+                    heightCm = 180,
+                    weightKg = weightKg
+                )
+            )
+        )
+    )

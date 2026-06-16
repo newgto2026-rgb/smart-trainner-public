@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutSetLog
 import com.smarttrainner.core.ui.SmartTrainnerBadgeRow
@@ -132,18 +133,37 @@ private fun CalendarSelectedWorkoutUiModel.metricBadges(): List<SmartTrainnerBad
         )
     }
     displayWeightText()?.let { value ->
+        val weightTextRes = if (loadType == ExerciseLoadType.ASSISTANCE_LOAD) {
+            R.string.calendar_record_metric_assistance_weight
+        } else {
+            R.string.calendar_record_metric_weight
+        }
         add(
             SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.calendar_record_metric_weight, value),
+                text = stringResource(weightTextRes, value),
                 containerColor = SmartTrainnerColors.SteelSoft,
                 contentColor = SmartTrainnerColors.Ink
             )
         )
     }
-    if (volumeKg > 0.0) {
+    displayEffectiveLoadText()?.let { value ->
         add(
             SmartTrainnerBadgeSpec(
-                text = stringResource(R.string.calendar_record_metric_volume, volumeKg),
+                text = stringResource(R.string.calendar_record_metric_effective_load, value),
+                containerColor = SmartTrainnerColors.GreenSoft,
+                contentColor = SmartTrainnerColors.Ink
+            )
+        )
+    }
+    if (volumeKg > 0.0) {
+        val volumeTextRes = if (loadType == ExerciseLoadType.ASSISTANCE_LOAD && effectiveVolumeKg != null) {
+            R.string.calendar_record_metric_effective_volume
+        } else {
+            R.string.calendar_record_metric_volume
+        }
+        add(
+            SmartTrainnerBadgeSpec(
+                text = stringResource(volumeTextRes, volumeKg),
                 containerColor = SmartTrainnerColors.SteelSoft,
                 contentColor = SmartTrainnerColors.Ink
             )
@@ -153,6 +173,11 @@ private fun CalendarSelectedWorkoutUiModel.metricBadges(): List<SmartTrainnerBad
 
 private fun CalendarSelectedWorkoutUiModel.displayWeightText(): String? =
     displaySetWeights()
+        .takeIf { it.isNotEmpty() }
+        ?.joinToString("/") { it.toRecordInput() }
+
+private fun CalendarSelectedWorkoutUiModel.displayEffectiveLoadText(): String? =
+    effectiveSetLoadsKg
         .takeIf { it.isNotEmpty() }
         ?.joinToString("/") { it.toRecordInput() }
 

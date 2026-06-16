@@ -36,6 +36,11 @@ enum class ExerciseMuscleRole {
     SECONDARY
 }
 
+enum class ExerciseLoadType {
+    EXTERNAL_LOAD,
+    ASSISTANCE_LOAD
+}
+
 enum class ExerciseMovementPattern(val sortRank: Int) {
     SQUAT(0),
     LEG_PRESS(1),
@@ -81,7 +86,8 @@ data class Exercise(
     val movementPattern: ExerciseMovementPattern = ExerciseMovementPattern.ACCESSORY,
     val popularityRank: Int = Int.MAX_VALUE,
     val variantRank: Int = Int.MAX_VALUE,
-    val catalogOrder: Int = Int.MAX_VALUE
+    val catalogOrder: Int = Int.MAX_VALUE,
+    val loadType: ExerciseLoadType = ExerciseLoadType.EXTERNAL_LOAD
 ) {
     val targetText: String
         get() = if (defaultRepRange != null) {

@@ -238,5 +238,8 @@ internal fun WorkoutCalendarLog.toUiModel(): CalendarSelectedWorkoutUiModel =
         memo = memo,
         completed = completed,
         volumeKg = volumeKg,
+        loadType = loadType,
+        effectiveVolumeKg = effectiveVolumeKg,
+        effectiveSetLoadsKg = effectiveSetLoadsKg,
         setEntries = setEntries
     )

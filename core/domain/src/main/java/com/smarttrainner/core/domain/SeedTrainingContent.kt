@@ -4,6 +4,7 @@ import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.ExerciseMovementPattern
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanLevel
@@ -140,7 +141,7 @@ object SeedTrainingContent {
         exercise("seated_cable_row", "시티드 케이블 로우", MuscleGroup.BACK, EquipmentType.CABLE, DifficultyLevel.BEGINNER, "seated_cable_row", "등 중앙과 자세 안정에 도움이 되는 수평 당기기 운동입니다.", listOf("허리 세팅: 발판에 발을 고정하고 허리를 중립으로 세운 뒤 팔을 길게 뻗어 손잡이를 잡습니다.", "팔꿈치 당기기: 몸통을 뒤로 젖히지 않고 팔꿈치를 갈비뼈 옆으로 당겨 손잡이를 몸 가까이 가져옵니다.", "견갑 통제 복귀: 어깨가 앞으로 끌려가지 않게 버티며 팔을 천천히 뻗어 시작 위치로 돌아갑니다."), listOf("상체를 크게 젖혀 반동을 만들지 마세요.", "어깨를 으쓱하지 마세요."), 3, 8..12, null, 90),
         exercise("chest_supported_row", "덤벨 체스트 서포티드 로우", MuscleGroup.BACK, EquipmentType.DUMBBELL, DifficultyLevel.BEGINNER, "chest_supported_row", "인클라인 벤치에 가슴을 지지해 허리 부담을 줄이고 등 당기기 감각을 익히는 덤벨 운동입니다.", listOf("벤치에 가슴 지지: 인클라인 벤치에 가슴을 붙이고 발끝으로 몸을 안정시킨 뒤 덤벨을 아래로 둡니다.", "팔꿈치 뒤로 당기기: 가슴이 벤치에서 뜨지 않게 유지하며 팔꿈치를 등 뒤로 보내 덤벨을 몸 옆으로 당깁니다.", "통제 복귀: 어깨가 앞으로 끌려가지 않게 견갑을 통제하며 덤벨을 천천히 아래로 내립니다."), listOf("목이 앞으로 빠지지 않게 하세요.", "가슴이 벤치에서 뜨면 중량을 낮추세요.", "허리 반동으로 덤벨을 끌어올리지 마세요."), 3, 8..12, null, 90),
         exercise("one_arm_dumbbell_row", "원암 덤벨 로우", MuscleGroup.BACK, EquipmentType.DUMBBELL, DifficultyLevel.INTERMEDIATE, "one_arm_dumbbell_row", "한쪽씩 등 수축과 몸통 회전 억제를 연습하기 좋은 덤벨 운동입니다.", listOf("벤치 지지: 한 손과 한쪽 무릎을 벤치에 두고 반대쪽 발은 바닥에 단단히 고정합니다.", "몸통 고정: 골반과 어깨가 바닥을 향하게 유지하고 덤벨을 어깨 아래에 둡니다.", "당기기: 몸통을 비틀지 않고 팔꿈치를 뒤로 보내 덤벨을 옆구리 가까이 당깁니다.", "회전 없이 내리기: 어깨가 앞으로 끌려가지 않게 통제하며 덤벨을 시작 위치로 천천히 내립니다."), listOf("몸을 비틀어 올리지 마세요.", "어깨가 귀 쪽으로 올라가면 중량을 낮추세요.", "허리가 불편하면 머신 로우로 대체하세요."), 3, 8..12, null, 90),
-        exercise("assisted_pullup", "어시스티드 풀업", MuscleGroup.BACK, EquipmentType.MACHINE, DifficultyLevel.INTERMEDIATE, "assisted_pullup", "보조 중량으로 풀업 패턴을 익히는 운동입니다.", listOf("발판과 보조 패드 진입: 발판에 올라 상단 손잡이 아래에 몸을 두고 한쪽 무릎씩 움직이는 보조 패드에 올립니다.", "상단 손잡이 잡기: 손잡이는 머리 위 고정 위치에서 잡고 가슴을 살짝 들어 몸통을 흔들리지 않게 준비합니다.", "가슴을 손잡이 쪽으로 끌기: 턱만 빼지 말고 팔꿈치를 아래로 당기며 몸을 위로 올립니다.", "패드와 함께 천천히 하강: 몸과 보조 패드가 함께 아래로 내려오게 통제하며 팔을 펴고 다음 반복을 준비합니다."), listOf("어깨 앞쪽 통증이 있으면 중단하세요.", "목을 빼서 턱만 올리지 마세요.", "보조 중량은 클수록 더 많은 도움을 줍니다.", "발판과 무릎 패드에서 균형이 흔들리면 중량을 조정하세요."), 3, 6..10, null, 120),
+        exercise("assisted_pullup", "어시스티드 풀업", MuscleGroup.BACK, EquipmentType.MACHINE, DifficultyLevel.INTERMEDIATE, "assisted_pullup", "보조 중량으로 풀업 패턴을 익히는 운동입니다.", listOf("발판과 보조 패드 진입: 발판에 올라 상단 손잡이 아래에 몸을 두고 한쪽 무릎씩 움직이는 보조 패드에 올립니다.", "상단 손잡이 잡기: 손잡이는 머리 위 고정 위치에서 잡고 가슴을 살짝 들어 몸통을 흔들리지 않게 준비합니다.", "가슴을 손잡이 쪽으로 끌기: 턱만 빼지 말고 팔꿈치를 아래로 당기며 몸을 위로 올립니다.", "패드와 함께 천천히 하강: 몸과 보조 패드가 함께 아래로 내려오게 통제하며 팔을 펴고 다음 반복을 준비합니다."), listOf("어깨 앞쪽 통증이 있으면 중단하세요.", "목을 빼서 턱만 올리지 마세요.", "보조 중량은 클수록 더 많은 도움을 줍니다.", "발판과 무릎 패드에서 균형이 흔들리면 중량을 조정하세요."), 3, 6..10, null, 120, loadType = ExerciseLoadType.ASSISTANCE_LOAD),
         exercise("pullup", "풀업", MuscleGroup.BACK, EquipmentType.BODYWEIGHT, DifficultyLevel.INTERMEDIATE, "pullup", "자기 체중으로 등과 팔 당기기 힘을 기르는 대표 맨몸 운동입니다.", listOf("손잡이 잡기: 바를 어깨보다 약간 넓게 잡고 몸이 흔들리지 않게 매달립니다.", "어깨 낮추기: 어깨가 귀로 올라가지 않게 낮추고 복부에 힘을 줍니다.", "가슴을 바 쪽으로 당기기: 턱만 빼지 말고 팔꿈치를 아래로 끌어 몸을 올립니다.", "통제 하강: 반동 없이 팔을 천천히 펴며 시작 위치로 돌아옵니다."), listOf("어깨나 팔꿈치 통증이 있으면 어시스티드 풀업으로 대체하세요.", "다리를 차서 반동을 만들지 마세요.", "목만 빼서 턱을 바에 맞추지 마세요."), 3, 4..8, null, 120),
         exercise("face_pull", "페이스 풀", MuscleGroup.SHOULDERS, EquipmentType.CABLE, DifficultyLevel.BEGINNER, "face_pull", "후면 어깨와 상부 등을 가볍게 깨우는 로프 케이블 운동입니다.", listOf("케이블 높이: 로프가 얼굴 높이에서 오도록 맞추고 팔을 뻗은 상태로 몸통을 세웁니다.", "얼굴 옆으로 당기기: 팔꿈치를 높게 유지하고 로프 끝을 얼굴 양옆으로 벌리며 당깁니다.", "팔꿈치 유지 복귀: 어깨가 말리지 않게 통제하며 같은 경로로 팔을 천천히 뻗습니다."), listOf("허리를 젖혀 당기지 마세요.", "팔꿈치가 아래로 떨어지면 중량을 낮추세요.", "가벼운 중량으로 움직임을 먼저 익히세요."), 3, 12..15, null, 60),
         exercise("machine_chest_press", "머신 체스트 프레스", MuscleGroup.CHEST, EquipmentType.MACHINE, DifficultyLevel.BEGINNER, "machine_chest_press", "가슴 밀기 패턴을 안정적으로 배우는 머신 운동입니다.", listOf("좌석 조정: 손잡이가 가슴 중간 높이에 오도록 좌석을 맞추고 등과 엉덩이를 패드에 붙입니다.", "밀기: 어깨가 들리지 않게 고정하고 손잡이를 같은 속도로 앞으로 밀어냅니다.", "어깨 범위 내 복귀: 가슴이 늘어나는 범위까지만 손잡이를 천천히 되돌립니다."), listOf("손목을 꺾지 마세요.", "어깨 통증이 있으면 범위를 줄이세요.", "반동으로 손잡이를 튕기지 마세요."), 3, 8..12, null, 90),
@@ -186,7 +187,7 @@ object SeedTrainingContent {
         exercise("pec_deck_fly", "펙덱 플라이", MuscleGroup.CHEST, EquipmentType.MACHINE, DifficultyLevel.BEGINNER, "pec_deck_fly", "가슴을 모으는 감각을 안전하게 배우는 머신 운동입니다.", listOf("패드 높이: 등과 엉덩이를 패드에 붙이고 팔꿈치와 손잡이가 가슴 높이에 오도록 앉습니다.", "앞으로 모으기: 어깨가 들리지 않게 손잡이를 가슴 앞에서 모으며 가슴을 조입니다.", "가슴 범위 내 복귀: 어깨가 과하게 뒤로 젖혀지기 전까지만 천천히 열어 시작 자세로 돌아갑니다."), listOf("어깨를 과하게 뒤로 보내지 마세요.", "무게보다 움직임 통제를 우선하세요.", "허리를 띄워 손잡이를 억지로 모으지 마세요."), 2, 10..15, null, 60),
         exercise("incline_machine_press", "인클라인 머신 프레스", MuscleGroup.CHEST, EquipmentType.MACHINE, DifficultyLevel.BEGINNER, "incline_machine_press", "윗가슴 프레스를 안정적으로 연습하는 머신 운동입니다.", listOf("손잡이 높이: 등을 기울어진 패드에 붙이고 손잡이가 윗가슴 옆에 오도록 앉습니다.", "대각선 밀기: 등과 엉덩이를 패드에 붙인 채 손잡이를 가슴 앞 대각선 위로 밀어냅니다.", "어깨 범위 내 복귀: 어깨가 앞쪽으로 말리지 않는 범위에서 손잡이를 윗가슴 옆으로 천천히 되돌립니다."), listOf("허리를 심하게 띄우지 마세요.", "어깨 전면 통증이 있으면 중단하세요.", "손잡이가 머리 위로만 올라가면 좌석 높이를 다시 맞추세요."), 3, 8..12, null, 90),
         exercise("dumbbell_floor_press", "덤벨 플로어 프레스", MuscleGroup.CHEST, EquipmentType.DUMBBELL, DifficultyLevel.BEGINNER, "dumbbell_floor_press", "바닥이 범위를 제한해 어깨 부담을 줄인 프레스입니다.", listOf("바닥에 눕기: 무릎을 세우고 양발을 바닥에 둔 채 덤벨을 가슴 양옆에 준비합니다.", "팔꿈치·손목 정렬: 팔꿈치는 몸통에서 30~45도 열고 손목을 덤벨 아래에 세웁니다.", "위로 밀기: 등은 바닥에 둔 채 양덤벨을 가슴 위로 밀고 팔꿈치는 잠그지 않습니다.", "팔꿈치 가볍게 하강: 팔꿈치가 바닥 가까이 오도록 천천히 내려 다음 반복을 준비합니다."), listOf("팔꿈치를 바닥에 세게 찍지 마세요.", "손목을 중립으로 유지하세요.", "벤치프레스처럼 허리를 과하게 띄우지 마세요."), 3, 8..12, null, 90),
-        exercise("assisted_dip", "어시스티드 딥", MuscleGroup.CHEST, EquipmentType.MACHINE, DifficultyLevel.INTERMEDIATE, "assisted_dip", "가슴과 삼두를 함께 쓰는 보조 딥 운동입니다.", listOf("보조 패드 진입: 손잡이를 잡고 발판을 딛은 뒤 한쪽 무릎부터 보조 패드에 올립니다.", "손잡이 지지: 양무릎을 패드에 두고 팔을 편 상태에서 어깨를 내리며 몸통을 세웁니다.", "통증 없는 하강: 팔꿈치를 굽혀 몸을 내리되 어깨 앞쪽이 찝히기 전까지만 내려갑니다.", "밀어 올라오기: 손잡이를 밀어 팔을 펴며 시작 위치로 올라오고 패드와 몸통을 흔들지 않습니다."), listOf("어깨 앞쪽 통증이 있으면 제외하세요.", "너무 깊이 내려가지 마세요.", "보조 패드가 흔들리면 중량 보조를 늘리세요."), 2, 6..10, null, 120),
+        exercise("assisted_dip", "어시스티드 딥", MuscleGroup.CHEST, EquipmentType.MACHINE, DifficultyLevel.INTERMEDIATE, "assisted_dip", "가슴과 삼두를 함께 쓰는 보조 딥 운동입니다.", listOf("보조 패드 진입: 손잡이를 잡고 발판을 딛은 뒤 한쪽 무릎부터 보조 패드에 올립니다.", "손잡이 지지: 양무릎을 패드에 두고 팔을 편 상태에서 어깨를 내리며 몸통을 세웁니다.", "통증 없는 하강: 팔꿈치를 굽혀 몸을 내리되 어깨 앞쪽이 찝히기 전까지만 내려갑니다.", "밀어 올라오기: 손잡이를 밀어 팔을 펴며 시작 위치로 올라오고 패드와 몸통을 흔들지 않습니다."), listOf("어깨 앞쪽 통증이 있으면 제외하세요.", "너무 깊이 내려가지 마세요.", "보조 패드가 흔들리면 중량 보조를 늘리세요."), 2, 6..10, null, 120, loadType = ExerciseLoadType.ASSISTANCE_LOAD),
         exercise("dip", "딥스", MuscleGroup.CHEST, EquipmentType.BODYWEIGHT, DifficultyLevel.INTERMEDIATE, "dip", "평행봉에서 가슴과 삼두를 함께 쓰는 대표 맨몸 밀기 운동입니다.", listOf("손잡이 지지: 평행봉을 잡고 팔을 편 상태에서 어깨를 귀에서 멀리 내립니다.", "몸통 각도 잡기: 몸통을 살짝 앞으로 기울이고 복부에 힘을 줘 흔들림을 줄입니다.", "통증 없는 하강: 팔꿈치를 굽혀 몸을 내리되 어깨 앞쪽이 불편하기 전까지만 갑니다.", "밀어 올라오기: 손잡이를 밀어 시작 위치로 돌아오고 팔꿈치를 세게 잠그지 않습니다."), listOf("어깨 앞쪽 통증이 있으면 어시스티드 딥이나 푸시업으로 대체하세요.", "너무 깊이 내려가지 마세요.", "반동으로 몸을 튕기지 마세요."), 3, 6..10, null, 120),
         exercise("cable_chest_press", "케이블 체스트 프레스", MuscleGroup.CHEST, EquipmentType.CABLE, DifficultyLevel.INTERMEDIATE, "cable_chest_press", "케이블 장력으로 가슴 밀기와 몸통 안정성을 함께 쓰는 운동입니다.", listOf("케이블 높이: 양쪽 손잡이가 가슴 중간 높이에 오도록 맞추고 케이블 중앙에 섭니다.", "스탠스 잡기: 한 발을 앞에 둔 스플릿 스탠스로 서서 손잡이를 가슴 옆에 둡니다.", "앞으로 밀기: 몸통을 고정한 채 양손 손잡이를 가슴 앞쪽으로 밀어 팔을 거의 폅니다.", "몸통 고정 복귀: 케이블 장력을 유지하며 손잡이를 가슴 옆으로 천천히 되돌립니다."), listOf("허리를 꺾어 밀지 마세요.", "균형이 흔들리면 머신으로 대체하세요.", "케이블이 팔을 뒤로 끌고 가지 않게 통제하세요."), 2, 8..12, null, 90),
         exercise("close_grip_pushup", "클로즈 그립 푸시업", MuscleGroup.TRICEPS, EquipmentType.BODYWEIGHT, DifficultyLevel.INTERMEDIATE, "close_grip_pushup", "가슴과 삼두를 함께 쓰는 맨몸 보조 운동입니다.", listOf("손 위치: 손을 가슴 아래 좁은 간격으로 두고 머리부터 뒤꿈치까지 일직선을 만듭니다.", "팔꿈치 붙여 하강: 팔꿈치가 옆으로 벌어지지 않게 몸통 가까이 접으며 몸 전체를 함께 내립니다.", "하단 통제: 가슴을 바닥 가까이 두고 손 위치와 몸통 일직선을 유지합니다.", "밀어 올라오기: 손바닥으로 바닥을 밀어 시작 자세로 돌아오되 허리가 처지지 않게 합니다."), listOf("손목 통증이 있으면 손 위치를 넓히세요.", "허리가 처지면 무릎을 대고 진행하세요.", "팔꿈치가 옆으로 벌어지면 난이도를 낮추세요."), 2, 6..12, null, 90),
@@ -1762,7 +1763,8 @@ object SeedTrainingContent {
         defaultSets: Int,
         defaultRepRange: IntRange?,
         defaultDurationMinutes: Int?,
-        restSeconds: Int
+        restSeconds: Int,
+        loadType: ExerciseLoadType = ExerciseLoadType.EXTERNAL_LOAD
     ): Exercise {
         val normalizedSets = when {
             defaultRepRange != null -> DEFAULT_REP_SETS
@@ -1789,7 +1791,8 @@ object SeedTrainingContent {
                 muscleGroup = muscleGroup,
                 equipment = equipment,
                 difficulty = difficulty
-            )
+            ),
+            loadType = loadType
         )
     }
 

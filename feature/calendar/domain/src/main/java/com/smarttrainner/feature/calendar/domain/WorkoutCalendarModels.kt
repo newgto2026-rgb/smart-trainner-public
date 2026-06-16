@@ -1,5 +1,6 @@
 package com.smarttrainner.feature.calendar.domain
 
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.WorkoutLogId
@@ -36,5 +37,8 @@ data class WorkoutCalendarLog(
     val memo: String,
     val completed: Boolean,
     val volumeKg: Double,
+    val loadType: ExerciseLoadType,
+    val effectiveVolumeKg: Double?,
+    val effectiveSetLoadsKg: List<Double> = emptyList(),
     val setEntries: List<WorkoutSetLog> = emptyList()
 )

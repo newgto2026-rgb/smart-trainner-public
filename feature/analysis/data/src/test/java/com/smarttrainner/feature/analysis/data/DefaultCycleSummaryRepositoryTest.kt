@@ -1,21 +1,33 @@
 package com.smarttrainner.feature.analysis.data
 
 import com.google.common.truth.Truth.assertThat
+import com.smarttrainner.core.domain.SessionRepository
+import com.smarttrainner.core.model.AuthProvider
 import com.smarttrainner.core.model.CurrentRoutineCycle
 import com.smarttrainner.core.model.CyclePlan
+import com.smarttrainner.core.model.NicknameAvailability
 import com.smarttrainner.core.model.PlanId
+import com.smarttrainner.core.model.ProfileGender
+import com.smarttrainner.core.model.ProfileSetup
 import com.smarttrainner.core.model.RoutineProgress
+import com.smarttrainner.core.model.TrainingExperience
+import com.smarttrainner.core.model.UserSession
+import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.feature.analysis.domain.CycleSummaryCalculator
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class DefaultCycleSummaryRepositoryTest {
+    private val sessionRepository = FakeSessionRepository()
     private val repository = DefaultCycleSummaryRepository(
-        summaryCalculator = CycleSummaryCalculator()
+        summaryCalculator = CycleSummaryCalculator(),
+        sessionRepository = sessionRepository
     )
 
     @Test
@@ -69,4 +81,50 @@ class DefaultCycleSummaryRepositoryTest {
             latestCompletion = null
         )
     }
+}
+
+private class FakeSessionRepository : SessionRepository {
+    private val activeSession = MutableStateFlow<UserSession?>(
+        UserSession(
+            id = UserSessionId("local-default"),
+            displayName = "Local",
+            email = null,
+            provider = AuthProvider.LOCAL,
+            linkedAt = null
+        )
+    )
+
+    override fun observeActiveSession(): Flow<UserSession?> = activeSession
+
+    override fun observeTrainingExperience(): Flow<TrainingExperience> =
+        MutableStateFlow(TrainingExperience.BEGINNER)
+
+    override suspend fun startDefaultSession(
+        nickname: String,
+        profileSetup: ProfileSetup
+    ): Result<UserSession> = unsupported()
+
+    override suspend fun checkNicknameAvailability(nickname: String): Result<NicknameAvailability> = unsupported()
+
+    override suspend fun signInWithGoogle(
+        idToken: String,
+        nickname: String?,
+        profileSetup: ProfileSetup?,
+        forceDeviceLogin: Boolean
+    ): Result<UserSession> = unsupported()
+
+    override suspend fun validateActiveSessionDevice(): Result<Unit> = unsupported()
+
+    override suspend fun setTrainingExperience(experience: TrainingExperience): Result<Unit> = unsupported()
+
+    override suspend fun updateBodyProfile(
+        gender: ProfileGender?,
+        heightCm: Int,
+        weightKg: Double,
+        nickname: String?
+    ): Result<Unit> = unsupported()
+
+    override suspend fun logout(): Result<Unit> = unsupported()
+
+    private fun <T> unsupported(): Result<T> = Result.failure(UnsupportedOperationException())
 }

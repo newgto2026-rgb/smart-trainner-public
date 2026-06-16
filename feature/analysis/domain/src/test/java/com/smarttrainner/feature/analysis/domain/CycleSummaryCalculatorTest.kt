@@ -6,6 +6,7 @@ import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanId
 import com.smarttrainner.core.model.PlannedExercise
@@ -89,6 +90,54 @@ class CycleSummaryCalculatorTest {
         assertThat(result.totalSets).isEqualTo(4)
         assertThat(result.totalVolumeKg).isEqualTo(2940.0)
         assertThat(result.muscleBalance[MuscleGroup.LOWER_BODY]).isEqualTo(1)
+    }
+
+    @Test
+    fun calculate_usesEffectiveVolumeForAssistedLoadExercises() {
+        val planned = plannedExercise(
+            id = "assisted_pullup",
+            muscleGroup = MuscleGroup.BACK,
+            loadType = ExerciseLoadType.ASSISTANCE_LOAD
+        )
+        val plan = CyclePlan(
+            id = PlanId("plan"),
+            templateId = "assisted",
+            name = "Assisted cycle",
+            cycleStartDate = cycleStart,
+            days = listOf(
+                WorkoutDayPlan(
+                    date = cycleStart,
+                    title = "Pull",
+                    focus = "Back",
+                    exercises = listOf(planned)
+                )
+            )
+        )
+        val logs = listOf(
+            WorkoutLog(
+                id = WorkoutLogId(1),
+                sessionId = UserSessionId("local-default"),
+                plannedExerciseId = planned.id,
+                exerciseId = planned.exercise.id,
+                performedAt = LocalDateTime.of(2026, 5, 18, 20, 0),
+                sets = 1,
+                reps = 5,
+                weightKg = 60.0,
+                durationMinutes = null,
+                memo = "",
+                completed = true
+            )
+        )
+
+        val result = calculate(
+            plan = plan,
+            logs = logs,
+            progress = progress(templateId = "assisted"),
+            zone = ZoneOffset.UTC,
+            bodyWeightKg = 80.0
+        )
+
+        assertThat(result.totalVolumeKg).isEqualTo(100.0)
     }
 
     @Test
@@ -604,27 +653,35 @@ class CycleSummaryCalculatorTest {
         plan: CyclePlan,
         logs: List<WorkoutLog>,
         progress: RoutineProgress,
-        zone: ZoneId
-    ) = calculator.calculate(
-        currentCycle = CurrentRoutineCycle(
-            progress = progress,
-            plan = plan,
-            currentDayIndex = progress.dayIndex.coerceInPlan(plan),
-            currentDay = plan.days.getOrNull(progress.dayIndex.coerceInPlan(plan)),
-            currentRoutineDayInstanceId = null,
-            currentRoutineDayDate = null,
-            previousRoutineDayInstanceId = null,
-            previousRoutineDayDate = null,
-            currentCycleLogs = logs,
-            allLogs = logs,
-            currentCyclePlannedExerciseIds = plan.days
-                .flatMap { day -> day.exercises.map { it.id } }
-                .toSet(),
-            currentDayCompletedPlannedExerciseIds = emptySet(),
-            latestCompletion = null
-        ),
-        zone = zone
-    )
+        zone: ZoneId,
+        bodyWeightKg: Double? = null
+    ) = CurrentRoutineCycle(
+        progress = progress,
+        plan = plan,
+        currentDayIndex = progress.dayIndex.coerceInPlan(plan),
+        currentDay = plan.days.getOrNull(progress.dayIndex.coerceInPlan(plan)),
+        currentRoutineDayInstanceId = null,
+        currentRoutineDayDate = null,
+        previousRoutineDayInstanceId = null,
+        previousRoutineDayDate = null,
+        currentCycleLogs = logs,
+        allLogs = logs,
+        currentCyclePlannedExerciseIds = plan.days
+            .flatMap { day -> day.exercises.map { it.id } }
+            .toSet(),
+        currentDayCompletedPlannedExerciseIds = emptySet(),
+        latestCompletion = null
+    ).let { currentCycle ->
+        if (bodyWeightKg == null) {
+            calculator.calculate(currentCycle = currentCycle, zone = zone)
+        } else {
+            calculator.calculate(
+                currentCycle = currentCycle,
+                zone = zone,
+                bodyWeightKg = bodyWeightKg
+            )
+        }
+    }
 
     private fun Int.coerceInPlan(plan: CyclePlan): Int =
         if (plan.days.isEmpty()) {
@@ -635,10 +692,11 @@ class CycleSummaryCalculatorTest {
 
     private fun plannedExercise(
         id: String,
-        muscleGroup: MuscleGroup
+        muscleGroup: MuscleGroup,
+        loadType: ExerciseLoadType = ExerciseLoadType.EXTERNAL_LOAD
     ): PlannedExercise = PlannedExercise(
         id = PlannedExerciseId("2026-05-18_$id"),
-        exercise = exercise(id, muscleGroup),
+        exercise = exercise(id, muscleGroup, loadType = loadType),
         sets = 3,
         repRange = 10..12,
         durationMinutes = null,
@@ -669,7 +727,8 @@ class CycleSummaryCalculatorTest {
     private fun exercise(
         id: String,
         muscleGroup: MuscleGroup,
-        muscleGroups: List<MuscleGroup> = listOf(muscleGroup)
+        muscleGroups: List<MuscleGroup> = listOf(muscleGroup),
+        loadType: ExerciseLoadType = ExerciseLoadType.EXTERNAL_LOAD
     ): Exercise = Exercise(
         id = ExerciseId(id),
         name = id,
@@ -684,6 +743,7 @@ class CycleSummaryCalculatorTest {
         defaultSets = 3,
         defaultRepRange = 10..12,
         defaultDurationMinutes = null,
-        restSeconds = 90
+        restSeconds = 90,
+        loadType = loadType
     )
 }
