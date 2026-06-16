@@ -36,6 +36,10 @@
     <string name="routine_custom_routine_name">Routine name</string>
     <string name="routine_custom_routine_saved">Routine saved.</string>
     <string name="routine_custom_template_meta">%1$d-day routine</string>
+    <string name="routine_custom_progress_confirm_body">This routine already has current-cycle progress. Keep completed exercises, assigned dates, and records while applying edits from your current point, or reset the current cycle from Day 1.</string>
+    <string name="routine_custom_progress_confirm_title">Apply routine edits?</string>
+    <string name="routine_custom_progress_keep">Keep progress and apply edits</string>
+    <string name="routine_custom_progress_reset">Reset current cycle</string>
     <string name="routine_day_focus_arm_accessories_conditioning">Arm accessories and conditioning</string>
     <string name="routine_day_focus_balance_posterior_chain">Balance and posterior chain</string>
     <string name="routine_day_focus_biceps_triceps_conditioning">Biceps, triceps, and conditioning</string>

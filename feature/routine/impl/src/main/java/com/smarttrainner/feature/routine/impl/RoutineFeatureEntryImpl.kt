@@ -79,6 +79,9 @@ class RoutineFeatureEntryImpl @Inject constructor(
                 onCustomRoutineExerciseMovedUp = viewModel::moveCustomRoutineExerciseUp,
                 onCustomRoutineExerciseMovedDown = viewModel::moveCustomRoutineExerciseDown,
                 onCustomRoutineSaved = viewModel::saveCustomRoutine,
+                onKeepCustomRoutineProgress = viewModel::keepCustomRoutineProgressAfterEdit,
+                onResetCustomRoutineProgress = viewModel::resetCustomRoutineProgressAfterEdit,
+                onDismissCustomRoutineProgressConfirm = viewModel::dismissCustomRoutineProgressConfirmation,
                 onCustomRoutineBuilderDismiss = viewModel::dismissCustomRoutineBuilder,
                 onRequestCompleteRoutineDay = viewModel::requestCompleteCurrentRoutineDay,
                 onConfirmCompleteRoutineDay = {
@@ -284,6 +287,13 @@ class RoutineFeatureEntryImpl @Inject constructor(
                     actions.onCustomRoutineSaved(state.customRoutineBuilder.editingRoutineId == null)
                 },
                 onDismissRequest = actions.onCustomRoutineBuilderDismiss
+            )
+        }
+        if (state.showCustomRoutineProgressConfirmDialog) {
+            CustomRoutineProgressConfirmDialog(
+                onKeepProgress = actions.onKeepCustomRoutineProgress,
+                onResetCurrentCycle = actions.onResetCustomRoutineProgress,
+                onDismissRequest = actions.onDismissCustomRoutineProgressConfirm
             )
         }
     }
