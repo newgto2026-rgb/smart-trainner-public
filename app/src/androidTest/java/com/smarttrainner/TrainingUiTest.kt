@@ -654,6 +654,74 @@ class TrainingUiTest {
     }
 
     @Test
+    fun calendarCanAddWorkoutForSelectedDate() {
+        continueFromLoginIfNeeded()
+
+        composeRule.onNodeWithTag("training_tab_calendar").performClick()
+        waitForNodeWithTag("calendar_day_workout_sheet")
+        composeRule.onNodeWithTag("calendar_add_workout").performClick()
+        waitForNodeWithTag("calendar_workout_editor_dialog")
+
+        selectCalendarEditorExercise("leg_press")
+        composeRule.onNodeWithTag("calendar_editor_set_reps_0")
+            .performScrollTo()
+            .performTextReplacement("11")
+        composeRule.onNodeWithTag("calendar_editor_set_weight_0")
+            .performScrollTo()
+            .performTextReplacement("70")
+        composeRule.onNodeWithTag("calendar_editor_set_rest_0")
+            .performScrollTo()
+            .performTextReplacement("120")
+        composeRule.onNodeWithTag("calendar_editor_memo")
+            .performScrollTo()
+            .performTextReplacement("calendar add")
+        composeRule.onNodeWithTag("calendar_editor_save").performScrollTo().performClick()
+        waitForNodeWithTagToDisappear("calendar_workout_editor_dialog")
+
+        val log = trainingRepository.workoutLogsForTest().single()
+        assertEquals("", log.plannedExerciseId.value)
+        assertEquals("leg_press", log.exerciseId.value)
+        assertEquals(FIXED_UI_DATE, log.performedAt.toLocalDate())
+        assertEquals("calendar add", log.memo)
+        assertEquals(11, log.setEntries.first().reps)
+        assertEquals(70.0, log.setEntries.first().weightKg)
+        assertAnyTextInsideTagWithScroll("calendar_day_workout_sheet", "레그 프레스", "Leg Press")
+        assertAnyTextInsideTagWithScroll("calendar_day_workout_sheet", "70 kg")
+    }
+
+    @Test
+    fun calendarCanEditExistingWorkoutWithoutDuplicatingHistory() {
+        continueFromLoginIfNeeded()
+        recordPlanExercise("training_plan_exercise_leg_press")
+        val originalLog = trainingRepository.workoutLogsForTest().single()
+
+        composeRule.onNodeWithTag("training_tab_calendar").performClick()
+        waitForNodeWithTag("calendar_day_workout_sheet")
+        composeRule.onNodeWithTag("calendar_edit_workout_${originalLog.id.value}")
+            .performScrollTo()
+            .performClick()
+        waitForNodeWithTag("calendar_workout_editor_dialog")
+
+        composeRule.onNodeWithTag("calendar_editor_set_weight_0")
+            .performScrollTo()
+            .performTextReplacement("5")
+        composeRule.onNodeWithTag("calendar_editor_memo")
+            .performScrollTo()
+            .performTextReplacement("calendar edit")
+        composeRule.onNodeWithTag("calendar_editor_save").performScrollTo().performClick()
+        waitForNodeWithTagToDisappear("calendar_workout_editor_dialog")
+
+        val editedLog = trainingRepository.workoutLogsForTest().single()
+        assertEquals(originalLog.id, editedLog.id)
+        assertEquals(originalLog.plannedExerciseId, editedLog.plannedExerciseId)
+        assertEquals(originalLog.routineDayInstanceId, editedLog.routineDayInstanceId)
+        assertEquals(originalLog.performedAt, editedLog.performedAt)
+        assertEquals("calendar edit", editedLog.memo)
+        assertEquals(5.0, editedLog.setEntries.first().weightKg)
+        assertAnyTextInsideTagWithScroll("calendar_day_workout_sheet", "5/1.5/2 kg")
+    }
+
+    @Test
     fun assistedLoadWorkoutShowsAssistanceAndEffectiveLoadInCalendarAndAnalysis() {
         continueFromLoginIfNeeded()
         trainingRepository.seedAssistedPullupLogForTest()
@@ -1621,6 +1689,18 @@ class TrainingUiTest {
         composeRule.onNodeWithTag(selectorTag).performClick()
         waitForNodeWithTag(optionTag)
         composeRule.onNodeWithTag(optionTag).performClick()
+        composeRule.waitForIdle()
+    }
+
+    private fun selectCalendarEditorExercise(exerciseId: String) {
+        composeRule.onNodeWithTag("calendar_editor_exercise_selector")
+            .performScrollTo()
+            .performClick()
+        val optionTag = "calendar_editor_exercise_option_$exerciseId"
+        waitForNodeWithTag(optionTag)
+        composeRule.onNodeWithTag(optionTag)
+            .performScrollTo()
+            .performClick()
         composeRule.waitForIdle()
     }
 

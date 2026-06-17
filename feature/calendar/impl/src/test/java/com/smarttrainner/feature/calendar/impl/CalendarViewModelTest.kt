@@ -4,7 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
+import com.smarttrainner.core.domain.ObserveExercisesUseCase
+import com.smarttrainner.core.domain.SaveWorkoutLogUseCase
 import com.smarttrainner.core.domain.SessionRepository
+import com.smarttrainner.core.domain.UpdateWorkoutLogUseCase
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.AuthProvider
 import com.smarttrainner.core.model.BodyMeasurement
@@ -24,6 +27,7 @@ import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
+import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.feature.calendar.domain.CalendarPreferencesRepository
 import com.smarttrainner.feature.calendar.domain.ObserveCalendarMonthExpandedUseCase
 import com.smarttrainner.feature.calendar.domain.ObserveWorkoutCalendarMonthUseCase
@@ -223,6 +227,89 @@ class CalendarViewModelTest {
         assertThat(state.selectedWeekDays.map { it.date }).contains(LocalDate.of(2026, 5, 24))
     }
 
+    @Test
+    fun addWorkoutEditor_savesManualWorkoutForSelectedDate() = runTest {
+        val repository = FakeCalendarRepository()
+        val viewModel = viewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "calendar_month" to "2026-05",
+                    "calendar_selected_date" to "2026-05-24"
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(CalendarAction.OnAddWorkoutClick)
+        viewModel.onAction(CalendarAction.OnEditorExerciseSelected(ExerciseId("row")))
+        viewModel.onAction(CalendarAction.OnEditorSetRepsChanged(index = 0, value = "11"))
+        viewModel.onAction(CalendarAction.OnEditorSetWeightChanged(index = 0, value = "42.5"))
+        viewModel.onAction(CalendarAction.OnEditorSetRestChanged(index = 0, value = "120"))
+        viewModel.onAction(CalendarAction.OnEditorMemoChanged("manual row"))
+        viewModel.onAction(CalendarAction.OnEditorSaveClick)
+        advanceUntilIdle()
+
+        val log = repository.logs.value.single()
+        assertThat(log.id).isEqualTo(WorkoutLogId(1))
+        assertThat(log.plannedExerciseId).isEqualTo(PlannedExerciseId(""))
+        assertThat(log.exerciseId).isEqualTo(ExerciseId("row"))
+        assertThat(log.performedAt).isEqualTo(LocalDateTime.of(2026, 5, 24, 12, 0))
+        assertThat(log.memo).isEqualTo("manual row")
+        assertThat(log.setEntries.first().reps).isEqualTo(11)
+        assertThat(log.setEntries.first().weightKg).isEqualTo(42.5)
+        assertThat(viewModel.uiState.value.editor).isNull()
+    }
+
+    @Test
+    fun editWorkoutEditor_updatesExistingWorkoutWithoutChangingSyncIdentityFields() = runTest {
+        val repository = FakeCalendarRepository()
+        val original = workoutLog(id = 5, exerciseId = "bench", day = 24).copy(
+            plannedExerciseId = PlannedExerciseId("planned_bench_sync"),
+            routineDayInstanceId = "routine-day|template|cycle1|day1",
+            sets = 1,
+            reps = 10,
+            weightKg = 40.0,
+            setEntries = listOf(
+                com.smarttrainner.core.model.WorkoutSetLog(
+                    order = 1,
+                    reps = 10,
+                    weightKg = 40.0,
+                    durationMinutes = null,
+                    restSeconds = 90
+                )
+            )
+        )
+        repository.logs.value = listOf(original)
+        val viewModel = viewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "calendar_month" to "2026-05",
+                    "calendar_selected_date" to "2026-05-24"
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        val workout = viewModel.uiState.value.selectedDateWorkouts.single()
+        viewModel.onAction(CalendarAction.OnEditWorkoutClick(workout))
+        viewModel.onAction(CalendarAction.OnEditorSetRepsChanged(index = 0, value = "12"))
+        viewModel.onAction(CalendarAction.OnEditorSetWeightChanged(index = 0, value = "45"))
+        viewModel.onAction(CalendarAction.OnEditorMemoChanged("edited"))
+        viewModel.onAction(CalendarAction.OnEditorSaveClick)
+        advanceUntilIdle()
+
+        val edited = repository.logs.value.single()
+        assertThat(edited.id).isEqualTo(original.id)
+        assertThat(edited.plannedExerciseId).isEqualTo(original.plannedExerciseId)
+        assertThat(edited.routineDayInstanceId).isEqualTo(original.routineDayInstanceId)
+        assertThat(edited.performedAt).isEqualTo(original.performedAt)
+        assertThat(edited.memo).isEqualTo("edited")
+        assertThat(edited.setEntries.single().reps).isEqualTo(12)
+        assertThat(edited.setEntries.single().weightKg).isEqualTo(45.0)
+    }
+
     private fun viewModel(
         repository: FakeCalendarRepository,
         preferencesRepository: FakeCalendarPreferencesRepository = FakeCalendarPreferencesRepository(),
@@ -230,8 +317,11 @@ class CalendarViewModelTest {
     ) = CalendarViewModel(
         savedStateHandle = savedStateHandle,
         observeWorkoutCalendarMonth = ObserveWorkoutCalendarMonthUseCase(repository, repository, repository),
+        observeExercises = ObserveExercisesUseCase(repository),
         observeCalendarMonthExpanded = ObserveCalendarMonthExpandedUseCase(preferencesRepository),
         updateCalendarMonthExpanded = UpdateCalendarMonthExpandedUseCase(preferencesRepository),
+        saveWorkoutLog = SaveWorkoutLogUseCase(repository),
+        updateWorkoutLog = UpdateWorkoutLogUseCase(repository),
         clock = fixedClock
     )
 }
@@ -262,6 +352,21 @@ private class FakeCalendarRepository : WorkoutLogRepository, ExerciseRepository,
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
     override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs
+
+    override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
+        logs.value.filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
+
+    override suspend fun getLatestWorkoutLog(plannedExerciseId: PlannedExerciseId): WorkoutLog? =
+        logs.value.filter { it.plannedExerciseId == plannedExerciseId }.maxByOrNull { it.performedAt }
+
+    override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = runCatching {
+        logs.value = logs.value + input.toWorkoutLog(id = (logs.value.maxOfOrNull { it.id.value } ?: 0L) + 1L)
+    }
+
+    override suspend fun updateWorkoutLog(id: WorkoutLogId, input: WorkoutLogInput): Result<Unit> = runCatching {
+        require(logs.value.any { it.id == id })
+        logs.value = logs.value.map { log -> if (log.id == id) input.toWorkoutLog(id.value) else log }
+    }
 
     override fun observeExercises(): Flow<List<Exercise>> = exercises
 
@@ -334,6 +439,22 @@ private fun workoutLog(
     durationMinutes = null,
     memo = "",
     completed = true
+)
+
+private fun WorkoutLogInput.toWorkoutLog(id: Long) = WorkoutLog(
+    id = WorkoutLogId(id),
+    sessionId = UserSessionId("session"),
+    plannedExerciseId = plannedExerciseId,
+    exerciseId = exerciseId,
+    performedAt = performedAt,
+    sets = sets,
+    reps = reps,
+    weightKg = weightKg,
+    durationMinutes = durationMinutes,
+    memo = memo,
+    completed = completed,
+    setEntries = setEntries,
+    routineDayInstanceId = routineDayInstanceId
 )
 
 private fun exercise(

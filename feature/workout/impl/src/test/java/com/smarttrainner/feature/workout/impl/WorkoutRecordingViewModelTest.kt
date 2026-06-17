@@ -394,4 +394,7 @@ private class FakeTrainingRepository : WorkoutLogRepository, WorkoutRecordingRep
         savedInputs += input
         return Result.success(Unit)
     }
+
+    override suspend fun updateWorkoutLog(id: WorkoutLogId, input: WorkoutLogInput): Result<Unit> =
+        Result.failure(UnsupportedOperationException("Workout editing is not used in this test."))
 }

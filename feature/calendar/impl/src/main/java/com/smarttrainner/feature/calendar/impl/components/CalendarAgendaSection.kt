@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,6 +44,8 @@ private const val WORKOUT_INCREMENT = 5
 internal fun CalendarAgendaSection(
     selectedDate: LocalDate,
     selectedDateWorkouts: List<CalendarSelectedWorkoutUiModel>,
+    onAddWorkoutClick: () -> Unit,
+    onEditWorkoutClick: (CalendarSelectedWorkoutUiModel) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val locale = Locale.getDefault()
@@ -99,6 +103,16 @@ internal fun CalendarAgendaSection(
                     color = SmartTrainnerColors.Muted
                 )
             }
+            Button(
+                onClick = onAddWorkoutClick,
+                modifier = Modifier.testTag("calendar_add_workout")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null
+                )
+                Text(text = stringResource(R.string.calendar_add_workout))
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -117,7 +131,10 @@ internal fun CalendarAgendaSection(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 visibleWorkouts.forEach { workout ->
-                    CalendarAgendaItem(workout = workout)
+                    CalendarAgendaItem(
+                        workout = workout,
+                        onEditClick = { onEditWorkoutClick(workout) }
+                    )
                 }
             }
             if (canShowMore || canCollapse) {

@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,7 +38,8 @@ import com.smarttrainner.feature.calendar.impl.R
 
 @Composable
 internal fun CalendarAgendaItem(
-    workout: CalendarSelectedWorkoutUiModel
+    workout: CalendarSelectedWorkoutUiModel,
+    onEditClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -85,6 +88,16 @@ internal fun CalendarAgendaItem(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+                }
+                IconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier.testTag("calendar_edit_workout_${workout.id.value}")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.calendar_edit_workout),
+                        tint = SmartTrainnerColors.Muted
+                    )
                 }
             }
             SmartTrainnerBadgeRow(

@@ -51,6 +51,12 @@ abstract class CoreRepositoryBindingsModule {
     ): WorkoutLogRepository
 
     @Binds
+    @IntoSet
+    abstract fun bindWorkoutLogTrainingDataSyncer(
+        repository: DefaultWorkoutLogRepository
+    ): TrainingDataSyncer
+
+    @Binds
     abstract fun bindSessionRepository(
         repository: DefaultSessionRepository
     ): SessionRepository

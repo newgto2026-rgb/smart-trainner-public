@@ -101,6 +101,20 @@ interface WorkoutLogDao {
         plannedExerciseId: String
     ): WorkoutLogWithSets?
 
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM workout_logs
+        WHERE sessionId = :sessionId
+        AND id = :id
+        LIMIT 1
+        """
+    )
+    suspend fun byId(
+        sessionId: String,
+        id: Long
+    ): WorkoutLogWithSets?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(log: WorkoutLogEntity): Long
 
@@ -110,6 +124,7 @@ interface WorkoutLogDao {
     @Transaction
     suspend fun upsertWithSets(log: WorkoutLogEntity, setLogs: List<WorkoutSetLogEntity>) {
         val workoutLogId = upsert(log)
+        deleteSetLogsByWorkoutLogIds(listOf(workoutLogId))
         insertSetLogs(setLogs.map { it.copy(workoutLogId = workoutLogId) })
     }
 

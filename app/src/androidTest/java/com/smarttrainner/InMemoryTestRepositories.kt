@@ -584,9 +584,15 @@ internal class InMemoryTrainingRepository :
     }
 
     override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = runCatching {
+        val existingLog = logs.value.firstOrNull { log ->
+            log.plannedExerciseId == input.plannedExerciseId &&
+                log.routineDayInstanceId == input.routineDayInstanceId &&
+                log.exerciseId == input.exerciseId &&
+                log.performedAt == input.performedAt
+        }
         val nextLog = WorkoutLog(
-            id = WorkoutLogId(logs.value.size.toLong() + 1),
-            sessionId = UserSessionId(TEST_SESSION_ID),
+            id = existingLog?.id ?: WorkoutLogId(logs.value.maxOfOrNull { it.id.value }?.plus(1) ?: 1L),
+            sessionId = UserSessionId(activeSessionId),
             plannedExerciseId = input.plannedExerciseId,
             exerciseId = input.exerciseId,
             performedAt = input.performedAt,
@@ -599,7 +605,27 @@ internal class InMemoryTrainingRepository :
             setEntries = input.setEntries,
             routineDayInstanceId = input.routineDayInstanceId
         )
-        logs.value = logs.value.filterNot { it.plannedExerciseId == input.plannedExerciseId } + nextLog
+        logs.value = logs.value.filterNot { it.id == nextLog.id } + nextLog
+    }
+
+    override suspend fun updateWorkoutLog(id: WorkoutLogId, input: WorkoutLogInput): Result<Unit> = runCatching {
+        require(logs.value.any { it.id == id }) { "Unknown workout log: ${id.value}" }
+        val nextLog = WorkoutLog(
+            id = id,
+            sessionId = UserSessionId(activeSessionId),
+            plannedExerciseId = input.plannedExerciseId,
+            exerciseId = input.exerciseId,
+            performedAt = input.performedAt,
+            sets = input.sets,
+            reps = input.reps,
+            weightKg = input.weightKg,
+            durationMinutes = input.durationMinutes,
+            memo = input.memo,
+            completed = input.completed,
+            setEntries = input.setEntries,
+            routineDayInstanceId = input.routineDayInstanceId
+        )
+        logs.value = logs.value.map { log -> if (log.id == id) nextLog else log }
     }
 
     private fun CustomRoutineInput.toPlanTemplate(): PlanTemplate {
