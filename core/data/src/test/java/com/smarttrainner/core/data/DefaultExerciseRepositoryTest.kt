@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.room.Room
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.database.CUSTOM_EXERCISE_SYNCED
+import com.smarttrainner.core.database.CUSTOM_EXERCISE_SYNC_PENDING_DELETE
 import com.smarttrainner.core.database.CUSTOM_EXERCISE_SYNC_PENDING_UPDATE
 import com.smarttrainner.core.database.CUSTOM_EXERCISE_SYNC_PENDING_UPSERT
 import com.smarttrainner.core.database.CustomExerciseDao
@@ -163,6 +164,30 @@ class DefaultExerciseRepositoryTest {
         assertThat(local?.syncState).isEqualTo(CUSTOM_EXERCISE_SYNC_PENDING_UPDATE)
     }
 
+    @Test
+    fun archiveCustomExerciseHidesExerciseAndKeepsPendingDeleteWhenOffline() = runTest {
+        val exerciseId = ExerciseId("custom-exercise-synced")
+        dao.upsert(
+            customInput(id = exerciseId).toEntity(
+                id = exerciseId.value,
+                ownerSessionId = DEFAULT_USER_SESSION_ID,
+                createdAt = clock.instant().toString(),
+                updatedAt = clock.instant().toString(),
+                archivedAt = null,
+                syncState = CUSTOM_EXERCISE_SYNCED
+            )
+        )
+        networkApi.archiveFailure = IOException("offline")
+
+        val result = repository.archiveCustomExercise(exerciseId)
+
+        assertThat(result.isSuccess).isTrue()
+        assertThat(repository.getExercise(exerciseId)).isNull()
+        assertThat(networkApi.archiveRequests).containsExactly(exerciseId.value to DEFAULT_USER_SESSION_ID)
+        assertThat(dao.getById(DEFAULT_USER_SESSION_ID, exerciseId.value)?.syncState)
+            .isEqualTo(CUSTOM_EXERCISE_SYNC_PENDING_DELETE)
+    }
+
     private fun customInput(
         id: ExerciseId?,
         name: String = "Offline row"
@@ -218,6 +243,7 @@ private class FakeCustomExerciseNetworkApi : CustomExerciseNetworkApi {
     var remoteExercises: List<CustomExerciseDto> = emptyList()
     var createFailure: Throwable? = null
     var updateFailure: Throwable? = null
+    var archiveFailure: Throwable? = null
 
     override suspend fun getCustomExercises(sessionId: String): CustomExerciseListResponse =
         CustomExerciseListResponse(remoteExercises, remoteExercises.size)
@@ -243,6 +269,7 @@ private class FakeCustomExerciseNetworkApi : CustomExerciseNetworkApi {
 
     override suspend fun archiveCustomExercise(id: String, sessionId: String) {
         archiveRequests += id to sessionId
+        archiveFailure?.let { throw it }
     }
 
     private fun CustomExerciseRequest.toDto(ownerSessionId: String) = CustomExerciseDto(

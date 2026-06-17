@@ -41,6 +41,7 @@ import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.TrainingDataSyncer
 import com.smarttrainner.core.domain.CyclePlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.ProfileGender
 import com.smarttrainner.core.model.ProfileSetup
 import com.smarttrainner.core.model.TrainingExperience
@@ -316,6 +317,21 @@ class TrainingUiTest {
         continueFromLoginIfNeeded()
         openCustomExerciseForm()
 
+        assertTaggedTextContainsAny(
+            "training_custom_exercise_required_policy",
+            "필수",
+            "Required"
+        )
+        scrollToNodeWithTag("training_custom_exercise_image_policy")
+        assertTaggedTextContainsAny(
+            "training_custom_exercise_image_policy",
+            "기본 이미지",
+            "default image"
+        )
+        scrollToNodeWithTag("training_custom_exercise_image_picker")
+        composeRule.onNodeWithTag("training_custom_exercise_image_picker").assertIsDisplayed()
+
+        scrollToNodeWithTag("training_custom_exercise_name_input")
         composeRule.onNodeWithTag("training_custom_exercise_name_input")
             .performTextReplacement("Hotel Cable Row")
         scrollToNodeWithTag("training_custom_exercise_safety_0_input")
@@ -377,6 +393,53 @@ class TrainingUiTest {
         trainingRepository.setActiveSessionForTest("android-ui-test")
         waitForNodeWithTag("training_exercise_row_custom_exercise_ui_1")
         composeRule.onNodeWithTag("training_exercise_row_custom_exercise_ui_1").assertIsDisplayed()
+    }
+
+    @Test
+    fun customExerciseDeleteWarnsAndRemovesRoutineAndWorkoutReferences() {
+        continueFromLoginIfNeeded()
+        createCustomExerciseFromExerciseTab()
+        val customExerciseId = ExerciseId("custom_exercise_ui_1")
+        trainingRepository.seedCustomRoutineAndLogForExerciseForTest(customExerciseId)
+
+        assertTrue(trainingRepository.workoutLogsForTest().any { it.exerciseId == customExerciseId })
+        assertTrue(
+            trainingRepository.customTemplatesForTest().any { template ->
+                template.days.any { day -> day.exercises.any { it.exerciseId == customExerciseId } }
+            }
+        )
+
+        clickExerciseRow("training_exercise_row_custom_exercise_ui_1")
+        waitForNodeWithTag("training_exercise_detail_dialog")
+        composeRule.onNodeWithTag("training_custom_exercise_delete").performClick()
+        waitForNodeWithTag("training_custom_exercise_delete_confirm_dialog")
+        assertAnyTextInsideTag(
+            "training_custom_exercise_delete_confirm_dialog",
+            "루틴",
+            "routine"
+        )
+        assertAnyTextInsideTag(
+            "training_custom_exercise_delete_confirm_dialog",
+            "운동 기록",
+            "workout records"
+        )
+
+        composeRule.onNodeWithTag("training_custom_exercise_delete_cancel").performClick()
+        waitForNodeWithTagToDisappear("training_custom_exercise_delete_confirm_dialog")
+        composeRule.onNodeWithTag("training_exercise_detail_dialog").assertIsDisplayed()
+
+        composeRule.onNodeWithTag("training_custom_exercise_delete").performClick()
+        waitForNodeWithTag("training_custom_exercise_delete_confirm_dialog")
+        composeRule.onNodeWithTag("training_custom_exercise_delete_confirm").performClick()
+        waitForNodeWithTagToDisappear("training_exercise_detail_dialog")
+        waitForNodeWithTagToDisappear("training_exercise_row_custom_exercise_ui_1")
+
+        assertTrue(trainingRepository.workoutLogsForTest().none { it.exerciseId == customExerciseId })
+        assertTrue(
+            trainingRepository.customTemplatesForTest().none { template ->
+                template.days.any { day -> day.exercises.any { it.exerciseId == customExerciseId } }
+            }
+        )
     }
 
     @Test

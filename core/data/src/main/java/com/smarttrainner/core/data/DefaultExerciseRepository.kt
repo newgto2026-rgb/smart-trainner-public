@@ -52,6 +52,7 @@ class DefaultExerciseRepository @Inject constructor(
     override suspend fun getExercise(id: ExerciseId): Exercise? =
         seedStore.exercise(id) ?: customExerciseDao
             .getById(activeSessionResolver.sessionId(), id.value)
+            ?.takeIf { it.archivedAt == null }
             ?.toExercise()
 
     override suspend fun saveCustomExercise(input: CustomExerciseInput): Result<Exercise> = runCatching {
@@ -88,7 +89,13 @@ class DefaultExerciseRepository @Inject constructor(
 
     override suspend fun archiveCustomExercise(id: ExerciseId): Result<Unit> = runCatching {
         val ownerSessionId = activeSessionResolver.sessionId()
-        require(customExerciseDao.markPendingArchive(ownerSessionId, id.value, clock.instant().toString()) > 0) {
+        require(
+            customExerciseDao.markPendingArchiveAndRemoveReferences(
+                ownerSessionId = ownerSessionId,
+                id = id.value,
+                archivedAt = clock.instant().toString()
+            ) > 0
+        ) {
             "Unknown custom exercise: ${id.value}"
         }
         runCatching {

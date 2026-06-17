@@ -1,7 +1,7 @@
 # Custom Exercise Decision Rounds
 
 ## Round 1: Product Scope
-Decision: Implement private custom exercise create, read, update, archive, catalog exposure, routine/workout integration, and metadata sync. Friend sharing UI remains out of scope.
+Decision: Implement private custom exercise create, read, update, delete, catalog exposure, routine/workout integration, and metadata sync. Friend sharing UI remains out of scope.
 
 Rationale: Local-only custom exercises would break cross-device and server-side routine/log interpretation.
 
@@ -31,9 +31,9 @@ Decision: Add a dedicated `custom_exercises` Room table with sync state and `arc
 Rationale: Custom exercises need session isolation and historical lookup independent of seed catalog changes.
 
 ## Round 7: Catalog Merge
-Decision: `observeExercises()` returns seeded exercises plus active current-owner custom exercises. `getExercise()` can resolve archived owner custom exercises.
+Decision: `observeExercises()` returns seeded exercises plus active current-owner custom exercises. Confirmed deletion prunes dependent local references instead of keeping archived custom exercises in user-visible lookup paths.
 
-Rationale: Catalogs should stay clean while historical routine/log references remain readable.
+Rationale: Catalogs should stay clean and routine/log rendering should not depend on hidden custom exercise rows after a destructive user-confirmed delete.
 
 ## Round 8: Routine And Workout
 Decision: Custom exercises are selectable in custom routines and workout recording. Cycle plan generation must use the merged catalog.
@@ -55,10 +55,14 @@ Decision: Require unit, DAO, repository/sync, server, and connected UI coverage.
 
 Rationale: This feature crosses catalog, storage, server, routine, and UI boundaries.
 
+## Round 12: Deletion Semantics
+Decision: Expose deletion only from the custom exercise detail dialog. The confirmation copy must warn that related custom routines and workout records can be changed. Confirmed deletion hides the custom exercise and removes same-owner routine entries and workout logs.
+
+Rationale: Keeping dangling routine/log references would make cycle plan rendering and later sync brittle. The detail dialog is the safest place to show a destructive owner-only action.
+
 ## Rejected Options
 - Local-only custom exercise storage: rejected because server routines/logs would not understand custom exercise IDs.
 - URL-only image input: rejected because it weakly satisfies the image input requirement.
 - Server binary image upload in this PR: rejected because storage, size limits, and moderation need a separate contract.
-- Hard delete: rejected because existing routines and workout logs would lose exercise metadata.
+- Silent hard delete: rejected because routines and workout logs would change without informed consent.
 - Owner-encoded exercise IDs: rejected because future sharing needs identity and authorization separated.
-

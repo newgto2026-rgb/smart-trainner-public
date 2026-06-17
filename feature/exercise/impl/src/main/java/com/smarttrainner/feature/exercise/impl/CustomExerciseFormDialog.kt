@@ -122,11 +122,12 @@ internal fun CustomExerciseFormDialog(
                         .padding(horizontal = 14.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
+                    FormPolicySection()
                     BasicInfoSection(state, actions)
                     ImageSection(state, actions)
                     TargetSection(state, actions)
                     DynamicTextSection(
-                        title = stringResource(R.string.exercise_custom_instructions),
+                        title = stringResource(R.string.exercise_custom_instructions_required),
                         values = state.instructions,
                         inputTagPrefix = "training_custom_exercise_instruction",
                         addTag = "training_custom_exercise_add_instruction",
@@ -134,22 +135,24 @@ internal fun CustomExerciseFormDialog(
                         onAdd = actions.onAddInstruction
                     )
                     DynamicTextSection(
-                        title = stringResource(R.string.exercise_custom_safety),
+                        title = stringResource(R.string.exercise_custom_safety_required),
                         values = state.safetyCues,
                         inputTagPrefix = "training_custom_exercise_safety",
                         addTag = "training_custom_exercise_add_safety",
                         onValueChanged = actions.onSafetyCueChanged,
                         onAdd = actions.onAddSafetyCue
                     )
-                    state.error?.let {
-                        Text(
-                            text = it.localizedMessage(),
-                            modifier = Modifier.testTag("training_custom_exercise_error"),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                }
+                state.error?.let {
+                    Text(
+                        text = it.localizedMessage(),
+                        modifier = Modifier
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                            .testTag("training_custom_exercise_error"),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 Button(
                     onClick = actions.onSave,
@@ -168,6 +171,30 @@ internal fun CustomExerciseFormDialog(
 }
 
 @Composable
+private fun FormPolicySection() {
+    Column(
+        modifier = Modifier.testTag("training_custom_exercise_required_policy"),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.exercise_custom_required_policy_title),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(R.string.exercise_custom_required_policy_body),
+            style = MaterialTheme.typography.bodySmall,
+            color = SmartTrainnerColors.Muted
+        )
+        Text(
+            text = stringResource(R.string.exercise_custom_optional_policy_body),
+            style = MaterialTheme.typography.bodySmall,
+            color = SmartTrainnerColors.Muted
+        )
+    }
+}
+
+@Composable
 private fun BasicInfoSection(
     state: CustomExerciseFormUiState,
     actions: CustomExerciseFormActions
@@ -179,7 +206,7 @@ private fun BasicInfoSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("training_custom_exercise_name_input"),
-            label = { Text(stringResource(R.string.exercise_custom_name)) },
+            label = { Text(stringResource(R.string.exercise_custom_name_required)) },
             singleLine = true,
             shape = RoundedCornerShape(8.dp)
         )
@@ -257,6 +284,12 @@ private fun ImageSection(
                 contentDescription = state.name.ifBlank { stringResource(R.string.exercise_custom_preview_name) }
             )
         }
+        Text(
+            text = stringResource(R.string.exercise_custom_image_helper),
+            modifier = Modifier.testTag("training_custom_exercise_image_policy"),
+            style = MaterialTheme.typography.bodySmall,
+            color = SmartTrainnerColors.Muted
+        )
         OutlinedTextField(
             value = state.imageUri,
             onValueChange = actions.onImageUriChanged,
@@ -288,7 +321,7 @@ private fun TargetSection(
     state: CustomExerciseFormUiState,
     actions: CustomExerciseFormActions
 ) {
-    FormSection(title = stringResource(R.string.exercise_custom_section_target)) {
+    FormSection(title = stringResource(R.string.exercise_custom_section_target_required)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             NumberField(
                 value = state.defaultSets,

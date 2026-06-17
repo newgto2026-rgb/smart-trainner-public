@@ -198,6 +198,61 @@ internal class InMemoryTrainingRepository :
 
     fun workoutLogsForTest(): List<WorkoutLog> = logs.value
 
+    fun customTemplatesForTest(): List<PlanTemplate> = customTemplates.value
+
+    fun seedCustomRoutineAndLogForExerciseForTest(exerciseId: ExerciseId) {
+        val exercise = currentExerciseById().getValue(exerciseId)
+        val template = PlanTemplate(
+            id = "custom-delete-test",
+            name = "Delete test routine",
+            level = PlanLevel.INTERMEDIATE,
+            cycleLength = 1,
+            description = "",
+            days = listOf(
+                PlanTemplateDay(
+                    dayOffset = 0,
+                    title = "Custom day",
+                    focus = "BACK",
+                    exercises = listOf(
+                        TemplateExercise(
+                            exerciseId = exerciseId,
+                            sets = exercise.defaultSets,
+                            repRange = exercise.defaultRepRange,
+                            durationMinutes = exercise.defaultDurationMinutes,
+                            restSeconds = exercise.restSeconds,
+                            note = ""
+                        )
+                    ),
+                    dayNumber = 1,
+                    primaryFocus = com.smarttrainner.core.model.RoutineFocus.BACK
+                )
+            ),
+            source = RoutineSource.CUSTOM
+        )
+        customTemplates.value = customTemplates.value.filterNot { it.id == template.id } + template
+        logs.value = logs.value + WorkoutLog(
+            id = WorkoutLogId(logs.value.size.toLong() + 1),
+            sessionId = UserSessionId(TEST_SESSION_ID),
+            plannedExerciseId = PlannedExerciseId("planned-${exerciseId.value}"),
+            exerciseId = exerciseId,
+            performedAt = LocalDate.of(2026, 6, 17).atTime(9, 0),
+            sets = exercise.defaultSets,
+            reps = exercise.defaultRepRange?.first,
+            weightKg = null,
+            durationMinutes = exercise.defaultDurationMinutes,
+            memo = "",
+            completed = true,
+            setEntries = listOf(
+                WorkoutSetLog(
+                    order = 1,
+                    reps = exercise.defaultRepRange?.first,
+                    weightKg = null,
+                    durationMinutes = exercise.defaultDurationMinutes
+                )
+            )
+        )
+    }
+
     fun progressForTest(): RoutineProgress = progress.value
 
     fun seedAssistedPullupLogForTest() {
@@ -340,6 +395,37 @@ internal class InMemoryTrainingRepository :
             customExercisesBySession.getValueOrEmpty(activeSessionId).filterNot { it.id == exercise.id } + exercise
         publishExercises()
         exercise
+    }
+
+    override suspend fun archiveCustomExercise(id: ExerciseId): Result<Unit> = runCatching {
+        val currentCustomExercises = customExercisesBySession.getValueOrEmpty(activeSessionId)
+        require(currentCustomExercises.any { it.id == id }) { "Unknown custom exercise: ${id.value}" }
+        customExercisesBySession[activeSessionId] = currentCustomExercises.filterNot { it.id == id }
+        customTemplates.value = customTemplates.value.mapNotNull { template ->
+            if (template.source != RoutineSource.CUSTOM) {
+                template
+            } else {
+                val days = template.days
+                    .map { day -> day.copy(exercises = day.exercises.filterNot { it.exerciseId == id }) }
+                    .filter { it.exercises.isNotEmpty() }
+                    .mapIndexed { index, day ->
+                        day.copy(dayOffset = index, dayNumber = index + 1)
+                    }
+                if (days.isEmpty()) {
+                    null
+                } else {
+                    template.copy(cycleLength = days.size, days = days)
+                }
+            }
+        }
+        if (customTemplates.value.none { it.id == selectedTemplateId.value }) {
+            selectedTemplateId.value = DEFAULT_TEMPLATE_ID
+        }
+        if (customTemplates.value.none { it.id == progress.value.templateId } && progress.value.templateId != DEFAULT_TEMPLATE_ID) {
+            progress.value = defaultProgress()
+        }
+        logs.value = logs.value.filterNot { it.exerciseId == id }
+        publishExercises()
     }
 
     override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =

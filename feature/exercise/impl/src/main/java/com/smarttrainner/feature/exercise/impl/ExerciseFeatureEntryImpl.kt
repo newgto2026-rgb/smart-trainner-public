@@ -84,7 +84,10 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
             state = state,
             actions = ExerciseDetailActions(
                 onDismiss = onDismiss,
-                onRecordRequested = onRecordRequested
+                onRecordRequested = onRecordRequested,
+                onDeleteRequested = viewModel::requestDeleteCustomExercise,
+                onDeleteDismissed = viewModel::dismissDeleteCustomExercise,
+                onDeleteConfirmed = { viewModel.confirmDeleteCustomExercise(onDeleted = onDismiss) }
             )
         )
     }

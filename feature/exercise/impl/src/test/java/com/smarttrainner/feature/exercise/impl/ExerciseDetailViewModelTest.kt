@@ -2,6 +2,7 @@ package com.smarttrainner.feature.exercise.impl
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.smarttrainner.core.domain.ArchiveCustomExerciseUseCase
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
 import com.smarttrainner.core.domain.WorkoutLogRepository
@@ -10,6 +11,7 @@ import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseSource
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExerciseId
@@ -75,6 +77,7 @@ class ExerciseDetailViewModelTest {
             assertThat(state.exercise?.id?.value).isEqualTo("chest_press")
             assertThat(state.latestWorkoutLog?.id).isEqualTo(latestLog.id)
             assertThat(state.showRecordAction).isTrue()
+            assertThat(state.showDeleteAction).isFalse()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -98,9 +101,45 @@ class ExerciseDetailViewModelTest {
         }
     }
 
+    @Test
+    fun deleteCustomExerciseShowsConfirmationAndArchivesOnConfirm() = runTest {
+        val exerciseId = ExerciseId("custom-exercise-1")
+        repository.exercises = listOf(
+            exercise("custom-exercise-1", MuscleGroup.BACK, source = ExerciseSource.USER_CREATED)
+        )
+        var deleted = false
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            viewModel.updateSelection(exerciseId, shouldShowRecordAction = false)
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.showDeleteAction).isTrue()
+
+            viewModel.requestDeleteCustomExercise()
+            advanceUntilIdle()
+            assertThat(viewModel.uiState.value.showDeleteConfirmation).isTrue()
+
+            viewModel.dismissDeleteCustomExercise()
+            advanceUntilIdle()
+            assertThat(viewModel.uiState.value.showDeleteConfirmation).isFalse()
+
+            viewModel.requestDeleteCustomExercise()
+            viewModel.confirmDeleteCustomExercise { deleted = true }
+            advanceUntilIdle()
+
+            assertThat(repository.archivedId).isEqualTo(exerciseId)
+            assertThat(deleted).isTrue()
+            assertThat(viewModel.uiState.value.exercise).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun viewModel() = ExerciseDetailViewModel(
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
-        getExercise = GetExerciseUseCase(repository)
+        getExercise = GetExerciseUseCase(repository),
+        archiveCustomExercise = ArchiveCustomExerciseUseCase(repository)
     )
 }
 
@@ -121,13 +160,19 @@ private class FakeExerciseRepository :
     ExerciseRepository,
     WorkoutLogRepository {
     val latestLogs = MutableStateFlow<List<WorkoutLog>>(emptyList())
-    private val exercises = listOf(
+    var exercises = listOf(
         exercise("chest_press", MuscleGroup.CHEST),
         exercise("back_pull", MuscleGroup.BACK)
     )
+    var archivedId: ExerciseId? = null
 
     fun reset() {
         latestLogs.value = emptyList()
+        exercises = listOf(
+            exercise("chest_press", MuscleGroup.CHEST),
+            exercise("back_pull", MuscleGroup.BACK)
+        )
+        archivedId = null
     }
 
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
@@ -139,10 +184,20 @@ private class FakeExerciseRepository :
 
     override fun observeExercises(): Flow<List<Exercise>> = unused()
 
+    override suspend fun archiveCustomExercise(id: ExerciseId): Result<Unit> {
+        archivedId = id
+        exercises = exercises.filterNot { it.id == id }
+        return Result.success(Unit)
+    }
+
     private fun unused(): Nothing = throw UnsupportedOperationException("Not used by exercise detail tests")
 }
 
-private fun exercise(id: String, muscleGroup: MuscleGroup) = Exercise(
+private fun exercise(
+    id: String,
+    muscleGroup: MuscleGroup,
+    source: ExerciseSource = ExerciseSource.SYSTEM
+) = Exercise(
     id = ExerciseId(id),
     name = id,
     muscleGroup = muscleGroup,
@@ -155,7 +210,8 @@ private fun exercise(id: String, muscleGroup: MuscleGroup) = Exercise(
     defaultSets = 3,
     defaultRepRange = 8..12,
     defaultDurationMinutes = null,
-    restSeconds = 90
+    restSeconds = 90,
+    source = source
 )
 
 private fun workoutLog(

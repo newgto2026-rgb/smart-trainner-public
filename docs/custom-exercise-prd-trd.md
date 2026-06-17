@@ -16,13 +16,14 @@ Add private custom exercises owned by the active logged-in user. A custom exerci
 5. If an image URL or picked image is present, the image preview uses the current exercise image frame. If not, a default image placeholder is shown.
 6. User saves the exercise.
 7. The custom exercise appears in Exercise tab search, detail, workout recording, and custom routine exercise pickers for that user only.
-8. User can edit or archive their own custom exercise later.
+8. User can delete their own custom exercise later after confirming the routine/workout-record impact.
 
 ### Acceptance Criteria
 - A custom exercise is scoped to the active `ownerSessionId`.
 - Another session on the same device does not see the custom exercise.
 - Custom exercise IDs remain stable when name or content changes.
-- Archived custom exercises disappear from catalog/pickers but remain resolvable for historical routine and workout references.
+- Deleted custom exercises disappear from catalog/pickers, are removed from same-owner custom routine entries, and remove workout records saved with that exercise.
+- Deleting a custom exercise requires a warning dialog that names the related routine and workout-record impact before the destructive action runs.
 - Category, equipment, and difficulty are dropdown selections.
 - A custom exercise can be saved without an image and renders a default image placeholder.
 - A custom exercise can render an image URL or locally picked image in the same 0.9 image frame used by seeded exercises.
@@ -57,7 +58,7 @@ Add private custom exercises owned by the active logged-in user. A custom exerci
 - Add `CustomExerciseInput` and validation errors in `core:model`/`core:domain`.
 - Add `custom_exercises` Room table and DAO.
 - `ExerciseRepository.observeExercises()` returns seeded exercises plus active, non-archived custom exercises for the current session.
-- `ExerciseRepository.getExercise()` can resolve archived custom exercises for historical references.
+- `ExerciseRepository.getExercise()` resolves active custom exercises only; confirmed deletion removes dependent local references so historical lookups do not point at missing custom exercise rows.
 
 ### Server Contract
 - Keep `GET /api/exercises` as the public seeded catalog.
@@ -65,7 +66,7 @@ Add private custom exercises owned by the active logged-in user. A custom exerci
   - `GET /api/custom-exercises`
   - `POST /api/custom-exercises`
   - `PUT /api/custom-exercises/{id}`
-  - `DELETE /api/custom-exercises/{id}` archives the resource.
+- `DELETE /api/custom-exercises/{id}` archives the resource and removes same-session custom routine references and workout logs for that exercise.
 - Responses stay wrapped in `{ data: ... }`; list responses include `count`.
 - Server validates ownership by request session and never returns another user's private custom exercises.
 
@@ -81,6 +82,7 @@ Add private custom exercises owned by the active logged-in user. A custom exerci
 - Routine builders and exercise pickers consume the merged exercise catalog.
 - Cycle plan building must use the merged catalog, not the seed-only map.
 - Sync order must run custom exercise sync before custom routine and workout log sync.
+- Confirmed custom exercise deletion prunes local routine references and workout logs immediately, then the custom exercise delete sync performs the same server cleanup before routine/log sync fetches remote state.
 
 ### Validation
 - Required: name, muscle group/category, equipment, difficulty, at least one method step, at least one safety point, sets, rest, and either reps or duration.
@@ -91,9 +93,8 @@ Add private custom exercises owned by the active logged-in user. A custom exerci
 
 ### Test Matrix
 - Domain validation tests.
-- Room DAO session isolation, archive hiding, archived lookup, pending sync tests.
+- Room DAO session isolation, delete hiding, reference pruning, and pending sync tests.
 - Repository merge and `getExercise()` tests.
 - Cycle plan/custom routine tests with custom exercise IDs.
 - Android UI tests for create/validation, routine picker exposure, and session isolation.
-- Server tests for create/list/update/archive/session isolation/id conflict.
-
+- Server tests for create/list/update/delete/session isolation/id conflict and reference pruning.
