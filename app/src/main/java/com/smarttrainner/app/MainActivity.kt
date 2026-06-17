@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
             LaunchedEffect(selectedThemeTone) {
                 val transparent = AndroidColor.TRANSPARENT
+                window.decorView.setBackgroundColor(selectedThemeTone.windowBackgroundColor())
                 if (selectedThemeTone == SmartTrainnerThemeTone.Black) {
                     enableEdgeToEdge(
                         statusBarStyle = SystemBarStyle.dark(transparent),
@@ -131,4 +132,11 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1027
     }
+}
+
+internal fun SmartTrainnerThemeTone.windowBackgroundColor(): Int = when (this) {
+    SmartTrainnerThemeTone.Black -> 0xFF070A0F.toInt()
+    SmartTrainnerThemeTone.Red -> 0xFFF9F6F7.toInt()
+    SmartTrainnerThemeTone.Blue -> 0xFFF6FAFC.toInt()
+    SmartTrainnerThemeTone.Green -> 0xFFF5F7FA.toInt()
 }

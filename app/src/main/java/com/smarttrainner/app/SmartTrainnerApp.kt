@@ -123,7 +123,12 @@ fun SmartTrainnerApp(
             onDismiss = viewModel::dismissDeviceLoginConflict
         )
     }
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SmartTrainnerGradients.screen())
+            .testTag("app_root_surface")
+    ) {
         when {
             state.isLoading -> LoadingScreen()
             state.activeSession == null -> LoginScreen(
