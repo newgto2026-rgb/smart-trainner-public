@@ -30,7 +30,8 @@ class CalendarFeatureEntryImpl @Inject constructor() : CalendarFeatureEntry {
                     currentMonth = state.currentMonth,
                     todayCount = state.todayWorkoutCount,
                     isMonthExpanded = state.isMonthExpanded,
-                    monthNavigationEnabled = false,
+                    canNavigateToPreviousMonth = state.canNavigateToPreviousMonth,
+                    canNavigateToNextMonth = state.canNavigateToNextMonth,
                     onPreviousMonthClick = { viewModel.onAction(CalendarAction.OnPreviousMonthClick) },
                     onNextMonthClick = { viewModel.onAction(CalendarAction.OnNextMonthClick) },
                     onToggleMonthExpansion = { viewModel.onAction(CalendarAction.OnToggleMonthExpansion) }

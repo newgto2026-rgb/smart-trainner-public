@@ -15,6 +15,8 @@ import java.time.YearMonth
 internal data class CalendarUiState(
     val currentMonth: YearMonth,
     val selectedDate: LocalDate,
+    val canNavigateToPreviousMonth: Boolean = true,
+    val canNavigateToNextMonth: Boolean,
     val isMonthExpanded: Boolean = true,
     val days: List<CalendarDayUiModel>,
     val selectedWeekDays: List<CalendarDayUiModel> = emptyList(),

@@ -55,8 +55,10 @@ class CalendarViewModel @Inject constructor(
     private val updateWorkoutLog: UpdateWorkoutLogUseCase,
     private val clock: Clock
 ) : ViewModel() {
-    private val monthState = MutableStateFlow(YearMonth.from(LocalDate.now(clock)))
-    private val selectedDateState = MutableStateFlow(LocalDate.now(clock))
+    private val todayAtStart = LocalDate.now(clock)
+    private val currentMonthAtStart = YearMonth.from(todayAtStart)
+    private val monthState = MutableStateFlow(savedStateHandle.initialMonth(clock).coerceAtMost(currentMonthAtStart))
+    private val selectedDateState = MutableStateFlow(savedStateHandle.initialSelectedDate(clock).coerceAtMost(todayAtStart))
     private val isMonthExpandedState = MutableStateFlow(savedStateHandle.initialIsMonthExpanded())
     private val editorDraftState = MutableStateFlow<CalendarWorkoutEditorDraft?>(null)
     private val exercisesState = observeExercises().stateIn(
@@ -90,6 +92,7 @@ class CalendarViewModel @Inject constructor(
         CalendarUiState(
             currentMonth = month,
             selectedDate = adjustedSelectedDate,
+            canNavigateToNextMonth = month < YearMonth.from(LocalDate.now(clock)),
             isMonthExpanded = isMonthExpanded,
             days = days,
             selectedWeekDays = days.selectedWeekDays(adjustedSelectedDate),
@@ -131,8 +134,8 @@ class CalendarViewModel @Inject constructor(
 
     internal fun onAction(action: CalendarAction) {
         when (action) {
-            CalendarAction.OnNextMonthClick -> keepTodaySelected()
-            CalendarAction.OnPreviousMonthClick -> keepTodaySelected()
+            CalendarAction.OnNextMonthClick -> moveMonthBy(1)
+            CalendarAction.OnPreviousMonthClick -> moveMonthBy(-1)
             CalendarAction.OnToggleMonthExpansion -> toggleMonthExpansion()
             is CalendarAction.OnDateClick -> updateSelectedDate(action.date)
             CalendarAction.OnAddWorkoutClick -> openAddWorkoutEditor()
@@ -158,22 +161,23 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    private fun keepTodaySelected() {
+    private fun moveMonthBy(offsetMonths: Long) {
         val today = LocalDate.now(clock)
         val currentMonth = YearMonth.from(today)
-        if (monthState.value == currentMonth && selectedDateState.value == today) return
+        val newMonth = monthState.value.plusMonths(offsetMonths).coerceAtMost(currentMonth)
+        if (newMonth == monthState.value) return
         updateMonthAndSelectedDate(
-            month = currentMonth,
-            selectedDate = today
+            month = newMonth,
+            selectedDate = selectedDateState.value.normalizeToMonth(newMonth).coerceAtMost(today)
         )
     }
 
     private fun updateSelectedDate(date: LocalDate) {
         val today = LocalDate.now(clock)
-        if (date != today) return
+        if (date > today) return
         updateMonthAndSelectedDate(
-            month = YearMonth.from(today),
-            selectedDate = today
+            month = YearMonth.from(date),
+            selectedDate = date
         )
     }
 
@@ -198,7 +202,7 @@ class CalendarViewModel @Inject constructor(
 
     private fun openAddWorkoutEditor() {
         val selectedDate = uiState.value.selectedDate
-        if (selectedDate != LocalDate.now(clock)) return
+        if (selectedDate > LocalDate.now(clock)) return
         val exercise = exercisesState.value.sortedBy { it.name }.firstOrNull()
         editorDraftState.value = CalendarWorkoutEditorDraft(
             mode = CalendarWorkoutEditorMode.ADD,
@@ -210,7 +214,7 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun openEditWorkoutEditor(workout: CalendarSelectedWorkoutUiModel) {
-        if (workout.performedAt.toLocalDate() != LocalDate.now(clock)) return
+        if (workout.performedAt.toLocalDate() > LocalDate.now(clock)) return
         editorDraftState.value = CalendarWorkoutEditorDraft(
             mode = CalendarWorkoutEditorMode.EDIT,
             logId = workout.id,
@@ -295,7 +299,7 @@ class CalendarViewModel @Inject constructor(
 
     private fun saveEditor() {
         val draft = editorDraftState.value ?: return
-        if (draft.selectedDate != LocalDate.now(clock)) {
+        if (draft.selectedDate > LocalDate.now(clock)) {
             editorDraftState.value = draft.copy(error = CalendarWorkoutEditorError.SAVE_FAILED)
             return
         }
@@ -356,6 +360,16 @@ class CalendarViewModel @Inject constructor(
     }
 }
 
+internal fun SavedStateHandle.initialMonth(clock: Clock): YearMonth =
+    get<String>(STATE_MONTH_KEY)
+        ?.let { rawMonth -> runCatching { YearMonth.parse(rawMonth) }.getOrNull() }
+        ?: YearMonth.now(clock)
+
+internal fun SavedStateHandle.initialSelectedDate(clock: Clock): LocalDate =
+    get<String>(STATE_SELECTED_DATE_KEY)
+        ?.let { rawDate -> runCatching { LocalDate.parse(rawDate) }.getOrNull() }
+        ?: LocalDate.now(clock)
+
 internal fun SavedStateHandle.initialIsMonthExpanded(): Boolean =
     get<Boolean>(STATE_IS_MONTH_EXPANDED_KEY) ?: true
 
@@ -375,6 +389,7 @@ internal fun initialCalendarUiState(
     return CalendarUiState(
         currentMonth = currentMonth,
         selectedDate = adjustedSelectedDate,
+        canNavigateToNextMonth = currentMonth < YearMonth.from(today),
         isMonthExpanded = isMonthExpanded,
         days = days,
         selectedWeekDays = days.selectedWeekDays(adjustedSelectedDate),
@@ -407,13 +422,13 @@ internal fun buildMonthCells(
             else -> yearMonth.atDay(dayOfMonth)
         }
         val summary = summariesByDate[date]
-        val isAccessible = isCurrentMonth && date == today
+        val isAccessible = isCurrentMonth && date <= today
         CalendarDayUiModel(
             date = date,
             isCurrentMonth = isCurrentMonth,
             isToday = date == today,
             isAccessible = isAccessible,
-            isSelected = isAccessible,
+            isSelected = isAccessible && date == selectedDate,
             workoutCount = if (isAccessible) summary?.workoutCount ?: 0 else 0,
             completedCount = if (isAccessible) summary?.completedCount ?: 0 else 0
         )
