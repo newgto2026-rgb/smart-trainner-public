@@ -55,8 +55,8 @@ class CalendarViewModel @Inject constructor(
     private val updateWorkoutLog: UpdateWorkoutLogUseCase,
     private val clock: Clock
 ) : ViewModel() {
-    private val monthState = MutableStateFlow(savedStateHandle.initialMonth(clock))
-    private val selectedDateState = MutableStateFlow(savedStateHandle.initialSelectedDate(clock))
+    private val monthState = MutableStateFlow(YearMonth.from(LocalDate.now(clock)))
+    private val selectedDateState = MutableStateFlow(LocalDate.now(clock))
     private val isMonthExpandedState = MutableStateFlow(savedStateHandle.initialIsMonthExpanded())
     private val editorDraftState = MutableStateFlow<CalendarWorkoutEditorDraft?>(null)
     private val exercisesState = observeExercises().stateIn(
@@ -131,8 +131,8 @@ class CalendarViewModel @Inject constructor(
 
     internal fun onAction(action: CalendarAction) {
         when (action) {
-            CalendarAction.OnNextMonthClick -> moveMonthBy(1)
-            CalendarAction.OnPreviousMonthClick -> moveMonthBy(-1)
+            CalendarAction.OnNextMonthClick -> keepTodaySelected()
+            CalendarAction.OnPreviousMonthClick -> keepTodaySelected()
             CalendarAction.OnToggleMonthExpansion -> toggleMonthExpansion()
             is CalendarAction.OnDateClick -> updateSelectedDate(action.date)
             CalendarAction.OnAddWorkoutClick -> openAddWorkoutEditor()
@@ -158,18 +158,22 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    private fun moveMonthBy(offsetMonths: Long) {
-        val newMonth = monthState.value.plusMonths(offsetMonths)
+    private fun keepTodaySelected() {
+        val today = LocalDate.now(clock)
+        val currentMonth = YearMonth.from(today)
+        if (monthState.value == currentMonth && selectedDateState.value == today) return
         updateMonthAndSelectedDate(
-            month = newMonth,
-            selectedDate = selectedDateState.value.normalizeToMonth(newMonth)
+            month = currentMonth,
+            selectedDate = today
         )
     }
 
     private fun updateSelectedDate(date: LocalDate) {
+        val today = LocalDate.now(clock)
+        if (date != today) return
         updateMonthAndSelectedDate(
-            month = YearMonth.from(date),
-            selectedDate = date
+            month = YearMonth.from(today),
+            selectedDate = today
         )
     }
 
@@ -194,6 +198,7 @@ class CalendarViewModel @Inject constructor(
 
     private fun openAddWorkoutEditor() {
         val selectedDate = uiState.value.selectedDate
+        if (selectedDate != LocalDate.now(clock)) return
         val exercise = exercisesState.value.sortedBy { it.name }.firstOrNull()
         editorDraftState.value = CalendarWorkoutEditorDraft(
             mode = CalendarWorkoutEditorMode.ADD,
@@ -205,6 +210,7 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun openEditWorkoutEditor(workout: CalendarSelectedWorkoutUiModel) {
+        if (workout.performedAt.toLocalDate() != LocalDate.now(clock)) return
         editorDraftState.value = CalendarWorkoutEditorDraft(
             mode = CalendarWorkoutEditorMode.EDIT,
             logId = workout.id,
@@ -289,6 +295,10 @@ class CalendarViewModel @Inject constructor(
 
     private fun saveEditor() {
         val draft = editorDraftState.value ?: return
+        if (draft.selectedDate != LocalDate.now(clock)) {
+            editorDraftState.value = draft.copy(error = CalendarWorkoutEditorError.SAVE_FAILED)
+            return
+        }
         val exerciseId = draft.selectedExerciseId
         if (exerciseId == null) {
             editorDraftState.value = draft.copy(error = CalendarWorkoutEditorError.EXERCISE)
@@ -346,16 +356,6 @@ class CalendarViewModel @Inject constructor(
     }
 }
 
-internal fun SavedStateHandle.initialMonth(clock: Clock): YearMonth =
-    get<String>(STATE_MONTH_KEY)
-        ?.let { rawMonth -> runCatching { YearMonth.parse(rawMonth) }.getOrNull() }
-        ?: YearMonth.now(clock)
-
-internal fun SavedStateHandle.initialSelectedDate(clock: Clock): LocalDate =
-    get<String>(STATE_SELECTED_DATE_KEY)
-        ?.let { rawDate -> runCatching { LocalDate.parse(rawDate) }.getOrNull() }
-        ?: LocalDate.now(clock)
-
 internal fun SavedStateHandle.initialIsMonthExpanded(): Boolean =
     get<Boolean>(STATE_IS_MONTH_EXPANDED_KEY) ?: true
 
@@ -407,13 +407,15 @@ internal fun buildMonthCells(
             else -> yearMonth.atDay(dayOfMonth)
         }
         val summary = summariesByDate[date]
+        val isAccessible = isCurrentMonth && date == today
         CalendarDayUiModel(
             date = date,
             isCurrentMonth = isCurrentMonth,
             isToday = date == today,
-            isSelected = isCurrentMonth && date == selectedDate,
-            workoutCount = if (isCurrentMonth) summary?.workoutCount ?: 0 else 0,
-            completedCount = if (isCurrentMonth) summary?.completedCount ?: 0 else 0
+            isAccessible = isAccessible,
+            isSelected = isAccessible,
+            workoutCount = if (isAccessible) summary?.workoutCount ?: 0 else 0,
+            completedCount = if (isAccessible) summary?.completedCount ?: 0 else 0
         )
     }
 }

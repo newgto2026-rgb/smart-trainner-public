@@ -46,6 +46,7 @@ internal fun CalendarTopHeader(
     currentMonth: YearMonth,
     todayCount: Int,
     isMonthExpanded: Boolean,
+    monthNavigationEnabled: Boolean,
     onPreviousMonthClick: () -> Unit,
     onNextMonthClick: () -> Unit,
     onToggleMonthExpansion: () -> Unit
@@ -154,12 +155,13 @@ internal fun CalendarTopHeader(
                     modifier = Modifier
                         .size(38.dp)
                         .testTag("calendar_prev_month"),
+                    enabled = monthNavigationEnabled,
                     onClick = onPreviousMonthClick
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                         contentDescription = stringResource(R.string.calendar_month_navigation_previous),
-                        tint = SmartTrainnerColors.Muted
+                        tint = SmartTrainnerColors.Muted.copy(alpha = if (monthNavigationEnabled) 1f else 0.36f)
                     )
                 }
             }
@@ -171,12 +173,13 @@ internal fun CalendarTopHeader(
                     modifier = Modifier
                         .size(38.dp)
                         .testTag("calendar_next_month"),
+                    enabled = monthNavigationEnabled,
                     onClick = onNextMonthClick
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = stringResource(R.string.calendar_month_navigation_next),
-                        tint = SmartTrainnerColors.Muted
+                        tint = SmartTrainnerColors.Muted.copy(alpha = if (monthNavigationEnabled) 1f else 0.36f)
                     )
                 }
             }
