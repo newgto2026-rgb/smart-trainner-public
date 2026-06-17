@@ -6,6 +6,7 @@ import androidx.room.Index
 
 const val CUSTOM_EXERCISE_SYNCED = "synced"
 const val CUSTOM_EXERCISE_SYNC_PENDING_UPSERT = "pending_upsert"
+const val CUSTOM_EXERCISE_SYNC_PENDING_UPDATE = "pending_update"
 const val CUSTOM_EXERCISE_SYNC_PENDING_DELETE = "pending_delete"
 
 @Entity(

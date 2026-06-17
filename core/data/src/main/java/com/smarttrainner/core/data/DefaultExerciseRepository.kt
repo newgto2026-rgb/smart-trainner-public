@@ -2,6 +2,8 @@ package com.smarttrainner.core.data
 
 import com.smarttrainner.core.database.CUSTOM_EXERCISE_SYNCED
 import com.smarttrainner.core.database.CUSTOM_EXERCISE_SYNC_PENDING_DELETE
+import com.smarttrainner.core.database.CUSTOM_EXERCISE_SYNC_PENDING_UPDATE
+import com.smarttrainner.core.database.CUSTOM_EXERCISE_SYNC_PENDING_UPSERT
 import com.smarttrainner.core.database.CustomExerciseDao
 import com.smarttrainner.core.database.CustomExerciseEntity
 import com.smarttrainner.core.datastore.ActiveSessionResolver
@@ -61,17 +63,19 @@ class DefaultExerciseRepository @Inject constructor(
         require(existing != null || customExerciseDao.countById(ownerSessionId, exerciseId) == 0) {
             "Custom exercise ID already exists: $exerciseId"
         }
+        val syncState = saveSyncStateFor(existing)
         val entity = input.toEntity(
             id = exerciseId,
             ownerSessionId = ownerSessionId,
             createdAt = existing?.createdAt ?: now.toString(),
             updatedAt = now.toString(),
-            archivedAt = existing?.archivedAt
+            archivedAt = existing?.archivedAt,
+            syncState = syncState
         )
         customExerciseDao.upsert(entity)
         runCatching {
             val request = entity.toNetworkRequest()
-            if (existing == null) {
+            if (syncState == CUSTOM_EXERCISE_SYNC_PENDING_UPSERT) {
                 customExerciseNetworkApi.createCustomExercise(ownerSessionId, request)
             } else {
                 customExerciseNetworkApi.updateCustomExercise(exerciseId, ownerSessionId, request)
@@ -102,6 +106,12 @@ class DefaultExerciseRepository @Inject constructor(
             runCatching {
                 if (pending.syncState == CUSTOM_EXERCISE_SYNC_PENDING_DELETE || pending.archivedAt != null) {
                     customExerciseNetworkApi.archiveCustomExercise(pending.id, ownerSessionId)
+                } else if (pending.syncState == CUSTOM_EXERCISE_SYNC_PENDING_UPDATE) {
+                    customExerciseNetworkApi.updateCustomExercise(
+                        pending.id,
+                        ownerSessionId,
+                        pending.toNetworkRequest()
+                    )
                 } else {
                     customExerciseNetworkApi.createCustomExercise(ownerSessionId, pending.toNetworkRequest())
                 }
@@ -127,12 +137,20 @@ class DefaultExerciseRepository @Inject constructor(
         "custom_exercise_${UUID.randomUUID().toString().replace("-", "_")}"
 }
 
+internal fun saveSyncStateFor(existing: CustomExerciseEntity?): String =
+    if (existing == null || existing.syncState == CUSTOM_EXERCISE_SYNC_PENDING_UPSERT) {
+        CUSTOM_EXERCISE_SYNC_PENDING_UPSERT
+    } else {
+        CUSTOM_EXERCISE_SYNC_PENDING_UPDATE
+    }
+
 internal fun CustomExerciseInput.toEntity(
     id: String,
     ownerSessionId: String,
     createdAt: String,
     updatedAt: String,
-    archivedAt: String?
+    archivedAt: String?,
+    syncState: String = CUSTOM_EXERCISE_SYNC_PENDING_UPSERT
 ): CustomExerciseEntity {
     val cleanedInstructions = instructions.map { it.trim() }.filter { it.isNotEmpty() }
     val cleanedSafetyCues = safetyCues.map { it.trim() }.filter { it.isNotEmpty() }
@@ -159,7 +177,8 @@ internal fun CustomExerciseInput.toEntity(
         restSeconds = restSeconds,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        archivedAt = archivedAt
+        archivedAt = archivedAt,
+        syncState = syncState
     )
 }
 

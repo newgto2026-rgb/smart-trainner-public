@@ -1,6 +1,7 @@
 package com.smarttrainner.core.domain
 
 import com.smarttrainner.core.model.CustomExerciseInput
+import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import javax.inject.Inject
 
@@ -62,9 +63,12 @@ class SaveCustomExerciseUseCase @Inject constructor(
     suspend operator fun invoke(
         input: CustomExerciseInput,
         existingExerciseIds: Set<ExerciseId> = emptySet()
-    ) = validateCustomExercise(input, existingExerciseIds)?.let { error ->
-        Result.failure(IllegalArgumentException(error.name))
-    } ?: repository.saveCustomExercise(input)
+    ): Result<Exercise> {
+        val duplicateCandidates = input.id?.let(existingExerciseIds::minus) ?: existingExerciseIds
+        return validateCustomExercise(input, duplicateCandidates)?.let { error ->
+            Result.failure(IllegalArgumentException(error.name))
+        } ?: repository.saveCustomExercise(input)
+    }
 }
 
 class ArchiveCustomExerciseUseCase @Inject constructor(

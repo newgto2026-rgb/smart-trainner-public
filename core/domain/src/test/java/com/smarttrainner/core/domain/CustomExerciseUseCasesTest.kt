@@ -86,6 +86,19 @@ class CustomExerciseUseCasesTest {
     }
 
     @Test
+    fun saveCustomExerciseAllowsExistingIdWhenEditingSameExercise() = runTest {
+        val repository = FakeExerciseRepository()
+        val useCase = SaveCustomExerciseUseCase(repository, validate)
+        val exerciseId = ExerciseId("custom-exercise-1")
+        val input = validInput(id = exerciseId)
+
+        val result = useCase(input, existingExerciseIds = setOf(exerciseId))
+
+        assertThat(result.isSuccess).isTrue()
+        assertThat(repository.savedInput).isEqualTo(input)
+    }
+
+    @Test
     fun archiveCustomExerciseDelegatesToRepository() = runTest {
         val repository = FakeExerciseRepository()
         val useCase = ArchiveCustomExerciseUseCase(repository)

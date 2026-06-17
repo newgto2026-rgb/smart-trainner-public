@@ -263,7 +263,7 @@ object SmartTrainnerMigrations {
                     `updatedAt` TEXT NOT NULL,
                     `archivedAt` TEXT,
                     `syncState` TEXT NOT NULL DEFAULT 'pending_upsert',
-                    PRIMARY KEY(`id`)
+                    PRIMARY KEY(`ownerSessionId`, `id`)
                 )
                 """.trimIndent()
             )
