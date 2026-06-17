@@ -362,7 +362,6 @@ class TrainingUiTest {
             "Default image"
         )
         assertAnyTextInsideTag("training_exercise_detail_dialog", "Pull the handle toward the ribs.")
-        assertAnyTextInsideTag("training_exercise_detail_dialog", "Keep the shoulders away from the ears.")
         composeRule.onNodeWithTag("training_close_exercise_detail").performClick()
         waitForNodeWithTagToDisappear("training_exercise_detail_dialog")
 
@@ -1569,9 +1568,6 @@ class TrainingUiTest {
         scrollToNodeWithTag("training_custom_exercise_instruction_0_input")
         composeRule.onNodeWithTag("training_custom_exercise_instruction_0_input")
             .performTextReplacement("Pull the handle toward the ribs.")
-        scrollToNodeWithTag("training_custom_exercise_safety_0_input")
-        composeRule.onNodeWithTag("training_custom_exercise_safety_0_input")
-            .performTextReplacement("Keep the shoulders away from the ears.")
         composeRule.onNodeWithTag("training_custom_exercise_save").performClick()
         waitForNodeWithTagToDisappear("training_custom_exercise_form")
         scrollToNodeWithTag("training_exercise_search")

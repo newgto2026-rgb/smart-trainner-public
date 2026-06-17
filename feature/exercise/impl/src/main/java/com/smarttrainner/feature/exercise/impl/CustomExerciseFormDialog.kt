@@ -135,7 +135,7 @@ internal fun CustomExerciseFormDialog(
                         onAdd = actions.onAddInstruction
                     )
                     DynamicTextSection(
-                        title = stringResource(R.string.exercise_custom_safety_required),
+                        title = stringResource(R.string.exercise_custom_safety_optional),
                         values = state.safetyCues,
                         inputTagPrefix = "training_custom_exercise_safety",
                         addTag = "training_custom_exercise_add_safety",
@@ -485,7 +485,6 @@ private fun CustomExerciseFormError.localizedMessage(): String = stringResource(
     when (this) {
         CustomExerciseFormError.NAME -> R.string.exercise_custom_error_name
         CustomExerciseFormError.INSTRUCTIONS -> R.string.exercise_custom_error_instructions
-        CustomExerciseFormError.SAFETY -> R.string.exercise_custom_error_safety
         CustomExerciseFormError.SETS -> R.string.exercise_custom_error_sets
         CustomExerciseFormError.TARGET -> R.string.exercise_custom_error_target
         CustomExerciseFormError.REPS -> R.string.exercise_custom_error_reps

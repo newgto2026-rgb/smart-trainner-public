@@ -11,7 +11,7 @@ Add private custom exercises owned by the active logged-in user. A custom exerci
 ### User Flow
 1. User opens the Exercise tab.
 2. User taps "Add custom exercise".
-3. User enters name, category, equipment, difficulty, summary, default target, method steps, safety points, and an optional image.
+3. User enters name, category, equipment, difficulty, summary, default target, method steps, optional safety points, and an optional image.
 4. Category, equipment, and difficulty are selected from dropdowns.
 5. If an image URL or picked image is present, the image preview uses the current exercise image frame. If not, a default image placeholder is shown.
 6. User saves the exercise.
@@ -85,7 +85,7 @@ Add private custom exercises owned by the active logged-in user. A custom exerci
 - Confirmed custom exercise deletion prunes local routine references and workout logs immediately, then the custom exercise delete sync performs the same server cleanup before routine/log sync fetches remote state.
 
 ### Validation
-- Required: name, muscle group/category, equipment, difficulty, at least one method step, at least one safety point, sets, rest, and either reps or duration.
+- Required: name, muscle group/category, equipment, difficulty, at least one method step, sets, rest, and either reps or duration. Safety points are optional.
 - Summary is allowed to be blank; the UI stores a default summary based on the name when blank.
 - Rep range must be positive and ordered.
 - Duration must be positive if used.

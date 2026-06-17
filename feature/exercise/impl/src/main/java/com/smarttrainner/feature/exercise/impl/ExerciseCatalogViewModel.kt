@@ -197,7 +197,6 @@ internal fun Throwable.toFormError(): CustomExerciseFormError =
 internal fun CustomExerciseValidationError.toFormError(): CustomExerciseFormError = when (this) {
     CustomExerciseValidationError.NAME -> CustomExerciseFormError.NAME
     CustomExerciseValidationError.INSTRUCTIONS -> CustomExerciseFormError.INSTRUCTIONS
-    CustomExerciseValidationError.SAFETY -> CustomExerciseFormError.SAFETY
     CustomExerciseValidationError.SETS -> CustomExerciseFormError.SETS
     CustomExerciseValidationError.TARGET -> CustomExerciseFormError.TARGET
     CustomExerciseValidationError.REPS -> CustomExerciseFormError.REPS

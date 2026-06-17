@@ -37,7 +37,6 @@ internal data class CustomExerciseFormUiState(
 internal enum class CustomExerciseFormError {
     NAME,
     INSTRUCTIONS,
-    SAFETY,
     SETS,
     TARGET,
     REPS,

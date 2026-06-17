@@ -14,7 +14,6 @@ class ObserveExercisesUseCase @Inject constructor(
 enum class CustomExerciseValidationError {
     NAME,
     INSTRUCTIONS,
-    SAFETY,
     SETS,
     TARGET,
     REPS,
@@ -32,9 +31,6 @@ class ValidateCustomExerciseUseCase @Inject constructor() {
         if (input.id != null && input.id in existingExerciseIds) return CustomExerciseValidationError.ID
         if (input.instructions.map { it.trim() }.none { it.isNotEmpty() }) {
             return CustomExerciseValidationError.INSTRUCTIONS
-        }
-        if (input.safetyCues.map { it.trim() }.none { it.isNotEmpty() }) {
-            return CustomExerciseValidationError.SAFETY
         }
         if (input.defaultSets !in 1..12) return CustomExerciseValidationError.SETS
         if (input.restSeconds !in 0..600) return CustomExerciseValidationError.REST

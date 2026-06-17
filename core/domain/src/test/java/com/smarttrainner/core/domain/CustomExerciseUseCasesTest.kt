@@ -23,6 +23,12 @@ class CustomExerciseUseCasesTest {
     }
 
     @Test
+    fun validateCustomExerciseTreatsSafetyCuesAsOptional() {
+        assertThat(validate(validInput(safetyCues = emptyList()))).isNull()
+        assertThat(validate(validInput(safetyCues = listOf("  ")))).isNull()
+    }
+
+    @Test
     fun validateCustomExerciseRequiresAtLeastOneTarget() {
         val error = validate(validInput(repRangeStart = null, repRangeEnd = null, duration = null))
 
@@ -52,7 +58,6 @@ class CustomExerciseUseCasesTest {
         assertThat(validate(validInput(name = ""))).isEqualTo(CustomExerciseValidationError.NAME)
         assertThat(validate(validInput(name = "x".repeat(61)))).isEqualTo(CustomExerciseValidationError.NAME)
         assertThat(validate(validInput(instructions = listOf("  ")))).isEqualTo(CustomExerciseValidationError.INSTRUCTIONS)
-        assertThat(validate(validInput(safetyCues = listOf("  ")))).isEqualTo(CustomExerciseValidationError.SAFETY)
         assertThat(validate(validInput(sets = 0))).isEqualTo(CustomExerciseValidationError.SETS)
         assertThat(validate(validInput(sets = 13))).isEqualTo(CustomExerciseValidationError.SETS)
         assertThat(validate(validInput(restSeconds = -1))).isEqualTo(CustomExerciseValidationError.REST)
