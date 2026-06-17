@@ -28,6 +28,7 @@ internal data class CalendarDayUiModel(
     val date: LocalDate,
     val isCurrentMonth: Boolean,
     val isToday: Boolean,
+    val isAccessible: Boolean,
     val isSelected: Boolean,
     val workoutCount: Int,
     val completedCount: Int

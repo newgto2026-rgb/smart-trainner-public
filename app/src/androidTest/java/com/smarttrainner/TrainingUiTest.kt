@@ -690,6 +690,20 @@ class TrainingUiTest {
     }
 
     @Test
+    fun calendarDisablesDatesOutsideToday() {
+        continueFromLoginIfNeeded()
+
+        composeRule.onNodeWithTag("training_tab_calendar").performClick()
+        waitForNodeWithTag("calendar_day_workout_sheet")
+
+        composeRule.onNodeWithTag("calendar_prev_month").assertIsNotEnabled()
+        composeRule.onNodeWithTag("calendar_next_month").assertIsNotEnabled()
+        composeRule.onNodeWithTag("calendar_day_2026-05-23").assertIsNotEnabled()
+        composeRule.onNodeWithTag("calendar_day_2026-05-24").assertIsEnabled()
+        assertTaggedTextContainsAny("calendar_day_workout_list_title", "2026년 5월 24일", "2026 May 24")
+    }
+
+    @Test
     fun calendarCanEditExistingWorkoutWithoutDuplicatingHistory() {
         continueFromLoginIfNeeded()
         recordPlanExercise("training_plan_exercise_leg_press")

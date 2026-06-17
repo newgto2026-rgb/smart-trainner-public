@@ -60,9 +60,12 @@ class CalendarViewModelTest {
     private val fixedClock = Clock.fixed(Instant.parse("2026-05-24T12:00:00Z"), ZoneOffset.UTC)
 
     @Test
-    fun uiState_restoresMonthAndSelectedDateFromSavedState() = runTest {
+    fun uiState_ignoresSavedDateOutsideToday() = runTest {
         val repository = FakeCalendarRepository()
-        repository.logs.value = listOf(workoutLog(id = 1, exerciseId = "bench", day = 9))
+        repository.logs.value = listOf(
+            workoutLog(id = 1, exerciseId = "bench", day = 9),
+            workoutLog(id = 2, exerciseId = "row", day = 24)
+        )
         val viewModel = viewModel(
             repository = repository,
             savedStateHandle = SavedStateHandle(
@@ -78,20 +81,24 @@ class CalendarViewModelTest {
             val state = awaitItem()
 
             assertThat(state.currentMonth.toString()).isEqualTo("2026-05")
-            assertThat(state.selectedDate.toString()).isEqualTo("2026-05-09")
-            assertThat(state.selectedDateWorkouts.map { it.exerciseName }).containsExactly("Bench press")
+            assertThat(state.selectedDate.toString()).isEqualTo("2026-05-24")
+            assertThat(state.selectedDateWorkouts.map { it.exerciseName }).containsExactly("Row")
             assertThat(state.days.single { it.date.toString() == "2026-05-09" }.workoutCount)
-                .isEqualTo(1)
+                .isEqualTo(0)
+            assertThat(state.days.single { it.date.toString() == "2026-05-09" }.isAccessible)
+                .isFalse()
+            assertThat(state.days.single { it.date.toString() == "2026-05-24" }.isAccessible)
+                .isTrue()
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun onDateClick_updatesSelectedDateWorkoutsWithinSameMonth() = runTest {
+    fun onDateClick_ignoresDateOutsideToday() = runTest {
         val repository = FakeCalendarRepository()
         repository.logs.value = listOf(
             workoutLog(id = 1, exerciseId = "bench", day = 9),
-            workoutLog(id = 2, exerciseId = "row", day = 10)
+            workoutLog(id = 2, exerciseId = "row", day = 24)
         )
         val viewModel = viewModel(
             repository = repository,
@@ -106,19 +113,20 @@ class CalendarViewModelTest {
         viewModel.uiState.test {
             skipItems(1)
             assertThat(awaitItem().selectedDateWorkouts.map { it.exerciseName })
-                .containsExactly("Bench press")
+                .containsExactly("Row")
 
-            viewModel.onAction(CalendarAction.OnDateClick(java.time.LocalDate.of(2026, 5, 10)))
-            val state = awaitItem()
+            viewModel.onAction(CalendarAction.OnDateClick(LocalDate.of(2026, 5, 9)))
+            advanceUntilIdle()
+            val state = viewModel.uiState.value
 
-            assertThat(state.selectedDate.toString()).isEqualTo("2026-05-10")
+            assertThat(state.selectedDate.toString()).isEqualTo("2026-05-24")
             assertThat(state.selectedDateWorkouts.map { it.exerciseName }).containsExactly("Row")
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun monthTransition_doesNotExposePreviousMonthSummaryWhileNewMonthLoads() = runTest {
+    fun monthNavigationActionsStayOnToday() = runTest {
         val repository = FakeCalendarRepository()
         repository.logs.value = listOf(workoutLog(id = 1, exerciseId = "bench", day = 24))
         val viewModel = viewModel(
@@ -131,18 +139,17 @@ class CalendarViewModelTest {
             )
         )
 
-        viewModel.uiState.test {
-            skipItems(1)
-            assertThat(awaitItem().todayWorkoutCount).isEqualTo(1)
+        advanceUntilIdle()
 
-            viewModel.onAction(CalendarAction.OnNextMonthClick)
-            val transitionState = awaitItem()
+        viewModel.onAction(CalendarAction.OnPreviousMonthClick)
+        viewModel.onAction(CalendarAction.OnNextMonthClick)
+        advanceUntilIdle()
+        val state = viewModel.uiState.value
 
-            assertThat(transitionState.currentMonth.toString()).isEqualTo("2026-06")
-            assertThat(transitionState.todayWorkoutCount).isEqualTo(0)
-            assertThat(transitionState.days.count { it.workoutCount > 0 }).isEqualTo(0)
-            cancelAndIgnoreRemainingEvents()
-        }
+        assertThat(state.currentMonth.toString()).isEqualTo("2026-05")
+        assertThat(state.selectedDate.toString()).isEqualTo("2026-05-24")
+        assertThat(state.todayWorkoutCount).isEqualTo(1)
+        assertThat(state.days.count { it.workoutCount > 0 }).isEqualTo(1)
     }
 
     @Test

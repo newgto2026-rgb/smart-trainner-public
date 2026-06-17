@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -108,11 +109,12 @@ private fun RowScope.CalendarDayCell(
     onClick: (LocalDate) -> Unit
 ) {
     val isInactiveMonth = !day.isCurrentMonth
-    val hasItems = !isInactiveMonth && day.workoutCount > 0
+    val hasItems = day.isAccessible && day.workoutCount > 0
     val textColor = when {
         day.isSelected -> SmartTrainnerColors.SurfaceRaised
         isInactiveMonth -> SmartTrainnerColors.Muted.copy(alpha = 0.34f)
         day.isToday -> SmartTrainnerColors.Coral
+        !day.isAccessible -> SmartTrainnerColors.Muted.copy(alpha = 0.52f)
         else -> SmartTrainnerColors.Ink
     }
     val dateFontWeight = if (day.isSelected || day.isToday) FontWeight.SemiBold else FontWeight.Medium
@@ -137,8 +139,11 @@ private fun RowScope.CalendarDayCell(
             .weight(1f)
             .height(40.dp)
             .testTag("calendar_day_${day.date}")
-            .clickable(enabled = day.isCurrentMonth) { onClick(day.date) }
-            .semantics { contentDescription = a11yParts.joinToString(separator = ", ") }
+            .clickable(enabled = day.isAccessible) { onClick(day.date) }
+            .semantics {
+                contentDescription = a11yParts.joinToString(separator = ", ")
+                if (!day.isAccessible) disabled()
+            }
             .padding(vertical = 3.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
