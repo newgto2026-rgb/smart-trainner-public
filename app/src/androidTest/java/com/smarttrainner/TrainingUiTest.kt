@@ -690,17 +690,25 @@ class TrainingUiTest {
     }
 
     @Test
-    fun calendarDisablesDatesOutsideToday() {
+    fun calendarAllowsPastDatesAndDisablesFutureDates() {
         continueFromLoginIfNeeded()
 
         composeRule.onNodeWithTag("training_tab_calendar").performClick()
         waitForNodeWithTag("calendar_day_workout_sheet")
 
-        composeRule.onNodeWithTag("calendar_prev_month").assertIsNotEnabled()
+        composeRule.onNodeWithTag("calendar_prev_month").assertIsEnabled()
         composeRule.onNodeWithTag("calendar_next_month").assertIsNotEnabled()
-        composeRule.onNodeWithTag("calendar_day_2026-05-23").assertIsNotEnabled()
+        composeRule.onNodeWithTag("calendar_day_2026-05-23").assertIsEnabled()
         composeRule.onNodeWithTag("calendar_day_2026-05-24").assertIsEnabled()
-        assertTaggedTextContainsAny("calendar_day_workout_list_title", "2026년 5월 24일", "2026 May 24")
+        composeRule.onNodeWithTag("calendar_day_2026-05-25").assertIsNotEnabled()
+
+        composeRule.onNodeWithTag("calendar_day_2026-05-23").performClick()
+        assertTaggedTextContainsAny("calendar_day_workout_list_title", "2026년 5월 23일", "2026 May 23")
+
+        composeRule.onNodeWithTag("calendar_prev_month").performClick()
+        waitForNodeWithTag("calendar_day_2026-04-23")
+        composeRule.onNodeWithTag("calendar_day_2026-04-23").assertIsEnabled()
+        composeRule.onNodeWithTag("calendar_next_month").assertIsEnabled()
     }
 
     @Test
