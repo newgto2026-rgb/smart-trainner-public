@@ -24,7 +24,7 @@ android {
                 "SMART_TRAINNER_SERVER_BASE_URL",
                 quotedBuildConfigString(
                     serverBaseUrlProperty
-                        .orElse("https://cute-lookup-dangerous-promotes.trycloudflare.com/")
+                        .orElse("https://specifies-cup-cross-latina.trycloudflare.com/")
                         .get()
                 )
             )
