@@ -2,11 +2,14 @@ package com.smarttrainner
 
 import android.Manifest
 import android.content.Intent
-import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
@@ -32,7 +35,9 @@ import com.smarttrainner.app.di.CoreRepositoryBindingsModule
 import com.smarttrainner.app.di.FriendDataRepositoryBindingsModule
 import com.smarttrainner.app.di.PlatformTimeModule
 import com.smarttrainner.app.di.RoutineDataRepositoryBindingsModule
+import com.smarttrainner.app.di.ThemePreferenceStore
 import com.smarttrainner.app.di.WorkoutDataRepositoryBindingsModule
+import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.NetworkStatusRepository
 import com.smarttrainner.core.domain.PushTokenRepository
@@ -63,6 +68,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -177,6 +183,9 @@ class TrainingUiTest {
     @JvmField
     val trainingDataSyncers: Set<@JvmSuppressWildcards TrainingDataSyncer> = emptySet()
 
+    @Inject
+    lateinit var themePreferenceStore: ThemePreferenceStore
+
     @BindValue
     @JvmField
     val clock: Clock = Clock.fixed(Instant.parse("2026-05-24T12:00:00Z"), ZoneOffset.UTC)
@@ -251,6 +260,23 @@ class TrainingUiTest {
 
         composeRule.onNodeWithTag("training_tab_analysis").performClick()
         composeRule.onNodeWithTag("training_summary_band").assertIsDisplayed()
+    }
+
+    @Test
+    fun blackThemeTabSwitchKeepsNavigationSurfaceDark() {
+        continueFromLoginIfNeeded()
+        runBlocking {
+            themePreferenceStore.setSelectedThemeTone(SmartTrainnerThemeTone.Black)
+        }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        waitForNodeWithTag("training_current_routine_card")
+        assertNavigationSurfaceIsDark()
+
+        composeRule.onNodeWithTag("training_tab_home").performClick()
+        waitForNodeWithTag("training_next_routine_day_card")
+        assertNavigationSurfaceIsDark()
     }
 
     @Test
@@ -1400,6 +1426,9 @@ class TrainingUiTest {
     private fun resetTestState() {
         trainingRepository.reset()
         (sessionRepository as InMemorySessionRepository).reset()
+        runBlocking {
+            themePreferenceStore.setSelectedThemeTone(SmartTrainnerThemeTone.Default)
+        }
     }
 
     private fun waitForLoginScreen() {
@@ -1418,6 +1447,18 @@ class TrainingUiTest {
         composeRule.waitUntil(timeoutMillis = 10_000) {
             !hasNodeWithTag(testTag)
         }
+    }
+
+    private fun assertNavigationSurfaceIsDark() {
+        val image = composeRule.onNodeWithTag("training_navigation_surface").captureToImage()
+        val pixelMap = image.toPixelMap()
+        val sampleX = 4.coerceAtMost(image.width - 1)
+        val sampleY = 4.coerceAtMost(image.height - 1)
+        val luminance = pixelMap[sampleX, sampleY].luminance()
+        assertTrue(
+            "Expected black theme navigation surface to stay dark, but sampled luminance was $luminance",
+            luminance < 0.2f
+        )
     }
 
     private fun confirmRoutineSwitchIfRequested() {

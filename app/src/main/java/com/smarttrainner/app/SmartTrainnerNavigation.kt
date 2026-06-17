@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.os.SystemClock
 import android.widget.Toast
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -84,6 +86,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.smarttrainner.R
 import com.smarttrainner.core.designsystem.SmartTrainnerColors
+import com.smarttrainner.core.designsystem.SmartTrainnerGradients
 import com.smarttrainner.core.designsystem.SmartTrainnerThemeTone
 import com.smarttrainner.core.designsystem.swatchColor
 import com.smarttrainner.core.model.ProfileGender
@@ -164,7 +167,12 @@ fun SmartTrainnerMainScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SmartTrainnerGradients.screen())
+            .testTag("training_navigation_surface")
+    ) {
         CompositionLocalProvider(
             LocalSmartTrainnerHeaderAction provides {
                 ProfileButton(
@@ -199,7 +207,12 @@ fun SmartTrainnerMainScreen(
                 ) {
                     NavHost(
                         navController = navController,
-                        startDestination = TrainingGraphRoute
+                        startDestination = TrainingGraphRoute,
+                        enterTransition = { EnterTransition.None },
+                        exitTransition = { ExitTransition.None },
+                        popEnterTransition = { EnterTransition.None },
+                        popExitTransition = { ExitTransition.None },
+                        sizeTransform = { null }
                     ) {
                         navigation(
                             startDestination = SmartTrainnerDestination.Home.route,
