@@ -295,7 +295,10 @@ class CalendarViewModel @Inject constructor(
 
     private fun saveEditor() {
         val draft = editorDraftState.value ?: return
-        if (draft.selectedDate != LocalDate.now(clock)) return
+        if (draft.selectedDate != LocalDate.now(clock)) {
+            editorDraftState.value = draft.copy(error = CalendarWorkoutEditorError.SAVE_FAILED)
+            return
+        }
         val exerciseId = draft.selectedExerciseId
         if (exerciseId == null) {
             editorDraftState.value = draft.copy(error = CalendarWorkoutEditorError.EXERCISE)
@@ -410,7 +413,7 @@ internal fun buildMonthCells(
             isCurrentMonth = isCurrentMonth,
             isToday = date == today,
             isAccessible = isAccessible,
-            isSelected = isCurrentMonth && date == selectedDate,
+            isSelected = isAccessible,
             workoutCount = if (isAccessible) summary?.workoutCount ?: 0 else 0,
             completedCount = if (isAccessible) summary?.completedCount ?: 0 else 0
         )

@@ -36,6 +36,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -87,7 +88,11 @@ class CalendarViewModelTest {
                 .isEqualTo(0)
             assertThat(state.days.single { it.date.toString() == "2026-05-09" }.isAccessible)
                 .isFalse()
+            assertThat(state.days.single { it.date.toString() == "2026-05-09" }.isSelected)
+                .isFalse()
             assertThat(state.days.single { it.date.toString() == "2026-05-24" }.isAccessible)
+                .isTrue()
+            assertThat(state.days.single { it.date.toString() == "2026-05-24" }.isSelected)
                 .isTrue()
             cancelAndIgnoreRemainingEvents()
         }
@@ -269,6 +274,36 @@ class CalendarViewModelTest {
     }
 
     @Test
+    fun addWorkoutEditor_reportsSaveFailureWhenTodayChangesBeforeSave() = runTest {
+        val repository = FakeCalendarRepository()
+        val mutableClock = MutableClock(Instant.parse("2026-05-24T12:00:00Z"))
+        val viewModel = viewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    "calendar_month" to "2026-05",
+                    "calendar_selected_date" to "2026-05-24"
+                )
+            ),
+            clock = mutableClock
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(CalendarAction.OnAddWorkoutClick)
+        viewModel.onAction(CalendarAction.OnEditorExerciseSelected(ExerciseId("row")))
+        viewModel.onAction(CalendarAction.OnEditorSetRepsChanged(index = 0, value = "11"))
+        viewModel.onAction(CalendarAction.OnEditorSetWeightChanged(index = 0, value = "42.5"))
+        viewModel.onAction(CalendarAction.OnEditorSetRestChanged(index = 0, value = "120"))
+        mutableClock.currentInstant = Instant.parse("2026-05-25T00:01:00Z")
+        viewModel.onAction(CalendarAction.OnEditorSaveClick)
+        advanceUntilIdle()
+
+        assertThat(repository.logs.value).isEmpty()
+        assertThat(viewModel.uiState.value.editor?.error)
+            .isEqualTo(CalendarWorkoutEditorError.SAVE_FAILED)
+    }
+
+    @Test
     fun editWorkoutEditor_updatesExistingWorkoutWithoutChangingSyncIdentityFields() = runTest {
         val repository = FakeCalendarRepository()
         val original = workoutLog(id = 5, exerciseId = "bench", day = 24).copy(
@@ -320,7 +355,8 @@ class CalendarViewModelTest {
     private fun viewModel(
         repository: FakeCalendarRepository,
         preferencesRepository: FakeCalendarPreferencesRepository = FakeCalendarPreferencesRepository(),
-        savedStateHandle: SavedStateHandle = SavedStateHandle()
+        savedStateHandle: SavedStateHandle = SavedStateHandle(),
+        clock: Clock = fixedClock
     ) = CalendarViewModel(
         savedStateHandle = savedStateHandle,
         observeWorkoutCalendarMonth = ObserveWorkoutCalendarMonthUseCase(repository, repository, repository),
@@ -329,7 +365,7 @@ class CalendarViewModelTest {
         updateCalendarMonthExpanded = UpdateCalendarMonthExpandedUseCase(preferencesRepository),
         saveWorkoutLog = SaveWorkoutLogUseCase(repository),
         updateWorkoutLog = UpdateWorkoutLogUseCase(repository),
-        clock = fixedClock
+        clock = clock
     )
 }
 
@@ -428,6 +464,17 @@ private class FakeCalendarPreferencesRepository(
         monthExpanded.value = isExpanded
         return Result.success(Unit)
     }
+}
+
+private class MutableClock(
+    var currentInstant: Instant,
+    private val currentZone: ZoneId = ZoneOffset.UTC
+) : Clock() {
+    override fun getZone(): ZoneId = currentZone
+
+    override fun withZone(zone: ZoneId): Clock = MutableClock(currentInstant, zone)
+
+    override fun instant(): Instant = currentInstant
 }
 
 private fun workoutLog(
