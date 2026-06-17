@@ -36,6 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -71,6 +73,9 @@ internal fun CalendarWorkoutEditorDialog(
     onDismiss: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val density = LocalDensity.current
+    val windowHeight = with(density) { LocalWindowInfo.current.containerSize.height.toDp() }
+    val maxDialogHeight = minOf(windowHeight * 0.85f, 640.dp)
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -78,7 +83,7 @@ internal fun CalendarWorkoutEditorDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 640.dp)
+                .heightIn(max = maxDialogHeight)
                 .padding(horizontal = 18.dp)
                 .testTag("calendar_workout_editor_dialog"),
             shape = RoundedCornerShape(8.dp),
@@ -284,7 +289,7 @@ private fun CalendarSetEditorRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.calendar_editor_set_number, index + 1),
+                text = stringResource(R.string.calendar_editor_set_number, (index + 1).toString()),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,

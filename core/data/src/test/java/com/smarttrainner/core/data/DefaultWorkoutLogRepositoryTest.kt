@@ -6,6 +6,10 @@ import androidx.room.Room
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.database.SmartTrainnerDatabase
 import com.smarttrainner.core.database.WorkoutLogDao
+import com.smarttrainner.core.database.WorkoutLogEntity
+import com.smarttrainner.core.database.WorkoutLogSetWrite
+import com.smarttrainner.core.database.WorkoutLogWithSets
+import com.smarttrainner.core.database.WorkoutSetLogEntity
 import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.DEFAULT_USER_SESSION_ID
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
@@ -26,6 +30,8 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -141,6 +147,25 @@ class DefaultWorkoutLogRepositoryTest {
         assertThat(localAfter.log.syncPending).isTrue()
     }
 
+    @Test
+    fun saveWorkoutLog_succeedsWhenMarkSyncedFailsAfterNetworkSuccess() = runTest {
+        val failingDao = MarkSyncedFailingWorkoutLogDao()
+        val repo = DefaultWorkoutLogRepository(
+            workoutLogDao = failingDao,
+            activeSessionResolver = ActiveSessionResolver(
+                TrainingPreferencesDataSource(context = context, clock = clock)
+            ),
+            workoutLogNetworkApi = networkApi
+        )
+
+        val result = repo.saveWorkoutLog(workoutInput())
+
+        assertThat(result.isSuccess).isTrue()
+        assertThat(networkApi.createRequests).hasSize(1)
+        assertThat(failingDao.markSyncedAttempts).isEqualTo(1)
+        assertThat(failingDao.upsertedLog?.syncPending).isTrue()
+    }
+
     private fun workoutInput(
         plannedExerciseId: PlannedExerciseId = PlannedExerciseId("routine-day-1-leg_press"),
         performedAt: LocalDateTime = LocalDateTime.parse("2026-06-17T12:00:00"),
@@ -178,6 +203,74 @@ private class FakeWorkoutLogNetworkApi : WorkoutLogNetworkApi {
         createFailure?.let { throw it }
         return WorkoutLogResponse(data = request.toDto(sessionId))
     }
+}
+
+private class MarkSyncedFailingWorkoutLogDao : WorkoutLogDao {
+    var upsertedLog: WorkoutLogEntity? = null
+    var markSyncedAttempts = 0
+
+    override fun observeBetween(
+        sessionId: String,
+        startDate: String,
+        endDate: String
+    ): Flow<List<WorkoutLogWithSets>> = flowOf(emptyList())
+
+    override fun observeAll(sessionId: String): Flow<List<WorkoutLogWithSets>> = flowOf(emptyList())
+
+    override fun observeLatestByExerciseForSession(sessionId: String): Flow<List<WorkoutLogWithSets>> =
+        flowOf(emptyList())
+
+    override suspend fun pendingSyncLogs(sessionId: String): List<WorkoutLogWithSets> = emptyList()
+
+    override suspend fun pendingSyncClientLogIds(sessionId: String): List<String> = emptyList()
+
+    override suspend fun latestByExercise(sessionId: String, exerciseId: String): WorkoutLogWithSets? = null
+
+    override suspend fun latestByPlannedExercise(
+        sessionId: String,
+        plannedExerciseId: String
+    ): WorkoutLogWithSets? = null
+
+    override suspend fun byId(sessionId: String, id: Long): WorkoutLogWithSets? = null
+
+    override suspend fun upsert(log: WorkoutLogEntity): Long {
+        upsertedLog = log.copy(id = 1L)
+        return 1L
+    }
+
+    override suspend fun insertSetLogs(setLogs: List<WorkoutSetLogEntity>) = Unit
+
+    override suspend fun markSynced(sessionId: String, clientLogId: String) {
+        markSyncedAttempts += 1
+        throw IOException("mark synced failed")
+    }
+
+    override suspend fun updateRoutineDayLogDate(
+        sessionId: String,
+        routineDayInstanceId: String,
+        performedDate: String,
+        performedAt: String
+    ) = Unit
+
+    override suspend fun routineDayWorkoutLogIds(
+        sessionId: String,
+        routineDayInstanceId: String?,
+        plannedExerciseIds: List<String>,
+        additionalExerciseIdPrefixPattern: String
+    ): List<Long> = emptyList()
+
+    override suspend fun routineCycleWorkoutLogIds(
+        sessionId: String,
+        routineDayInstancePrefixPattern: String,
+        plannedExerciseIds: List<String>,
+        additionalExerciseIdPrefixPattern: String
+    ): List<Long> = emptyList()
+
+    override suspend fun deleteSetLogsByWorkoutLogIds(workoutLogIds: List<Long>) = Unit
+
+    override suspend fun deleteWorkoutLogsByIds(workoutLogIds: List<Long>) = Unit
+
+    override suspend fun upsertAllWithSets(logsWithSets: List<WorkoutLogSetWrite>) = Unit
 }
 
 private fun WorkoutLogRequest.toDto(sessionId: String) = WorkoutLogDto(

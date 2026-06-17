@@ -99,7 +99,10 @@ class DefaultWorkoutLogRepository @Inject constructor(
                     sessionId = sessionId,
                     request = localLog.toNetworkRequest()
                 )
-                workoutLogDao.markSynced(sessionId, localLog.log.clientLogId)
+            }.onSuccess {
+                runCatching {
+                    workoutLogDao.markSynced(sessionId, localLog.log.clientLogId)
+                }
             }.onFailure { error ->
                 if (firstFailure == null) firstFailure = error
             }
@@ -137,7 +140,9 @@ class DefaultWorkoutLogRepository @Inject constructor(
                 request = input.toNetworkRequest(clientLogId)
             )
         }.onSuccess {
-            workoutLogDao.markSynced(sessionId, clientLogId)
+            runCatching {
+                workoutLogDao.markSynced(sessionId, clientLogId)
+            }
         }
     }
 }

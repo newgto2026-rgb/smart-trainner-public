@@ -25,7 +25,7 @@
     <string name="calendar_editor_edit_title">Edit workout</string>
     <string name="calendar_editor_exercise">Exercise</string>
     <string name="calendar_editor_sets_title">Sets</string>
-    <string name="calendar_editor_set_number">Set %1$d</string>
+    <string name="calendar_editor_set_number">Set %1$s</string>
     <string name="calendar_editor_reps">Reps</string>
     <string name="calendar_editor_weight">Weight</string>
     <string name="calendar_editor_assistance_weight">Assist</string>

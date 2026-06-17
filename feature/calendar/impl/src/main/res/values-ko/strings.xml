@@ -25,7 +25,7 @@
     <string name="calendar_editor_edit_title">운동 수정</string>
     <string name="calendar_editor_exercise">운동</string>
     <string name="calendar_editor_sets_title">세트</string>
-    <string name="calendar_editor_set_number">%1$d세트</string>
+    <string name="calendar_editor_set_number">%1$s세트</string>
     <string name="calendar_editor_reps">반복</string>
     <string name="calendar_editor_weight">중량</string>
     <string name="calendar_editor_assistance_weight">보조</string>
