@@ -2,6 +2,7 @@ package com.smarttrainner.app.di
 
 import android.content.Context
 import androidx.room.Room
+import com.smarttrainner.core.database.CustomExerciseDao
 import com.smarttrainner.core.database.CustomRoutineDao
 import com.smarttrainner.core.database.FriendDao
 import com.smarttrainner.core.database.SmartTrainnerMigrations
@@ -34,6 +35,10 @@ object PlatformDatabaseModule {
     @Provides
     fun provideCustomRoutineDao(database: SmartTrainnerDatabase): CustomRoutineDao =
         database.customRoutineDao()
+
+    @Provides
+    fun provideCustomExerciseDao(database: SmartTrainnerDatabase): CustomExerciseDao =
+        database.customExerciseDao()
 
     @Provides
     fun provideFriendDao(database: SmartTrainnerDatabase): FriendDao =

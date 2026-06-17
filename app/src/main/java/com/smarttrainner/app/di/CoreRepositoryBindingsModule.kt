@@ -35,6 +35,12 @@ abstract class CoreRepositoryBindingsModule {
     ): ExerciseRepository
 
     @Binds
+    @IntoSet
+    abstract fun bindExerciseTrainingDataSyncer(
+        repository: DefaultExerciseRepository
+    ): TrainingDataSyncer
+
+    @Binds
     abstract fun bindCyclePlanRepository(
         repository: DefaultCyclePlanRepository
     ): CyclePlanRepository

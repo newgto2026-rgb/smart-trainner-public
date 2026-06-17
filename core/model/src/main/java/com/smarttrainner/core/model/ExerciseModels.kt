@@ -1,5 +1,7 @@
 package com.smarttrainner.core.model
 
+import java.time.Instant
+
 enum class MuscleGroup(val displayName: String) {
     LOWER_BODY("하체"),
     BACK("등"),
@@ -39,6 +41,12 @@ enum class ExerciseMuscleRole {
 enum class ExerciseLoadType {
     EXTERNAL_LOAD,
     ASSISTANCE_LOAD
+}
+
+enum class ExerciseSource {
+    SYSTEM,
+    USER_CREATED,
+    SHARED
 }
 
 enum class ExerciseMovementPattern(val sortRank: Int) {
@@ -87,7 +95,14 @@ data class Exercise(
     val popularityRank: Int = Int.MAX_VALUE,
     val variantRank: Int = Int.MAX_VALUE,
     val catalogOrder: Int = Int.MAX_VALUE,
-    val loadType: ExerciseLoadType = ExerciseLoadType.EXTERNAL_LOAD
+    val loadType: ExerciseLoadType = ExerciseLoadType.EXTERNAL_LOAD,
+    val source: ExerciseSource = ExerciseSource.SYSTEM,
+    val ownerSessionId: UserSessionId? = null,
+    val originExerciseId: ExerciseId? = null,
+    val imageUri: String? = null,
+    val createdAt: Instant? = null,
+    val updatedAt: Instant? = null,
+    val archivedAt: Instant? = null
 ) {
     val targetText: String
         get() = if (defaultRepRange != null) {
@@ -113,6 +128,23 @@ data class Exercise(
         else -> null
     }
 }
+
+data class CustomExerciseInput(
+    val id: ExerciseId? = null,
+    val name: String,
+    val muscleGroup: MuscleGroup,
+    val equipment: EquipmentType,
+    val difficulty: DifficultyLevel,
+    val imageUri: String? = null,
+    val summary: String = "",
+    val instructions: List<String>,
+    val safetyCues: List<String>,
+    val defaultSets: Int,
+    val repRangeStart: Int?,
+    val repRangeEnd: Int?,
+    val defaultDurationMinutes: Int?,
+    val restSeconds: Int
+)
 
 fun Exercise.targetsMuscleGroup(group: MuscleGroup): Boolean =
     group in muscleGroups

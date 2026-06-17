@@ -16,8 +16,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -57,6 +59,7 @@ private val armDetailGroups = listOf(
 internal fun LazyListScope.exerciseCatalogContent(
     state: ExerciseCatalogUiState,
     onSearchQueryChanged: (String) -> Unit,
+    onAddCustomExerciseRequested: () -> Unit,
     onExerciseSelected: (ExerciseId) -> Unit
 ) {
     val selectedExerciseId = state.selectedExerciseId
@@ -67,6 +70,21 @@ internal fun LazyListScope.exerciseCatalogContent(
             onQueryChanged = onSearchQueryChanged,
             modifier = Modifier.fillMaxWidth()
         )
+    }
+    item {
+        OutlinedButton(
+            onClick = onAddCustomExerciseRequested,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("training_custom_exercise_add_cta"),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null)
+            Text(
+                text = stringResource(R.string.exercise_custom_add),
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
     }
     item {
         Text(

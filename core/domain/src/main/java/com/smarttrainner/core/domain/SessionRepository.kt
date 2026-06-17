@@ -34,5 +34,8 @@ interface NetworkStatusRepository {
 }
 
 interface TrainingDataSyncer {
+    val syncPriority: Int
+        get() = 100
+
     suspend fun syncPendingTrainingData(): Result<Unit>
 }

@@ -1,3 +1,4 @@
 <resources>
     <string name="exercise_image_pending">Image QA pending</string>
+    <string name="exercise_default_image">Default image</string>
 </resources>

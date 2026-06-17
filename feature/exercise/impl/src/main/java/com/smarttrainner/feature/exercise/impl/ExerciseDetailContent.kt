@@ -16,12 +16,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +49,13 @@ internal fun ExerciseDetailDialog(
     actions: ExerciseDetailActions
 ) {
     val exercise = state.exercise ?: return
+    if (state.showDeleteConfirmation) {
+        DeleteCustomExerciseConfirmationDialog(
+            deleting = state.deleting,
+            onDismiss = actions.onDeleteDismissed,
+            onConfirm = actions.onDeleteConfirmed
+        )
+    }
     Dialog(
         onDismissRequest = actions.onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -80,6 +90,18 @@ internal fun ExerciseDetailDialog(
                         )
                         ExerciseMetaChips(exercise)
                     }
+                    if (state.showDeleteAction) {
+                        IconButton(
+                            onClick = actions.onDeleteRequested,
+                            enabled = !state.deleting,
+                            modifier = Modifier.testTag("training_custom_exercise_delete")
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.exercise_custom_delete)
+                            )
+                        }
+                    }
                     IconButton(
                         onClick = actions.onDismiss,
                         modifier = Modifier.testTag("training_close_exercise_detail")
@@ -100,6 +122,17 @@ internal fun ExerciseDetailDialog(
                         showHeader = false
                     )
                 }
+                if (state.deleteError) {
+                    Text(
+                        text = stringResource(R.string.exercise_custom_delete_error),
+                        modifier = Modifier
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                            .testTag("training_custom_exercise_delete_error"),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 if (state.showRecordAction) {
                     Button(
                         onClick = { actions.onRecordRequested(exercise.id) },
@@ -115,6 +148,50 @@ internal fun ExerciseDetailDialog(
             }
         }
     }
+}
+
+@Composable
+private fun DeleteCustomExerciseConfirmationDialog(
+    deleting: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.testTag("training_custom_exercise_delete_confirm_dialog"),
+        title = {
+            Text(stringResource(R.string.exercise_custom_delete_title))
+        },
+        text = {
+            Text(stringResource(R.string.exercise_custom_delete_body))
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                enabled = !deleting,
+                modifier = Modifier.testTag("training_custom_exercise_delete_confirm")
+            ) {
+                Text(
+                    stringResource(
+                        if (deleting) {
+                            R.string.exercise_custom_deleting
+                        } else {
+                            R.string.exercise_custom_delete_confirm
+                        }
+                    )
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !deleting,
+                modifier = Modifier.testTag("training_custom_exercise_delete_cancel")
+            ) {
+                Text(stringResource(R.string.exercise_custom_delete_cancel))
+            }
+        }
+    )
 }
 
 @Composable
@@ -323,6 +400,7 @@ private fun StepImageSection(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val stepLabel = formattedStepLabel(index + 1, step.label)
                     TrainerExerciseImage(
                         exercise = exercise,
                         modifier = Modifier
@@ -330,11 +408,11 @@ private fun StepImageSection(
                             .clickable { onImageSelected(index) }
                             .testTag("training_step_image_$index"),
                         stepIndex = index,
-                        contentDescription = "${exercise.localizedName()} ${index + 1}. ${step.label}"
+                        contentDescription = "${exercise.localizedName()} $stepLabel"
                     )
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "${index + 1}. ${step.label}",
+                            text = stepLabel,
                             style = MaterialTheme.typography.labelLarge,
                             color = SmartTrainnerColors.Coral,
                             fontWeight = FontWeight.Bold
@@ -348,5 +426,22 @@ private fun StepImageSection(
                 }
             }
         }
+    }
+}
+
+internal fun formattedStepLabel(stepNumber: Int, label: String): String {
+    val trimmed = label.trim()
+    val normalized = trimmed.lowercase()
+    return if (
+        normalized.startsWith("$stepNumber.") ||
+        normalized.startsWith("${stepNumber} ") ||
+        normalized.startsWith("${stepNumber}단계") ||
+        normalized.startsWith("${stepNumber}번째") ||
+        normalized.startsWith("step $stepNumber") ||
+        normalized.startsWith("line $stepNumber")
+    ) {
+        trimmed
+    } else {
+        "$stepNumber. $trimmed"
     }
 }

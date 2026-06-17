@@ -41,6 +41,7 @@ import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.TrainingDataSyncer
 import com.smarttrainner.core.domain.CyclePlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.ProfileGender
 import com.smarttrainner.core.model.ProfileSetup
 import com.smarttrainner.core.model.TrainingExperience
@@ -309,6 +310,135 @@ class TrainingUiTest {
         waitForNodeWithTagToDisappear("training_exercise_search_clear")
         scrollToNodeWithTag("training_exercise_row_machine_chest_press")
         composeRule.onNodeWithTag("training_exercise_row_machine_chest_press").assertIsDisplayed()
+    }
+
+    @Test
+    fun customExerciseFormShowsValidationErrorWhenMethodIsMissing() {
+        continueFromLoginIfNeeded()
+        openCustomExerciseForm()
+
+        assertTaggedTextContainsAny(
+            "training_custom_exercise_required_policy",
+            "필수",
+            "Required"
+        )
+        scrollToNodeWithTag("training_custom_exercise_image_policy")
+        assertTaggedTextContainsAny(
+            "training_custom_exercise_image_policy",
+            "기본 이미지",
+            "default image"
+        )
+        scrollToNodeWithTag("training_custom_exercise_image_picker")
+        composeRule.onNodeWithTag("training_custom_exercise_image_picker").assertIsDisplayed()
+
+        scrollToNodeWithTag("training_custom_exercise_name_input")
+        composeRule.onNodeWithTag("training_custom_exercise_name_input")
+            .performTextReplacement("Hotel Cable Row")
+        scrollToNodeWithTag("training_custom_exercise_safety_0_input")
+        composeRule.onNodeWithTag("training_custom_exercise_safety_0_input")
+            .performTextReplacement("Keep the shoulders away from the ears.")
+        composeRule.onNodeWithTag("training_custom_exercise_save").performClick()
+
+        waitForNodeWithTag("training_custom_exercise_error")
+        composeRule.onNodeWithTag("training_custom_exercise_form").assertIsDisplayed()
+        assertTaggedTextContainsAny(
+            "training_custom_exercise_error",
+            "운동 방법",
+            "exercise method"
+        )
+    }
+
+    @Test
+    fun customExerciseCreateAppearsInCatalogDetailAndRoutineBuilderWithDefaultImage() {
+        continueFromLoginIfNeeded()
+        createCustomExerciseFromExerciseTab()
+
+        clickExerciseRow("training_exercise_row_custom_exercise_ui_1")
+        waitForNodeWithTag("training_exercise_detail_dialog")
+        assertAnyTextInsideTag("training_exercise_detail_dialog", "Hotel Cable Row")
+        assertAnyTextInsideTagWithScroll(
+            "training_exercise_detail_dialog",
+            "기본 이미지",
+            "Default image"
+        )
+        assertAnyTextInsideTag("training_exercise_detail_dialog", "Pull the handle toward the ribs.")
+        composeRule.onNodeWithTag("training_close_exercise_detail").performClick()
+        waitForNodeWithTagToDisappear("training_exercise_detail_dialog")
+
+        composeRule.onNodeWithTag("training_tab_plan").performClick()
+        composeRule.onNodeWithTag("training_create_custom_routine_button").performClick()
+        waitForNodeWithTag("training_custom_routine_builder")
+        selectCustomFocus("training_custom_focus_BACK")
+        scrollToNodeWithTag("training_custom_exercise_group_BACK")
+        composeRule.onNodeWithTag("training_custom_exercise_group_BACK").performClick()
+        scrollToNodeWithTag("training_custom_add_exercise_custom_exercise_ui_1")
+        composeRule.onNodeWithTag("training_custom_add_exercise_custom_exercise_ui_1")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun customExerciseCatalogIsScopedToActiveUserSession() {
+        continueFromLoginIfNeeded()
+        createCustomExerciseFromExerciseTab()
+        composeRule.onNodeWithTag("training_exercise_row_custom_exercise_ui_1").assertIsDisplayed()
+
+        trainingRepository.setActiveSessionForTest("other-user-session")
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithTag("training_exercise_row_custom_exercise_ui_1")
+                .fetchSemanticsNodes()
+                .isEmpty()
+        }
+
+        trainingRepository.setActiveSessionForTest("android-ui-test")
+        waitForNodeWithTag("training_exercise_row_custom_exercise_ui_1")
+        composeRule.onNodeWithTag("training_exercise_row_custom_exercise_ui_1").assertIsDisplayed()
+    }
+
+    @Test
+    fun customExerciseDeleteWarnsAndRemovesRoutineAndWorkoutReferences() {
+        continueFromLoginIfNeeded()
+        createCustomExerciseFromExerciseTab()
+        val customExerciseId = ExerciseId("custom_exercise_ui_1")
+        trainingRepository.seedCustomRoutineAndLogForExerciseForTest(customExerciseId)
+
+        assertTrue(trainingRepository.workoutLogsForTest().any { it.exerciseId == customExerciseId })
+        assertTrue(
+            trainingRepository.customTemplatesForTest().any { template ->
+                template.days.any { day -> day.exercises.any { it.exerciseId == customExerciseId } }
+            }
+        )
+
+        clickExerciseRow("training_exercise_row_custom_exercise_ui_1")
+        waitForNodeWithTag("training_exercise_detail_dialog")
+        composeRule.onNodeWithTag("training_custom_exercise_delete").performClick()
+        waitForNodeWithTag("training_custom_exercise_delete_confirm_dialog")
+        assertAnyTextInsideTag(
+            "training_custom_exercise_delete_confirm_dialog",
+            "루틴",
+            "routine"
+        )
+        assertAnyTextInsideTag(
+            "training_custom_exercise_delete_confirm_dialog",
+            "운동 기록",
+            "workout records"
+        )
+
+        composeRule.onNodeWithTag("training_custom_exercise_delete_cancel").performClick()
+        waitForNodeWithTagToDisappear("training_custom_exercise_delete_confirm_dialog")
+        composeRule.onNodeWithTag("training_exercise_detail_dialog").assertIsDisplayed()
+
+        composeRule.onNodeWithTag("training_custom_exercise_delete").performClick()
+        waitForNodeWithTag("training_custom_exercise_delete_confirm_dialog")
+        composeRule.onNodeWithTag("training_custom_exercise_delete_confirm").performClick()
+        waitForNodeWithTagToDisappear("training_exercise_detail_dialog")
+        waitForNodeWithTagToDisappear("training_exercise_row_custom_exercise_ui_1")
+
+        assertTrue(trainingRepository.workoutLogsForTest().none { it.exerciseId == customExerciseId })
+        assertTrue(
+            trainingRepository.customTemplatesForTest().none { template ->
+                template.days.any { day -> day.exercises.any { it.exerciseId == customExerciseId } }
+            }
+        )
     }
 
     @Test
@@ -1409,6 +1539,50 @@ class TrainingUiTest {
         waitForNodeWithTagToDisappear("training_routine_library_dialog")
     }
 
+    private fun openCustomExerciseForm() {
+        composeRule.onNodeWithTag("training_tab_exercises").performClick()
+        waitForNodeWithTag("training_custom_exercise_add_cta")
+        composeRule.onNodeWithTag("training_custom_exercise_add_cta").performClick()
+        waitForNodeWithTag("training_custom_exercise_form")
+    }
+
+    private fun createCustomExerciseFromExerciseTab() {
+        openCustomExerciseForm()
+        composeRule.onNodeWithTag("training_custom_exercise_name_input")
+            .performTextReplacement("Hotel Cable Row")
+        selectCustomExerciseDropdown(
+            selectorTag = "training_custom_exercise_category_selector",
+            optionTag = "training_custom_exercise_category_option_BACK"
+        )
+        selectCustomExerciseDropdown(
+            selectorTag = "training_custom_exercise_equipment_selector",
+            optionTag = "training_custom_exercise_equipment_option_CABLE"
+        )
+        selectCustomExerciseDropdown(
+            selectorTag = "training_custom_exercise_difficulty_selector",
+            optionTag = "training_custom_exercise_difficulty_option_ADVANCED"
+        )
+        scrollToNodeWithTag("training_custom_exercise_summary_input")
+        composeRule.onNodeWithTag("training_custom_exercise_summary_input")
+            .performTextReplacement("A custom back exercise for travel days.")
+        scrollToNodeWithTag("training_custom_exercise_instruction_0_input")
+        composeRule.onNodeWithTag("training_custom_exercise_instruction_0_input")
+            .performTextReplacement("Pull the handle toward the ribs.")
+        composeRule.onNodeWithTag("training_custom_exercise_save").performClick()
+        waitForNodeWithTagToDisappear("training_custom_exercise_form")
+        scrollToNodeWithTag("training_exercise_search")
+        composeRule.onNodeWithTag("training_exercise_search").performTextReplacement("Hotel Cable Row")
+        waitForNodeWithTag("training_exercise_row_custom_exercise_ui_1")
+    }
+
+    private fun selectCustomExerciseDropdown(selectorTag: String, optionTag: String) {
+        scrollToNodeWithTag(selectorTag)
+        composeRule.onNodeWithTag(selectorTag).performClick()
+        waitForNodeWithTag(optionTag)
+        composeRule.onNodeWithTag(optionTag).performClick()
+        composeRule.waitForIdle()
+    }
+
     private fun substituteVisibleRoutineExerciseWithIndoorBike() {
         composeRule.onNodeWithTag("training_substitute_routine_exercise")
             .performScrollTo()
@@ -1654,7 +1828,7 @@ class TrainingUiTest {
             .map { text -> hasText(text, substring = true) }
             .reduce { left, right -> left or right }
         scrollToNode(matcher)
-        composeRule.onNode(matcher).assertIsDisplayed()
+        composeRule.onAllNodes(matcher)[0].assertIsDisplayed()
     }
 
     private fun assertCycleCompletionTextVisible() {

@@ -34,9 +34,32 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
             exerciseCatalogContent(
                 state = routeState,
                 onSearchQueryChanged = viewModel::updateSearchQuery,
+                onAddCustomExerciseRequested = viewModel::openCustomExerciseForm,
                 onExerciseSelected = onExerciseSelected
             )
         }
+        CustomExerciseFormDialog(
+            state = routeState.customExerciseForm,
+            actions = CustomExerciseFormActions(
+                onDismiss = viewModel::closeCustomExerciseForm,
+                onNameChanged = viewModel::updateCustomExerciseName,
+                onMuscleGroupChanged = viewModel::updateCustomExerciseMuscleGroup,
+                onEquipmentChanged = viewModel::updateCustomExerciseEquipment,
+                onDifficultyChanged = viewModel::updateCustomExerciseDifficulty,
+                onImageUriChanged = viewModel::updateCustomExerciseImageUri,
+                onSummaryChanged = viewModel::updateCustomExerciseSummary,
+                onSetsChanged = viewModel::updateCustomExerciseSets,
+                onRepStartChanged = viewModel::updateCustomExerciseRepStart,
+                onRepEndChanged = viewModel::updateCustomExerciseRepEnd,
+                onDurationChanged = viewModel::updateCustomExerciseDuration,
+                onRestChanged = viewModel::updateCustomExerciseRest,
+                onInstructionChanged = viewModel::updateCustomExerciseInstruction,
+                onAddInstruction = viewModel::addCustomExerciseInstruction,
+                onSafetyCueChanged = viewModel::updateCustomExerciseSafetyCue,
+                onAddSafetyCue = viewModel::addCustomExerciseSafetyCue,
+                onSave = viewModel::saveCustomExercise
+            )
+        )
     }
 
     @Composable
@@ -61,7 +84,10 @@ class ExerciseFeatureEntryImpl @Inject constructor() :
             state = state,
             actions = ExerciseDetailActions(
                 onDismiss = onDismiss,
-                onRecordRequested = onRecordRequested
+                onRecordRequested = onRecordRequested,
+                onDeleteRequested = viewModel::requestDeleteCustomExercise,
+                onDeleteDismissed = viewModel::dismissDeleteCustomExercise,
+                onDeleteConfirmed = { viewModel.confirmDeleteCustomExercise(onDeleted = onDismiss) }
             )
         )
     }

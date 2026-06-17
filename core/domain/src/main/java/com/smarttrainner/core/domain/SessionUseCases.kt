@@ -28,7 +28,7 @@ class SyncPendingTrainingDataUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(): Result<Unit> {
         var firstFailure: Throwable? = null
-        syncers.forEach { syncer ->
+        syncers.sortedBy { it.syncPriority }.forEach { syncer ->
             syncer.syncPendingTrainingData().onFailure { error ->
                 if (firstFailure == null) {
                     firstFailure = error
