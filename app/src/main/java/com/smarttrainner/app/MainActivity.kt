@@ -135,8 +135,8 @@ class MainActivity : ComponentActivity() {
 }
 
 internal fun SmartTrainnerThemeTone.windowBackgroundColor(): Int = when (this) {
-    SmartTrainnerThemeTone.Black -> AndroidColor.rgb(7, 10, 15)
-    SmartTrainnerThemeTone.Red,
-    SmartTrainnerThemeTone.Blue,
-    SmartTrainnerThemeTone.Green -> AndroidColor.rgb(246, 250, 252)
+    SmartTrainnerThemeTone.Black -> 0xFF070A0F.toInt()
+    SmartTrainnerThemeTone.Red -> 0xFFF9F6F7.toInt()
+    SmartTrainnerThemeTone.Blue -> 0xFFF6FAFC.toInt()
+    SmartTrainnerThemeTone.Green -> 0xFFF5F7FA.toInt()
 }
