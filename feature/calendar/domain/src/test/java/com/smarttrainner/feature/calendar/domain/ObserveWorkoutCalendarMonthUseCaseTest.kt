@@ -22,6 +22,7 @@ import com.smarttrainner.core.model.UserSession
 import com.smarttrainner.core.model.UserSessionId
 import com.smarttrainner.core.model.WorkoutLog
 import com.smarttrainner.core.model.WorkoutLogId
+import com.smarttrainner.core.model.WorkoutLogInput
 import com.smarttrainner.core.model.WorkoutSetLog
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -141,6 +142,18 @@ private class FakeWorkoutCalendarRepository : WorkoutLogRepository, ExerciseRepo
     override fun observeLatestWorkoutLogs(): Flow<List<WorkoutLog>> = logs
 
     override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = logs
+
+    override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
+        logs.value.filter { it.exerciseId == exerciseId }.maxByOrNull { it.performedAt }
+
+    override suspend fun getLatestWorkoutLog(
+        plannedExerciseId: com.smarttrainner.core.model.PlannedExerciseId
+    ): WorkoutLog? =
+        logs.value.filter { it.plannedExerciseId == plannedExerciseId }.maxByOrNull { it.performedAt }
+
+    override suspend fun saveWorkoutLog(input: WorkoutLogInput): Result<Unit> = unsupported()
+
+    override suspend fun updateWorkoutLog(id: WorkoutLogId, input: WorkoutLogInput): Result<Unit> = unsupported()
 
     override fun observeExercises(): Flow<List<Exercise>> = exercises
 

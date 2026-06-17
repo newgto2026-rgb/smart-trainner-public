@@ -3,6 +3,7 @@ package com.smarttrainner.feature.calendar.domain
 import com.smarttrainner.core.model.ExerciseLoadType
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.MuscleGroup
+import com.smarttrainner.core.model.PlannedExerciseId
 import com.smarttrainner.core.model.WorkoutLogId
 import com.smarttrainner.core.model.WorkoutSetLog
 import java.time.LocalDate
@@ -27,6 +28,7 @@ data class WorkoutDateSummary(
 data class WorkoutCalendarLog(
     val id: WorkoutLogId,
     val exerciseId: ExerciseId,
+    val plannedExerciseId: PlannedExerciseId,
     val exerciseName: String,
     val muscleGroup: MuscleGroup?,
     val performedAt: LocalDateTime,
@@ -40,5 +42,6 @@ data class WorkoutCalendarLog(
     val loadType: ExerciseLoadType,
     val effectiveVolumeKg: Double?,
     val effectiveSetLoadsKg: List<Double> = emptyList(),
-    val setEntries: List<WorkoutSetLog> = emptyList()
+    val setEntries: List<WorkoutSetLog> = emptyList(),
+    val routineDayInstanceId: String? = null
 )

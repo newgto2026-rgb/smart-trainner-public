@@ -35,6 +35,7 @@ class ObserveWorkoutCalendarMonthUseCase @Inject constructor(
                 WorkoutCalendarLog(
                     id = log.id,
                     exerciseId = log.exerciseId,
+                    plannedExerciseId = log.plannedExerciseId,
                     exerciseName = exercise?.name ?: log.exerciseId.value,
                     muscleGroup = exercise?.muscleGroup,
                     performedAt = log.performedAt,
@@ -48,7 +49,8 @@ class ObserveWorkoutCalendarMonthUseCase @Inject constructor(
                     loadType = exercise?.loadType ?: ExerciseLoadType.EXTERNAL_LOAD,
                     effectiveVolumeKg = exercise?.let { log.effectiveVolumeKg(it, bodyWeightKg) },
                     effectiveSetLoadsKg = exercise?.let { log.effectiveSetLoadsKg(it, bodyWeightKg) }.orEmpty(),
-                    setEntries = log.setEntries
+                    setEntries = log.setEntries,
+                    routineDayInstanceId = log.routineDayInstanceId
                 )
             }
             .toList()
