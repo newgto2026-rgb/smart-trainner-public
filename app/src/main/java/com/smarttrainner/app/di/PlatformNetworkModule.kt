@@ -1,6 +1,7 @@
 package com.smarttrainner.app.di
 
 import com.smarttrainner.core.domain.DeviceSessionStore
+import com.smarttrainner.core.network.CustomExerciseNetworkApi
 import com.smarttrainner.core.network.FriendNetworkApi
 import com.smarttrainner.core.network.PushTokenNetworkApi
 import com.smarttrainner.core.network.RoutineProgressNetworkApi
@@ -83,6 +84,11 @@ object PlatformNetworkModule {
     @Singleton
     fun provideRoutineNetworkApi(retrofit: Retrofit): RoutineNetworkApi =
         retrofit.create(RoutineNetworkApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCustomExerciseNetworkApi(retrofit: Retrofit): CustomExerciseNetworkApi =
+        retrofit.create(CustomExerciseNetworkApi::class.java)
 
     @Provides
     @Singleton

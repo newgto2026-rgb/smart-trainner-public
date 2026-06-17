@@ -58,7 +58,7 @@ object SmartTrainnerMigrations {
                     `description` TEXT NOT NULL,
                     `createdAt` TEXT NOT NULL,
                     `updatedAt` TEXT NOT NULL,
-                    PRIMARY KEY(`id`)
+                    PRIMARY KEY(`ownerSessionId`, `id`)
                 )
                 """.trimIndent()
             )
@@ -235,6 +235,53 @@ object SmartTrainnerMigrations {
         }
     }
 
+    private val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `custom_exercises` (
+                    `id` TEXT NOT NULL,
+                    `ownerSessionId` TEXT NOT NULL,
+                    `source` TEXT NOT NULL,
+                    `originExerciseId` TEXT,
+                    `name` TEXT NOT NULL,
+                    `primaryMuscleGroup` TEXT NOT NULL,
+                    `secondaryMuscleGroups` TEXT NOT NULL,
+                    `equipment` TEXT NOT NULL,
+                    `difficulty` TEXT NOT NULL,
+                    `imageKey` TEXT NOT NULL,
+                    `imageUri` TEXT,
+                    `summary` TEXT NOT NULL,
+                    `instructions` TEXT NOT NULL,
+                    `safetyCues` TEXT NOT NULL,
+                    `defaultSets` INTEGER NOT NULL,
+                    `repRangeStart` INTEGER,
+                    `repRangeEnd` INTEGER,
+                    `defaultDurationMinutes` INTEGER,
+                    `restSeconds` INTEGER NOT NULL,
+                    `createdAt` TEXT NOT NULL,
+                    `updatedAt` TEXT NOT NULL,
+                    `archivedAt` TEXT,
+                    `syncState` TEXT NOT NULL DEFAULT 'pending_upsert',
+                    PRIMARY KEY(`id`)
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_custom_exercises_ownerSessionId_syncState` " +
+                    "ON `custom_exercises` (`ownerSessionId`, `syncState`)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_custom_exercises_ownerSessionId_name` " +
+                    "ON `custom_exercises` (`ownerSessionId`, `name`)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_custom_exercises_ownerSessionId_archivedAt` " +
+                    "ON `custom_exercises` (`ownerSessionId`, `archivedAt`)"
+            )
+        }
+    }
+
     val ALL = arrayOf(
         MIGRATION_1_2,
         MIGRATION_2_3,
@@ -243,6 +290,7 @@ object SmartTrainnerMigrations {
         MIGRATION_5_6,
         MIGRATION_6_7,
         MIGRATION_7_8,
-        MIGRATION_8_9
+        MIGRATION_8_9,
+        MIGRATION_9_10
     )
 }

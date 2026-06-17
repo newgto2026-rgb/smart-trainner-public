@@ -10,6 +10,7 @@ import com.smarttrainner.core.database.CUSTOM_ROUTINE_SYNC_PENDING_DELETE
 import com.smarttrainner.core.database.CUSTOM_ROUTINE_SYNCED
 import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
+import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.TrainingDataSyncer
 import com.smarttrainner.core.domain.TrainingSeedStore
 import com.smarttrainner.core.model.CustomRoutineInput
@@ -42,6 +43,7 @@ class DefaultRoutinePlanRepository @Inject constructor(
     private val preferences: TrainingPreferencesDataSource,
     private val activeSessionResolver: ActiveSessionResolver,
     private val seedStore: TrainingSeedStore,
+    private val exerciseRepository: ExerciseRepository,
     private val clock: Clock,
     private val routineNetworkApi: RoutineNetworkApi
 ) : RoutinePlanCatalogRepository, RoutinePlanCommandRepository, TrainingDataSyncer {
@@ -50,8 +52,12 @@ class DefaultRoutinePlanRepository @Inject constructor(
 
     private fun observeCustomRoutines(): Flow<List<PlanTemplate>> =
         activeSessionResolver.observeSessionId().flatMapLatest { sessionId ->
-            customRoutineDao.observeForSession(sessionId)
-                .map { routines -> routines.map { it.toPlanTemplate(seedStore.exercises) } }
+            kotlinx.coroutines.flow.combine(
+                customRoutineDao.observeForSession(sessionId),
+                exerciseRepository.observeExercises()
+            ) { routines, exercises ->
+                routines.map { it.toPlanTemplate(exercises) }
+            }
         }
 
     override suspend fun selectPlanTemplate(templateId: String): Result<Unit> = runCatching {
@@ -83,7 +89,9 @@ class DefaultRoutinePlanRepository @Inject constructor(
         }.onSuccess {
             customRoutineDao.updateSyncState(sessionId, routineId, CUSTOM_ROUTINE_SYNCED)
         }
-        requireNotNull(customRoutineDao.getById(sessionId, routineId)).toPlanTemplate(seedStore.exercises)
+        requireNotNull(customRoutineDao.getById(sessionId, routineId)).toPlanTemplate(
+            exerciseRepository.observeExercises().first()
+        )
     }
 
     override suspend fun deleteCustomRoutine(templateId: String): Result<Unit> = runCatching {

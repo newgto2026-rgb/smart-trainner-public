@@ -10,6 +10,7 @@ import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseMovementPattern
 import com.smarttrainner.core.model.ExerciseMuscleRole
+import com.smarttrainner.core.model.ExerciseSource
 import com.smarttrainner.core.model.MuscleGroup
 import java.util.Locale
 
@@ -19,11 +20,11 @@ private fun isKoreanLocale(): Boolean =
 
 @Composable
 internal fun Exercise.localizedName(): String =
-    if (isKoreanLocale()) name else id.value.toExerciseTitle()
+    if (isKoreanLocale() || source != ExerciseSource.SYSTEM) name else id.value.toExerciseTitle()
 
 @Composable
 internal fun Exercise.localizedSummary(): String =
-    if (isKoreanLocale()) {
+    if (isKoreanLocale() || source != ExerciseSource.SYSTEM) {
         summary
     } else {
         stringResource(
@@ -36,6 +37,15 @@ internal fun Exercise.localizedSummary(): String =
 
 @Composable
 internal fun Exercise.localizedStepItems(): List<LocalizedExerciseStep> {
+    if (source != ExerciseSource.SYSTEM) {
+        return instructions.mapIndexed { index, instruction ->
+            localizedExerciseStep(
+                label = stringResource(R.string.exercise_step_number, index + 1),
+                instruction = instruction
+            )
+        }
+    }
+
     val visuals = exerciseStepVisuals(id.value)
     if (visuals.isNotEmpty()) {
         val isKo = isKoreanLocale()
@@ -115,7 +125,7 @@ private fun generatedEnglishStepItems(exerciseId: String): List<LocalizedExercis
 
 @Composable
 internal fun Exercise.localizedSafetyCues(): List<String> =
-    if (isKoreanLocale()) {
+    if (isKoreanLocale() || source != ExerciseSource.SYSTEM) {
         safetyCues
     } else {
         kettlebellEnglishSafetyCues(id.value) ?: listOf(

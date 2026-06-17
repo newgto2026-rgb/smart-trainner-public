@@ -4,6 +4,7 @@ import com.smarttrainner.core.database.CustomRoutineDao
 import com.smarttrainner.core.database.WorkoutLogDao
 import com.smarttrainner.core.datastore.ActiveSessionResolver
 import com.smarttrainner.core.datastore.TrainingPreferencesDataSource
+import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.TrainingSeedStore
 import com.smarttrainner.core.domain.RoutineProgressRepository
 import com.smarttrainner.core.domain.TrainingDataSyncer
@@ -54,6 +55,7 @@ class DefaultRoutineProgressRepository @Inject constructor(
     private val preferences: TrainingPreferencesDataSource,
     private val activeSessionResolver: ActiveSessionResolver,
     private val seedStore: TrainingSeedStore,
+    private val exerciseRepository: ExerciseRepository,
     private val routineProgressNetworkApi: RoutineProgressNetworkApi,
     private val clock: Clock
 ) : RoutineProgressRepository, RoutineProgressCommandRepository, TrainingDataSyncer {
@@ -65,11 +67,12 @@ class DefaultRoutineProgressRepository @Inject constructor(
                 }
                 combine(
                     preferences.activeRoutineProgress(sessionId),
-                    customRoutineDao.observeForSession(sessionId)
-                ) { preference, customRoutines ->
+                    customRoutineDao.observeForSession(sessionId),
+                    exerciseRepository.observeExercises()
+                ) { preference, customRoutines, exercises ->
                     val template = seedStore.templateById(
                         preference.templateId,
-                        customRoutines.map { it.toPlanTemplate(seedStore.exercises) }
+                        customRoutines.map { it.toPlanTemplate(exercises) }
                     )
                     val startedAt = preference.startedAt.toInstantOrNull()
                     RoutineProgress(
@@ -138,8 +141,9 @@ class DefaultRoutineProgressRepository @Inject constructor(
             ?.atZone(clock.zone)
             ?.toLocalDate()
             ?: LocalDate.now(clock)
+        val availableExercises = exerciseRepository.observeExercises().first()
         val currentCyclePlannedExerciseIds = seedStore
-            .buildCyclePlan(currentTemplate, currentCycleStartDate)
+            .buildCyclePlan(currentTemplate, currentCycleStartDate, availableExercises)
             .days
             .flatMap { day -> day.exercises.map { it.id.value } }
         val routineDayInstancePrefixValue = routineDayInstancePrefix(
@@ -334,7 +338,9 @@ class DefaultRoutineProgressRepository @Inject constructor(
     private suspend fun templateFor(sessionId: String, templateId: String) =
         seedStore.templateById(
             templateId,
-            customRoutineDao.observeForSession(sessionId).first().map { it.toPlanTemplate(seedStore.exercises) }
+            customRoutineDao.observeForSession(sessionId).first().map {
+                it.toPlanTemplate(exerciseRepository.observeExercises().first())
+            }
         )
 
     private suspend fun pushServerProgress(

@@ -2,6 +2,7 @@ package com.smarttrainner.core.domain
 
 import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseSource
 import com.smarttrainner.core.model.RoutineSource
 import java.time.LocalDate
 import org.junit.Test
@@ -58,5 +59,33 @@ class TrainingSeedStoreTest {
 
         assertThat(plan.days.single().exercises.single().id.value)
             .isEqualTo("${plannedDate}_${customTemplate.id}_day3_slot1_$exerciseId")
+    }
+
+    @Test
+    fun buildCyclePlanCanResolveUserCreatedExercisesFromAvailableCatalog() {
+        val systemTemplate = store.templates.first { it.days.isNotEmpty() }
+        val customExercise = store.exercises.first().copy(
+            id = ExerciseId("custom_exercise_row"),
+            name = "Hotel Cable Row",
+            source = ExerciseSource.USER_CREATED
+        )
+        val customDay = systemTemplate.days.first().copy(
+            exercises = listOf(
+                systemTemplate.days.first().exercises.first().copy(exerciseId = customExercise.id)
+            )
+        )
+        val customTemplate = systemTemplate.copy(
+            id = "custom-test",
+            days = listOf(customDay),
+            source = RoutineSource.CUSTOM
+        )
+
+        val plan = store.buildCyclePlan(
+            template = customTemplate,
+            cycleStartDate = LocalDate.parse("2026-05-25"),
+            availableExercises = store.exercises + customExercise
+        )
+
+        assertThat(plan.days.single().exercises.single().exercise).isEqualTo(customExercise)
     }
 }

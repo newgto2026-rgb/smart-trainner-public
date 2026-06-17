@@ -1,3 +1,4 @@
 <resources>
     <string name="exercise_image_pending">이미지 검수 중</string>
+    <string name="exercise_default_image">기본 이미지</string>
 </resources>

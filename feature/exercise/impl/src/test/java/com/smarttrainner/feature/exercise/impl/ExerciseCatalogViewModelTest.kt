@@ -5,12 +5,16 @@ import com.google.common.truth.Truth.assertThat
 import com.smarttrainner.core.domain.ExerciseRepository
 import com.smarttrainner.core.domain.ObserveExercisesUseCase
 import com.smarttrainner.core.domain.ObserveLatestWorkoutLogsUseCase
+import com.smarttrainner.core.domain.SaveCustomExerciseUseCase
+import com.smarttrainner.core.domain.ValidateCustomExerciseUseCase
 import com.smarttrainner.core.domain.WorkoutLogRepository
+import com.smarttrainner.core.model.CustomExerciseInput
 import com.smarttrainner.core.model.CustomRoutineInput
 import com.smarttrainner.core.model.DifficultyLevel
 import com.smarttrainner.core.model.EquipmentType
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
+import com.smarttrainner.core.model.ExerciseSource
 import com.smarttrainner.core.model.MuscleGroup
 import com.smarttrainner.core.model.PlanTemplate
 import com.smarttrainner.core.model.PlannedExerciseId
@@ -128,9 +132,69 @@ class ExerciseCatalogViewModelTest {
         advanceUntilIdle()
     }
 
+    @Test
+    fun saveCustomExercise_addsUserCreatedExerciseAndClosesForm() = runTest {
+        repository.exercises.value = listOf(exercise("leg_press", MuscleGroup.LOWER_BODY))
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            advanceUntilIdle()
+            awaitItem()
+
+            viewModel.openCustomExerciseForm()
+            viewModel.updateCustomExerciseName("Desk Row")
+            viewModel.updateCustomExerciseMuscleGroup(MuscleGroup.BACK)
+            viewModel.updateCustomExerciseEquipment(EquipmentType.BODYWEIGHT)
+            viewModel.updateCustomExerciseDifficulty(DifficultyLevel.BEGINNER)
+            viewModel.updateCustomExerciseSummary("A simple back drill.")
+            viewModel.updateCustomExerciseInstruction(0, "Pull elbows behind the body.")
+            viewModel.updateCustomExerciseSafetyCue(0, "Keep the ribs down.")
+            viewModel.saveCustomExercise()
+            advanceUntilIdle()
+
+            val state = awaitStateMatching { state ->
+                !state.customExerciseForm.visible &&
+                    state.exercises.any { it.name == "Desk Row" }
+            }
+            val customExercise = state.exercises.single { it.name == "Desk Row" }
+            assertThat(customExercise.source).isEqualTo(ExerciseSource.USER_CREATED)
+            assertThat(customExercise.muscleGroup).isEqualTo(MuscleGroup.BACK)
+            cancelAndIgnoreRemainingEvents()
+        }
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun saveCustomExercise_showsValidationErrorWhenMethodIsMissing() = runTest {
+        repository.exercises.value = listOf(exercise("leg_press", MuscleGroup.LOWER_BODY))
+        val viewModel = viewModel()
+
+        viewModel.uiState.test {
+            skipItems(1)
+            advanceUntilIdle()
+            awaitItem()
+
+            viewModel.openCustomExerciseForm()
+            viewModel.updateCustomExerciseName("Desk Row")
+            viewModel.updateCustomExerciseSafetyCue(0, "Keep the ribs down.")
+            viewModel.saveCustomExercise()
+            advanceUntilIdle()
+
+            val state = awaitStateMatching { it.customExerciseForm.error == CustomExerciseFormError.INSTRUCTIONS }
+            assertThat(state.customExerciseForm.visible).isTrue()
+            assertThat(repository.exercises.value.map { it.name }).doesNotContain("Desk Row")
+            cancelAndIgnoreRemainingEvents()
+        }
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
+    }
+
     private fun viewModel() = ExerciseCatalogViewModel(
         observeExercises = ObserveExercisesUseCase(repository),
         observeLatestWorkoutLogs = ObserveLatestWorkoutLogsUseCase(repository),
+        saveCustomExercise = SaveCustomExerciseUseCase(repository, ValidateCustomExerciseUseCase()),
         searchDispatcher = mainDispatcherRule.dispatcher
     )
 }
@@ -152,9 +216,43 @@ private class FakeExerciseCatalogRepository :
 
     override fun observeAllWorkoutLogs(): Flow<List<WorkoutLog>> = latestLogs
 
-    override suspend fun getExercise(id: ExerciseId): Exercise? = unused()
+    override suspend fun getExercise(id: ExerciseId): Exercise? = exercises.value.firstOrNull { it.id == id }
 
-    private fun unused(): Nothing = throw UnsupportedOperationException("Not used by exercise catalog tests")
+    override suspend fun saveCustomExercise(input: CustomExerciseInput): Result<Exercise> = runCatching {
+        val id = input.id ?: ExerciseId("custom_exercise_test_${exercises.value.size + 1}")
+        val exercise = Exercise(
+            id = id,
+            name = input.name.trim(),
+            muscleGroup = input.muscleGroup,
+            equipment = input.equipment,
+            difficulty = input.difficulty,
+            imageKey = id.value,
+            summary = input.summary.trim(),
+            instructions = input.instructions.map { it.trim() }.filter { it.isNotEmpty() },
+            safetyCues = input.safetyCues.map { it.trim() }.filter { it.isNotEmpty() },
+            defaultSets = input.defaultSets,
+            defaultRepRange = input.repRangeStart?.let { start ->
+                input.repRangeEnd?.let { end -> start..end }
+            },
+            defaultDurationMinutes = input.defaultDurationMinutes,
+            restSeconds = input.restSeconds,
+            source = ExerciseSource.USER_CREATED,
+            ownerSessionId = UserSessionId("local-default"),
+            imageUri = input.imageUri
+        )
+        exercises.value = exercises.value + exercise
+        exercise
+    }
+}
+
+private suspend fun app.cash.turbine.ReceiveTurbine<ExerciseCatalogUiState>.awaitStateMatching(
+    predicate: (ExerciseCatalogUiState) -> Boolean
+): ExerciseCatalogUiState {
+    var state = awaitItem()
+    while (!predicate(state)) {
+        state = awaitItem()
+    }
+    return state
 }
 
 private fun exercise(

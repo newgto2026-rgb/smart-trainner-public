@@ -7,7 +7,9 @@ import com.smarttrainner.core.domain.SessionRepository
 import com.smarttrainner.core.domain.CyclePlanRepository
 import com.smarttrainner.core.domain.WorkoutLogRepository
 import com.smarttrainner.core.model.AuthProvider
+import com.smarttrainner.core.model.CustomExerciseInput
 import com.smarttrainner.core.model.CustomRoutineInput
+import com.smarttrainner.core.model.ExerciseSource
 import com.smarttrainner.core.model.Exercise
 import com.smarttrainner.core.model.ExerciseId
 import com.smarttrainner.core.model.NicknameAvailability
@@ -164,20 +166,32 @@ internal class InMemoryTrainingRepository :
     WorkoutRecordingRepository,
     WorkoutLogRepository,
     CycleSummaryRepository {
-    private val exercises = MutableStateFlow(SeedTrainingContent.exercises)
-    private val exerciseById = SeedTrainingContent.exercises.associateBy { it.id }
+    private val seedExercises = SeedTrainingContent.exercises
+    private val customExercisesBySession = mutableMapOf<String, List<Exercise>>()
+    private val exercises = MutableStateFlow(seedExercises)
     private val systemTemplates = SeedTrainingContent.templates
     private val selectedTemplateId = MutableStateFlow(DEFAULT_TEMPLATE_ID)
     private val customTemplates = MutableStateFlow<List<PlanTemplate>>(emptyList())
     private val progress = MutableStateFlow(defaultProgress())
     private val logs = MutableStateFlow<List<WorkoutLog>>(emptyList())
     private val summaryCalculator = CycleSummaryCalculator()
+    private var activeSessionId = TEST_SESSION_ID
+    private var nextCustomExerciseCounter = 1
 
     fun reset() {
+        activeSessionId = TEST_SESSION_ID
+        customExercisesBySession.clear()
+        publishExercises()
+        nextCustomExerciseCounter = 1
         selectedTemplateId.value = DEFAULT_TEMPLATE_ID
         customTemplates.value = emptyList()
         progress.value = defaultProgress()
         logs.value = emptyList()
+    }
+
+    fun setActiveSessionForTest(sessionId: String) {
+        activeSessionId = sessionId
+        publishExercises()
     }
 
     fun routineDayDatesForTest(): Map<String, LocalDate> = progress.value.routineDayDates
@@ -187,7 +201,7 @@ internal class InMemoryTrainingRepository :
     fun progressForTest(): RoutineProgress = progress.value
 
     fun seedAssistedPullupLogForTest() {
-        val exercise = exerciseById.getValue(ExerciseId("assisted_pullup"))
+        val exercise = currentExerciseById().getValue(ExerciseId("assisted_pullup"))
         logs.value = listOf(
             WorkoutLog(
                 id = WorkoutLogId(1),
@@ -298,7 +312,35 @@ internal class InMemoryTrainingRepository :
         summaryCalculator.calculate(currentCycle, zone)
     )
 
-    override suspend fun getExercise(id: ExerciseId): Exercise? = exerciseById[id]
+    override suspend fun getExercise(id: ExerciseId): Exercise? = currentExerciseById()[id]
+
+    override suspend fun saveCustomExercise(input: CustomExerciseInput): Result<Exercise> = runCatching {
+        val id = input.id ?: ExerciseId("custom_exercise_ui_${nextCustomExerciseCounter++}")
+        val exercise = Exercise(
+            id = id,
+            name = input.name.trim(),
+            muscleGroup = input.muscleGroup,
+            equipment = input.equipment,
+            difficulty = input.difficulty,
+            imageKey = id.value,
+            summary = input.summary.trim(),
+            instructions = input.instructions.map { it.trim() }.filter { it.isNotEmpty() },
+            safetyCues = input.safetyCues.map { it.trim() }.filter { it.isNotEmpty() },
+            defaultSets = input.defaultSets,
+            defaultRepRange = input.repRangeStart?.let { start ->
+                input.repRangeEnd?.let { end -> start..end }
+            },
+            defaultDurationMinutes = input.defaultDurationMinutes,
+            restSeconds = input.restSeconds,
+            source = ExerciseSource.USER_CREATED,
+            ownerSessionId = UserSessionId(activeSessionId),
+            imageUri = input.imageUri?.trim()?.takeIf { it.isNotEmpty() }
+        )
+        customExercisesBySession[activeSessionId] =
+            customExercisesBySession.getValueOrEmpty(activeSessionId).filterNot { it.id == exercise.id } + exercise
+        publishExercises()
+        exercise
+    }
 
     override suspend fun getLatestWorkoutLog(exerciseId: ExerciseId): WorkoutLog? =
         logs.value
@@ -531,7 +573,7 @@ internal class InMemoryTrainingRepository :
                     title = day.title,
                     focus = day.focus,
                     exercises = day.exercises.mapIndexed { slotIndex, item ->
-                        val exercise = exerciseById.getValue(item.exerciseId)
+                        val exercise = currentExerciseById().getValue(item.exerciseId)
                         PlannedExercise(
                             id = PlannedExerciseId(template.plannedExerciseId(date, day.dayNumber, slotIndex, item.exerciseId)),
                             exercise = exercise,
@@ -602,7 +644,17 @@ internal class InMemoryTrainingRepository :
             startedAt = Instant.EPOCH,
             cycleStartedAt = Instant.EPOCH
         )
+
+    private fun publishExercises() {
+        exercises.value = seedExercises + customExercisesBySession.getValueOrEmpty(activeSessionId)
+    }
+
+    private fun currentExerciseById(): Map<ExerciseId, Exercise> =
+        exercises.value.associateBy { it.id }
 }
+
+private fun Map<String, List<Exercise>>.getValueOrEmpty(sessionId: String): List<Exercise> =
+    this[sessionId].orEmpty()
 
 private const val TEST_SESSION_ID = "android-ui-test"
 private const val DEFAULT_TEMPLATE_ID = "beginner-full-body-3day"

@@ -29,7 +29,8 @@ class TrainingSeedStore @Inject constructor() {
 
     fun buildCyclePlan(
         template: PlanTemplate,
-        cycleStartDate: LocalDate
+        cycleStartDate: LocalDate,
+        availableExercises: List<Exercise> = exercises
     ): CyclePlan = CyclePlan(
         id = PlanId("${template.id}_${cycleStartDate}"),
         templateId = template.id,
@@ -37,6 +38,7 @@ class TrainingSeedStore @Inject constructor() {
         cycleStartDate = cycleStartDate,
         days = template.days.map { day ->
             val date = cycleStartDate.plusDays(day.dayOffset.toLong())
+            val exerciseById = availableExercises.associateBy { it.id }
             WorkoutDayPlan(
                 date = date,
                 title = day.title,

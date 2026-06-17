@@ -15,12 +15,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.smarttrainner.core.model.Exercise
+import com.smarttrainner.core.model.ExerciseSource
 import javax.inject.Inject
 
 private const val TRAINER_IMAGE_ASPECT_RATIO = 0.9f
@@ -54,6 +56,26 @@ fun TrainerExerciseImage(
     cleanThumbnailCrop: Boolean = false,
     contentDescription: String? = null
 ) {
+    val customImageUri = exercise.imageUri?.takeIf { it.isNotBlank() }
+    if (customImageUri != null) {
+        Box(
+            modifier = modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(TrainerExerciseImageBackground)
+                .aspectRatio(TRAINER_IMAGE_ASPECT_RATIO)
+        ) {
+            AsyncImage(
+                model = customImageUri,
+                contentDescription = contentDescription,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("training_exercise_custom_image"),
+                contentScale = ContentScale.Fit
+            )
+        }
+        return
+    }
+
     val visuals = exerciseStepVisuals(exercise.id.value)
     val representativeIndex = if (visuals.size > 1) 1 else 0
     val visual = if (stepIndex == null) {
@@ -69,15 +91,23 @@ fun TrainerExerciseImage(
     val needsQaReplacement = exerciseArtNeedsQaReplacement(exercise.id.value)
 
     if (visual == null || needsQaReplacement) {
+        val fallbackText = stringResource(
+            if (exercise.source == ExerciseSource.SYSTEM) {
+                R.string.exercise_image_pending
+            } else {
+                R.string.exercise_default_image
+            }
+        )
         Box(
             modifier = modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(TrainerExerciseImageBackground)
-                .aspectRatio(TRAINER_IMAGE_ASPECT_RATIO),
+                .aspectRatio(TRAINER_IMAGE_ASPECT_RATIO)
+                .testTag("training_exercise_default_image"),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = stringResource(R.string.exercise_image_pending),
+                text = fallbackText,
                 modifier = Modifier
                     .padding(10.dp),
                 color = Color(0xFF44777F),
